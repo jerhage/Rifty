@@ -2,10 +2,21 @@
   "name": "riftcards",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "scripts": {
+    "start": "expo start",
+    "reset-project": "node ./scripts/reset-project.js",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "oxlint",
+    "types": "tsc --noEmit"
+  },
   "dependencies": {
     "@expo/ui": "~57.0.16",
+    "drizzle-orm": "^1.0.0-rc.4",
     "expo": "~57.0.20",
     "expo-constants": "~57.0.17",
+    "expo-crypto": "~57.0.2",
     "expo-device": "~57.0.1",
     "expo-font": "~57.0.3",
     "expo-glass-effect": "~57.0.1",
@@ -13,6 +24,7 @@
     "expo-linking": "~57.0.9",
     "expo-router": "~57.0.19",
     "expo-splash-screen": "~57.0.8",
+    "expo-sqlite": "~57.0.2",
     "expo-status-bar": "~57.0.1",
     "expo-symbols": "~57.0.2",
     "expo-system-ui": "~57.0.3",
@@ -25,19 +37,29 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.1"
+    "react-native-worklets": "0.10.1",
+    "ts-pattern": "^5.9.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "29.5.14",
+    "@types/node": "^26.4.1",
     "@types/react": "~19.2.2",
+    "babel-plugin-inline-import": "^3.0.0",
+    "drizzle-kit": "^1.0.0-rc.4",
+    "jest": "~29.7.0",
+    "jest-expo": "~57.0.5",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.81.0",
     "typescript": "~6.0.3"
   },
-  "scripts": {
-    "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "lint": "expo lint"
+  "jest": {
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "preset": "jest-expo",
+    "watchman": false
   },
   "private": true
 }

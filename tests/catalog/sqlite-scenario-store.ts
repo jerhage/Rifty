@@ -1,0 +1,185 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { drizzle } from "drizzle-orm/node-sqlite";
+
+import type { Card } from "@/features/catalog/card/card";
+import type { CardSet } from "@/features/catalog/set/card-set";
+import type { CatalogDataStore } from "@/infrastructure/database/catalog-data-store";
+import {
+  cardClassifications,
+  cardDomains,
+  cardMarketplaceReferences,
+  cardMedia,
+  cardSets,
+  cardSupertypes,
+  cardTags,
+  cardTypes,
+  catalogCards,
+  domains,
+  rarities,
+  setMarketplaceReferences,
+  tags,
+} from "@/infrastructure/database/schema";
+import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
+import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
+
+interface SqliteScenarioStore extends CatalogDataStore {
+  close(): void;
+  seedCard(card: Card): void;
+  seedSet(cardSet: CardSet): void;
+}
+
+function createSqliteScenarioStore(): SqliteScenarioStore {
+  const client = new DatabaseSync(":memory:");
+  client.exec("PRAGMA foreign_keys = ON;");
+  applyMigrations(client);
+
+  const database = drizzle({ client });
+
+  function seedSet(cardSet: CardSet): void {
+    database
+      .insert(cardSets)
+      .values({
+        code: cardSet.code,
+        sourceId: cardSet.sourceId,
+        name: cardSet.name,
+        declaredCardCount: cardSet.declaredCardCount,
+        publishedOn: cardSet.publishedOn,
+      })
+      .run();
+
+    if (cardSet.marketplaceReferences.length > 0) {
+      database
+        .insert(setMarketplaceReferences)
+        .values(
+          cardSet.marketplaceReferences.map((reference) => ({
+            setCode: cardSet.code,
+            marketplace: reference.marketplace,
+            externalId: reference.externalId,
+          })),
+        )
+        .run();
+    }
+  }
+
+  function seedCard(card: Card): void {
+    database
+      .insert(cardTypes)
+      .values({ id: card.classification.typeId, name: card.classification.typeId })
+      .onConflictDoNothing()
+      .run();
+    database
+      .insert(rarities)
+      .values({
+        id: card.classification.rarityId,
+        name: card.classification.rarityId,
+        sortOrder: 0,
+      })
+      .onConflictDoNothing()
+      .run();
+    if (card.classification.supertypeId) {
+      database
+        .insert(cardSupertypes)
+        .values({ id: card.classification.supertypeId, name: card.classification.supertypeId })
+        .onConflictDoNothing()
+        .run();
+    }
+    for (const domainId of card.domainIds) {
+      database.insert(domains).values({ id: domainId, name: domainId }).onConflictDoNothing().run();
+    }
+    for (const tagId of card.tagIds) {
+      database.insert(tags).values({ id: tagId, name: tagId }).onConflictDoNothing().run();
+    }
+
+    database
+      .insert(catalogCards)
+      .values({
+        id: card.id,
+        riftboundId: card.riftboundId,
+        setCode: card.setCode,
+        collectorNumber: card.collectorNumber,
+        name: card.name,
+        cleanName: card.cleanName,
+        energy: card.attributes.energy,
+        might: card.attributes.might,
+        power: card.attributes.power,
+        rulesTextRich: card.rulesText.rich,
+        rulesTextPlain: card.rulesText.plain,
+        flavourText: card.rulesText.flavour,
+        orientation: card.orientation,
+        isAlternateArt: card.isAlternateArt,
+        isOvernumbered: card.isOvernumbered,
+        isSignature: card.isSignature,
+        sourceUpdatedAt: card.sourceUpdatedAt,
+      })
+      .run();
+    database
+      .insert(cardClassifications)
+      .values({
+        cardId: card.id,
+        typeId: card.classification.typeId,
+        supertypeId: card.classification.supertypeId,
+        rarityId: card.classification.rarityId,
+      })
+      .run();
+    database
+      .insert(cardMedia)
+      .values({
+        cardId: card.id,
+        imageAssetId: card.media.imageAssetId,
+        artist: card.media.artist,
+        accessibilityText: card.media.accessibilityText,
+      })
+      .run();
+
+    if (card.domainIds.length > 0) {
+      database
+        .insert(cardDomains)
+        .values(card.domainIds.map((domainId) => ({ cardId: card.id, domainId })))
+        .run();
+    }
+    if (card.tagIds.length > 0) {
+      database
+        .insert(cardTags)
+        .values(card.tagIds.map((tagId) => ({ cardId: card.id, tagId })))
+        .run();
+    }
+    if (card.marketplaceReferences.length > 0) {
+      database
+        .insert(cardMarketplaceReferences)
+        .values(
+          card.marketplaceReferences.map((reference) => ({
+            cardId: card.id,
+            marketplace: reference.marketplace,
+            externalId: reference.externalId,
+          })),
+        )
+        .run();
+    }
+  }
+
+  return {
+    cards: new SqliteCardRepository(database),
+    sets: new SqliteSetRepository(database),
+    seedCard,
+    seedSet,
+    close: () => client.close(),
+  };
+}
+
+function applyMigrations(client: DatabaseSync): void {
+  const migrationsDirectory = join(process.cwd(), "drizzle");
+  const migrationDirectories = readdirSync(migrationsDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+
+  for (const directory of migrationDirectories) {
+    const migrationPath = join(migrationsDirectory, directory, "migration.sql");
+    client.exec(readFileSync(migrationPath, "utf8"));
+  }
+}
+
+export { createSqliteScenarioStore };
+export type { SqliteScenarioStore };

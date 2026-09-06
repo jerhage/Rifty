@@ -1,0 +1,60 @@
+import { asc, eq, inArray } from "drizzle-orm";
+
+import type { SetCode } from "@/features/catalog/value-objects/set-code";
+import type { CardSet } from "@/features/catalog/set/card-set";
+import type { SetRepository } from "@/features/catalog/set/set-repository";
+import { cardSets, setMarketplaceReferences } from "@/infrastructure/database/schema";
+
+import { toDomainCardSet } from "./set-mapper";
+import type { SqliteDatabase } from "./sqlite-database";
+
+class SqliteSetRepository implements SetRepository {
+  constructor(private readonly db: SqliteDatabase) {}
+
+  async get(code: SetCode): Promise<CardSet | null> {
+    const [row] = await this.db.select().from(cardSets).where(eq(cardSets.code, code)).limit(1);
+    if (!row) return null;
+
+    return (await this.toDomainCardSets([row]))[0] ?? null;
+  }
+
+  async getAll(): Promise<readonly CardSet[]> {
+    const rows = await this.db
+      .select()
+      .from(cardSets)
+      .orderBy(asc(cardSets.publishedOn), asc(cardSets.code));
+    return this.toDomainCardSets(rows);
+  }
+
+  private async toDomainCardSets(
+    rows: readonly (typeof cardSets.$inferSelect)[],
+  ): Promise<CardSet[]> {
+    if (rows.length === 0) return [];
+
+    const references = await this.db
+      .select()
+      .from(setMarketplaceReferences)
+      .where(
+        inArray(
+          setMarketplaceReferences.setCode,
+          rows.map((row) => row.code),
+        ),
+      )
+      .orderBy(asc(setMarketplaceReferences.marketplace), asc(setMarketplaceReferences.externalId));
+    const referencesBySetCode = references.reduce((grouped, reference) => {
+      const group = grouped.get(reference.setCode);
+      if (group) group.push(reference);
+      else grouped.set(reference.setCode, [reference]);
+      return grouped;
+    }, new Map<string, typeof references>());
+
+    return rows.map((cardSet) =>
+      toDomainCardSet({
+        cardSet,
+        marketplaceReferences: referencesBySetCode.get(cardSet.code) ?? [],
+      }),
+    );
+  }
+}
+
+export { SqliteSetRepository };

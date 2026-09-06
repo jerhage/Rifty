@@ -6,12 +6,16 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 
 interface CardSummaryCardProps {
+  readonly aspectRatio?: number;
   readonly card: Card;
 }
 
-function CardSummaryCard({ card }: CardSummaryCardProps) {
+function CardSummaryCard({ aspectRatio, card }: CardSummaryCardProps) {
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <ThemedView
+      type="backgroundElement"
+      style={[styles.card, aspectRatio === undefined ? undefined : { aspectRatio }]}
+    >
       <ThemedView style={styles.header}>
         <ThemedText type="smallBold">{card.setCode}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
@@ -37,6 +41,7 @@ function CardSummaryCard({ card }: CardSummaryCardProps) {
 
       <ThemedText type="smallBold">Abilities</ThemedText>
       <ThemedText style={styles.abilities}>{card.rulesText.plain || "No abilities."}</ThemedText>
+
     </ThemedView>
   );
 }

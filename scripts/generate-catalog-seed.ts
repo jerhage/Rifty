@@ -8,31 +8,36 @@ import {
   cardDomainInsertSchema,
   cardMarketplaceReferenceInsertSchema,
   cardMediaInsertSchema,
-  cardSetInsertSchema,
-  cardSupertypeInsertSchema,
   cardTagInsertSchema,
-  cardTypeInsertSchema,
   catalogCardInsertSchema,
+} from "../src/infrastructure/database/catalog-schema/cards";
+import {
+  cardSetInsertSchema,
+  setMarketplaceReferenceInsertSchema,
+} from "../src/infrastructure/database/catalog-schema/sets";
+import {
+  cardSupertypeInsertSchema,
+  cardTypeInsertSchema,
   domainInsertSchema,
   rarityInsertSchema,
-  setMarketplaceReferenceInsertSchema,
   tagInsertSchema,
-} from "../src/infrastructure/database/catalog-persistence-schemas";
+} from "../src/infrastructure/database/catalog-schema/taxonomy";
 import type {
   cardClassifications,
   cardDomains,
   cardMarketplaceReferences,
   cardMedia,
-  cardSets,
-  cardSupertypes,
   cardTags,
-  cardTypes,
   catalogCards,
+} from "../src/infrastructure/database/catalog-schema/cards";
+import type { cardSets, setMarketplaceReferences } from "../src/infrastructure/database/catalog-schema/sets";
+import type {
+  cardSupertypes,
+  cardTypes,
   domains,
   rarities,
-  setMarketplaceReferences,
   tags,
-} from "../src/infrastructure/database/schema";
+} from "../src/infrastructure/database/catalog-schema/taxonomy";
 
 const dataDirectory = process.env.CATALOG_DATA_DIRECTORY ?? "data";
 const outputPath =

@@ -1,39 +1,13 @@
+import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { z } from "zod/v4";
 
-/** Records the bundled catalog dataset currently materialized in the local database. */
-const catalogSeedStates = sqliteTable("catalog_seed_state", {
-  id: text().primaryKey(),
-  version: text().notNull(),
-});
+import { cardSets, marketplaceSchema } from "./sets";
+import { cardSupertypes, cardTypes, domains, rarities, tags } from "./taxonomy";
+
+const cardOrientationSchema = z.enum(["landscape", "portrait"]);
 
 /** Catalog tables persist individual card printings and their related data. */
-const cardSets = sqliteTable(
-  "card_set",
-  {
-    code: text().primaryKey(),
-    sourceId: text("source_id").notNull().unique(),
-    name: text().notNull(),
-    declaredCardCount: integer("declared_card_count").notNull(),
-    publishedOn: text("published_on").notNull(),
-  },
-  (table) => [index("card_set_published_on").on(table.publishedOn)],
-);
-
-const setMarketplaceReferences = sqliteTable(
-  "set_marketplace_reference",
-  {
-    setCode: text("set_code")
-      .notNull()
-      .references(() => cardSets.code),
-    marketplace: text().notNull(),
-    externalId: text("external_id").notNull(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.setCode, table.marketplace, table.externalId] }),
-    index("set_marketplace_reference_lookup").on(table.marketplace, table.externalId),
-  ],
-);
-
 const catalogCards = sqliteTable(
   "catalog_card",
   {
@@ -88,22 +62,6 @@ const cardMedia = sqliteTable("card_media", {
   accessibilityText: text("accessibility_text"),
 });
 
-const cardTypes = sqliteTable("card_type", {
-  id: text().primaryKey(),
-  name: text().notNull().unique(),
-});
-
-const cardSupertypes = sqliteTable("card_supertype", {
-  id: text().primaryKey(),
-  name: text().notNull().unique(),
-});
-
-const rarities = sqliteTable("rarity", {
-  id: text().primaryKey(),
-  name: text().notNull().unique(),
-  sortOrder: integer("sort_order").notNull(),
-});
-
 const cardClassifications = sqliteTable(
   "card_classification",
   {
@@ -121,11 +79,6 @@ const cardClassifications = sqliteTable(
   (table) => [index("card_classification_type_rarity").on(table.typeId, table.rarityId)],
 );
 
-const domains = sqliteTable("domain", {
-  id: text().primaryKey(),
-  name: text().notNull().unique(),
-});
-
 const cardDomains = sqliteTable(
   "card_domain",
   {
@@ -141,11 +94,6 @@ const cardDomains = sqliteTable(
     index("card_domain_domain_id").on(table.domainId),
   ],
 );
-
-const tags = sqliteTable("tag", {
-  id: text().primaryKey(),
-  name: text().notNull().unique(),
-});
 
 const cardTags = sqliteTable(
   "card_tag",
@@ -163,19 +111,57 @@ const cardTags = sqliteTable(
   ],
 );
 
+const catalogCardSelectSchema = createSelectSchema(catalogCards, {
+  orientation: cardOrientationSchema,
+});
+const catalogCardInsertSchema = createInsertSchema(catalogCards, {
+  id: (schema) => schema.trim().min(1),
+  riftboundId: (schema) => schema.trim().min(1),
+  name: (schema) => schema.trim().min(1),
+  cleanName: (schema) => schema.trim().min(1),
+  orientation: cardOrientationSchema,
+  energy: (schema) => schema.int().nonnegative().nullable(),
+  might: (schema) => schema.int().nonnegative().nullable(),
+  power: (schema) => schema.int().nonnegative().nullable(),
+});
+
+const cardMarketplaceReferenceSelectSchema = createSelectSchema(cardMarketplaceReferences, {
+  marketplace: marketplaceSchema,
+});
+const cardMarketplaceReferenceInsertSchema = createInsertSchema(cardMarketplaceReferences, {
+  marketplace: marketplaceSchema,
+});
+
+const cardMediaSelectSchema = createSelectSchema(cardMedia);
+const cardMediaInsertSchema = createInsertSchema(cardMedia, {
+  imageAssetId: (schema) => schema.trim().min(1),
+});
+
+const cardClassificationSelectSchema = createSelectSchema(cardClassifications);
+const cardClassificationInsertSchema = createInsertSchema(cardClassifications);
+const cardDomainSelectSchema = createSelectSchema(cardDomains);
+const cardDomainInsertSchema = createInsertSchema(cardDomains);
+const cardTagSelectSchema = createSelectSchema(cardTags);
+const cardTagInsertSchema = createInsertSchema(cardTags);
+
 export {
-  catalogSeedStates,
+  cardClassificationInsertSchema,
+  cardClassificationSelectSchema,
   cardClassifications,
+  cardDomainInsertSchema,
+  cardDomainSelectSchema,
   cardDomains,
+  cardMarketplaceReferenceInsertSchema,
+  cardMarketplaceReferenceSelectSchema,
   cardMarketplaceReferences,
   cardMedia,
-  cardSets,
-  cardSupertypes,
+  cardMediaInsertSchema,
+  cardMediaSelectSchema,
+  cardOrientationSchema,
+  cardTagInsertSchema,
+  cardTagSelectSchema,
   cardTags,
-  cardTypes,
+  catalogCardInsertSchema,
+  catalogCardSelectSchema,
   catalogCards,
-  domains,
-  rarities,
-  setMarketplaceReferences,
-  tags,
 };

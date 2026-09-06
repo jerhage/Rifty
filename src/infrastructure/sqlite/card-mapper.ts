@@ -7,7 +7,7 @@ import {
   cardMediaSelectSchema,
   cardTagSelectSchema,
   catalogCardSelectSchema,
-} from "@/infrastructure/database/catalog-persistence-schemas";
+} from "@/infrastructure/database/catalog-schema/cards";
 
 interface CardPersistenceShape {
   readonly card: unknown;

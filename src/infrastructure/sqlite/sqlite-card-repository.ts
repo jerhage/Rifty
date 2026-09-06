@@ -13,7 +13,7 @@ import {
   cardMedia,
   cardTags,
   catalogCards,
-} from "@/infrastructure/database/schema";
+} from "@/infrastructure/database/catalog-schema/cards";
 
 import { toDomainCard, toDomainCardSummary } from "./card-mapper";
 import type { SqliteDatabase } from "./sqlite-database";

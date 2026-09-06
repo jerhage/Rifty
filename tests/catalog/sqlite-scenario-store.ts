@@ -11,16 +11,17 @@ import {
   cardDomains,
   cardMarketplaceReferences,
   cardMedia,
-  cardSets,
-  cardSupertypes,
   cardTags,
-  cardTypes,
   catalogCards,
+} from "@/infrastructure/database/catalog-schema/cards";
+import { cardSets, setMarketplaceReferences } from "@/infrastructure/database/catalog-schema/sets";
+import {
+  cardSupertypes,
+  cardTypes,
   domains,
   rarities,
-  setMarketplaceReferences,
   tags,
-} from "@/infrastructure/database/schema";
+} from "@/infrastructure/database/catalog-schema/taxonomy";
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
 import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
 

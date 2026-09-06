@@ -8,17 +8,18 @@ import {
   cardDomains,
   cardMarketplaceReferences,
   cardMedia,
-  cardSets,
-  cardSupertypes,
   cardTags,
-  cardTypes,
   catalogCards,
-  catalogSeedStates,
+} from "./catalog-schema/cards";
+import { catalogSeedStates } from "./catalog-schema/seed-state";
+import { cardSets, setMarketplaceReferences } from "./catalog-schema/sets";
+import {
+  cardSupertypes,
+  cardTypes,
   domains,
   rarities,
-  setMarketplaceReferences,
   tags,
-} from "./schema";
+} from "./catalog-schema/taxonomy";
 
 const CATALOG_SEED_STATE_ID = "catalog";
 // catalog_card is the widest insert (17 columns); 50 rows stays below SQLite's 999-variable limit.

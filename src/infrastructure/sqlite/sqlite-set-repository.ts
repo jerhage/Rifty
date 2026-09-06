@@ -4,6 +4,7 @@ import type { SetCode } from "@/features/catalog/value-objects/set-code";
 import type { CardSet } from "@/features/catalog/set/card-set";
 import type { SetRepository } from "@/features/catalog/set/set-repository";
 import { cardSets, setMarketplaceReferences } from "@/infrastructure/database/schema";
+import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
 
 import { toDomainCardSet } from "./set-mapper";
 import type { SqliteDatabase } from "./sqlite-database";
@@ -11,23 +12,28 @@ import type { SqliteDatabase } from "./sqlite-database";
 class SqliteSetRepository implements SetRepository {
   constructor(private readonly db: SqliteDatabase) {}
 
-  async get(code: SetCode): Promise<CardSet | null> {
+  async get(code: SetCode, { signal }: ReadOptions = {}): Promise<CardSet | null> {
+    throwIfAborted(signal);
     const [row] = await this.db.select().from(cardSets).where(eq(cardSets.code, code)).limit(1);
+    throwIfAborted(signal);
     if (!row) return null;
 
-    return (await this.toDomainCardSets([row]))[0] ?? null;
+    return (await this.toDomainCardSets([row], signal))[0] ?? null;
   }
 
-  async getAll(): Promise<readonly CardSet[]> {
+  async getAll({ signal }: ReadOptions = {}): Promise<readonly CardSet[]> {
+    throwIfAborted(signal);
     const rows = await this.db
       .select()
       .from(cardSets)
       .orderBy(asc(cardSets.publishedOn), asc(cardSets.code));
-    return this.toDomainCardSets(rows);
+    throwIfAborted(signal);
+    return this.toDomainCardSets(rows, signal);
   }
 
   private async toDomainCardSets(
     rows: readonly (typeof cardSets.$inferSelect)[],
+    signal: AbortSignal | undefined,
   ): Promise<CardSet[]> {
     if (rows.length === 0) return [];
 
@@ -41,6 +47,7 @@ class SqliteSetRepository implements SetRepository {
         ),
       )
       .orderBy(asc(setMarketplaceReferences.marketplace), asc(setMarketplaceReferences.externalId));
+    throwIfAborted(signal);
     const referencesBySetCode = references.reduce((grouped, reference) => {
       const group = grouped.get(reference.setCode);
       if (group) group.push(reference);

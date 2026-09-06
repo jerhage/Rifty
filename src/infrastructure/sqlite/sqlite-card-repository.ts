@@ -3,6 +3,7 @@ import { asc, eq, inArray } from "drizzle-orm";
 import type { Card, CardId } from "@/features/catalog/card/card";
 import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
 import { Page } from "@/shared/page";
+import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
 import type { CardRepository } from "@/features/catalog/card/card-repository";
 import {
   cardClassifications,
@@ -19,19 +20,23 @@ import type { SqliteDatabase } from "./sqlite-database";
 class SqliteCardRepository implements CardRepository {
   constructor(private readonly db: SqliteDatabase) {}
 
-  async get(id: CardId): Promise<Card | null> {
+  async get(id: CardId, { signal }: ReadOptions = {}): Promise<Card | null> {
+    throwIfAborted(signal);
     const [row] = await this.db.select().from(catalogCards).where(eq(catalogCards.id, id)).limit(1);
+    throwIfAborted(signal);
     if (!row) return null;
 
-    return (await this.toDomainCards([row]))[0] ?? null;
+    return (await this.toDomainCards([row], signal))[0] ?? null;
   }
 
-  async getPage(criteria?: CardListCriteria): Promise<Page<Card>> {
+  async getPage(criteria?: CardListCriteria, { signal }: ReadOptions = {}): Promise<Page<Card>> {
+    throwIfAborted(signal);
     const rows = await this.db
       .select()
       .from(catalogCards)
       .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id));
-    const hydratedCards = await this.toDomainCards(rows);
+    throwIfAborted(signal);
+    const hydratedCards = await this.toDomainCards(rows, signal);
     const matchingCards = criteria
       ? hydratedCards.filter((card) => matchesCriteria(card, criteria))
       : hydratedCards;
@@ -45,6 +50,7 @@ class SqliteCardRepository implements CardRepository {
 
   private async toDomainCards(
     rows: readonly (typeof catalogCards.$inferSelect)[],
+    signal: AbortSignal | undefined,
   ): Promise<Card[]> {
     if (rows.length === 0) return [];
 
@@ -74,6 +80,7 @@ class SqliteCardRepository implements CardRepository {
           asc(cardMarketplaceReferences.externalId),
         ),
     ]);
+    throwIfAborted(signal);
     const classificationsByCardId = new Map(classifications.map((row) => [row.cardId, row]));
     const mediaByCardId = new Map(media.map((row) => [row.cardId, row]));
     const domainsByCardId = groupByCardId(domains);

@@ -10,6 +10,7 @@
     "web": "expo start --web",
     "lint": "oxlint",
     "types": "tsc --noEmit",
+    "test": "jest --runInBand",
     "generate:catalog-seed": "deno run --sloppy-imports --allow-read --allow-write --allow-env ./scripts/generate-catalog-seed.ts"
   },
   "dependencies": {

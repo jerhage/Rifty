@@ -23,20 +23,20 @@ function CardDetailData({ cardFinder, cardId, children }: CardDetailDataProps) {
   const [state, setState] = useState<CardDetailDataContent>({ type: "loading" });
 
   useEffect(() => {
-    let isCurrent = true;
+    const controller = new AbortController();
     setState({ type: "loading" });
     void cardFinder
-      .get(cardId)
+      .get(cardId, { signal: controller.signal })
       .then((result) => {
-        if (!isCurrent) return;
+        if (controller.signal.aborted) return;
         setState(result ? { type: "success", card: result } : { type: "notFound" });
       })
       .catch(() => {
-        if (isCurrent) setState({ type: "loadFailed" });
+        if (!controller.signal.aborted) setState({ type: "loadFailed" });
       });
 
     return () => {
-      isCurrent = false;
+      controller.abort();
     };
   }, [cardFinder, cardId]);
 

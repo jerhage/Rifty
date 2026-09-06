@@ -1,4 +1,5 @@
 import { parseCard, type Card } from "@/features/catalog/card/card";
+import { parseCardSummary, type CardSummary } from "@/features/catalog/card/card-summary";
 import {
   cardClassificationSelectSchema,
   cardDomainSelectSchema,
@@ -73,4 +74,9 @@ function toDomainCard({
   });
 }
 
-export { toDomainCard };
+function toDomainCardSummary(card: unknown): CardSummary {
+  const persistedCard = catalogCardSelectSchema.pick({ id: true, name: true }).parse(card);
+  return parseCardSummary(persistedCard);
+}
+
+export { toDomainCard, toDomainCardSummary };

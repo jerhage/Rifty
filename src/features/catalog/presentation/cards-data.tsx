@@ -5,14 +5,14 @@ import { match } from "ts-pattern";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Spacing } from "@/constants/theme";
-import type { Card } from "@/features/catalog/card/card";
-import type { CardLister } from "@/features/catalog/card/card-lister";
+import type { CardSummaryLister } from "@/features/catalog/card/card-summary-lister";
+import type { CardSummary } from "@/features/catalog/card/card-summary";
 import { Page } from "@/shared/page";
 
 const PAGE_SIZE = 100;
 
 interface CardsDataContent {
-  readonly cards: readonly Card[];
+  readonly cards: readonly CardSummary[];
   readonly hasMore: boolean;
   readonly isRefreshing: boolean;
   readonly isLoadingMore: boolean;
@@ -23,7 +23,7 @@ interface CardsDataContent {
 }
 
 interface CardsDataProps {
-  readonly cardLister: CardLister;
+  readonly cardSummaryLister: CardSummaryLister;
   readonly children: (content: CardsDataContent) => ReactNode;
 }
 
@@ -32,12 +32,12 @@ type CardsDataState =
   | { readonly type: "loadFailed" }
   | {
       readonly type: "success";
-      readonly page: Page<Card>;
+      readonly page: Page<CardSummary>;
       readonly isLoadingMore: boolean;
       readonly loadMoreError: string | null;
     };
 
-function CardsData({ cardLister, children }: CardsDataProps) {
+function CardsData({ cardSummaryLister, children }: CardsDataProps) {
   const [state, setState] = useState<CardsDataState>({ type: "loading" });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const firstPageController = useRef<AbortController | null>(null);
@@ -51,11 +51,14 @@ function CardsData({ cardLister, children }: CardsDataProps) {
 
     return {
       controller,
-      request: cardLister.getPage({ limit: PAGE_SIZE, offset: 0 }, { signal: controller.signal }),
+      request: cardSummaryLister.getSummaryPage(
+        { limit: PAGE_SIZE, offset: 0 },
+        { signal: controller.signal },
+      ),
     };
-  }, [cardLister]);
+  }, [cardSummaryLister]);
 
-  const setLoadedFirstPage = useCallback((page: Page<Card>) => {
+  const setLoadedFirstPage = useCallback((page: Page<CardSummary>) => {
     setState({
       type: "success",
       page,
@@ -122,8 +125,8 @@ function CardsData({ cardLister, children }: CardsDataProps) {
         const controller = new AbortController();
         loadMoreController.current = controller;
         setState({ ...loadedState, isLoadingMore: true, loadMoreError: null });
-        void cardLister
-          .getPage({ limit: PAGE_SIZE, offset }, { signal: controller.signal })
+        void cardSummaryLister
+          .getSummaryPage({ limit: PAGE_SIZE, offset }, { signal: controller.signal })
           .then((page) => {
             if (controller.signal.aborted) return;
             setState((current) =>
@@ -151,7 +154,7 @@ function CardsData({ cardLister, children }: CardsDataProps) {
           });
       })
       .otherwise(() => undefined);
-  }, [cardLister, state]);
+  }, [cardSummaryLister, state]);
 
   return match(state)
     .with({ type: "loading" }, () => (

@@ -9,7 +9,7 @@ function HomeScreen() {
   const router = useRouter();
 
   return (
-    <CardsData cardLister={catalog.cards}>
+    <CardsData cardSummaryLister={catalog.cards}>
       {(content) => (
         <CardCatalogScreen
           {...content}

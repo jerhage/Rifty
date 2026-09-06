@@ -1,6 +1,7 @@
 import { asc, eq, inArray } from "drizzle-orm";
 
 import type { Card, CardId } from "@/features/catalog/card/card";
+import type { CardSummary } from "@/features/catalog/card/card-summary";
 import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
 import { Page } from "@/shared/page";
 import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
@@ -14,7 +15,7 @@ import {
   catalogCards,
 } from "@/infrastructure/database/schema";
 
-import { toDomainCard } from "./card-mapper";
+import { toDomainCard, toDomainCardSummary } from "./card-mapper";
 import type { SqliteDatabase } from "./sqlite-database";
 
 class SqliteCardRepository implements CardRepository {
@@ -27,6 +28,27 @@ class SqliteCardRepository implements CardRepository {
     if (!row) return null;
 
     return (await this.toDomainCards([row], signal))[0] ?? null;
+  }
+
+  async getSummaryPage(
+    criteria?: Pick<CardListCriteria, "limit" | "offset">,
+    { signal }: ReadOptions = {},
+  ): Promise<Page<CardSummary>> {
+    throwIfAborted(signal);
+    const offset = criteria?.offset ?? 0;
+    const limit = criteria?.limit ?? 10;
+    const rows = await this.db
+      .select({ id: catalogCards.id, name: catalogCards.name })
+      .from(catalogCards)
+      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
+      .limit(limit + 1)
+      .offset(offset);
+    throwIfAborted(signal);
+
+    return Page.create(
+      rows.slice(0, limit).map(toDomainCardSummary),
+      rows.length > limit,
+    );
   }
 
   async getPage(criteria?: CardListCriteria, { signal }: ReadOptions = {}): Promise<Page<Card>> {

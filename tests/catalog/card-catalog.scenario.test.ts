@@ -92,4 +92,17 @@ describe("card catalog scenarios", () => {
     );
     store.close();
   });
+
+  it("lists only the card data needed by the catalog screen", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    store.seedCard(card("vi", unleashed.code, { collectorNumber: 2, name: "Vi" }));
+    store.seedCard(card("jinx", unleashed.code, { collectorNumber: 1, name: "Jinx" }));
+
+    await expect(store.cards.getSummaryPage({ limit: 1, offset: 0 })).resolves.toEqual(
+      Page.create([{ id: "jinx", name: "Jinx" }], true),
+    );
+    store.close();
+  });
 });

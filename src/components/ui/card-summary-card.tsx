@@ -25,11 +25,14 @@ function CardSummaryCard({ card }: CardSummaryCardProps) {
       <ThemedText type="small" themeColor="textSecondary">
         {formatClassification(card)}
       </ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Domains: {formatDomains(card.domainIds)}
+      </ThemedText>
 
       <ThemedView style={styles.stats}>
         <Stat label="Cost" value={card.attributes.energy} />
-        <Stat label="Might" value={card.attributes.might} />
         <Stat label="Power" value={card.attributes.power} />
+        <Stat label="Might" value={card.attributes.might} />
       </ThemedView>
 
       <ThemedText type="smallBold">Abilities</ThemedText>
@@ -55,6 +58,15 @@ function formatClassification(card: Card): string {
     .map((value) => value.replaceAll("-", " "))
     .map((value) => value.replace(/\b\w/g, (letter) => letter.toUpperCase()))
     .join(" · ");
+}
+
+function formatDomains(domainIds: readonly string[]): string {
+  return domainIds.length === 0
+    ? "None"
+    : domainIds
+        .map((domainId) => domainId.replaceAll("-", " "))
+        .map((domainId) => domainId.replace(/\b\w/g, (letter) => letter.toUpperCase()))
+        .join(" · ");
 }
 
 export { CardSummaryCard };

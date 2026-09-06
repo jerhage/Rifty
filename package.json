@@ -9,7 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "oxlint",
-    "types": "tsc --noEmit"
+    "types": "tsc --noEmit",
+    "generate:catalog-seed": "node --experimental-strip-types ./scripts/generate-catalog-seed.ts"
   },
   "dependencies": {
     "@expo/ui": "~57.0.16",

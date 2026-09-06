@@ -1,5 +1,11 @@
 import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+/** Records the bundled catalog dataset currently materialized in the local database. */
+const catalogSeedStates = sqliteTable("catalog_seed_state", {
+  id: text().primaryKey(),
+  version: text().notNull(),
+});
+
 /** Catalog tables persist individual card printings and their related data. */
 const cardSets = sqliteTable(
   "card_set",
@@ -32,7 +38,8 @@ const catalogCards = sqliteTable(
   "catalog_card",
   {
     id: text().primaryKey(),
-    riftboundId: text("riftbound_id").notNull().unique(),
+    // A Riftbound ID identifies a card face; multiple printings can share it.
+    riftboundId: text("riftbound_id").notNull(),
     setCode: text("set_code")
       .notNull()
       .references(() => cardSets.code),
@@ -157,6 +164,7 @@ const cardTags = sqliteTable(
 );
 
 export {
+  catalogSeedStates,
   cardClassifications,
   cardDomains,
   cardMarketplaceReferences,

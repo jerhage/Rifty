@@ -1,5 +1,6 @@
 import type { Card } from "@/features/catalog/card/card";
 import type { CardSet } from "@/features/catalog/set/card-set";
+import { buildImageUrl } from "@/shared/image-url";
 
 function cardSet(code: string, publishedOn: string, name = code): CardSet {
   return {
@@ -49,11 +50,10 @@ function card(
     },
     domainIds: options.domainIds ?? ["chaos"],
     tagIds: options.tagIds ?? [],
-    media: {
-      imageAssetId: `image-${id}`,
-      artist: "Test Artist",
-      accessibilityText: `Card ${id}`,
-    },
+    imageUrl: buildImageUrl("0123456789abcdef0123456789abcdef01234567", {
+      width: 744,
+      height: 1039,
+    }),
     marketplaceReferences: options.marketplaceReferences ?? [
       { marketplace: "tcgplayer", externalId: `tcgplayer-${id}` },
     ],

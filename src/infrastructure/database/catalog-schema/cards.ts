@@ -58,6 +58,8 @@ const cardMedia = sqliteTable("card_media", {
     .primaryKey()
     .references(() => catalogCards.id),
   imageAssetId: text("image_asset_id").notNull(),
+  imageWidth: integer("image_width").notNull(),
+  imageHeight: integer("image_height").notNull(),
   artist: text(),
   accessibilityText: text("accessibility_text"),
 });
@@ -135,6 +137,8 @@ const cardMarketplaceReferenceInsertSchema = createInsertSchema(cardMarketplaceR
 const cardMediaSelectSchema = createSelectSchema(cardMedia);
 const cardMediaInsertSchema = createInsertSchema(cardMedia, {
   imageAssetId: (schema) => schema.trim().min(1),
+  imageWidth: (schema) => schema.int().positive(),
+  imageHeight: (schema) => schema.int().positive(),
 });
 
 const cardClassificationSelectSchema = createSelectSchema(cardClassifications);

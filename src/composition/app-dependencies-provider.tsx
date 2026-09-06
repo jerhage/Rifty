@@ -16,6 +16,7 @@ function AppDependenciesProvider({ children }: PropsWithChildren) {
         if (isCurrent) setDependencies(loadedDependencies);
       })
       .catch((caughtError: unknown) => {
+        console.error("Could not open the card catalog.", caughtError);
         if (isCurrent) setError(asError(caughtError));
       });
 

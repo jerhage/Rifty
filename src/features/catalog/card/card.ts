@@ -16,11 +16,6 @@ const cardClassificationSchema = z.object({
   supertypeId: taxonomyIdSchema.nullable(),
   rarityId: taxonomyIdSchema,
 });
-const cardMediaSchema = z.object({
-  imageAssetId: z.string().trim().min(1),
-  artist: z.string().trim().min(1).nullable(),
-  accessibilityText: z.string().trim().min(1).nullable(),
-});
 const cardSchema = z.object({
   id: cardIdSchema,
   riftboundId: z.string().trim().min(1),
@@ -42,7 +37,7 @@ const cardSchema = z.object({
   classification: cardClassificationSchema,
   domainIds: z.array(taxonomyIdSchema),
   tagIds: z.array(taxonomyIdSchema),
-  media: cardMediaSchema,
+  imageUrl: z.url(),
   marketplaceReferences: z.array(marketplaceReferenceSchema),
 });
 
@@ -53,16 +48,14 @@ function parseCard(value: unknown): Card {
 type CardId = z.output<typeof cardIdSchema>;
 type CardAttributes = z.output<typeof cardAttributesSchema>;
 type CardClassification = z.output<typeof cardClassificationSchema>;
-type CardMedia = z.output<typeof cardMediaSchema>;
 type Card = z.output<typeof cardSchema>;
 
 export {
   cardAttributesSchema,
   cardClassificationSchema,
   cardIdSchema,
-  cardMediaSchema,
   cardOrientationSchema,
   cardSchema,
   parseCard,
 };
-export type { Card, CardAttributes, CardClassification, CardId, CardMedia };
+export type { Card, CardAttributes, CardClassification, CardId };

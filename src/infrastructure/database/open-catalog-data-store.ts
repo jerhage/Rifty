@@ -13,9 +13,25 @@ const CATALOG_DATABASE_NAME = "catalog.db";
 async function openCatalogDataStore(): Promise<CatalogDataStore> {
   const database = SQLite.openDatabaseSync(CATALOG_DATABASE_NAME);
   await database.execAsync("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;");
-  await migrate(drizzle(database), migrations);
-  await ensureCatalogSeeded(database);
+  try {
+    await migrate(drizzle(database), migrations);
+  } catch (error) {
+    throw new Error(`Could not migrate the card catalog database: ${errorMessage(error)}`, {
+      cause: error,
+    });
+  }
+  try {
+    await ensureCatalogSeeded(database);
+  } catch (error) {
+    throw new Error(`Could not seed the card catalog database: ${errorMessage(error)}`, {
+      cause: error,
+    });
+  }
   return createCatalogDataStore(database);
+}
+
+function errorMessage(value: unknown): string {
+  return value instanceof Error ? value.message : String(value);
 }
 
 export { CATALOG_DATABASE_NAME, openCatalogDataStore };

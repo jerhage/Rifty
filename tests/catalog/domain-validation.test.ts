@@ -5,14 +5,14 @@ import { parseCardSet } from "@/features/catalog/set/card-set";
 import { card, cardSet } from "./fixtures";
 
 describe("catalog domain validation", () => {
-  it("rejects a card without a source identity or image asset reference", () => {
+  it("rejects a card without a source identity or image URL", () => {
     expect(() => parseCard({ ...card("vi", "UNL"), id: " " })).toThrow("Too small");
     expect(() =>
       parseCard({
         ...card("vi", "UNL"),
-        media: { imageAssetId: "", artist: null, accessibilityText: null },
+        imageUrl: "",
       }),
-    ).toThrow("Too small");
+    ).toThrow("Invalid URL");
   });
 
   it("rejects invalid analysis criteria and malformed set metadata", () => {

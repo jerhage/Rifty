@@ -24,6 +24,7 @@ import {
 } from "@/infrastructure/database/catalog-schema/taxonomy";
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
 import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
+import { parseImageUrl } from "@/shared/image-url";
 
 interface SqliteScenarioStore extends CatalogDataStore {
   close(): void;
@@ -124,13 +125,16 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         rarityId: card.classification.rarityId,
       })
       .run();
+    const image = parseImageUrl(card.imageUrl);
     database
       .insert(cardMedia)
       .values({
         cardId: card.id,
-        imageAssetId: card.media.imageAssetId,
-        artist: card.media.artist,
-        accessibilityText: card.media.accessibilityText,
+        imageAssetId: image.assetId,
+        imageWidth: image.dimensions.width,
+        imageHeight: image.dimensions.height,
+        artist: null,
+        accessibilityText: null,
       })
       .run();
 

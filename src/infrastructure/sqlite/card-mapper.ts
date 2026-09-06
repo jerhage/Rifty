@@ -8,6 +8,7 @@ import {
   cardTagSelectSchema,
   catalogCardSelectSchema,
 } from "@/infrastructure/database/catalog-schema/cards";
+import { buildImageUrl } from "@/shared/image-url";
 
 interface CardPersistenceShape {
   readonly card: unknown;
@@ -59,11 +60,10 @@ function toDomainCard({
     },
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     tagIds: tags.map((tag) => cardTagSelectSchema.parse(tag).tagId),
-    media: {
-      imageAssetId: persistedMedia.imageAssetId,
-      artist: persistedMedia.artist,
-      accessibilityText: persistedMedia.accessibilityText,
-    },
+    imageUrl: buildImageUrl(persistedMedia.imageAssetId, {
+      width: persistedMedia.imageWidth,
+      height: persistedMedia.imageHeight,
+    }),
     marketplaceReferences: marketplaceReferences.map((reference) => {
       const persistedReference = cardMarketplaceReferenceSelectSchema.parse(reference);
       return {

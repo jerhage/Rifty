@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { z } from "zod/v4";
+import { parseImageUrl } from "../src/shared/image-url";
 
 import {
   cardClassificationInsertSchema,
@@ -235,9 +236,12 @@ function buildSeed(cards: readonly RawCard[], sets: readonly RawSet[]): Seed {
       supertypeId: card.classification.supertype ?? null,
       rarityId: card.classification.rarity,
     });
+    const image = parseImageUrl(card.media.image_url);
     cardMedia.push({
       cardId: card.id,
-      imageAssetId: card.media.image_url,
+      imageAssetId: image.assetId,
+      imageWidth: image.dimensions.width,
+      imageHeight: image.dimensions.height,
       artist: card.media.artist ?? null,
       accessibilityText: card.media.accessibility_text ?? null,
     });

@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CardSummaryCard } from "@/components/ui/card-summary-card";
@@ -11,15 +11,18 @@ import type { CardsDataContent } from "./cards-data";
 function CardCatalogScreen({
   cards,
   hasMore,
+  isRefreshing,
   isLoadingMore,
   loadMoreError,
   loadMore,
+  refresh,
   retryLoadMore,
 }: CardsDataContent) {
   const insets = useSafeAreaInsets();
 
   return (
     <ScrollView
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} />}
       style={styles.scrollView}
       contentContainerStyle={[
         styles.content,
@@ -31,6 +34,7 @@ function CardCatalogScreen({
         },
       ]}
     >
+      {isRefreshing && <ActivityIndicator />}
       <ThemedView style={styles.container}>
         <ThemedView style={styles.header}>
           <ThemedText type="subtitle">Riftbound Cards</ThemedText>

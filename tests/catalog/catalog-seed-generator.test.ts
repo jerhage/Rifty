@@ -7,7 +7,7 @@ const projectRoot = process.cwd();
 const generator = join(projectRoot, "scripts/generate-catalog-seed.ts");
 
 function runGenerator(environment: Partial<NodeJS.ProcessEnv> = {}): string {
-  return execFileSync("node", ["--experimental-strip-types", generator], {
+  return execFileSync("deno", ["run", "--sloppy-imports", "--allow-read", "--allow-write", "--allow-env", generator], {
     cwd: projectRoot,
     encoding: "utf8",
     env: { ...process.env, ...environment },

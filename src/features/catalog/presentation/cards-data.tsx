@@ -13,9 +13,11 @@ const PAGE_SIZE = 10;
 interface CardsDataContent {
   readonly cards: readonly Card[];
   readonly hasMore: boolean;
+  readonly isRefreshing: boolean;
   readonly isLoadingMore: boolean;
   readonly loadMoreError: string | null;
   loadMore(): void;
+  refresh(): void;
   retryLoadMore(): void;
 }
 
@@ -36,6 +38,7 @@ type CardsDataState =
 
 function CardsData({ cardLister, children }: CardsDataProps) {
   const [state, setState] = useState<CardsDataState>({ type: "loading" });
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchFirstPage = useCallback(
     () => cardLister.getPage({ limit: PAGE_SIZE, offset: 0 }),
@@ -58,6 +61,16 @@ function CardsData({ cardLister, children }: CardsDataProps) {
         setLoadedFirstPage(page);
       })
       .catch(() => setState({ type: "loadFailed" }));
+  }, [fetchFirstPage, setLoadedFirstPage]);
+
+  const refresh = useCallback(() => {
+    setIsRefreshing(true);
+    void fetchFirstPage()
+      .then(setLoadedFirstPage)
+      .catch(() => {
+        // Keep the currently displayed page available when a refresh fails.
+      })
+      .finally(() => setIsRefreshing(false));
   }, [fetchFirstPage, setLoadedFirstPage]);
 
   useEffect(() => {
@@ -125,9 +138,11 @@ function CardsData({ cardLister, children }: CardsDataProps) {
   return children({
     cards: state.page.items,
     hasMore: state.page.hasMore,
+    isRefreshing,
     isLoadingMore: state.isLoadingMore,
     loadMoreError: state.loadMoreError,
     loadMore,
+    refresh,
     retryLoadMore: loadMore,
   });
 }

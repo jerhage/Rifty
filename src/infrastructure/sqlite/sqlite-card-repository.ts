@@ -1,6 +1,10 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray, sql } from "drizzle-orm";
 
 import type { Card, CardId } from "@/features/catalog/card/card";
+import {
+  normalizeCardDomainSelection,
+  type CardDomainSelection,
+} from "@/features/catalog/card/card-domain-selection";
 import type { CardSummary } from "@/features/catalog/card/card-summary";
 import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
 import { Page } from "@/shared/page";
@@ -45,9 +49,21 @@ class SqliteCardRepository implements CardRepository {
       .offset(offset);
     throwIfAborted(signal);
 
+    return Page.create(rows.slice(0, limit).map(toDomainCardSummary), rows.length > limit);
+  }
+
+  async getSummaryPageForDomains(
+    domains: CardDomainSelection,
+    criteria?: Pick<CardListCriteria, "limit" | "offset">,
+    { signal }: ReadOptions = {},
+  ): Promise<Page<CardSummary>> {
+    const rows = await this.rowsForDomains(domains, signal);
+    const offset = criteria?.offset ?? 0;
+    const limit = criteria?.limit ?? 10;
+
     return Page.create(
-      rows.slice(0, limit).map(toDomainCardSummary),
-      rows.length > limit,
+      rows.slice(offset, offset + limit).map(toDomainCardSummary),
+      offset + limit < rows.length,
     );
   }
 
@@ -68,6 +84,50 @@ class SqliteCardRepository implements CardRepository {
     const pageCards = matchingCards.slice(offset, offset + limit);
 
     return Page.create(pageCards, offset + pageCards.length < matchingCards.length);
+  }
+
+  async getPageForDomains(
+    domains: CardDomainSelection,
+    criteria?: Pick<CardListCriteria, "limit" | "offset">,
+    { signal }: ReadOptions = {},
+  ): Promise<Page<Card>> {
+    const rows = await this.rowsForDomains(domains, signal);
+    const cards = await this.toDomainCards(rows, signal);
+    const offset = criteria?.offset ?? 0;
+    const limit = criteria?.limit ?? 10;
+    const pageCards = cards.slice(offset, offset + limit);
+
+    return Page.create(pageCards, offset + pageCards.length < cards.length);
+  }
+
+  private async rowsForDomains(
+    selection: CardDomainSelection,
+    signal: AbortSignal | undefined,
+  ): Promise<(typeof catalogCards.$inferSelect)[]> {
+    throwIfAborted(signal);
+    const domainIds = normalizeCardDomainSelection(selection);
+    const matchingCardIds = await this.db
+      .select({ cardId: cardDomains.cardId })
+      .from(cardDomains)
+      .where(inArray(cardDomains.domainId, domainIds))
+      .groupBy(cardDomains.cardId)
+      .having(sql`count(*) = ${domainIds.length}`);
+    throwIfAborted(signal);
+    if (matchingCardIds.length === 0) return [];
+
+    const rows = await this.db
+      .select()
+      .from(catalogCards)
+      .where(
+        inArray(
+          catalogCards.id,
+          matchingCardIds.map(({ cardId }) => cardId),
+        ),
+      )
+      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id));
+    throwIfAborted(signal);
+
+    return rows;
   }
 
   private async toDomainCards(

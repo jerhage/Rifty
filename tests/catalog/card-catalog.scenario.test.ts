@@ -105,4 +105,30 @@ describe("card catalog scenarios", () => {
     );
     store.close();
   });
+
+  it("gets cards belonging to one or every selected domain", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const fury = card("fury", unleashed.code, { collectorNumber: 1, domainIds: ["fury"] });
+    const furyOrder = card("fury-order", unleashed.code, {
+      collectorNumber: 2,
+      domainIds: ["fury", "order"],
+    });
+    const order = card("order", unleashed.code, { collectorNumber: 3, domainIds: ["order"] });
+    store.seedCard(fury);
+    store.seedCard(furyOrder);
+    store.seedCard(order);
+
+    await expect(store.cards.getPageForDomains("fury")).resolves.toEqual(
+      Page.create([fury, furyOrder], false),
+    );
+    await expect(store.cards.getPageForDomains(["fury", "order"])).resolves.toEqual(
+      Page.create([furyOrder], false),
+    );
+    await expect(store.cards.getSummaryPageForDomains(["fury", "order"])).resolves.toEqual(
+      Page.create([{ id: furyOrder.id, name: furyOrder.name }], false),
+    );
+    store.close();
+  });
 });

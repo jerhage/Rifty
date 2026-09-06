@@ -1,7 +1,6 @@
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CardSummaryCard } from "@/components/ui/card-summary-card";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
@@ -17,7 +16,8 @@ function CardCatalogScreen({
   loadMore,
   refresh,
   retryLoadMore,
-}: CardsDataContent) {
+  onSelectCard,
+}: CardsDataContent & { readonly onSelectCard: (id: string) => void }) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -44,7 +44,11 @@ function CardCatalogScreen({
         </ThemedView>
 
         {cards.map((card) => (
-          <CardSummaryCard key={card.id} card={card} />
+          <Pressable key={card.id} onPress={() => onSelectCard(card.id)}>
+            <ThemedView type="backgroundElement" style={styles.card}>
+              <ThemedText type="subtitle">{card.name}</ThemedText>
+            </ThemedView>
+          </Pressable>
         ))}
 
         {loadMoreError ? (
@@ -111,6 +115,10 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.one,
     paddingBottom: Spacing.two,
+  },
+  card: {
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
   },
   loadMoreSection: {
     alignItems: "center",

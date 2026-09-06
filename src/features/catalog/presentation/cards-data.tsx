@@ -1,5 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -89,62 +90,69 @@ function CardsData({ cardLister, children }: CardsDataProps) {
   }, [fetchFirstPage, setLoadedFirstPage]);
 
   const loadMore = useCallback(() => {
-    if (state.type !== "success" || state.isLoadingMore || !state.page.hasMore) return;
-
-    const offset = state.page.items.length;
-    setState({ ...state, isLoadingMore: true, loadMoreError: null });
-    void cardLister
-      .getPage({ limit: PAGE_SIZE, offset })
-      .then((page) => {
-        setState((current) =>
-          current.type === "success"
-            ? {
-                type: "success",
-                page: current.page.append(page),
-                isLoadingMore: false,
-                loadMoreError: null,
-              }
-            : current,
-        );
-      })
-      .catch(() => {
-        setState((current) =>
-          current.type === "success"
-            ? { ...current, isLoadingMore: false, loadMoreError: "Could not load more cards." }
-            : current,
-        );
-      });
+    match(state)
+      .with(
+        { type: "success", isLoadingMore: false, page: { hasMore: true } },
+        (loadedState) => {
+          const offset = loadedState.page.items.length;
+          setState({ ...loadedState, isLoadingMore: true, loadMoreError: null });
+          void cardLister
+            .getPage({ limit: PAGE_SIZE, offset })
+            .then((page) => {
+              setState((current) =>
+                match(current)
+                  .with({ type: "success" }, (successfulState) => ({
+                    type: "success" as const,
+                    page: successfulState.page.append(page),
+                    isLoadingMore: false,
+                    loadMoreError: null,
+                  }))
+                  .otherwise(() => current),
+              );
+            })
+            .catch(() => {
+              setState((current) =>
+                match(current)
+                  .with({ type: "success" }, (successfulState) => ({
+                    ...successfulState,
+                    isLoadingMore: false,
+                    loadMoreError: "Could not load more cards.",
+                  }))
+                  .otherwise(() => current),
+              );
+            });
+        },
+      )
+      .otherwise(() => undefined);
   }, [cardLister, state]);
 
-  if (state.type === "loading") {
-    return (
+  return match(state)
+    .with({ type: "loading" }, () => (
       <ThemedView style={styles.centered}>
         <ActivityIndicator />
       </ThemedView>
-    );
-  }
-
-  if (state.type === "loadFailed") {
-    return (
+    ))
+    .with({ type: "loadFailed" }, () => (
       <ThemedView style={styles.centered}>
         <ThemedText>Could not load cards.</ThemedText>
         <Pressable onPress={retryFirstPage} style={styles.retryButton}>
           <ThemedText type="linkPrimary">Try again</ThemedText>
         </Pressable>
       </ThemedView>
-    );
-  }
-
-  return children({
-    cards: state.page.items,
-    hasMore: state.page.hasMore,
-    isRefreshing,
-    isLoadingMore: state.isLoadingMore,
-    loadMoreError: state.loadMoreError,
-    loadMore,
-    refresh,
-    retryLoadMore: loadMore,
-  });
+    ))
+    .with({ type: "success" }, (loadedState) =>
+      children({
+        cards: loadedState.page.items,
+        hasMore: loadedState.page.hasMore,
+        isRefreshing,
+        isLoadingMore: loadedState.isLoadingMore,
+        loadMoreError: loadedState.loadMoreError,
+        loadMore,
+        refresh,
+        retryLoadMore: loadMore,
+      }),
+    )
+    .exhaustive();
 }
 
 export { CardsData };

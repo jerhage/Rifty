@@ -112,6 +112,7 @@ describe("card catalog scenarios", () => {
         [
           {
             id: jinx.id,
+            riftboundId: jinx.riftboundId,
             domainIds: jinx.domainIds,
             imageUrl: jinx.imageUrl,
             name: jinx.name,
@@ -249,6 +250,7 @@ describe("card catalog scenarios", () => {
         [
           {
             id: kaisa.id,
+            riftboundId: kaisa.riftboundId,
             domainIds: kaisa.domainIds,
             imageUrl: kaisa.imageUrl,
             name: kaisa.name,
@@ -290,6 +292,7 @@ describe("card catalog scenarios", () => {
         [
           {
             id: drawnName.id,
+            riftboundId: drawnName.riftboundId,
             domainIds: drawnName.domainIds,
             imageUrl: drawnName.imageUrl,
             name: drawnName.name,
@@ -306,6 +309,7 @@ describe("card catalog scenarios", () => {
         [
           {
             id: drawSpell.id,
+            riftboundId: drawSpell.riftboundId,
             domainIds: drawSpell.domainIds,
             imageUrl: drawSpell.imageUrl,
             name: drawSpell.name,
@@ -322,6 +326,7 @@ describe("card catalog scenarios", () => {
         [
           {
             id: drawnName.id,
+            riftboundId: drawnName.riftboundId,
             domainIds: drawnName.domainIds,
             imageUrl: drawnName.imageUrl,
             name: drawnName.name,
@@ -329,6 +334,7 @@ describe("card catalog scenarios", () => {
           },
           {
             id: drawSpell.id,
+            riftboundId: drawSpell.riftboundId,
             domainIds: drawSpell.domainIds,
             imageUrl: drawSpell.imageUrl,
             name: drawSpell.name,
@@ -366,6 +372,7 @@ describe("card catalog scenarios", () => {
         [
           {
             id: furyOrder.id,
+            riftboundId: furyOrder.riftboundId,
             domainIds: furyOrder.domainIds,
             imageUrl: furyOrder.imageUrl,
             name: furyOrder.name,

@@ -71,6 +71,7 @@ class SqliteCardRepository implements CardRepository {
       .select({
         card: {
           id: catalogCards.id,
+          riftboundId: catalogCards.riftboundId,
           name: catalogCards.name,
           orientation: catalogCards.orientation,
         },

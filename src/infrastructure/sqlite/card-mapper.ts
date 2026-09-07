@@ -84,7 +84,7 @@ function toDomainCardSummary({
   readonly media: unknown;
 }): CardSummary {
   const persistedCard = catalogCardSelectSchema
-    .pick({ id: true, name: true, orientation: true })
+    .pick({ id: true, riftboundId: true, name: true, orientation: true })
     .parse(card);
   const persistedMedia = cardMediaSelectSchema
     .pick({ imageAssetId: true, imageHeight: true, imageWidth: true })
@@ -92,6 +92,7 @@ function toDomainCardSummary({
 
   return parseCardSummary({
     id: persistedCard.id,
+    riftboundId: persistedCard.riftboundId,
     name: persistedCard.name,
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     orientation: persistedCard.orientation,

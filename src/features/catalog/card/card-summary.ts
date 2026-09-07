@@ -5,6 +5,7 @@ import { cardIdSchema, cardOrientationSchema } from "./card";
 
 const cardSummarySchema = z.object({
   id: cardIdSchema,
+  riftboundId: z.string().trim().min(1),
   name: z.string().trim().min(1),
   domainIds: z.array(cardDomainSchema),
   orientation: cardOrientationSchema,

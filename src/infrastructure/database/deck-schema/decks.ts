@@ -1,17 +1,8 @@
 import { sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { check, index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { z } from "zod/v4";
 
-/** A deck section is structural data, not a statement that its contents are tournament legal. */
-const deckSectionSchema = z.enum([
-  "legend",
-  "chosenChampion",
-  "mainDeck",
-  "runeDeck",
-  "battlefield",
-  "sideboard",
-]);
+import { deckSectionSchema } from "@/features/deck/deck/deck";
 
 /** Locally-created deck metadata. Accounts and ownership are intentionally out of scope. */
 const decks = sqliteTable(

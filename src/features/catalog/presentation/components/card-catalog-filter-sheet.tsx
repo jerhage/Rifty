@@ -132,7 +132,13 @@ function CardCatalogFilterSheet({
   );
 }
 
-function FilterSection({ children, title }: { readonly children: ReactNode; readonly title: string }) {
+function FilterSection({
+  children,
+  title,
+}: {
+  readonly children: ReactNode;
+  readonly title: string;
+}) {
   return (
     <View style={styles.section}>
       <ThemedText type="smallBold">{title}</ThemedText>
@@ -182,7 +188,10 @@ function ChoiceButton({
 }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type={selected ? "backgroundSelected" : "backgroundElement"} style={styles.choice}>
+      <ThemedView
+        type={selected ? "backgroundSelected" : "backgroundElement"}
+        style={styles.choice}
+      >
         <ThemedText type="smallBold">{label}</ThemedText>
       </ThemedView>
     </Pressable>
@@ -200,7 +209,10 @@ function ActionButton({
 }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type={secondary ? "backgroundElement" : "backgroundSelected"} style={styles.action}>
+      <ThemedView
+        type={secondary ? "backgroundElement" : "backgroundSelected"}
+        style={styles.action}
+      >
         <ThemedText type="smallBold">{label}</ThemedText>
       </ThemedView>
     </Pressable>
@@ -215,7 +227,10 @@ function toggleDomain(criteria: CatalogQueryCriteria, domainId: CardDomain): Cat
   return { ...criteria, domainIds: toggleId(criteria.domainIds, domainId) };
 }
 
-function toggleId<Id extends string>(selectedIds: readonly Id[] | undefined, id: Id): Id[] | undefined {
+function toggleId<Id extends string>(
+  selectedIds: readonly Id[] | undefined,
+  id: Id,
+): Id[] | undefined {
   const currentIds = selectedIds ?? [];
   const nextIds = currentIds.includes(id)
     ? currentIds.filter((selectedId) => selectedId !== id)

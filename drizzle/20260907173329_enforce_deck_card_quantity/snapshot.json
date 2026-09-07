@@ -2,9 +2,7 @@
   "version": "7",
   "dialect": "sqlite",
   "id": "1c1a166d-6a50-49fe-b8c5-a3e469ba9605",
-  "prevIds": [
-    "3ba5e26d-06d1-4be6-8768-215186ca2141"
-  ],
+  "prevIds": ["3ba5e26d-06d1-4be6-8768-215186ca2141"],
   "ddl": [
     {
       "name": "card_classification",
@@ -711,13 +709,9 @@
       "table": "deck"
     },
     {
-      "columns": [
-        "card_id"
-      ],
+      "columns": ["card_id"],
       "tableTo": "catalog_card",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -726,13 +720,9 @@
       "table": "card_classification"
     },
     {
-      "columns": [
-        "type_id"
-      ],
+      "columns": ["type_id"],
       "tableTo": "card_type",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -741,13 +731,9 @@
       "table": "card_classification"
     },
     {
-      "columns": [
-        "supertype_id"
-      ],
+      "columns": ["supertype_id"],
       "tableTo": "card_supertype",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -756,13 +742,9 @@
       "table": "card_classification"
     },
     {
-      "columns": [
-        "rarity_id"
-      ],
+      "columns": ["rarity_id"],
       "tableTo": "rarity",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -771,13 +753,9 @@
       "table": "card_classification"
     },
     {
-      "columns": [
-        "card_id"
-      ],
+      "columns": ["card_id"],
       "tableTo": "catalog_card",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -786,13 +764,9 @@
       "table": "card_domain"
     },
     {
-      "columns": [
-        "domain_id"
-      ],
+      "columns": ["domain_id"],
       "tableTo": "domain",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -801,13 +775,9 @@
       "table": "card_domain"
     },
     {
-      "columns": [
-        "card_id"
-      ],
+      "columns": ["card_id"],
       "tableTo": "catalog_card",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -816,13 +786,9 @@
       "table": "card_marketplace_reference"
     },
     {
-      "columns": [
-        "card_id"
-      ],
+      "columns": ["card_id"],
       "tableTo": "catalog_card",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -831,13 +797,9 @@
       "table": "card_media"
     },
     {
-      "columns": [
-        "card_id"
-      ],
+      "columns": ["card_id"],
       "tableTo": "catalog_card",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -846,13 +808,9 @@
       "table": "card_tag"
     },
     {
-      "columns": [
-        "tag_id"
-      ],
+      "columns": ["tag_id"],
       "tableTo": "tag",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -861,13 +819,9 @@
       "table": "card_tag"
     },
     {
-      "columns": [
-        "set_code"
-      ],
+      "columns": ["set_code"],
       "tableTo": "card_set",
-      "columnsTo": [
-        "code"
-      ],
+      "columnsTo": ["code"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -876,13 +830,9 @@
       "table": "catalog_card"
     },
     {
-      "columns": [
-        "set_code"
-      ],
+      "columns": ["set_code"],
       "tableTo": "card_set",
-      "columnsTo": [
-        "code"
-      ],
+      "columnsTo": ["code"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "nameExplicit": false,
@@ -891,13 +841,9 @@
       "table": "set_marketplace_reference"
     },
     {
-      "columns": [
-        "deck_id"
-      ],
+      "columns": ["deck_id"],
       "tableTo": "deck",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "nameExplicit": false,
@@ -906,152 +852,112 @@
       "table": "deck_card"
     },
     {
-      "columns": [
-        "card_id",
-        "domain_id"
-      ],
+      "columns": ["card_id", "domain_id"],
       "nameExplicit": false,
       "name": "card_domain_pk",
       "entityType": "pks",
       "table": "card_domain"
     },
     {
-      "columns": [
-        "card_id",
-        "marketplace",
-        "external_id"
-      ],
+      "columns": ["card_id", "marketplace", "external_id"],
       "nameExplicit": false,
       "name": "card_marketplace_reference_pk",
       "entityType": "pks",
       "table": "card_marketplace_reference"
     },
     {
-      "columns": [
-        "card_id",
-        "tag_id"
-      ],
+      "columns": ["card_id", "tag_id"],
       "nameExplicit": false,
       "name": "card_tag_pk",
       "entityType": "pks",
       "table": "card_tag"
     },
     {
-      "columns": [
-        "set_code",
-        "marketplace",
-        "external_id"
-      ],
+      "columns": ["set_code", "marketplace", "external_id"],
       "nameExplicit": false,
       "name": "set_marketplace_reference_pk",
       "entityType": "pks",
       "table": "set_marketplace_reference"
     },
     {
-      "columns": [
-        "deck_id",
-        "section",
-        "card_riftbound_id"
-      ],
+      "columns": ["deck_id", "section", "card_riftbound_id"],
       "nameExplicit": false,
       "name": "deck_card_pk",
       "entityType": "pks",
       "table": "deck_card"
     },
     {
-      "columns": [
-        "card_id"
-      ],
+      "columns": ["card_id"],
       "nameExplicit": false,
       "name": "card_classification_pk",
       "table": "card_classification",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "card_id"
-      ],
+      "columns": ["card_id"],
       "nameExplicit": false,
       "name": "card_media_pk",
       "table": "card_media",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "catalog_card_pk",
       "table": "catalog_card",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "catalog_seed_state_pk",
       "table": "catalog_seed_state",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "code"
-      ],
+      "columns": ["code"],
       "nameExplicit": false,
       "name": "card_set_pk",
       "table": "card_set",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "card_supertype_pk",
       "table": "card_supertype",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "card_type_pk",
       "table": "card_type",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "domain_pk",
       "table": "domain",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "rarity_pk",
       "table": "rarity",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "tag_pk",
       "table": "tag",
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "deck_pk",
       "table": "deck",
@@ -1228,54 +1134,42 @@
       "table": "deck"
     },
     {
-      "columns": [
-        "source_id"
-      ],
+      "columns": ["source_id"],
       "nameExplicit": false,
       "name": "card_set_source_id_unique",
       "entityType": "uniques",
       "table": "card_set"
     },
     {
-      "columns": [
-        "name"
-      ],
+      "columns": ["name"],
       "nameExplicit": false,
       "name": "card_supertype_name_unique",
       "entityType": "uniques",
       "table": "card_supertype"
     },
     {
-      "columns": [
-        "name"
-      ],
+      "columns": ["name"],
       "nameExplicit": false,
       "name": "card_type_name_unique",
       "entityType": "uniques",
       "table": "card_type"
     },
     {
-      "columns": [
-        "name"
-      ],
+      "columns": ["name"],
       "nameExplicit": false,
       "name": "domain_name_unique",
       "entityType": "uniques",
       "table": "domain"
     },
     {
-      "columns": [
-        "name"
-      ],
+      "columns": ["name"],
       "nameExplicit": false,
       "name": "rarity_name_unique",
       "entityType": "uniques",
       "table": "rarity"
     },
     {
-      "columns": [
-        "name"
-      ],
+      "columns": ["name"],
       "nameExplicit": false,
       "name": "tag_name_unique",
       "entityType": "uniques",

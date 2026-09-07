@@ -10,10 +10,7 @@ function CardSummaryPageFooter({
   isLoadingMore,
   loadMoreError,
   retryLoadMore,
-}: Pick<
-  CardsDataContent,
-  "isLoadingMore" | "loadMoreError" | "retryLoadMore"
->) {
+}: Pick<CardsDataContent, "isLoadingMore" | "loadMoreError" | "retryLoadMore">) {
   if (loadMoreError) {
     return (
       <ThemedView style={styles.loadMoreSection}>

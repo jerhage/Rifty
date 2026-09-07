@@ -71,11 +71,7 @@ function formatTaxonomyId(value: string): string {
 }
 
 function formatDomains(domainIds: readonly string[]): string {
-  return domainIds.length === 0
-    ? "None"
-    : domainIds
-        .map(formatTaxonomyId)
-        .join(" · ");
+  return domainIds.length === 0 ? "None" : domainIds.map(formatTaxonomyId).join(" · ");
 }
 
 export { CardSummaryCard };

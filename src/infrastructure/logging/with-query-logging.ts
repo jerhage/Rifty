@@ -27,7 +27,7 @@ function withQueryLogging<T extends object>(target: T, logger: Logger, label: st
           const result = await original.apply(object, args);
           logger.info(`${method} succeeded`, {
             durationMs: performance.now() - startedAt,
-            resultCount: Array.isArray(result) ? result.length : undefined,
+            resultCount: resultCount(result),
           });
           return result;
         } catch (error) {
@@ -40,6 +40,23 @@ function withQueryLogging<T extends object>(target: T, logger: Logger, label: st
       };
     },
   });
+}
+
+function resultCount(result: unknown): number {
+  if (Array.isArray(result)) return result.length;
+  if (hasPageItems(result)) return result.items.length;
+  if (result === null || result === undefined) return 0;
+
+  return 1;
+}
+
+function hasPageItems(result: unknown): result is { readonly items: readonly unknown[] } {
+  return (
+    typeof result === "object" &&
+    result !== null &&
+    "items" in result &&
+    Array.isArray(result.items)
+  );
 }
 
 export { withQueryLogging };

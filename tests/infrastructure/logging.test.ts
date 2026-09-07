@@ -2,6 +2,7 @@ import type { Logger, LogMetadata } from "@/application/ports/logger";
 import { DrizzleLoggerAdapter } from "@/infrastructure/drizzle/drizzle-logger-adapter";
 import { NoopLogger } from "@/infrastructure/logging/noop-logger";
 import { withQueryLogging } from "@/infrastructure/logging/with-query-logging";
+import { Page } from "@/shared/page";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -91,6 +92,46 @@ describe("query logging", () => {
         },
       },
     ]);
+  });
+
+  it("counts items in a paged repository result", async () => {
+    const logger = new MemoryLogger();
+    const repository = withQueryLogging(
+      {
+        async getPage() {
+          return Page.create(["one", "two"], true);
+        },
+      },
+      logger,
+      "ExampleRepository",
+    );
+
+    await repository.getPage();
+
+    expect(logger.entries.at(1)).toEqual({
+      level: "info",
+      message: "ExampleRepository.getPage succeeded",
+      metadata: { durationMs: expect.any(Number), resultCount: 2 },
+    });
+  });
+
+  it("counts one found record and zero absent records", async () => {
+    const logger = new MemoryLogger();
+    const repository = withQueryLogging(
+      {
+        async get(found: boolean): Promise<{ readonly id: string } | null> {
+          return found ? { id: "card-1" } : null;
+        },
+      },
+      logger,
+      "ExampleRepository",
+    );
+
+    await repository.get(true);
+    await repository.get(false);
+
+    expect(logger.entries.at(1)?.metadata).toMatchObject({ resultCount: 1 });
+    expect(logger.entries.at(3)?.metadata).toMatchObject({ resultCount: 0 });
   });
 
   it("adapts Drizzle query logging without adding a duration", () => {

@@ -9,7 +9,7 @@ function CardDetailRoute() {
   const { catalog } = useAppDependencies();
 
   return (
-    <CardDetailData cardFinder={catalog.cards} cardId={id}>
+    <CardDetailData cardFinder={catalog.cardRepository} cardId={id}>
       {(card) => <CardDetailScreen card={card} />}
     </CardDetailData>
   );

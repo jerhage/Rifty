@@ -5,8 +5,8 @@ import { ConsoleLogger } from "@/infrastructure/logging/console-logger";
 import { withQueryLogging } from "@/infrastructure/logging/with-query-logging";
 
 interface CatalogDependencies {
-  readonly cards: CardRepository;
-  readonly sets: SetRepository;
+  readonly cardRepository: CardRepository;
+  readonly setRepository: SetRepository;
 }
 
 interface AppDependencies {
@@ -18,8 +18,8 @@ async function createAppDependencies(): Promise<AppDependencies> {
   const store = await openCatalogDataStore(logger);
   return {
     catalog: {
-      cards: withQueryLogging(store.cards, logger, "CardRepository"),
-      sets: withQueryLogging(store.sets, logger, "SetRepository"),
+      cardRepository: withQueryLogging(store.cards, logger, "CardRepository"),
+      setRepository: withQueryLogging(store.sets, logger, "SetRepository"),
     },
   };
 }

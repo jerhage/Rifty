@@ -13,7 +13,7 @@ function HomeScreen() {
   const { catalog } = useAppDependencies();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const catalogQuery = useCatalogQuery(catalog.cards);
+  const catalogQuery = useCatalogQuery(catalog.cardRepository);
 
   return (
     <>
@@ -29,7 +29,7 @@ function HomeScreen() {
           />
         )}
       </CardsData>
-      <CardSetsData setLister={catalog.sets}>
+      <CardSetsData setLister={catalog.setRepository}>
         {(cardSets) => (
           <CardCatalogFilterSheet
             cardSets={cardSets}

@@ -1,4 +1,4 @@
-import { asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 
 import type { Card, CardId } from "@/features/catalog/card/card";
 import {
@@ -38,26 +38,7 @@ class SqliteCardRepository implements CardRepository {
     criteria?: Pick<CardListCriteria, "limit" | "offset">,
     { signal }: ReadOptions = {},
   ): Promise<Page<CardSummary>> {
-    throwIfAborted(signal);
-    const offset = criteria?.offset ?? 0;
-    const limit = criteria?.limit ?? 10;
-    const rows = await this.db
-      .select({
-        card: { id: catalogCards.id, name: catalogCards.name },
-        media: {
-          imageAssetId: cardMedia.imageAssetId,
-          imageHeight: cardMedia.imageHeight,
-          imageWidth: cardMedia.imageWidth,
-        },
-      })
-      .from(catalogCards)
-      .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
-      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
-      .limit(limit + 1)
-      .offset(offset);
-    throwIfAborted(signal);
-
-    return Page.create(rows.slice(0, limit).map(toDomainCardSummary), rows.length > limit);
+    return this.getSummaryPageMatching(criteria, signal);
   }
 
   async getSummaryPageForDomains(
@@ -65,78 +46,46 @@ class SqliteCardRepository implements CardRepository {
     criteria?: Pick<CardListCriteria, "limit" | "offset">,
     { signal }: ReadOptions = {},
   ): Promise<Page<CardSummary>> {
-    const rows = await this.summaryRowsForDomains(domains, signal);
-    const offset = criteria?.offset ?? 0;
-    const limit = criteria?.limit ?? 10;
-
-    return Page.create(
-      rows.slice(offset, offset + limit).map(toDomainCardSummary),
-      offset + limit < rows.length,
+    return this.getSummaryPageMatching(
+      { ...criteria, domainIds: [...normalizeCardDomainSelection(domains)] },
+      signal,
     );
   }
 
   async getPage(criteria?: CardListCriteria, { signal }: ReadOptions = {}): Promise<Page<Card>> {
     throwIfAborted(signal);
+    const { limit, offset } = pagination(criteria);
     const rows = await this.db
       .select()
       .from(catalogCards)
-      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id));
+      .where(and(...this.conditionsFor(criteria)))
+      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
+      // Fetch one sentinel row beyond the page so its presence determines hasMore.
+      .limit(limit + 1)
+      .offset(offset);
     throwIfAborted(signal);
-    const hydratedCards = await this.toDomainCards(rows, signal);
-    const matchingCards = criteria
-      ? hydratedCards.filter((card) => matchesCriteria(card, criteria))
-      : hydratedCards;
+    const pageCards = await this.toDomainCards(rows.slice(0, limit), signal);
 
-    const offset = criteria?.offset ?? 0;
-    const limit = criteria?.limit ?? 10;
-    const pageCards = matchingCards.slice(offset, offset + limit);
-
-    return Page.create(pageCards, offset + pageCards.length < matchingCards.length);
+    return Page.create(pageCards, rows.length > limit);
   }
 
   async getPageForDomains(
     domains: CardDomainSelection,
     criteria?: Pick<CardListCriteria, "limit" | "offset">,
-    { signal }: ReadOptions = {},
+    options: ReadOptions = {},
   ): Promise<Page<Card>> {
-    const rows = await this.rowsForDomains(domains, signal);
-    const cards = await this.toDomainCards(rows, signal);
-    const offset = criteria?.offset ?? 0;
-    const limit = criteria?.limit ?? 10;
-    const pageCards = cards.slice(offset, offset + limit);
-
-    return Page.create(pageCards, offset + pageCards.length < cards.length);
+    return this.getPage(
+      { ...criteria, domainIds: [...normalizeCardDomainSelection(domains)] },
+      options,
+    );
   }
 
-  private async rowsForDomains(
-    selection: CardDomainSelection,
+  private async getSummaryPageMatching(
+    criteria: CardListCriteria | Pick<CardListCriteria, "limit" | "offset"> | undefined,
     signal: AbortSignal | undefined,
-  ): Promise<(typeof catalogCards.$inferSelect)[]> {
+  ): Promise<Page<CardSummary>> {
     throwIfAborted(signal);
-    const domainIds = normalizeCardDomainSelection(selection);
-    const matchingCardIds = await this.matchingCardIdsForDomains(domainIds, signal);
-    if (matchingCardIds.length === 0) return [];
-
-    const rows = await this.db
-      .select()
-      .from(catalogCards)
-      .where(inArray(catalogCards.id, matchingCardIds))
-      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id));
-    throwIfAborted(signal);
-
-    return rows;
-  }
-
-  private async summaryRowsForDomains(
-    selection: CardDomainSelection,
-    signal: AbortSignal | undefined,
-  ): Promise<
-    { readonly card: { readonly id: string; readonly name: string }; readonly media: unknown }[]
-  > {
-    throwIfAborted(signal);
-    const domainIds = normalizeCardDomainSelection(selection);
-    const matchingCardIds = await this.matchingCardIdsForDomains(domainIds, signal);
-    if (matchingCardIds.length === 0) return [];
+    const { limit, offset } = pagination(criteria);
 
     const rows = await this.db
       .select({
@@ -149,26 +98,97 @@ class SqliteCardRepository implements CardRepository {
       })
       .from(catalogCards)
       .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
-      .where(inArray(catalogCards.id, matchingCardIds))
-      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id));
+      .where(and(...this.conditionsFor(criteria)))
+      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
+      // Fetch one sentinel row beyond the page so its presence determines hasMore.
+      .limit(limit + 1)
+      .offset(offset);
     throwIfAborted(signal);
 
-    return rows;
+    return Page.create(rows.slice(0, limit).map(toDomainCardSummary), rows.length > limit);
   }
 
-  private async matchingCardIdsForDomains(
-    domainIds: readonly string[],
-    signal: AbortSignal | undefined,
-  ): Promise<string[]> {
-    const matchingCardIds = await this.db
-      .select({ cardId: cardDomains.cardId })
-      .from(cardDomains)
-      .where(inArray(cardDomains.domainId, domainIds))
-      .groupBy(cardDomains.cardId)
-      .having(sql`count(*) = ${domainIds.length}`);
-    throwIfAborted(signal);
+  private conditionsFor(
+    criteria: CardListCriteria | Pick<CardListCriteria, "limit" | "offset"> | undefined,
+  ): SQL[] {
+    if (!criteria) return [];
 
-    return matchingCardIds.map(({ cardId }) => cardId);
+    const conditions: SQL[] = [];
+    if ("setCodes" in criteria && criteria.setCodes?.length) {
+      conditions.push(inArray(catalogCards.setCode, criteria.setCodes));
+    }
+    if ("typeIds" in criteria && criteria.typeIds?.length) {
+      conditions.push(
+        inArray(
+          catalogCards.id,
+          this.db
+            .select({ cardId: cardClassifications.cardId })
+            .from(cardClassifications)
+            .where(inArray(cardClassifications.typeId, criteria.typeIds)),
+        ),
+      );
+    }
+    if ("supertypeIds" in criteria && criteria.supertypeIds?.length) {
+      conditions.push(
+        inArray(
+          catalogCards.id,
+          this.db
+            .select({ cardId: cardClassifications.cardId })
+            .from(cardClassifications)
+            .where(inArray(cardClassifications.supertypeId, criteria.supertypeIds)),
+        ),
+      );
+    }
+    if ("rarityIds" in criteria && criteria.rarityIds?.length) {
+      conditions.push(
+        inArray(
+          catalogCards.id,
+          this.db
+            .select({ cardId: cardClassifications.cardId })
+            .from(cardClassifications)
+            .where(inArray(cardClassifications.rarityId, criteria.rarityIds)),
+        ),
+      );
+    }
+    if ("domainIds" in criteria && criteria.domainIds?.length) {
+      const domainIds = [...new Set(criteria.domainIds)];
+      conditions.push(
+        inArray(
+          catalogCards.id,
+          this.db
+            .select({ cardId: cardDomains.cardId })
+            .from(cardDomains)
+            .where(inArray(cardDomains.domainId, domainIds))
+            .groupBy(cardDomains.cardId)
+            .having(sql`count(*) = ${domainIds.length}`),
+        ),
+      );
+    }
+    if ("tagIds" in criteria && criteria.tagIds?.length) {
+      const tagIds = [...new Set(criteria.tagIds)];
+      conditions.push(
+        inArray(
+          catalogCards.id,
+          this.db
+            .select({ cardId: cardTags.cardId })
+            .from(cardTags)
+            .where(inArray(cardTags.tagId, tagIds))
+            .groupBy(cardTags.cardId)
+            .having(sql`count(*) = ${tagIds.length}`),
+        ),
+      );
+    }
+    if ("search" in criteria && criteria.search) {
+      conditions.push(
+        or(
+          sql`instr(lower(${catalogCards.name}), lower(${criteria.search})) > 0`,
+          sql`instr(lower(${catalogCards.cleanName}), lower(${criteria.search})) > 0`,
+          sql`instr(lower(${catalogCards.rulesTextPlain}), lower(${criteria.search})) > 0`,
+        )!,
+      );
+    }
+
+    return conditions;
   }
 
   private async toDomainCards(
@@ -178,6 +198,8 @@ class SqliteCardRepository implements CardRepository {
     if (rows.length === 0) return [];
 
     const cardIds = rows.map((row) => row.id);
+    // Batch each relation for this page. Otherwise 2 domains * 3 tags * 2 references would produce 12 rows per card in one join
+    // and require additional processing for deduping. This is fine for now since we arent' performance limited.
     const [classifications, media, domains, tags, marketplaceReferences] = await Promise.all([
       this.db
         .select()
@@ -238,29 +260,14 @@ function groupByCardId<Row extends { cardId: string }>(rows: readonly Row[]): Ma
   }, new Map<string, Row[]>());
 }
 
-function matchesCriteria(card: Card, criteria: CardListCriteria): boolean {
-  if (criteria.setCodes && !criteria.setCodes.includes(card.setCode)) return false;
-  if (criteria.typeIds && !criteria.typeIds.includes(card.classification.typeId)) return false;
-  if (
-    criteria.supertypeIds &&
-    (!card.classification.supertypeId ||
-      !criteria.supertypeIds.includes(card.classification.supertypeId))
-  ) {
-    return false;
-  }
-  if (criteria.rarityIds && !criteria.rarityIds.includes(card.classification.rarityId))
-    return false;
-  if (criteria.domainIds && !criteria.domainIds.every((id) => card.domainIds.includes(id)))
-    return false;
-  if (criteria.tagIds && !criteria.tagIds.every((id) => card.tagIds.includes(id))) return false;
-
-  if (criteria.search) {
-    const search = criteria.search.toLocaleLowerCase();
-    const searchable = `${card.name} ${card.cleanName} ${card.rulesText.plain}`.toLocaleLowerCase();
-    if (!searchable.includes(search)) return false;
-  }
-
-  return true;
+function pagination(criteria: Pick<CardListCriteria, "limit" | "offset"> | undefined): {
+  readonly limit: number;
+  readonly offset: number;
+} {
+  return {
+    limit: criteria?.limit ?? 10,
+    offset: criteria?.offset ?? 0,
+  };
 }
 
 export { SqliteCardRepository };

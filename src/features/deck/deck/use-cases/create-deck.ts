@@ -18,8 +18,8 @@ interface CreateDeckCapabilities {
 }
 
 /**
- * Names are compared without case, which is stricter than the unique index behind them: two decks
- * differing only in capitalisation would be indistinguishable in a list.
+ * Two decks whose names differ only in capitalization would look identical in a list, so the check
+ * ignores case. That is stricter than the unique index behind it.
  */
 async function createDeck(
   name: DeckName,

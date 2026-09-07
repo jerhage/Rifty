@@ -29,7 +29,7 @@ async function renameDeck(
 
     const wanted = name.trim().toLowerCase();
     const existing = await deckLister.getAll();
-    // A deck keeping its own name is a rename that changes only capitalisation, not a clash.
+    // Restyling a deck's own capitalization is not a clash with itself.
     if (existing.some((deck) => deck.id !== id && deck.name.trim().toLowerCase() === wanted)) {
       return { type: "nameTaken" };
     }

@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, type StyleProp, type ViewStyle } from "react-na
 
 import { Spacing } from "@/constants/theme";
 
+/** A sideways scrolling row used for chips; can run off the screen. */
 function HorizontalScroller({
   children,
   gap = Spacing.two - 1,

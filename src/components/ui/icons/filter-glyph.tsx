@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
+/** The three-bar mark used for filters. */
 function FilterGlyph({ color }: { readonly color: string }) {
   return (
     <View style={styles.glyph}>

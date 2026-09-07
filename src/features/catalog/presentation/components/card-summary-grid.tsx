@@ -1,4 +1,5 @@
 import { Image, useImage } from "expo-image";
+import { useState } from "react";
 import type { ReactElement } from "react";
 import {
   ActivityIndicator,
@@ -6,6 +7,7 @@ import {
   Pressable,
   RefreshControl,
   StyleSheet,
+  type LayoutChangeEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -34,6 +36,17 @@ function CardSummaryGrid({
   onSelectCard,
 }: CardSummaryGridProps) {
   const insets = useSafeAreaInsets();
+  const [listWidth, setListWidth] = useState<number | null>(null);
+  const contentWidth = listWidth === null ? null : Math.min(listWidth, MaxContentWidth);
+  const cardWidth =
+    contentWidth === null
+      ? null
+      : (contentWidth - insets.left - insets.right - Spacing.three * 2 - Spacing.two) / 2;
+
+  const updateListWidth = ({ nativeEvent }: LayoutChangeEvent) => {
+    const width = nativeEvent.layout.width;
+    setListWidth((currentWidth) => (currentWidth === width ? currentWidth : width));
+  };
 
   return (
     <FlatList
@@ -53,8 +66,11 @@ function CardSummaryGrid({
       ListFooterComponent={footer}
       ListHeaderComponent={header}
       numColumns={2}
+      onLayout={updateListWidth}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
-      renderItem={({ item }) => <CardGridItem card={item} onPress={onSelectCard} />}
+      renderItem={({ item }) => (
+        <CardGridItem card={item} onPress={onSelectCard} width={cardWidth} />
+      )}
       style={styles.list}
     />
   );
@@ -63,14 +79,20 @@ function CardSummaryGrid({
 function CardGridItem({
   card,
   onPress,
+  width,
 }: {
   readonly card: CardSummary;
   readonly onPress: (id: string) => void;
+  readonly width: number | null;
 }) {
   const image = useImage(card.imageUrl, { maxHeight: 720, maxWidth: 512 });
 
   return (
-    <Pressable accessibilityLabel={`Open ${card.name}`} onPress={() => onPress(card.id)} style={styles.card}>
+    <Pressable
+      accessibilityLabel={`Open ${card.name}`}
+      onPress={() => onPress(card.id)}
+      style={[styles.card, width === null ? undefined : { flexBasis: width, flexShrink: 0, width }]}
+    >
       {image ? (
         <Image
           contentFit="contain"
@@ -100,10 +122,13 @@ const styles = StyleSheet.create({
   },
   cardRow: {
     gap: Spacing.two,
+    justifyContent: "center",
     marginBottom: Spacing.two,
   },
   card: {
-    flex: 1,
+    flexBasis: "50%",
+    flexGrow: 0,
+    flexShrink: 1,
     overflow: "hidden",
   },
   image: {

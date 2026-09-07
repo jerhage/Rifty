@@ -22,6 +22,7 @@ function card(
       | "collectorNumber"
       | "name"
       | "cleanName"
+      | "rulesText"
       | "classification"
       | "domainIds"
       | "tagIds"
@@ -37,7 +38,11 @@ function card(
     name: options.name ?? `Card ${id}`,
     cleanName: options.cleanName ?? `Card ${id}`,
     attributes: { energy: 3, might: 2, power: null },
-    rulesText: { rich: "<p>Play effect.</p>", plain: "Play effect.", flavour: null },
+    rulesText: options.rulesText ?? {
+      rich: "<p>Play effect.</p>",
+      plain: "Play effect.",
+      flavour: null,
+    },
     orientation: "portrait",
     isAlternateArt: false,
     isOvernumbered: false,

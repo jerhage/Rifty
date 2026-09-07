@@ -6,7 +6,7 @@ import type { ReadOptions } from "@/shared/read-options";
 /** Pages the minimal card data required by catalog browsing. */
 interface CardSummaryLister {
   getSummaryPage(
-    criteria?: Pick<CardListCriteria, "limit" | "offset">,
+    criteria?: Pick<CardListCriteria, "limit" | "offset" | "search">,
     options?: ReadOptions,
   ): Promise<Page<CardSummary>>;
 }

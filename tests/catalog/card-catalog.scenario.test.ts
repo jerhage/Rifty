@@ -59,7 +59,12 @@ describe("card catalog scenarios", () => {
 
     await expect(
       listCards(
-        { domainIds: ["fury"], rarityIds: ["rare"], search: "piltover", limit: 10 },
+        {
+          domainIds: ["fury"],
+          rarityIds: ["rare"],
+          search: { type: "nameOrRulesText", text: "piltover" },
+          limit: 10,
+        },
         { cardLister: store.cards },
       ),
     ).resolves.toEqual({ type: "success", page: Page.create([vi], false) });
@@ -120,10 +125,57 @@ describe("card catalog scenarios", () => {
     store.seedCard(kaisa);
     store.seedCard(jinx);
 
-    await expect(store.cards.getSummaryPageByName("kaisa")).resolves.toEqual(
+    await expect(
+      store.cards.getSummaryPage({ search: { type: "name", text: "kaisa" } }),
+    ).resolves.toEqual(
       Page.create([{ id: kaisa.id, imageUrl: kaisa.imageUrl, name: kaisa.name }], false),
     );
-    await expect(store.cards.getSummaryPageByName(" ")).resolves.toEqual(Page.empty());
+    await expect(
+      store.cards.getSummaryPage({ search: { type: "name", text: " " } }),
+    ).resolves.toEqual(Page.empty());
+    store.close();
+  });
+
+  it("searches card summaries by name, plain rules text, or both", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const drawnName = card("drawn-name", unleashed.code, {
+      collectorNumber: 1,
+      name: "Drawn Name",
+    });
+    const drawSpell = card("draw-spell", unleashed.code, {
+      cleanName: "Spell",
+      collectorNumber: 2,
+      name: "Spell",
+      rulesText: { rich: "<p>Draw 2.</p>", plain: "Draw 2.", flavour: null },
+    });
+    const otherCard = card("other", unleashed.code, { collectorNumber: 3 });
+    store.seedCard(drawnName);
+    store.seedCard(drawSpell);
+    store.seedCard(otherCard);
+
+    await expect(
+      store.cards.getSummaryPage({ search: { type: "name", text: "draw" } }),
+    ).resolves.toEqual(
+      Page.create([{ id: drawnName.id, imageUrl: drawnName.imageUrl, name: drawnName.name }], false),
+    );
+    await expect(
+      store.cards.getSummaryPage({ search: { type: "rulesText", text: "draw" } }),
+    ).resolves.toEqual(
+      Page.create([{ id: drawSpell.id, imageUrl: drawSpell.imageUrl, name: drawSpell.name }], false),
+    );
+    await expect(
+      store.cards.getSummaryPage({ search: { type: "nameOrRulesText", text: "draw" } }),
+    ).resolves.toEqual(
+      Page.create(
+        [
+          { id: drawnName.id, imageUrl: drawnName.imageUrl, name: drawnName.name },
+          { id: drawSpell.id, imageUrl: drawSpell.imageUrl, name: drawSpell.name },
+        ],
+        false,
+      ),
+    );
     store.close();
   });
 

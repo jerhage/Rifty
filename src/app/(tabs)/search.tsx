@@ -16,7 +16,10 @@ function SearchScreen() {
   const cardSummaryLister = useMemo<CardSummaryLister>(
     () => ({
       getSummaryPage: (criteria, options) =>
-        catalog.cards.getSummaryPageByName(debouncedName, criteria, options),
+        catalog.cards.getSummaryPage(
+          { ...criteria, search: { type: "name", text: debouncedName } },
+          options,
+        ),
     }),
     [catalog.cards, debouncedName],
   );

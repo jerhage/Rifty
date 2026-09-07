@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
+import { match } from "ts-pattern";
 
 import type { Card, CardId } from "@/features/catalog/card/card";
 import {
@@ -6,7 +7,7 @@ import {
   type CardDomainSelection,
 } from "@/features/catalog/card/card-domain-selection";
 import type { CardSummary } from "@/features/catalog/card/card-summary";
-import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
+import type { CardListCriteria, CardSearch } from "@/features/catalog/card/card-list-criteria";
 import { Page } from "@/shared/page";
 import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
 import type { CardRepository } from "@/features/catalog/card/card-repository";
@@ -35,7 +36,7 @@ class SqliteCardRepository implements CardRepository {
   }
 
   async getSummaryPage(
-    criteria?: Pick<CardListCriteria, "limit" | "offset">,
+    criteria?: Pick<CardListCriteria, "limit" | "offset" | "search">,
     { signal }: ReadOptions = {},
   ): Promise<Page<CardSummary>> {
     return this.#getSummaryPageMatching(criteria, signal);
@@ -50,17 +51,6 @@ class SqliteCardRepository implements CardRepository {
       { ...criteria, domainIds: [...normalizeCardDomainSelection(domains)] },
       signal,
     );
-  }
-
-  async getSummaryPageByName(
-    name: string,
-    criteria?: Pick<CardListCriteria, "limit" | "offset">,
-    { signal }: ReadOptions = {},
-  ): Promise<Page<CardSummary>> {
-    const search = name.trim();
-    if (!search) return Page.empty();
-
-    return this.#getSummaryPageMatching({ ...criteria, search }, signal, "name");
   }
 
   async getPage(criteria?: CardListCriteria, { signal }: ReadOptions = {}): Promise<Page<Card>> {
@@ -92,9 +82,11 @@ class SqliteCardRepository implements CardRepository {
   }
 
   async #getSummaryPageMatching(
-    criteria: CardListCriteria | Pick<CardListCriteria, "limit" | "offset"> | undefined,
+    criteria:
+      | CardListCriteria
+      | Pick<CardListCriteria, "limit" | "offset" | "search">
+      | undefined,
     signal: AbortSignal | undefined,
-    searchScope: "anyText" | "name" = "anyText",
   ): Promise<Page<CardSummary>> {
     throwIfAborted(signal);
     const { limit, offset } = pagination(criteria);
@@ -110,7 +102,7 @@ class SqliteCardRepository implements CardRepository {
       })
       .from(catalogCards)
       .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
-      .where(and(...this.#conditionsFor(criteria, searchScope)))
+      .where(and(...this.#conditionsFor(criteria)))
       .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
       .limit(limit + 1)
@@ -121,8 +113,10 @@ class SqliteCardRepository implements CardRepository {
   }
 
   #conditionsFor(
-    criteria: CardListCriteria | Pick<CardListCriteria, "limit" | "offset"> | undefined,
-    searchScope: "anyText" | "name" = "anyText",
+    criteria:
+      | CardListCriteria
+      | Pick<CardListCriteria, "limit" | "offset" | "search">
+      | undefined,
   ): SQL[] {
     if (!criteria) return [];
 
@@ -192,18 +186,29 @@ class SqliteCardRepository implements CardRepository {
       );
     }
     if ("search" in criteria && criteria.search) {
-      conditions.push(
-        or(
-          sql`instr(lower(${catalogCards.name}), lower(${criteria.search})) > 0`,
-          sql`instr(lower(${catalogCards.cleanName}), lower(${criteria.search})) > 0`,
-          searchScope === "name"
-            ? undefined
-            : sql`instr(lower(${catalogCards.rulesTextPlain}), lower(${criteria.search})) > 0`,
-        )!,
-      );
+      conditions.push(this.#searchCondition(criteria.search));
     }
 
     return conditions;
+  }
+
+  #searchCondition(search: CardSearch): SQL {
+    const text = search.text.trim();
+    if (!text) return sql`0 = 1`;
+
+    const nameCondition = () =>
+      or(
+        sql`instr(lower(${catalogCards.name}), lower(${text})) > 0`,
+        sql`instr(lower(${catalogCards.cleanName}), lower(${text})) > 0`,
+      )!;
+    const rulesTextCondition = () =>
+      sql`instr(lower(${catalogCards.rulesTextPlain}), lower(${text})) > 0`;
+
+    return match(search)
+      .with({ type: "name" }, nameCondition)
+      .with({ type: "rulesText" }, rulesTextCondition)
+      .with({ type: "nameOrRulesText" }, () => or(nameCondition(), rulesTextCondition())!)
+      .exhaustive();
   }
 
   /**

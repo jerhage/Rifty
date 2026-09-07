@@ -1,6 +1,8 @@
 import type { CardRepository } from "@/features/catalog/card/card-repository";
 import type { SetRepository } from "@/features/catalog/set/set-repository";
 import { openCatalogDataStore } from "@/infrastructure/database/open-catalog-data-store";
+import { ConsoleLogger } from "@/infrastructure/logging/console-logger";
+import { withQueryLogging } from "@/infrastructure/logging/with-query-logging";
 
 interface CatalogDependencies {
   readonly cards: CardRepository;
@@ -12,11 +14,12 @@ interface AppDependencies {
 }
 
 async function createAppDependencies(): Promise<AppDependencies> {
-  const store = await openCatalogDataStore();
+  const logger = new ConsoleLogger();
+  const store = await openCatalogDataStore(logger);
   return {
     catalog: {
-      cards: store.cards,
-      sets: store.sets,
+      cards: withQueryLogging(store.cards, logger, "CardRepository"),
+      sets: withQueryLogging(store.sets, logger, "SetRepository"),
     },
   };
 }

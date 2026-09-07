@@ -2,6 +2,8 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import type * as SQLite from "expo-sqlite";
 
+import type { Logger } from "@/application/ports/logger";
+import { DrizzleLoggerAdapter } from "@/infrastructure/drizzle/drizzle-logger-adapter";
 import { CATALOG_SEED_VERSION, catalogSeed } from "./generated/catalog-seed";
 import {
   cardClassifications,
@@ -26,8 +28,8 @@ const CATALOG_SEED_STATE_ID = "catalog";
 const INSERT_BATCH_SIZE = 50;
 
 /** Imports bundled reference data only when its content version changes. */
-async function ensureCatalogSeeded(database: SQLite.SQLiteDatabase): Promise<void> {
-  const db = drizzle(database);
+async function ensureCatalogSeeded(database: SQLite.SQLiteDatabase, logger: Logger): Promise<void> {
+  const db = drizzle(database, { logger: new DrizzleLoggerAdapter(logger) });
   const [state] = await db
     .select({ version: catalogSeedStates.version })
     .from(catalogSeedStates)
@@ -36,7 +38,7 @@ async function ensureCatalogSeeded(database: SQLite.SQLiteDatabase): Promise<voi
   if (state?.version === CATALOG_SEED_VERSION) return;
 
   await database.withExclusiveTransactionAsync(async (transaction) => {
-    const transactionDb = drizzle(transaction);
+    const transactionDb = drizzle(transaction, { logger: new DrizzleLoggerAdapter(logger) });
     const [currentState] = await transactionDb
       .select({ version: catalogSeedStates.version })
       .from(catalogSeedStates)

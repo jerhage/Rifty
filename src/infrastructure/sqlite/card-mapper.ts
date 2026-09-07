@@ -76,12 +76,16 @@ function toDomainCard({
 
 function toDomainCardSummary({
   card,
+  domains,
   media,
 }: {
   readonly card: unknown;
+  readonly domains: readonly unknown[];
   readonly media: unknown;
 }): CardSummary {
-  const persistedCard = catalogCardSelectSchema.pick({ id: true, name: true }).parse(card);
+  const persistedCard = catalogCardSelectSchema
+    .pick({ id: true, name: true, orientation: true })
+    .parse(card);
   const persistedMedia = cardMediaSelectSchema
     .pick({ imageAssetId: true, imageHeight: true, imageWidth: true })
     .parse(media);
@@ -89,6 +93,8 @@ function toDomainCardSummary({
   return parseCardSummary({
     id: persistedCard.id,
     name: persistedCard.name,
+    domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
+    orientation: persistedCard.orientation,
     imageUrl: buildImageUrl(persistedMedia.imageAssetId, {
       width: persistedMedia.imageWidth,
       height: persistedMedia.imageHeight,

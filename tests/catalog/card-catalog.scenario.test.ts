@@ -108,8 +108,42 @@ describe("card catalog scenarios", () => {
     store.seedCard(jinx);
 
     await expect(store.cards.getSummaryPage({ limit: 1, offset: 0 })).resolves.toEqual(
-      Page.create([{ id: jinx.id, imageUrl: jinx.imageUrl, name: jinx.name }], true),
+      Page.create(
+        [
+          {
+            id: jinx.id,
+            domainIds: jinx.domainIds,
+            imageUrl: jinx.imageUrl,
+            name: jinx.name,
+            orientation: jinx.orientation,
+          },
+        ],
+        true,
+      ),
     );
+    store.close();
+  });
+
+  it("carries the orientation the catalog grid needs to place landscape battlefields", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const spire = card("contested-spire", unleashed.code, {
+      classification: { typeId: "Battlefield", supertypeId: null, rarityId: "rare" },
+      collectorNumber: 1,
+      name: "Contested Spire",
+      orientation: "landscape",
+    });
+    const unit = card("novice", unleashed.code, { collectorNumber: 2, name: "Novice" });
+    store.seedCard(spire);
+    store.seedCard(unit);
+
+    await expect(store.cards.getSummaryPage()).resolves.toMatchObject({
+      items: [
+        { id: spire.id, orientation: "landscape" },
+        { id: unit.id, orientation: "portrait" },
+      ],
+    });
     store.close();
   });
 
@@ -211,7 +245,18 @@ describe("card catalog scenarios", () => {
     await expect(
       store.cards.getSummaryPage({ search: { type: "name", text: "kaisa" } }),
     ).resolves.toEqual(
-      Page.create([{ id: kaisa.id, imageUrl: kaisa.imageUrl, name: kaisa.name }], false),
+      Page.create(
+        [
+          {
+            id: kaisa.id,
+            domainIds: kaisa.domainIds,
+            imageUrl: kaisa.imageUrl,
+            name: kaisa.name,
+            orientation: kaisa.orientation,
+          },
+        ],
+        false,
+      ),
     );
     await expect(
       store.cards.getSummaryPage({ search: { type: "name", text: " " } }),
@@ -242,7 +287,15 @@ describe("card catalog scenarios", () => {
       store.cards.getSummaryPage({ search: { type: "name", text: "draw" } }),
     ).resolves.toEqual(
       Page.create(
-        [{ id: drawnName.id, imageUrl: drawnName.imageUrl, name: drawnName.name }],
+        [
+          {
+            id: drawnName.id,
+            domainIds: drawnName.domainIds,
+            imageUrl: drawnName.imageUrl,
+            name: drawnName.name,
+            orientation: drawnName.orientation,
+          },
+        ],
         false,
       ),
     );
@@ -250,7 +303,15 @@ describe("card catalog scenarios", () => {
       store.cards.getSummaryPage({ search: { type: "rulesText", text: "draw" } }),
     ).resolves.toEqual(
       Page.create(
-        [{ id: drawSpell.id, imageUrl: drawSpell.imageUrl, name: drawSpell.name }],
+        [
+          {
+            id: drawSpell.id,
+            domainIds: drawSpell.domainIds,
+            imageUrl: drawSpell.imageUrl,
+            name: drawSpell.name,
+            orientation: drawSpell.orientation,
+          },
+        ],
         false,
       ),
     );
@@ -259,8 +320,20 @@ describe("card catalog scenarios", () => {
     ).resolves.toEqual(
       Page.create(
         [
-          { id: drawnName.id, imageUrl: drawnName.imageUrl, name: drawnName.name },
-          { id: drawSpell.id, imageUrl: drawSpell.imageUrl, name: drawSpell.name },
+          {
+            id: drawnName.id,
+            domainIds: drawnName.domainIds,
+            imageUrl: drawnName.imageUrl,
+            name: drawnName.name,
+            orientation: drawnName.orientation,
+          },
+          {
+            id: drawSpell.id,
+            domainIds: drawSpell.domainIds,
+            imageUrl: drawSpell.imageUrl,
+            name: drawSpell.name,
+            orientation: drawSpell.orientation,
+          },
         ],
         false,
       ),
@@ -290,7 +363,15 @@ describe("card catalog scenarios", () => {
     );
     await expect(store.cards.getSummaryPage({ domainIds: ["Fury", "Order"] })).resolves.toEqual(
       Page.create(
-        [{ id: furyOrder.id, imageUrl: furyOrder.imageUrl, name: furyOrder.name }],
+        [
+          {
+            id: furyOrder.id,
+            domainIds: furyOrder.domainIds,
+            imageUrl: furyOrder.imageUrl,
+            name: furyOrder.name,
+            orientation: furyOrder.orientation,
+          },
+        ],
         false,
       ),
     );

@@ -26,6 +26,7 @@ function card(
       | "rulesText"
       | "classification"
       | "domainIds"
+      | "orientation"
       | "tagIds"
       | "marketplaceReferences"
     >
@@ -44,7 +45,7 @@ function card(
       plain: "Play effect.",
       flavour: null,
     },
-    orientation: "portrait",
+    orientation: options.orientation ?? "portrait",
     isAlternateArt: false,
     isOvernumbered: false,
     isSignature: false,

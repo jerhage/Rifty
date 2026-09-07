@@ -69,7 +69,11 @@ class SqliteCardRepository implements CardRepository {
 
     const rows = await this.db
       .select({
-        card: { id: catalogCards.id, name: catalogCards.name },
+        card: {
+          id: catalogCards.id,
+          name: catalogCards.name,
+          orientation: catalogCards.orientation,
+        },
         media: {
           imageAssetId: cardMedia.imageAssetId,
           imageHeight: cardMedia.imageHeight,
@@ -84,8 +88,38 @@ class SqliteCardRepository implements CardRepository {
       .limit(limit + 1)
       .offset(offset);
     throwIfAborted(signal);
+    const pageRows = rows.slice(0, limit);
+    const domainsByCardId = await this.#domainRowsFor(
+      pageRows.map((row) => row.card.id),
+      signal,
+    );
 
-    return Page.create(rows.slice(0, limit).map(toDomainCardSummary), rows.length > limit);
+    return Page.create(
+      pageRows.map((row) =>
+        toDomainCardSummary({ ...row, domains: domainsByCardId.get(row.card.id) ?? [] }),
+      ),
+      rows.length > limit,
+    );
+  }
+
+  /**
+   * Domains are fetched as their own batch rather than joined onto the summary query: a card with
+   * several domains would otherwise multiply its media row and need deduping back out again.
+   */
+  async #domainRowsFor(
+    cardIds: readonly string[],
+    signal: AbortSignal | undefined,
+  ): Promise<Map<string, (typeof cardDomains.$inferSelect)[]>> {
+    if (cardIds.length === 0) return new Map();
+
+    const rows = await this.db
+      .select()
+      .from(cardDomains)
+      .where(inArray(cardDomains.cardId, [...cardIds]))
+      .orderBy(asc(cardDomains.domainId));
+    throwIfAborted(signal);
+
+    return groupByCardId(rows);
   }
 
   #conditionsFor(criteria: CardListCriteria | undefined): SQL[] {
@@ -242,35 +276,31 @@ class SqliteCardRepository implements CardRepository {
     const cardIds = rows.map((row) => row.id);
     // Batch each relation for this page. Otherwise 2 domains * 3 tags * 2 references would produce 12 rows per card in one join
     // and require additional processing for deduping. This is fine for now since we arent' performance limited.
-    const [classifications, media, domains, tags, marketplaceReferences] = await Promise.all([
-      this.db
-        .select()
-        .from(cardClassifications)
-        .where(inArray(cardClassifications.cardId, cardIds)),
-      this.db.select().from(cardMedia).where(inArray(cardMedia.cardId, cardIds)),
-      this.db
-        .select()
-        .from(cardDomains)
-        .where(inArray(cardDomains.cardId, cardIds))
-        .orderBy(asc(cardDomains.domainId)),
-      this.db
-        .select()
-        .from(cardTags)
-        .where(inArray(cardTags.cardId, cardIds))
-        .orderBy(asc(cardTags.tagId)),
-      this.db
-        .select()
-        .from(cardMarketplaceReferences)
-        .where(inArray(cardMarketplaceReferences.cardId, cardIds))
-        .orderBy(
-          asc(cardMarketplaceReferences.marketplace),
-          asc(cardMarketplaceReferences.externalId),
-        ),
-    ]);
+    const [classifications, media, domainsByCardId, tags, marketplaceReferences] =
+      await Promise.all([
+        this.db
+          .select()
+          .from(cardClassifications)
+          .where(inArray(cardClassifications.cardId, cardIds)),
+        this.db.select().from(cardMedia).where(inArray(cardMedia.cardId, cardIds)),
+        this.#domainRowsFor(cardIds, signal),
+        this.db
+          .select()
+          .from(cardTags)
+          .where(inArray(cardTags.cardId, cardIds))
+          .orderBy(asc(cardTags.tagId)),
+        this.db
+          .select()
+          .from(cardMarketplaceReferences)
+          .where(inArray(cardMarketplaceReferences.cardId, cardIds))
+          .orderBy(
+            asc(cardMarketplaceReferences.marketplace),
+            asc(cardMarketplaceReferences.externalId),
+          ),
+      ]);
     throwIfAborted(signal);
     const classificationsByCardId = new Map(classifications.map((row) => [row.cardId, row]));
     const mediaByCardId = new Map(media.map((row) => [row.cardId, row]));
-    const domainsByCardId = groupByCardId(domains);
     const tagsByCardId = groupByCardId(tags);
     const marketplaceReferencesByCardId = groupByCardId(marketplaceReferences);
 

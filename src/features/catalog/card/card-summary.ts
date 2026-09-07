@@ -1,10 +1,13 @@
 import { z } from "zod/v4";
 
-import { cardIdSchema } from "./card";
+import { cardDomainSchema } from "../value-objects/card-domain";
+import { cardIdSchema, cardOrientationSchema } from "./card";
 
 const cardSummarySchema = z.object({
   id: cardIdSchema,
   name: z.string().trim().min(1),
+  domainIds: z.array(cardDomainSchema),
+  orientation: cardOrientationSchema,
   imageUrl: z.url(),
 });
 

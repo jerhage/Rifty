@@ -44,4 +44,4 @@ example
 
 .local/
 coverage/
-data/
+/data/

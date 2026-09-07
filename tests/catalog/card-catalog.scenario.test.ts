@@ -148,10 +148,12 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("filters card summaries by numeric attributes and domains in SQL", async () => {
+  it("filters card summaries by set, numeric attributes, and domains in SQL", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    const origins = cardSet("OGN", "2025-10-31T00:00:00");
     store.seedSet(unleashed);
+    store.seedSet(origins);
     const novice = card("novice", unleashed.code, {
       attributes: { energy: 2, might: 1, power: null },
       collectorNumber: 1,
@@ -167,9 +169,19 @@ describe("card catalog scenarios", () => {
       collectorNumber: 3,
       domainIds: ["Fury", "Order"],
     });
+    const originsCard = card("origins-card", origins.code, {
+      attributes: { energy: 9, might: 3, power: 1 },
+      collectorNumber: 1,
+      domainIds: ["Fury"],
+    });
     store.seedCard(novice);
     store.seedCard(adept);
     store.seedCard(master);
+    store.seedCard(originsCard);
+
+    await expect(store.cards.getSummaryPage({ setCodes: [origins.code] })).resolves.toMatchObject({
+      items: [{ id: originsCard.id }],
+    });
 
     await expect(
       store.cards.getSummaryPage({ energy: { type: "between", minimum: 3, maximum: 5 } }),

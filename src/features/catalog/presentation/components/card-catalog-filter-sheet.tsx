@@ -11,8 +11,10 @@ import type {
   CardNumericFilter,
   CardSort,
 } from "@/features/catalog/card/card-list-criteria";
+import type { CardSet } from "@/features/catalog/set/card-set";
 import { cardDomainSchema, type CardDomain } from "@/features/catalog/value-objects/card-domain";
 import { cardTypeSchema, type CardType } from "@/features/catalog/value-objects/card-type";
+import type { SetCode } from "@/features/catalog/value-objects/set-code";
 import { useTheme } from "@/hooks/use-theme";
 
 type CatalogQueryCriteria = Omit<CardListCriteria, "limit" | "offset">;
@@ -33,6 +35,7 @@ const sortOptions: readonly { readonly label: string; readonly sort: CardSort | 
 ];
 
 interface CardCatalogFilterSheetProps {
+  readonly cardSets: readonly CardSet[];
   readonly criteria: CatalogQueryCriteria;
   readonly isPresented: boolean;
   readonly onApply: () => void;
@@ -42,6 +45,7 @@ interface CardCatalogFilterSheetProps {
 }
 
 function CardCatalogFilterSheet({
+  cardSets,
   criteria,
   isPresented,
   onApply,
@@ -83,6 +87,19 @@ function CardCatalogFilterSheet({
                   label={domainId}
                   onPress={() => onChangeCriteria(toggleDomain(criteria, domainId))}
                   selected={criteria.domainIds?.includes(domainId) ?? false}
+                />
+              ))}
+            </View>
+          </FilterSection>
+
+          <FilterSection title="Sets">
+            <View style={styles.choiceList}>
+              {cardSets.map((cardSet) => (
+                <ChoiceButton
+                  key={cardSet.code}
+                  label={`${cardSet.name} (${cardSet.code})`}
+                  onPress={() => onChangeCriteria(toggleSet(criteria, cardSet.code))}
+                  selected={criteria.setCodes?.includes(cardSet.code) ?? false}
                 />
               ))}
             </View>
@@ -225,6 +242,10 @@ function toggleType(criteria: CatalogQueryCriteria, typeId: CardType): CatalogQu
 
 function toggleDomain(criteria: CatalogQueryCriteria, domainId: CardDomain): CatalogQueryCriteria {
   return { ...criteria, domainIds: toggleId(criteria.domainIds, domainId) };
+}
+
+function toggleSet(criteria: CatalogQueryCriteria, setCode: SetCode): CatalogQueryCriteria {
+  return { ...criteria, setCodes: toggleId(criteria.setCodes, setCode) };
 }
 
 function toggleId<Id extends string>(

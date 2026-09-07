@@ -50,11 +50,11 @@ function card(
     isSignature: false,
     sourceUpdatedAt: "2026-07-10T22:45:08.861364+00:00",
     classification: options.classification ?? {
-      typeId: "unit",
+      typeId: "Unit",
       supertypeId: null,
       rarityId: "common",
     },
-    domainIds: options.domainIds ?? ["chaos"],
+    domainIds: options.domainIds ?? ["Chaos"],
     tagIds: options.tagIds ?? [],
     imageUrl: buildImageUrl("0123456789abcdef0123456789abcdef01234567", {
       width: 744,

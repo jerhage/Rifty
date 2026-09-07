@@ -3,6 +3,8 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { z } from "zod/v4";
 import { parseImageUrl } from "../src/shared/image-url";
+import { cardDomainSchema } from "../src/features/catalog/value-objects/card-domain";
+import { cardTypeSchema } from "../src/features/catalog/value-objects/card-type";
 
 import {
   cardClassificationInsertSchema,
@@ -70,10 +72,10 @@ const rawCardSchema = z.object({
     power: z.number().int().nullable(),
   }),
   classification: z.object({
-    type: z.string(),
+    type: cardTypeSchema,
     supertype: nullableString,
     rarity: z.string(),
-    domain: z.array(z.string()),
+    domain: z.array(cardDomainSchema),
   }),
   text: z.object({ rich: z.string(), plain: z.string(), flavour: nullableString }),
   set: z.object({ set_id: z.string(), label: z.string() }),

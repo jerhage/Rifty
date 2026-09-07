@@ -13,8 +13,8 @@ describe("card catalog scenarios", () => {
       collectorNumber: 229,
       name: "Vi - Piltover Enforcer (Signature)",
       cleanName: "Vi Piltover Enforcer Signature",
-      classification: { typeId: "legend", supertypeId: "signature", rarityId: "rare" },
-      domainIds: ["fury", "order"],
+      classification: { typeId: "Legend", supertypeId: "signature", rarityId: "rare" },
+      domainIds: ["Fury", "Order"],
       tagIds: ["vi", "piltover"],
       marketplaceReferences: [
         { marketplace: "tcgplayer", externalId: "685522" },
@@ -44,14 +44,14 @@ describe("card catalog scenarios", () => {
     store.seedSet(unleashed);
     const vi = card("vi", unleashed.code, {
       name: "Vi - Piltover Enforcer",
-      classification: { typeId: "legend", supertypeId: null, rarityId: "rare" },
-      domainIds: ["fury", "order"],
+      classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
+      domainIds: ["Fury", "Order"],
       tagIds: ["vi"],
     });
     const spirit = card("spirit", unleashed.code, {
       name: "Bewitching Spirit",
-      classification: { typeId: "unit", supertypeId: null, rarityId: "common" },
-      domainIds: ["chaos"],
+      classification: { typeId: "Unit", supertypeId: null, rarityId: "common" },
+      domainIds: ["Chaos"],
       tagIds: ["spirit"],
     });
     store.seedCard(vi);
@@ -60,9 +60,9 @@ describe("card catalog scenarios", () => {
     await expect(
       listCards(
         {
-          domainIds: ["fury"],
+          domainIds: ["Fury"],
           rarityIds: ["rare"],
-          typeIds: ["legend"],
+          typeIds: ["Legend"],
           search: { type: "nameOrRulesText", text: "piltover" },
           limit: 10,
         },
@@ -155,17 +155,17 @@ describe("card catalog scenarios", () => {
     const novice = card("novice", unleashed.code, {
       attributes: { energy: 2, might: 1, power: null },
       collectorNumber: 1,
-      domainIds: ["order"],
+      domainIds: ["Order"],
     });
     const adept = card("adept", unleashed.code, {
       attributes: { energy: 4, might: 3, power: 1 },
       collectorNumber: 2,
-      domainIds: ["fury"],
+      domainIds: ["Fury"],
     });
     const master = card("master", unleashed.code, {
       attributes: { energy: 6, might: 5, power: 2 },
       collectorNumber: 3,
-      domainIds: ["fury", "order"],
+      domainIds: ["Fury", "Order"],
     });
     store.seedCard(novice);
     store.seedCard(adept);
@@ -178,7 +178,7 @@ describe("card catalog scenarios", () => {
       store.cards.getSummaryPage({ power: { type: "atLeast", value: 2 } }),
     ).resolves.toMatchObject({ items: [{ id: master.id }] });
     await expect(
-      store.cards.getSummaryPage({ domainIds: ["fury", "order"] }),
+      store.cards.getSummaryPage({ domainIds: ["Fury", "Order"] }),
     ).resolves.toMatchObject({ items: [{ id: master.id }] });
     store.close();
   });
@@ -260,23 +260,23 @@ describe("card catalog scenarios", () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
-    const fury = card("fury", unleashed.code, { collectorNumber: 1, domainIds: ["fury"] });
+    const fury = card("fury", unleashed.code, { collectorNumber: 1, domainIds: ["Fury"] });
     const furyOrder = card("fury-order", unleashed.code, {
       collectorNumber: 2,
-      domainIds: ["fury", "order"],
+      domainIds: ["Fury", "Order"],
     });
-    const order = card("order", unleashed.code, { collectorNumber: 3, domainIds: ["order"] });
+    const order = card("order", unleashed.code, { collectorNumber: 3, domainIds: ["Order"] });
     store.seedCard(fury);
     store.seedCard(furyOrder);
     store.seedCard(order);
 
-    await expect(store.cards.getPage({ domainIds: ["fury"] })).resolves.toEqual(
+    await expect(store.cards.getPage({ domainIds: ["Fury"] })).resolves.toEqual(
       Page.create([fury, furyOrder], false),
     );
-    await expect(store.cards.getPage({ domainIds: ["fury", "order"] })).resolves.toEqual(
+    await expect(store.cards.getPage({ domainIds: ["Fury", "Order"] })).resolves.toEqual(
       Page.create([furyOrder], false),
     );
-    await expect(store.cards.getSummaryPage({ domainIds: ["fury", "order"] })).resolves.toEqual(
+    await expect(store.cards.getSummaryPage({ domainIds: ["Fury", "Order"] })).resolves.toEqual(
       Page.create(
         [{ id: furyOrder.id, imageUrl: furyOrder.imageUrl, name: furyOrder.name }],
         false,

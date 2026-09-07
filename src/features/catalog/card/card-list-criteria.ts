@@ -1,6 +1,8 @@
 import { z } from "zod/v4";
 
 import { setCodeSchema } from "../value-objects/set-code";
+import { cardDomainSchema } from "../value-objects/card-domain";
+import { cardTypeSchema } from "../value-objects/card-type";
 import { taxonomyIdSchema } from "../value-objects/taxonomy-id";
 
 const cardSearchSchema = z.discriminatedUnion("type", [
@@ -37,10 +39,10 @@ const cardNumericFilterSchema = z
 
 const cardListCriteriaSchema = z.object({
   setCodes: z.array(setCodeSchema).optional(),
-  typeIds: z.array(taxonomyIdSchema).optional(),
+  typeIds: z.array(cardTypeSchema).optional(),
   supertypeIds: z.array(taxonomyIdSchema).optional(),
   rarityIds: z.array(taxonomyIdSchema).optional(),
-  domainIds: z.array(taxonomyIdSchema).optional(),
+  domainIds: z.array(cardDomainSchema).optional(),
   tagIds: z.array(taxonomyIdSchema).optional(),
   energy: cardNumericFilterSchema.optional(),
   might: cardNumericFilterSchema.optional(),

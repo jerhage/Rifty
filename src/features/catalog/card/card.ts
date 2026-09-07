@@ -1,6 +1,8 @@
 import { z } from "zod/v4";
 
 import { marketplaceReferenceSchema } from "../value-objects/marketplace-reference";
+import { cardDomainSchema } from "../value-objects/card-domain";
+import { cardTypeSchema } from "../value-objects/card-type";
 import { setCodeSchema } from "../value-objects/set-code";
 import { taxonomyIdSchema } from "../value-objects/taxonomy-id";
 
@@ -12,7 +14,7 @@ const cardAttributesSchema = z.object({
   power: z.number().int().nonnegative().nullable(),
 });
 const cardClassificationSchema = z.object({
-  typeId: taxonomyIdSchema,
+  typeId: cardTypeSchema,
   supertypeId: taxonomyIdSchema.nullable(),
   rarityId: taxonomyIdSchema,
 });
@@ -35,7 +37,7 @@ const cardSchema = z.object({
   isSignature: z.boolean(),
   sourceUpdatedAt: z.string().trim().min(1),
   classification: cardClassificationSchema,
-  domainIds: z.array(taxonomyIdSchema),
+  domainIds: z.array(cardDomainSchema),
   tagIds: z.array(taxonomyIdSchema),
   imageUrl: z.url(),
   marketplaceReferences: z.array(marketplaceReferenceSchema),

@@ -35,6 +35,7 @@ const catalogCards = sqliteTable(
   (table) => [
     index("card_set_collector_number").on(table.setCode, table.collectorNumber),
     index("card_clean_name").on(table.cleanName),
+    index("catalog_card_riftbound_id").on(table.riftboundId),
   ],
 );
 

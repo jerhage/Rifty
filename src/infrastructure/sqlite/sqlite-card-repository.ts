@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 import { match } from "ts-pattern";
 
 import type { Card, CardId } from "@/features/catalog/card/card";
@@ -7,7 +7,11 @@ import {
   type CardDomainSelection,
 } from "@/features/catalog/card/card-domain-selection";
 import type { CardSummary } from "@/features/catalog/card/card-summary";
-import type { CardListCriteria, CardSearch } from "@/features/catalog/card/card-list-criteria";
+import type {
+  CardListCriteria,
+  CardSearch,
+  CardSort,
+} from "@/features/catalog/card/card-list-criteria";
 import { Page } from "@/shared/page";
 import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
 import type { CardRepository } from "@/features/catalog/card/card-repository";
@@ -36,7 +40,7 @@ class SqliteCardRepository implements CardRepository {
   }
 
   async getSummaryPage(
-    criteria?: Pick<CardListCriteria, "limit" | "offset" | "search">,
+    criteria?: Pick<CardListCriteria, "limit" | "offset" | "search" | "sort">,
     { signal }: ReadOptions = {},
   ): Promise<Page<CardSummary>> {
     return this.#getSummaryPageMatching(criteria, signal);
@@ -44,7 +48,7 @@ class SqliteCardRepository implements CardRepository {
 
   async getSummaryPageForDomains(
     domains: CardDomainSelection,
-    criteria?: Pick<CardListCriteria, "limit" | "offset">,
+    criteria?: Pick<CardListCriteria, "limit" | "offset" | "sort">,
     { signal }: ReadOptions = {},
   ): Promise<Page<CardSummary>> {
     return this.#getSummaryPageMatching(
@@ -60,7 +64,7 @@ class SqliteCardRepository implements CardRepository {
       .select()
       .from(catalogCards)
       .where(and(...this.#conditionsFor(criteria)))
-      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
+      .orderBy(...this.#orderBy(criteria))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
       .limit(limit + 1)
       .offset(offset);
@@ -72,7 +76,7 @@ class SqliteCardRepository implements CardRepository {
 
   async getPageForDomains(
     domains: CardDomainSelection,
-    criteria?: Pick<CardListCriteria, "limit" | "offset">,
+    criteria?: Pick<CardListCriteria, "limit" | "offset" | "sort">,
     options: ReadOptions = {},
   ): Promise<Page<Card>> {
     return this.getPage(
@@ -84,7 +88,7 @@ class SqliteCardRepository implements CardRepository {
   async #getSummaryPageMatching(
     criteria:
       | CardListCriteria
-      | Pick<CardListCriteria, "limit" | "offset" | "search">
+      | Pick<CardListCriteria, "limit" | "offset" | "search" | "sort">
       | undefined,
     signal: AbortSignal | undefined,
   ): Promise<Page<CardSummary>> {
@@ -103,7 +107,7 @@ class SqliteCardRepository implements CardRepository {
       .from(catalogCards)
       .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
       .where(and(...this.#conditionsFor(criteria)))
-      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
+      .orderBy(...this.#orderBy(criteria))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
       .limit(limit + 1)
       .offset(offset);
@@ -115,7 +119,7 @@ class SqliteCardRepository implements CardRepository {
   #conditionsFor(
     criteria:
       | CardListCriteria
-      | Pick<CardListCriteria, "limit" | "offset" | "search">
+      | Pick<CardListCriteria, "limit" | "offset" | "search" | "sort">
       | undefined,
   ): SQL[] {
     if (!criteria) return [];
@@ -209,6 +213,32 @@ class SqliteCardRepository implements CardRepository {
       .with({ type: "rulesText" }, rulesTextCondition)
       .with({ type: "nameOrRulesText" }, () => or(nameCondition(), rulesTextCondition())!)
       .exhaustive();
+  }
+
+  #orderBy(
+    criteria:
+      | CardListCriteria
+      | Pick<CardListCriteria, "limit" | "offset" | "search" | "sort">
+      | undefined,
+  ): SQL[] {
+    const catalogOrder = () => [asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id)];
+    const directionFor = (direction: "ascending" | "descending") =>
+      direction === "ascending" ? asc : desc;
+    const nullableOrder = (
+      column: typeof catalogCards.energy | typeof catalogCards.might | typeof catalogCards.power,
+      direction: "ascending" | "descending",
+    ) => [asc(sql`case when ${column} is null then 1 else 0 end`), directionFor(direction)(column)];
+
+    if (!criteria?.sort) return catalogOrder();
+
+    return match<CardSort, SQL[]>(criteria.sort)
+      .with({ type: "catalogOrder" }, catalogOrder)
+      .with({ type: "name" }, ({ direction }) => [directionFor(direction)(sql`lower(${catalogCards.name})`)])
+      .with({ type: "energy" }, ({ direction }) => nullableOrder(catalogCards.energy, direction))
+      .with({ type: "might" }, ({ direction }) => nullableOrder(catalogCards.might, direction))
+      .with({ type: "power" }, ({ direction }) => nullableOrder(catalogCards.power, direction))
+      .exhaustive()
+      .concat(catalogOrder());
   }
 
   /**

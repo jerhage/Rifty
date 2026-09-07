@@ -17,6 +17,7 @@ describe("catalog domain validation", () => {
 
   it("rejects invalid analysis criteria and malformed set metadata", () => {
     expect(() => parseCardListCriteria({ limit: 0 })).toThrow("Too small");
+    expect(() => parseCardListCriteria({ sort: { type: "name", direction: "up" } })).toThrow();
     expect(() => parseCardSet({ ...cardSet("UNL", "2026-05-08T00:00:00"), code: " " })).toThrow(
       "Too small",
     );

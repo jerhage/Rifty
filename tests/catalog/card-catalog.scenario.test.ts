@@ -112,6 +112,41 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
+  it("sorts card summaries by text and numeric attributes in SQL", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const zeta = card("zeta", unleashed.code, {
+      attributes: { energy: 3, might: null, power: null },
+      collectorNumber: 1,
+      name: "Zeta",
+    });
+    const alpha = card("alpha", unleashed.code, {
+      attributes: { energy: 7, might: 2, power: 2 },
+      collectorNumber: 2,
+      name: "Alpha",
+    });
+    const beta = card("beta", unleashed.code, {
+      attributes: { energy: 5, might: 4, power: 1 },
+      collectorNumber: 3,
+      name: "Beta",
+    });
+    store.seedCard(zeta);
+    store.seedCard(alpha);
+    store.seedCard(beta);
+
+    await expect(
+      store.cards.getSummaryPage({ sort: { type: "name", direction: "ascending" } }),
+    ).resolves.toMatchObject({ items: [{ id: alpha.id }, { id: beta.id }, { id: zeta.id }] });
+    await expect(
+      store.cards.getSummaryPage({ sort: { type: "energy", direction: "descending" } }),
+    ).resolves.toMatchObject({ items: [{ id: alpha.id }, { id: beta.id }, { id: zeta.id }] });
+    await expect(
+      store.cards.getSummaryPage({ sort: { type: "power", direction: "ascending" } }),
+    ).resolves.toMatchObject({ items: [{ id: beta.id }, { id: alpha.id }, { id: zeta.id }] });
+    store.close();
+  });
+
   it("finds card summaries by printed or normalized card name", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");

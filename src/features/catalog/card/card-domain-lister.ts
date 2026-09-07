@@ -8,7 +8,7 @@ import type { ReadOptions } from "@/shared/read-options";
 interface CardDomainLister {
   getPageForDomains(
     domains: CardDomainSelection,
-    criteria?: Pick<CardListCriteria, "limit" | "offset">,
+    criteria?: Pick<CardListCriteria, "limit" | "offset" | "sort">,
     options?: ReadOptions,
   ): Promise<Page<Card>>;
 }

@@ -22,6 +22,7 @@ function card(
       | "collectorNumber"
       | "name"
       | "cleanName"
+      | "attributes"
       | "rulesText"
       | "classification"
       | "domainIds"
@@ -37,7 +38,7 @@ function card(
     collectorNumber: options.collectorNumber ?? 1,
     name: options.name ?? `Card ${id}`,
     cleanName: options.cleanName ?? `Card ${id}`,
-    attributes: { energy: 3, might: 2, power: null },
+    attributes: options.attributes ?? { energy: 3, might: 2, power: null },
     rulesText: options.rulesText ?? {
       rich: "<p>Play effect.</p>",
       plain: "Play effect.",

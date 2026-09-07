@@ -1,6 +1,5 @@
 import { Chip } from "@/components/ui/atoms/chip";
 
-/** A card-type filter chip: uppercase monospace, filled with the accent color when active. */
 function TypeChip({
   label,
   onPress,

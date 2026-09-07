@@ -4,7 +4,6 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Radius, Spacing } from "@/constants/theme";
 
-/** A quieter action on a raised surface, for retries and other secondary choices. */
 function SecondaryButton({
   label,
   onPress,

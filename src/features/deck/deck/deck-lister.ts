@@ -2,7 +2,7 @@ import type { ReadOptions } from "@/shared/read-options";
 
 import type { Deck } from "./deck";
 
-/** Lists every saved deck, most recently edited first. */
+/** Ordered most recently edited first. */
 interface DeckLister {
   getAll(options?: ReadOptions): Promise<readonly Deck[]>;
 }

@@ -6,7 +6,6 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-/** Shared chrome for a bottom-sheet page: title row, scrolling body, pinned confirm button. */
 function SheetFace({
   action,
   body,

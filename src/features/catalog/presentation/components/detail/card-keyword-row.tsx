@@ -5,7 +5,6 @@ import { Radius, Spacing } from "@/constants/theme";
 
 import { formatTaxonomyId } from "../../card-taxonomy-format";
 
-/** The card's tags as outlined pills in its domain color. */
 function CardKeywordRow({
   accent,
   tagIds,

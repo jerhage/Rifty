@@ -9,7 +9,6 @@ type CatalogSortId = "catalogOrder" | "name" | "energy" | "might" | "power";
 interface CatalogSortOption {
   readonly id: CatalogSortId;
   readonly label: string;
-  /** A short caption explaining what the ordering means, shown beneath its label in the sheet. */
   readonly note: string;
   /**
    * Direction applied when this ordering is first picked, or `null` for an ordering that has no
@@ -102,7 +101,7 @@ function buildSort(id: CatalogSortId, direction: CardSortDirection): CardSort | 
     .exhaustive();
 }
 
-/** Choosing an attribute adopts that attribute's natural direction rather than keeping the old one. */
+/** Choosing an attribute adopts its natural direction rather than keeping the previous one. */
 function sortForId(id: CatalogSortId): CardSort | undefined {
   const option = sortOptions.find((candidate) => candidate.id === id);
 
@@ -118,7 +117,6 @@ function sortWithDirection(
   return buildSort(sortIdOf(sort), direction);
 }
 
-/** Flips an ordering that has a direction; catalog order is returned untouched. */
 function toggledSort(sort: CardSort | undefined): CardSort | undefined {
   const direction = sortDirectionOf(sort);
 
@@ -131,7 +129,6 @@ function sortOptionLabel(sort: CardSort | undefined): string {
   return sortOptionFor(sort).label;
 }
 
-/** The arrow shown on the sort control, or `null` when the ordering has no direction. */
 function sortDirectionArrow(sort: CardSort | undefined): string | null {
   const direction = sortDirectionOf(sort);
 

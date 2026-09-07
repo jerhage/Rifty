@@ -1,6 +1,6 @@
 import type { Deck } from "./deck";
 
-/** Persists a deck in full, replacing whatever was stored under its identifier. */
+/** Replaces the whole aggregate stored under this identifier, entries included. */
 interface DeckSaver {
   save(deck: Deck): Promise<void>;
 }

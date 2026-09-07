@@ -58,20 +58,17 @@ const styles = StyleSheet.create({
     lineHeight: 44,
     fontWeight: 600,
   },
-  /** Screen titles — the design's Space Grotesk 700 at 24-26px. */
   display: {
     fontSize: 25,
     fontWeight: 700,
     letterSpacing: -0.5,
     lineHeight: 30,
   },
-  /** Section headers within a screen. */
   heading: {
     fontSize: 15,
     fontWeight: 600,
     lineHeight: 20,
   },
-  /** The design's running body copy, a step below `default`. */
   body: {
     fontSize: 13,
     fontWeight: 400,
@@ -91,7 +88,6 @@ const styles = StyleSheet.create({
     fontWeight: Platform.select({ android: 700 }) ?? 500,
     fontSize: 12,
   },
-  /** Micro labels: uppercase monospace with wide tracking, used for counts and captions. */
   mono: {
     fontFamily: Fonts.mono,
     fontSize: 10,
@@ -99,7 +95,6 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     textTransform: "uppercase",
   },
-  /** Monospace numerals shown at reading size, for stat values. */
   monoValue: {
     fontFamily: Fonts.mono,
     fontSize: 14,

@@ -5,7 +5,6 @@ import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
 import { useTheme } from "@/hooks/use-theme";
 
-/** Rules text, with the flavour line beneath it when the printing carries one. */
 function CardRulesPanel({ rulesText }: { readonly rulesText: Card["rulesText"] }) {
   const theme = useTheme();
 

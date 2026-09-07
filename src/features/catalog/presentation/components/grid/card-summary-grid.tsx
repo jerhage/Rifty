@@ -20,7 +20,6 @@ interface CardSummaryGridProps {
   readonly onSelectCard: (id: string) => void;
 }
 
-/** The two-column catalog grid. Tiles are measured so a trailing odd card keeps its column width. */
 function CardSummaryGrid({
   cards,
   emptyMessage,

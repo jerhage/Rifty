@@ -6,7 +6,6 @@ import type { Card } from "@/features/catalog/card/card";
 
 import { formatDomains, formatTaxonomyId } from "../../card-taxonomy-format";
 
-/** Domain and type in the card's own color, then its rarity. */
 function CardClassificationLine({
   accent,
   card,

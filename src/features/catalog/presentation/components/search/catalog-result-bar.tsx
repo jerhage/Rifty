@@ -7,7 +7,6 @@ import { activeFilterCount, type CatalogQueryCriteria } from "../../catalog-quer
 import { FilterControl } from "./filter-control";
 import { SortControl } from "./sort-control";
 
-/** The result count, with the filter and sort controls beneath it. */
 function CatalogResultBar({
   criteria,
   onOpenFilters,

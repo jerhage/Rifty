@@ -1,6 +1,5 @@
 import { StyleSheet, View } from "react-native";
 
-/** Three descending rules, the shorthand for "filters" throughout the catalog. */
 function FilterGlyph({ color }: { readonly color: string }) {
   return (
     <View style={styles.glyph}>

@@ -5,7 +5,6 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-/** Holds two or more {@link SegmentedOption} children as one connected control. */
 function SegmentedControl({ children }: { readonly children: ReactNode }) {
   const theme = useTheme();
 
@@ -16,7 +15,6 @@ function SegmentedControl({ children }: { readonly children: ReactNode }) {
   );
 }
 
-/** One choice within a {@link SegmentedControl}, optionally prefixed by a glyph. */
 function SegmentedOption({
   glyph,
   label,

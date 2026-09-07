@@ -9,7 +9,6 @@ import type { SetCode } from "@/features/catalog/value-objects/set-code";
 /** The catalog query as the UI holds it: everything except the paging the data component owns. */
 type CatalogQueryCriteria = Omit<CardListCriteria, "limit" | "offset">;
 
-/** The card attributes that can be constrained by a minimum value. */
 type NumericAttribute = "energy" | "might" | "power";
 
 function toggleSet(criteria: CatalogQueryCriteria, setCode: SetCode): CatalogQueryCriteria {

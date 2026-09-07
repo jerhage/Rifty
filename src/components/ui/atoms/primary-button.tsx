@@ -4,7 +4,6 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-/** The filled, full-width action that closes out a sheet or form. */
 function PrimaryButton({
   label,
   onPress,

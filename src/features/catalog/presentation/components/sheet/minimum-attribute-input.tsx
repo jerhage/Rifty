@@ -11,7 +11,6 @@ import {
   type NumericAttribute,
 } from "../../catalog-query-criteria";
 
-/** A labelled numeric field constraining one card attribute to a minimum value. */
 function MinimumAttributeInput({
   criteria,
   label,

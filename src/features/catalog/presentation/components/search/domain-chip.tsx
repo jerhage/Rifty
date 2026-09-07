@@ -1,10 +1,7 @@
 import { Chip } from "@/components/ui/atoms/chip";
 import { ColorDot } from "@/components/ui/atoms/color-dot";
 
-/**
- * A domain filter chip. The dot keeps its domain color whether or not the chip is on, so the chip
- * itself stays neutral rather than fighting it.
- */
+/** The dot keeps its domain color when unselected, so the chip itself stays neutral. */
 function DomainChip({
   dotColor,
   label,

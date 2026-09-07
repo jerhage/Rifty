@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet, type StyleProp, type ViewStyle } from "react-na
 
 import { Spacing } from "@/constants/theme";
 
-/** A single scrolling row of chips or pills that runs past the right edge of the screen. */
 function HorizontalScroller({
   children,
   gap = Spacing.two - 1,

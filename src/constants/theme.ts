@@ -1,11 +1,8 @@
 /**
- * Design tokens for the Riftbound Companion UI.
- *
- * Colors come from the `Riftbound Companion` design canvas. The canvas expresses color in
- * `oklch()`, which React Native's style engine does not parse on native, so every opaque value is
- * stored here as its sRGB hex equivalent. Translucent values stay as `rgba()` — React Native does
- * support that notation, and letting them composite over whatever sits behind keeps the layered
- * "glass" surfaces of the design intact.
+ * The design canvas expresses color in `oklch()`, which React Native's style engine does not parse
+ * on native, so every opaque value is stored here as its sRGB hex equivalent. Translucent values
+ * stay as `rgba()`, which React Native does support, so they keep compositing over whatever sits
+ * behind them.
  */
 
 import "@/global.css";

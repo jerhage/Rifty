@@ -4,7 +4,6 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-/** A single-choice row: marker, label, and a note explaining what choosing it means. */
 function RadioRow({
   label,
   note,

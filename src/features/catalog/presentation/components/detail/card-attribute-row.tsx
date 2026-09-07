@@ -5,11 +5,7 @@ import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
 import { useTheme } from "@/hooks/use-theme";
 
-/**
- * The card's numeric attributes as tiles under the artwork. A card only shows the attributes it
- * actually carries — a Spell has no might, a Battlefield no energy — and nothing renders when it
- * carries none.
- */
+/** A Spell has no might and a Battlefield no energy, so absent attributes are dropped. */
 function CardAttributeRow({ accent, card }: { readonly accent: string; readonly card: Card }) {
   const theme = useTheme();
   const attributes = [

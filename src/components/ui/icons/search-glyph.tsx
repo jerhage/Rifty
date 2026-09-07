@@ -2,7 +2,6 @@ import { StyleSheet, View } from "react-native";
 
 import { Radius } from "@/constants/theme";
 
-/** The outline ring that stands in for a magnifier inside the search field. */
 function SearchGlyph({ color }: { readonly color: string }) {
   return <View style={[styles.glyph, { borderColor: color }]} />;
 }

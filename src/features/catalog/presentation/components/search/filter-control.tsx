@@ -5,7 +5,6 @@ import { FilterGlyph } from "@/components/ui/icons/filter-glyph";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-/** Opens the advanced filters, badged with how many facets are currently constrained. */
 function FilterControl({
   count,
   onPress,

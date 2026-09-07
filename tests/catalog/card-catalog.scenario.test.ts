@@ -107,6 +107,26 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
+  it("finds card summaries by printed or normalized card name", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const kaisa = card("kaisa", unleashed.code, {
+      cleanName: "KaiSa Daughter of the Void",
+      collectorNumber: 1,
+      name: "Kai'Sa - Daughter of the Void",
+    });
+    const jinx = card("jinx", unleashed.code, { collectorNumber: 2, name: "Jinx" });
+    store.seedCard(kaisa);
+    store.seedCard(jinx);
+
+    await expect(store.cards.getSummaryPageByName("kaisa")).resolves.toEqual(
+      Page.create([{ id: kaisa.id, imageUrl: kaisa.imageUrl, name: kaisa.name }], false),
+    );
+    await expect(store.cards.getSummaryPageByName(" ")).resolves.toEqual(Page.empty());
+    store.close();
+  });
+
   it("gets cards belonging to one or every selected domain", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");

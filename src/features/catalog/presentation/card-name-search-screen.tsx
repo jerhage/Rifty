@@ -1,0 +1,99 @@
+import { StyleSheet, TextInput } from "react-native";
+
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+
+import { CardSummaryGrid } from "./card-summary-grid";
+import { CardSummaryPageFooter } from "./card-summary-page-footer";
+import type { CardsDataContent } from "./cards-data";
+
+interface CardNameSearchScreenProps extends CardsDataContent {
+  readonly name: string;
+  readonly onChangeName: (name: string) => void;
+  readonly onSelectCard: (id: string) => void;
+}
+
+function CardNameSearchScreen({
+  cards,
+  hasMore,
+  isLoadingMore,
+  isRefreshing,
+  loadMore,
+  loadMoreError,
+  name,
+  onChangeName,
+  onSelectCard,
+  refresh,
+  retryLoadMore,
+}: CardNameSearchScreenProps) {
+  return (
+    <CardSummaryGrid
+      cards={cards}
+      emptyMessage={name.trim() ? "No cards match that name." : "Enter a card name to search."}
+      footer={
+        <CardSummaryPageFooter
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          loadMore={loadMore}
+          loadMoreError={loadMoreError}
+          retryLoadMore={retryLoadMore}
+        />
+      }
+      header={<CardNameSearchHeader name={name} onChangeName={onChangeName} resultCount={cards.length} />}
+      isRefreshing={isRefreshing}
+      onRefresh={refresh}
+      onSelectCard={onSelectCard}
+    />
+  );
+}
+
+function CardNameSearchHeader({
+  name,
+  onChangeName,
+  resultCount,
+}: {
+  readonly name: string;
+  readonly onChangeName: (name: string) => void;
+  readonly resultCount: number;
+}) {
+  const theme = useTheme();
+
+  return (
+    <ThemedView style={styles.header}>
+      <ThemedText type="subtitle">Search Cards</ThemedText>
+      <TextInput
+        accessibilityLabel="Search card names"
+        autoCapitalize="none"
+        autoCorrect={false}
+        onChangeText={onChangeName}
+        placeholder="Card name"
+        placeholderTextColor={theme.textSecondary}
+        style={[styles.input, { backgroundColor: theme.backgroundElement, color: theme.text }]}
+        value={name}
+      />
+      {name.trim() ? (
+        <ThemedText themeColor="textSecondary">
+          {resultCount === 1 ? "1 card" : `${resultCount} cards`}
+        </ThemedText>
+      ) : null}
+    </ThemedView>
+  );
+}
+
+export { CardNameSearchScreen };
+
+const styles = StyleSheet.create({
+  header: {
+    gap: Spacing.two,
+    paddingBottom: Spacing.three,
+  },
+  input: {
+    borderRadius: Spacing.two,
+    fontSize: 16,
+    lineHeight: 24,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+});

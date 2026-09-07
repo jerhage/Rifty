@@ -52,6 +52,17 @@ class SqliteCardRepository implements CardRepository {
     );
   }
 
+  async getSummaryPageByName(
+    name: string,
+    criteria?: Pick<CardListCriteria, "limit" | "offset">,
+    { signal }: ReadOptions = {},
+  ): Promise<Page<CardSummary>> {
+    const search = name.trim();
+    if (!search) return Page.empty();
+
+    return this.#getSummaryPageMatching({ ...criteria, search }, signal, "name");
+  }
+
   async getPage(criteria?: CardListCriteria, { signal }: ReadOptions = {}): Promise<Page<Card>> {
     throwIfAborted(signal);
     const { limit, offset } = pagination(criteria);
@@ -83,6 +94,7 @@ class SqliteCardRepository implements CardRepository {
   async #getSummaryPageMatching(
     criteria: CardListCriteria | Pick<CardListCriteria, "limit" | "offset"> | undefined,
     signal: AbortSignal | undefined,
+    searchScope: "anyText" | "name" = "anyText",
   ): Promise<Page<CardSummary>> {
     throwIfAborted(signal);
     const { limit, offset } = pagination(criteria);
@@ -98,7 +110,7 @@ class SqliteCardRepository implements CardRepository {
       })
       .from(catalogCards)
       .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
-      .where(and(...this.#conditionsFor(criteria)))
+      .where(and(...this.#conditionsFor(criteria, searchScope)))
       .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
       .limit(limit + 1)
@@ -110,6 +122,7 @@ class SqliteCardRepository implements CardRepository {
 
   #conditionsFor(
     criteria: CardListCriteria | Pick<CardListCriteria, "limit" | "offset"> | undefined,
+    searchScope: "anyText" | "name" = "anyText",
   ): SQL[] {
     if (!criteria) return [];
 
@@ -183,7 +196,9 @@ class SqliteCardRepository implements CardRepository {
         or(
           sql`instr(lower(${catalogCards.name}), lower(${criteria.search})) > 0`,
           sql`instr(lower(${catalogCards.cleanName}), lower(${criteria.search})) > 0`,
-          sql`instr(lower(${catalogCards.rulesTextPlain}), lower(${criteria.search})) > 0`,
+          searchScope === "name"
+            ? undefined
+            : sql`instr(lower(${catalogCards.rulesTextPlain}), lower(${criteria.search})) > 0`,
         )!,
       );
     }

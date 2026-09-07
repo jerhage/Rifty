@@ -22,6 +22,9 @@ function AppTabs() {
           <TabTrigger name="index" href="/" asChild>
             <TabButton>Cards</TabButton>
           </TabTrigger>
+          <TabTrigger name="search" href="/search" asChild>
+            <TabButton>Search</TabButton>
+          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>

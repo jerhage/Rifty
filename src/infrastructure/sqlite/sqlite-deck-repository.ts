@@ -35,6 +35,50 @@ class SqliteDeckRepository implements DeckRepository {
   }
 
   /**
+   * Replaces the stored deck wholesale. Entries are deleted and reinserted inside a transaction
+   * rather than diffed: a deck is small, and an aggregate written in one step cannot be left
+   * holding a card the caller removed.
+   */
+  async save(deck: Deck): Promise<void> {
+    // The driver is synchronous, so the transaction body runs statements with `run()` rather than
+    // awaiting them; an async callback here is rejected by the type system for that reason.
+    this.db.transaction((tx) => {
+      tx.insert(decks)
+        .values({
+          id: deck.id,
+          name: deck.name,
+          notes: deck.notes,
+          createdAt: deck.createdAt,
+          updatedAt: deck.updatedAt,
+        })
+        .onConflictDoUpdate({
+          target: decks.id,
+          set: { name: deck.name, notes: deck.notes, updatedAt: deck.updatedAt },
+        })
+        .run();
+      tx.delete(deckCards).where(eq(deckCards.deckId, deck.id)).run();
+
+      if (deck.entries.length > 0) {
+        tx.insert(deckCards)
+          .values(
+            deck.entries.map((entry) => ({
+              deckId: deck.id,
+              section: entry.section,
+              cardRiftboundId: entry.cardRiftboundId,
+              quantity: entry.quantity,
+            })),
+          )
+          .run();
+      }
+    });
+  }
+
+  /** Entries go with the deck through the schema's cascade. */
+  async remove(id: DeckId): Promise<void> {
+    await this.db.delete(decks).where(eq(decks.id, id));
+  }
+
+  /**
    * Entries are batched for the whole page and ordered so a deck maps to the same aggregate every
    * read. Section order is alphabetical rather than play order — presenting them is the UI's call.
    */

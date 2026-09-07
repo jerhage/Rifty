@@ -1,0 +1,56 @@
+import type { Clock } from "@/application/ports/clock";
+import type { IdGenerator } from "@/application/ports/id-generator";
+
+import { parseDeck, type Deck, type DeckName } from "../deck";
+import type { DeckLister } from "../deck-lister";
+import type { DeckSaver } from "../deck-saver";
+
+type CreateDeckResult =
+  | { readonly type: "success"; readonly deck: Deck }
+  | { readonly type: "nameTaken" }
+  | { readonly type: "saveFailed" };
+
+interface CreateDeckCapabilities {
+  readonly clock: Clock;
+  readonly deckLister: DeckLister;
+  readonly deckSaver: DeckSaver;
+  readonly idGenerator: IdGenerator;
+}
+
+/**
+ * Names are compared without case, which is stricter than the unique index behind them: two decks
+ * differing only in capitalisation would be indistinguishable in a list.
+ */
+async function createDeck(
+  name: DeckName,
+  { clock, deckLister, deckSaver, idGenerator }: CreateDeckCapabilities,
+): Promise<CreateDeckResult> {
+  try {
+    if (await isNameTaken(name, deckLister)) return { type: "nameTaken" };
+
+    const createdAt = clock.now();
+    const deck = parseDeck({
+      id: idGenerator.next(),
+      name,
+      notes: "",
+      createdAt,
+      updatedAt: createdAt,
+      entries: [],
+    });
+    await deckSaver.save(deck);
+
+    return { type: "success", deck };
+  } catch {
+    return { type: "saveFailed" };
+  }
+}
+
+async function isNameTaken(name: DeckName, deckLister: DeckLister): Promise<boolean> {
+  const existing = await deckLister.getAll();
+  const wanted = name.trim().toLowerCase();
+
+  return existing.some((deck) => deck.name.trim().toLowerCase() === wanted);
+}
+
+export { createDeck };
+export type { CreateDeckCapabilities, CreateDeckResult };

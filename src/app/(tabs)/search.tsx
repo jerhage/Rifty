@@ -17,7 +17,7 @@ function SearchScreen() {
     () => ({
       getSummaryPage: (criteria, options) =>
         catalog.cards.getSummaryPage(
-          { ...criteria, search: { type: "name", text: debouncedName } },
+          { ...criteria, search: { type: "nameOrRulesText", text: debouncedName } },
           options,
         ),
     }),

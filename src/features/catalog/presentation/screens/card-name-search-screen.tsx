@@ -31,7 +31,11 @@ function CardNameSearchScreen({
   return (
     <CardSummaryGrid
       cards={cards}
-      emptyMessage={name.trim() ? "No cards match that name." : "Enter a card name to search."}
+      emptyMessage={
+        name.trim()
+          ? "No cards match that name."
+          : "Enter a card name or search a card's rules text."
+      }
       footer={
         <CardSummaryPageFooter
           hasMore={hasMore}
@@ -66,11 +70,11 @@ function CardNameSearchHeader({
     <ThemedView style={styles.header}>
       <ThemedText type="subtitle">Search Cards</ThemedText>
       <TextInput
-        accessibilityLabel="Search card names"
+        accessibilityLabel="Search cards by name or rules text"
         autoCapitalize="none"
         autoCorrect={false}
         onChangeText={onChangeName}
-        placeholder="Card name"
+        placeholder="Card name or rules text"
         placeholderTextColor={theme.textSecondary}
         style={[styles.input, { backgroundColor: theme.backgroundElement, color: theme.text }]}
         value={name}

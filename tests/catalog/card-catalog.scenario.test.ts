@@ -62,6 +62,7 @@ describe("card catalog scenarios", () => {
         {
           domainIds: ["fury"],
           rarityIds: ["rare"],
+          typeIds: ["legend"],
           search: { type: "nameOrRulesText", text: "piltover" },
           limit: 10,
         },

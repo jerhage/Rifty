@@ -27,6 +27,9 @@ function CardSummaryCard({ aspectRatio, card }: CardSummaryCardProps) {
         {card.name}
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
+        Type: {formatTaxonomyId(card.classification.typeId)}
+      </ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
         {formatClassification(card)}
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
@@ -57,19 +60,21 @@ function Stat({ label, value }: { readonly label: string; readonly value: number
 }
 
 function formatClassification(card: Card): string {
-  return [card.classification.supertypeId, card.classification.typeId, card.classification.rarityId]
+  return [card.classification.supertypeId, card.classification.rarityId]
     .filter((value): value is string => value !== null)
-    .map((value) => value.replaceAll("-", " "))
-    .map((value) => value.replace(/\b\w/g, (letter) => letter.toUpperCase()))
+    .map(formatTaxonomyId)
     .join(" · ");
+}
+
+function formatTaxonomyId(value: string): string {
+  return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function formatDomains(domainIds: readonly string[]): string {
   return domainIds.length === 0
     ? "None"
     : domainIds
-        .map((domainId) => domainId.replaceAll("-", " "))
-        .map((domainId) => domainId.replace(/\b\w/g, (letter) => letter.toUpperCase()))
+        .map(formatTaxonomyId)
         .join(" · ");
 }
 

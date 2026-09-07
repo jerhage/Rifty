@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,7 +7,7 @@ const projectRoot = process.cwd();
 const generator = join(projectRoot, "scripts/generate-catalog-seed.ts");
 
 function runGenerator(environment: Partial<NodeJS.ProcessEnv> = {}): string {
-  return execFileSync(
+  const result = spawnSync(
     "deno",
     ["run", "--sloppy-imports", "--allow-read", "--allow-write", "--allow-env", generator],
     {
@@ -16,6 +16,12 @@ function runGenerator(environment: Partial<NodeJS.ProcessEnv> = {}): string {
       env: { ...process.env, ...environment },
     },
   );
+
+  if (result.error) throw result.error;
+  // Capture expected generator failures so their stderr does not pollute Jest output.
+  if (result.status !== 0) throw new Error(result.stderr.toString());
+
+  return result.stdout.toString();
 }
 
 describe("catalog seed generator", () => {

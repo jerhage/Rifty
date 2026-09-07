@@ -40,10 +40,5 @@ type CardListCriteria = z.output<typeof cardListCriteriaSchema>;
 type CardSearch = z.output<typeof cardSearchSchema>;
 type CardSort = z.output<typeof cardSortSchema>;
 
-export {
-  cardListCriteriaSchema,
-  cardSearchSchema,
-  cardSortSchema,
-  parseCardListCriteria,
-};
+export { cardListCriteriaSchema, cardSearchSchema, cardSortSchema, parseCardListCriteria };
 export type { CardListCriteria, CardSearch, CardSort };

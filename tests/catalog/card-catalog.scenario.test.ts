@@ -193,12 +193,18 @@ describe("card catalog scenarios", () => {
     await expect(
       store.cards.getSummaryPage({ search: { type: "name", text: "draw" } }),
     ).resolves.toEqual(
-      Page.create([{ id: drawnName.id, imageUrl: drawnName.imageUrl, name: drawnName.name }], false),
+      Page.create(
+        [{ id: drawnName.id, imageUrl: drawnName.imageUrl, name: drawnName.name }],
+        false,
+      ),
     );
     await expect(
       store.cards.getSummaryPage({ search: { type: "rulesText", text: "draw" } }),
     ).resolves.toEqual(
-      Page.create([{ id: drawSpell.id, imageUrl: drawSpell.imageUrl, name: drawSpell.name }], false),
+      Page.create(
+        [{ id: drawSpell.id, imageUrl: drawSpell.imageUrl, name: drawSpell.name }],
+        false,
+      ),
     );
     await expect(
       store.cards.getSummaryPage({ search: { type: "nameOrRulesText", text: "draw" } }),

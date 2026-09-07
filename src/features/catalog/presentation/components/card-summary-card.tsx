@@ -41,7 +41,6 @@ function CardSummaryCard({ aspectRatio, card }: CardSummaryCardProps) {
 
       <ThemedText type="smallBold">Abilities</ThemedText>
       <ThemedText style={styles.abilities}>{card.rulesText.plain || "No abilities."}</ThemedText>
-
     </ThemedView>
   );
 }

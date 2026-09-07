@@ -221,7 +221,11 @@ class SqliteCardRepository implements CardRepository {
       | Pick<CardListCriteria, "limit" | "offset" | "search" | "sort">
       | undefined,
   ): SQL[] {
-    const catalogOrder = () => [asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id)];
+    const catalogOrder = () => [
+      asc(catalogCards.setCode),
+      asc(catalogCards.collectorNumber),
+      asc(catalogCards.id),
+    ];
     const directionFor = (direction: "ascending" | "descending") =>
       direction === "ascending" ? asc : desc;
     const nullableOrder = (
@@ -233,7 +237,9 @@ class SqliteCardRepository implements CardRepository {
 
     return match<CardSort, SQL[]>(criteria.sort)
       .with({ type: "catalogOrder" }, catalogOrder)
-      .with({ type: "name" }, ({ direction }) => [directionFor(direction)(sql`lower(${catalogCards.name})`)])
+      .with({ type: "name" }, ({ direction }) => [
+        directionFor(direction)(sql`lower(${catalogCards.name})`),
+      ])
       .with({ type: "energy" }, ({ direction }) => nullableOrder(catalogCards.energy, direction))
       .with({ type: "might" }, ({ direction }) => nullableOrder(catalogCards.might, direction))
       .with({ type: "power" }, ({ direction }) => nullableOrder(catalogCards.power, direction))

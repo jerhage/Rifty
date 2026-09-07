@@ -41,7 +41,9 @@ function CardNameSearchScreen({
           retryLoadMore={retryLoadMore}
         />
       }
-      header={<CardNameSearchHeader name={name} onChangeName={onChangeName} resultCount={cards.length} />}
+      header={
+        <CardNameSearchHeader name={name} onChangeName={onChangeName} resultCount={cards.length} />
+      }
       isRefreshing={isRefreshing}
       onRefresh={refresh}
       onSelectCard={onSelectCard}

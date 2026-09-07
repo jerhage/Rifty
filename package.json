@@ -1,7 +1,8 @@
 {
   "name": "riftcards",
-  "main": "expo-router/entry",
   "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -9,6 +10,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "check:lint": "oxlint",
+    "format": "oxfmt",
     "check:types": "tsc --noEmit",
     "test": "jest --runInBand",
     "check:db": "drizzle-kit check",
@@ -63,6 +65,5 @@
     },
     "preset": "jest-expo",
     "watchman": false
-  },
-  "private": true
+  }
 }

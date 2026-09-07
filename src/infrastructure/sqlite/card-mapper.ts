@@ -74,7 +74,13 @@ function toDomainCard({
   });
 }
 
-function toDomainCardSummary({ card, media }: { readonly card: unknown; readonly media: unknown }): CardSummary {
+function toDomainCardSummary({
+  card,
+  media,
+}: {
+  readonly card: unknown;
+  readonly media: unknown;
+}): CardSummary {
   const persistedCard = catalogCardSelectSchema.pick({ id: true, name: true }).parse(card);
   const persistedMedia = cardMediaSelectSchema
     .pick({ imageAssetId: true, imageHeight: true, imageWidth: true })

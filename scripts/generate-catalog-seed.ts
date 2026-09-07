@@ -31,7 +31,10 @@ import type {
   cardTags,
   catalogCards,
 } from "../src/infrastructure/database/catalog-schema/cards";
-import type { cardSets, setMarketplaceReferences } from "../src/infrastructure/database/catalog-schema/sets";
+import type {
+  cardSets,
+  setMarketplaceReferences,
+} from "../src/infrastructure/database/catalog-schema/sets";
 import type {
   cardSupertypes,
   cardTypes,

@@ -6,10 +6,6 @@ import type { CardSummaryLister } from "./card-summary-lister";
 
 /** Product-facing read capability for the local card catalog. */
 interface CardRepository
-  extends CardDomainLister,
-    CardDomainSummaryLister,
-    CardFinder,
-    CardLister,
-    CardSummaryLister {}
+  extends CardDomainLister, CardDomainSummaryLister, CardFinder, CardLister, CardSummaryLister {}
 
 export type { CardRepository };

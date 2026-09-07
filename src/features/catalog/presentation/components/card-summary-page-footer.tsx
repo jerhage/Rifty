@@ -48,8 +48,15 @@ function LoadMoreButton({
   readonly onPress: () => void;
 }) {
   return (
-    <Pressable disabled={disabled} onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type="backgroundSelected" style={[styles.loadMoreButton, disabled && styles.disabled]}>
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => pressed && styles.pressed}
+    >
+      <ThemedView
+        type="backgroundSelected"
+        style={[styles.loadMoreButton, disabled && styles.disabled]}
+      >
         <ThemedText type="smallBold">{label}</ThemedText>
       </ThemedView>
     </Pressable>

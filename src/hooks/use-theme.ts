@@ -3,14 +3,20 @@
  * https://docs.expo.dev/guides/color-schemes/
  */
 
-import { Colors } from "@/constants/theme";
+import { Colors, DomainColors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === "unspecified" ? "light" : scheme;
-
-  return Colors[theme];
+  return Colors[resolvedScheme(useColorScheme())];
 }
 
-export { useTheme };
+/** Accent colors keyed by catalog domain, for the current color scheme. */
+function useDomainColors() {
+  return DomainColors[resolvedScheme(useColorScheme())];
+}
+
+function resolvedScheme(scheme: ReturnType<typeof useColorScheme>) {
+  return scheme === "dark" ? "dark" : "light";
+}
+
+export { useDomainColors, useTheme };

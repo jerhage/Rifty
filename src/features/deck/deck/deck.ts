@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 /** Stable game-card identity retained by a deck even when catalog data is reseeded. */
 const cardRiftboundIdSchema = z.string().trim().min(1);
 const deckIdSchema = z.string().trim().min(1);
+const deckNameSchema = z.string().trim().min(1);
 const deckSectionSchema = z.enum([
   "legend",
   "chosenChampion",
@@ -24,7 +25,7 @@ const deckEntrySchema = z.object({
 const deckSchema = z
   .object({
     id: deckIdSchema,
-    name: z.string().trim().min(1),
+    name: deckNameSchema,
     notes: z.string(),
     createdAt: z.string().trim().min(1),
     updatedAt: z.string().trim().min(1),
@@ -104,6 +105,7 @@ function parseDeckVerification(value: unknown): DeckVerification {
 
 type CardRiftboundId = z.output<typeof cardRiftboundIdSchema>;
 type DeckId = z.output<typeof deckIdSchema>;
+type DeckName = z.output<typeof deckNameSchema>;
 type DeckSection = z.output<typeof deckSectionSchema>;
 type DeckEntry = z.output<typeof deckEntrySchema>;
 type Deck = z.output<typeof deckSchema>;
@@ -120,6 +122,7 @@ export {
   deckEntrySchema,
   deckIdSchema,
   deckLegalityViolationSchema,
+  deckNameSchema,
   deckSchema,
   deckSectionSchema,
   deckUnverifiedReasonSchema,
@@ -134,6 +137,7 @@ export type {
   DeckEntry,
   DeckId,
   DeckLegalityViolation,
+  DeckName,
   DeckSection,
   DeckUnverifiedReason,
   DeckVerification,

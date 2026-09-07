@@ -6,6 +6,7 @@ import m0002 from "./20260906175223_allow_duplicate_riftbound_ids/migration.sql"
 import m0003 from "./20260906211632_add_card_media_dimensions/migration.sql";
 import m0004 from "./20260907173253_add_decks/migration.sql";
 import m0005 from "./20260907173329_enforce_deck_card_quantity/migration.sql";
+import m0006 from "./20260907180450_enforce_unique_deck_names/migration.sql";
 
 export default {
   migrations: {
@@ -15,5 +16,6 @@ export default {
     "20260906211632_add_card_media_dimensions": m0003,
     "20260907173253_add_decks": m0004,
     "20260907173329_enforce_deck_card_quantity": m0005,
+    "20260907180450_enforce_unique_deck_names": m0006,
   },
 };

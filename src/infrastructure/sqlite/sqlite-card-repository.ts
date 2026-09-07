@@ -31,14 +31,14 @@ class SqliteCardRepository implements CardRepository {
     throwIfAborted(signal);
     if (!row) return null;
 
-    return (await this.toDomainCards([row], signal))[0] ?? null;
+    return (await this.#toDomainCards([row], signal)).at(0) ?? null;
   }
 
   async getSummaryPage(
     criteria?: Pick<CardListCriteria, "limit" | "offset">,
     { signal }: ReadOptions = {},
   ): Promise<Page<CardSummary>> {
-    return this.getSummaryPageMatching(criteria, signal);
+    return this.#getSummaryPageMatching(criteria, signal);
   }
 
   async getSummaryPageForDomains(
@@ -46,7 +46,7 @@ class SqliteCardRepository implements CardRepository {
     criteria?: Pick<CardListCriteria, "limit" | "offset">,
     { signal }: ReadOptions = {},
   ): Promise<Page<CardSummary>> {
-    return this.getSummaryPageMatching(
+    return this.#getSummaryPageMatching(
       { ...criteria, domainIds: [...normalizeCardDomainSelection(domains)] },
       signal,
     );
@@ -58,13 +58,13 @@ class SqliteCardRepository implements CardRepository {
     const rows = await this.db
       .select()
       .from(catalogCards)
-      .where(and(...this.conditionsFor(criteria)))
+      .where(and(...this.#conditionsFor(criteria)))
       .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
       .limit(limit + 1)
       .offset(offset);
     throwIfAborted(signal);
-    const pageCards = await this.toDomainCards(rows.slice(0, limit), signal);
+    const pageCards = await this.#toDomainCards(rows.slice(0, limit), signal);
 
     return Page.create(pageCards, rows.length > limit);
   }
@@ -80,7 +80,7 @@ class SqliteCardRepository implements CardRepository {
     );
   }
 
-  private async getSummaryPageMatching(
+  async #getSummaryPageMatching(
     criteria: CardListCriteria | Pick<CardListCriteria, "limit" | "offset"> | undefined,
     signal: AbortSignal | undefined,
   ): Promise<Page<CardSummary>> {
@@ -98,7 +98,7 @@ class SqliteCardRepository implements CardRepository {
       })
       .from(catalogCards)
       .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
-      .where(and(...this.conditionsFor(criteria)))
+      .where(and(...this.#conditionsFor(criteria)))
       .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
       .limit(limit + 1)
@@ -108,7 +108,7 @@ class SqliteCardRepository implements CardRepository {
     return Page.create(rows.slice(0, limit).map(toDomainCardSummary), rows.length > limit);
   }
 
-  private conditionsFor(
+  #conditionsFor(
     criteria: CardListCriteria | Pick<CardListCriteria, "limit" | "offset"> | undefined,
   ): SQL[] {
     if (!criteria) return [];
@@ -191,7 +191,10 @@ class SqliteCardRepository implements CardRepository {
     return conditions;
   }
 
-  private async toDomainCards(
+  /**
+   * Loads card aggregates and maps to domain cards. Need to think of a better name
+   * */
+  async #toDomainCards(
     rows: readonly (typeof catalogCards.$inferSelect)[],
     signal: AbortSignal | undefined,
   ): Promise<Card[]> {

@@ -169,7 +169,7 @@ function naturalCompare(left: string, right: string): number {
   return left.localeCompare(right, undefined, { numeric: true });
 }
 function assertComplete<Item>(pages: readonly Page<Item>[], label: string): void {
-  if (pages.reduce((count, page) => count + page.items.length, 0) !== pages[0]?.total)
+  if (pages.reduce((count, page) => count + page.items.length, 0) !== pages.at(0)?.total)
     throw new Error(`Incomplete ${label} pages.`);
 }
 function assertUnique<Item>(

@@ -18,7 +18,7 @@ class SqliteSetRepository implements SetRepository {
     throwIfAborted(signal);
     if (!row) return null;
 
-    return (await this.toDomainCardSets([row], signal))[0] ?? null;
+    return (await this.#toDomainCardSets([row], signal))[0] ?? null;
   }
 
   async getAll({ signal }: ReadOptions = {}): Promise<readonly CardSet[]> {
@@ -28,10 +28,10 @@ class SqliteSetRepository implements SetRepository {
       .from(cardSets)
       .orderBy(asc(cardSets.publishedOn), asc(cardSets.code));
     throwIfAborted(signal);
-    return this.toDomainCardSets(rows, signal);
+    return this.#toDomainCardSets(rows, signal);
   }
 
-  private async toDomainCardSets(
+  async #toDomainCardSets(
     rows: readonly (typeof cardSets.$inferSelect)[],
     signal: AbortSignal | undefined,
   ): Promise<CardSet[]> {

@@ -1,14 +1,11 @@
-import { and, asc, desc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, or, sql, type SQL } from "drizzle-orm";
 import { match } from "ts-pattern";
 
 import type { Card, CardId } from "@/features/catalog/card/card";
-import {
-  normalizeCardDomainSelection,
-  type CardDomainSelection,
-} from "@/features/catalog/card/card-domain-selection";
 import type { CardSummary } from "@/features/catalog/card/card-summary";
 import type {
   CardListCriteria,
+  CardNumericFilter,
   CardSearch,
   CardSort,
 } from "@/features/catalog/card/card-list-criteria";
@@ -40,21 +37,10 @@ class SqliteCardRepository implements CardRepository {
   }
 
   async getSummaryPage(
-    criteria?: Pick<CardListCriteria, "limit" | "offset" | "search" | "sort">,
+    criteria?: CardListCriteria,
     { signal }: ReadOptions = {},
   ): Promise<Page<CardSummary>> {
     return this.#getSummaryPageMatching(criteria, signal);
-  }
-
-  async getSummaryPageForDomains(
-    domains: CardDomainSelection,
-    criteria?: Pick<CardListCriteria, "limit" | "offset" | "sort">,
-    { signal }: ReadOptions = {},
-  ): Promise<Page<CardSummary>> {
-    return this.#getSummaryPageMatching(
-      { ...criteria, domainIds: [...normalizeCardDomainSelection(domains)] },
-      signal,
-    );
   }
 
   async getPage(criteria?: CardListCriteria, { signal }: ReadOptions = {}): Promise<Page<Card>> {
@@ -74,22 +60,8 @@ class SqliteCardRepository implements CardRepository {
     return Page.create(pageCards, rows.length > limit);
   }
 
-  async getPageForDomains(
-    domains: CardDomainSelection,
-    criteria?: Pick<CardListCriteria, "limit" | "offset" | "sort">,
-    options: ReadOptions = {},
-  ): Promise<Page<Card>> {
-    return this.getPage(
-      { ...criteria, domainIds: [...normalizeCardDomainSelection(domains)] },
-      options,
-    );
-  }
-
   async #getSummaryPageMatching(
-    criteria:
-      | CardListCriteria
-      | Pick<CardListCriteria, "limit" | "offset" | "search" | "sort">
-      | undefined,
+    criteria: CardListCriteria | undefined,
     signal: AbortSignal | undefined,
   ): Promise<Page<CardSummary>> {
     throwIfAborted(signal);
@@ -116,19 +88,14 @@ class SqliteCardRepository implements CardRepository {
     return Page.create(rows.slice(0, limit).map(toDomainCardSummary), rows.length > limit);
   }
 
-  #conditionsFor(
-    criteria:
-      | CardListCriteria
-      | Pick<CardListCriteria, "limit" | "offset" | "search" | "sort">
-      | undefined,
-  ): SQL[] {
+  #conditionsFor(criteria: CardListCriteria | undefined): SQL[] {
     if (!criteria) return [];
 
     const conditions: SQL[] = [];
-    if ("setCodes" in criteria && criteria.setCodes?.length) {
+    if (criteria.setCodes?.length) {
       conditions.push(inArray(catalogCards.setCode, criteria.setCodes));
     }
-    if ("typeIds" in criteria && criteria.typeIds?.length) {
+    if (criteria.typeIds?.length) {
       conditions.push(
         inArray(
           catalogCards.id,
@@ -139,7 +106,7 @@ class SqliteCardRepository implements CardRepository {
         ),
       );
     }
-    if ("supertypeIds" in criteria && criteria.supertypeIds?.length) {
+    if (criteria.supertypeIds?.length) {
       conditions.push(
         inArray(
           catalogCards.id,
@@ -150,7 +117,7 @@ class SqliteCardRepository implements CardRepository {
         ),
       );
     }
-    if ("rarityIds" in criteria && criteria.rarityIds?.length) {
+    if (criteria.rarityIds?.length) {
       conditions.push(
         inArray(
           catalogCards.id,
@@ -161,7 +128,7 @@ class SqliteCardRepository implements CardRepository {
         ),
       );
     }
-    if ("domainIds" in criteria && criteria.domainIds?.length) {
+    if (criteria.domainIds?.length) {
       const domainIds = [...new Set(criteria.domainIds)];
       conditions.push(
         inArray(
@@ -175,7 +142,7 @@ class SqliteCardRepository implements CardRepository {
         ),
       );
     }
-    if ("tagIds" in criteria && criteria.tagIds?.length) {
+    if (criteria.tagIds?.length) {
       const tagIds = [...new Set(criteria.tagIds)];
       conditions.push(
         inArray(
@@ -189,7 +156,13 @@ class SqliteCardRepository implements CardRepository {
         ),
       );
     }
-    if ("search" in criteria && criteria.search) {
+    if (criteria.energy)
+      conditions.push(this.#numericFilterCondition(catalogCards.energy, criteria.energy));
+    if (criteria.might)
+      conditions.push(this.#numericFilterCondition(catalogCards.might, criteria.might));
+    if (criteria.power)
+      conditions.push(this.#numericFilterCondition(catalogCards.power, criteria.power));
+    if (criteria.search) {
       conditions.push(this.#searchCondition(criteria.search));
     }
 
@@ -215,12 +188,22 @@ class SqliteCardRepository implements CardRepository {
       .exhaustive();
   }
 
-  #orderBy(
-    criteria:
-      | CardListCriteria
-      | Pick<CardListCriteria, "limit" | "offset" | "search" | "sort">
-      | undefined,
-  ): SQL[] {
+  #numericFilterCondition(
+    column: typeof catalogCards.energy | typeof catalogCards.might | typeof catalogCards.power,
+    filter: CardNumericFilter,
+  ): SQL {
+    return match(filter)
+      .with({ type: "exact" }, ({ value }) => eq(column, value))
+      .with({ type: "atLeast" }, ({ value }) => gte(column, value))
+      .with({ type: "atMost" }, ({ value }) => lte(column, value))
+      .with({ type: "between" }, ({ minimum, maximum }) =>
+        // Drizzle permits an empty and(), but a between filter always supplies both bounds.
+        and(gte(column, minimum), lte(column, maximum))!,
+      )
+      .exhaustive();
+  }
+
+  #orderBy(criteria: CardListCriteria | undefined): SQL[] {
     const catalogOrder = () => [
       asc(catalogCards.setCode),
       asc(catalogCards.collectorNumber),

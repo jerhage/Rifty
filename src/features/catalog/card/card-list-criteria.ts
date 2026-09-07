@@ -19,6 +19,22 @@ const cardSortSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("power"), direction: cardSortDirectionSchema }),
 ]);
 
+const cardNumericFilterSchema = z
+  .discriminatedUnion("type", [
+    z.object({ type: z.literal("exact"), value: z.number().int().nonnegative() }),
+    z.object({ type: z.literal("atLeast"), value: z.number().int().nonnegative() }),
+    z.object({ type: z.literal("atMost"), value: z.number().int().nonnegative() }),
+    z.object({
+      type: z.literal("between"),
+      minimum: z.number().int().nonnegative(),
+      maximum: z.number().int().nonnegative(),
+    }),
+  ])
+  .refine(
+    (filter) => filter.type !== "between" || filter.minimum <= filter.maximum,
+    "A numeric filter minimum cannot exceed its maximum.",
+  );
+
 const cardListCriteriaSchema = z.object({
   setCodes: z.array(setCodeSchema).optional(),
   typeIds: z.array(taxonomyIdSchema).optional(),
@@ -26,6 +42,9 @@ const cardListCriteriaSchema = z.object({
   rarityIds: z.array(taxonomyIdSchema).optional(),
   domainIds: z.array(taxonomyIdSchema).optional(),
   tagIds: z.array(taxonomyIdSchema).optional(),
+  energy: cardNumericFilterSchema.optional(),
+  might: cardNumericFilterSchema.optional(),
+  power: cardNumericFilterSchema.optional(),
   search: cardSearchSchema.optional(),
   sort: cardSortSchema.optional(),
   limit: z.number().int().positive().max(100).optional(),
@@ -39,6 +58,13 @@ function parseCardListCriteria(value: unknown): CardListCriteria {
 type CardListCriteria = z.output<typeof cardListCriteriaSchema>;
 type CardSearch = z.output<typeof cardSearchSchema>;
 type CardSort = z.output<typeof cardSortSchema>;
+type CardNumericFilter = z.output<typeof cardNumericFilterSchema>;
 
-export { cardListCriteriaSchema, cardSearchSchema, cardSortSchema, parseCardListCriteria };
-export type { CardListCriteria, CardSearch, CardSort };
+export {
+  cardListCriteriaSchema,
+  cardNumericFilterSchema,
+  cardSearchSchema,
+  cardSortSchema,
+  parseCardListCriteria,
+};
+export type { CardListCriteria, CardNumericFilter, CardSearch, CardSort };

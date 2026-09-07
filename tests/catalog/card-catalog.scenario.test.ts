@@ -147,6 +147,41 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
+  it("filters card summaries by numeric attributes and domains in SQL", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const novice = card("novice", unleashed.code, {
+      attributes: { energy: 2, might: 1, power: null },
+      collectorNumber: 1,
+      domainIds: ["order"],
+    });
+    const adept = card("adept", unleashed.code, {
+      attributes: { energy: 4, might: 3, power: 1 },
+      collectorNumber: 2,
+      domainIds: ["fury"],
+    });
+    const master = card("master", unleashed.code, {
+      attributes: { energy: 6, might: 5, power: 2 },
+      collectorNumber: 3,
+      domainIds: ["fury", "order"],
+    });
+    store.seedCard(novice);
+    store.seedCard(adept);
+    store.seedCard(master);
+
+    await expect(
+      store.cards.getSummaryPage({ energy: { type: "between", minimum: 3, maximum: 5 } }),
+    ).resolves.toMatchObject({ items: [{ id: adept.id }] });
+    await expect(
+      store.cards.getSummaryPage({ power: { type: "atLeast", value: 2 } }),
+    ).resolves.toMatchObject({ items: [{ id: master.id }] });
+    await expect(
+      store.cards.getSummaryPage({ domainIds: ["fury", "order"] }),
+    ).resolves.toMatchObject({ items: [{ id: master.id }] });
+    store.close();
+  });
+
   it("finds card summaries by printed or normalized card name", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
@@ -234,13 +269,13 @@ describe("card catalog scenarios", () => {
     store.seedCard(furyOrder);
     store.seedCard(order);
 
-    await expect(store.cards.getPageForDomains("fury")).resolves.toEqual(
+    await expect(store.cards.getPage({ domainIds: ["fury"] })).resolves.toEqual(
       Page.create([fury, furyOrder], false),
     );
-    await expect(store.cards.getPageForDomains(["fury", "order"])).resolves.toEqual(
+    await expect(store.cards.getPage({ domainIds: ["fury", "order"] })).resolves.toEqual(
       Page.create([furyOrder], false),
     );
-    await expect(store.cards.getSummaryPageForDomains(["fury", "order"])).resolves.toEqual(
+    await expect(store.cards.getSummaryPage({ domainIds: ["fury", "order"] })).resolves.toEqual(
       Page.create(
         [{ id: furyOrder.id, imageUrl: furyOrder.imageUrl, name: furyOrder.name }],
         false,

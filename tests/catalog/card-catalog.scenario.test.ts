@@ -3,7 +3,7 @@ import { listCards } from "@/features/catalog/card/use-cases/list-cards";
 import { Page } from "@/shared/page";
 
 import { card, cardSet } from "./fixtures";
-import { createSqliteScenarioStore } from "./sqlite-scenario-store";
+import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 
 describe("card catalog scenarios", () => {
   it("hydrates a card printing with its classification, media, and references", async () => {

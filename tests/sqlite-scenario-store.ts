@@ -5,7 +5,10 @@ import { drizzle } from "drizzle-orm/node-sqlite";
 
 import type { Card } from "@/features/catalog/card/card";
 import type { CardSet } from "@/features/catalog/set/card-set";
+import type { Deck } from "@/features/deck/deck/deck";
 import type { CatalogDataStore } from "@/infrastructure/database/catalog-data-store";
+import type { DeckDataStore } from "@/infrastructure/database/deck-data-store";
+import { deckCards, decks } from "@/infrastructure/database/deck-schema/decks";
 import {
   cardClassifications,
   cardDomains,
@@ -23,12 +26,16 @@ import {
   tags,
 } from "@/infrastructure/database/catalog-schema/taxonomy";
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
+import { SqliteDeckRepository } from "@/infrastructure/sqlite/sqlite-deck-repository";
 import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
 import { parseImageUrl } from "@/shared/image-url";
 
+/** The real engine and committed migrations, holding both catalog and deck tables. */
 interface SqliteScenarioStore extends CatalogDataStore {
+  readonly deckStore: DeckDataStore;
   close(): void;
   seedCard(card: Card): void;
+  seedDeck(deck: Deck): void;
   seedSet(cardSet: CardSet): void;
 }
 
@@ -164,10 +171,39 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
     }
   }
 
+  function seedDeck(deck: Deck): void {
+    database
+      .insert(decks)
+      .values({
+        id: deck.id,
+        name: deck.name,
+        notes: deck.notes,
+        createdAt: deck.createdAt,
+        updatedAt: deck.updatedAt,
+      })
+      .run();
+
+    if (deck.entries.length > 0) {
+      database
+        .insert(deckCards)
+        .values(
+          deck.entries.map((entry) => ({
+            deckId: deck.id,
+            section: entry.section,
+            cardRiftboundId: entry.cardRiftboundId,
+            quantity: entry.quantity,
+          })),
+        )
+        .run();
+    }
+  }
+
   return {
     cards: new SqliteCardRepository(database),
     sets: new SqliteSetRepository(database),
+    deckStore: { repository: new SqliteDeckRepository(database) },
     seedCard,
+    seedDeck,
     seedSet,
     close: () => client.close(),
   };

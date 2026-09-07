@@ -2,7 +2,7 @@ import { findSet } from "@/features/catalog/set/use-cases/find-set";
 import { listSets } from "@/features/catalog/set/use-cases/list-sets";
 
 import { cardSet } from "./fixtures";
-import { createSqliteScenarioStore } from "./sqlite-scenario-store";
+import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 
 describe("set catalog scenarios", () => {
   it("lists sets in publication order and retains marketplace references", async () => {

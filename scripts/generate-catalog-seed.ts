@@ -140,9 +140,9 @@ if (cardPages.length === 0 || setPages.length === 0)
   throw new Error("Expected card and set pages in data/.");
 assertComplete(cardPages, "card");
 assertComplete(setPages, "set");
-const cards = cardPages.flatMap((page) => page.items);
+const cards = latestCardsByRiftboundId(cardPages.flatMap((page) => page.items));
 const sets = setPages.flatMap((page) => page.items);
-assertUnique(cards, (card) => card.id, "card id");
+assertUnique(cards, (card) => card.riftbound_id, "Riftbound card id");
 assertUnique(sets, (cardSet) => cardSet.set_id, "set code");
 const setCodes = new Set(sets.map((cardSet) => cardSet.set_id));
 for (const card of cards)
@@ -189,6 +189,25 @@ function assertUnique<Item>(
       throw new Error(`Duplicate or missing ${label}: ${key || "<missing>"}.`);
     seen.add(key);
   }
+}
+
+function latestCardsByRiftboundId(cards: readonly RawCard[]): RawCard[] {
+  const cardsByRiftboundId = new Map<string, RawCard>();
+
+  for (const card of cards) {
+    const existing = cardsByRiftboundId.get(card.riftbound_id);
+    // The provider emits stale and current records for some single-set printings. A Riftbound ID
+    // identifies that printing, so retain its newest source record; source ID breaks timestamp ties.
+    if (
+      existing === undefined ||
+      card.metadata.updated_on > existing.metadata.updated_on ||
+      (card.metadata.updated_on === existing.metadata.updated_on && card.id > existing.id)
+    ) {
+      cardsByRiftboundId.set(card.riftbound_id, card);
+    }
+  }
+
+  return [...cardsByRiftboundId.values()];
 }
 
 function buildSeed(cards: readonly RawCard[], sets: readonly RawSet[]): Seed {

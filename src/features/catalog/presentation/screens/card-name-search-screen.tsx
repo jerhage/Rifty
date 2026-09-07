@@ -44,7 +44,11 @@ function CardNameSearchScreen({
           />
         }
         header={
-          <CardNameSearchHeader name={name} onChangeName={onChangeName} resultCount={cards.length} />
+          <CardNameSearchHeader
+            name={name}
+            onChangeName={onChangeName}
+            resultCount={cards.length}
+          />
         }
         isRefreshing={isRefreshing}
         onEndReached={loadMore}
@@ -54,7 +58,11 @@ function CardNameSearchScreen({
       <Pressable
         accessibilityLabel="Open card filters and sorting"
         onPress={onOpenFilters}
-        style={({ pressed }) => [styles.filterButton, { top: filterButtonTop }, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.filterButton,
+          { top: filterButtonTop },
+          pressed && styles.pressed,
+        ]}
       >
         <ThemedView type="backgroundSelected" style={styles.filterButtonSurface}>
           <ThemedText type="smallBold">Filter & Sort</ThemedText>

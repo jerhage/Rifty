@@ -25,8 +25,18 @@ function runGenerator(environment: Partial<NodeJS.ProcessEnv> = {}): string {
 }
 
 describe("catalog seed generator", () => {
-  it("generates the checked-in catalog data", () => {
-    expect(runGenerator()).toMatch(/Generated .* with 1451 cards/);
+  it("generates one current record for each Riftbound card ID", async () => {
+    expect(runGenerator()).toMatch(/Generated .* with 1304 cards/);
+
+    const generatedSeed = await readFile(
+      join(projectRoot, "src/infrastructure/database/generated/catalog-seed.ts"),
+      "utf8",
+    );
+    const riftboundIds = [...generatedSeed.matchAll(/"riftboundId": "([^"]+)"/g)].map(
+      (match) => match[1]!,
+    );
+
+    expect(new Set(riftboundIds).size).toBe(riftboundIds.length);
   });
 
   it("rejects a card whose set is absent from the supplied set pages", async () => {

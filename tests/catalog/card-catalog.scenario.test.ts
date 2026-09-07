@@ -98,10 +98,11 @@ describe("card catalog scenarios", () => {
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
     store.seedCard(card("vi", unleashed.code, { collectorNumber: 2, name: "Vi" }));
-    store.seedCard(card("jinx", unleashed.code, { collectorNumber: 1, name: "Jinx" }));
+    const jinx = card("jinx", unleashed.code, { collectorNumber: 1, name: "Jinx" });
+    store.seedCard(jinx);
 
     await expect(store.cards.getSummaryPage({ limit: 1, offset: 0 })).resolves.toEqual(
-      Page.create([{ id: "jinx", name: "Jinx" }], true),
+      Page.create([{ id: jinx.id, imageUrl: jinx.imageUrl, name: jinx.name }], true),
     );
     store.close();
   });
@@ -127,7 +128,10 @@ describe("card catalog scenarios", () => {
       Page.create([furyOrder], false),
     );
     await expect(store.cards.getSummaryPageForDomains(["fury", "order"])).resolves.toEqual(
-      Page.create([{ id: furyOrder.id, name: furyOrder.name }], false),
+      Page.create(
+        [{ id: furyOrder.id, imageUrl: furyOrder.imageUrl, name: furyOrder.name }],
+        false,
+      ),
     );
     store.close();
   });

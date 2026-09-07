@@ -5,6 +5,7 @@ import { cardIdSchema } from "./card";
 const cardSummarySchema = z.object({
   id: cardIdSchema,
   name: z.string().trim().min(1),
+  imageUrl: z.url(),
 });
 
 function parseCardSummary(value: unknown): CardSummary {

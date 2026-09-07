@@ -42,8 +42,16 @@ class SqliteCardRepository implements CardRepository {
     const offset = criteria?.offset ?? 0;
     const limit = criteria?.limit ?? 10;
     const rows = await this.db
-      .select({ id: catalogCards.id, name: catalogCards.name })
+      .select({
+        card: { id: catalogCards.id, name: catalogCards.name },
+        media: {
+          imageAssetId: cardMedia.imageAssetId,
+          imageHeight: cardMedia.imageHeight,
+          imageWidth: cardMedia.imageWidth,
+        },
+      })
       .from(catalogCards)
+      .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
       .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id))
       .limit(limit + 1)
       .offset(offset);
@@ -57,7 +65,7 @@ class SqliteCardRepository implements CardRepository {
     criteria?: Pick<CardListCriteria, "limit" | "offset">,
     { signal }: ReadOptions = {},
   ): Promise<Page<CardSummary>> {
-    const rows = await this.rowsForDomains(domains, signal);
+    const rows = await this.summaryRowsForDomains(domains, signal);
     const offset = criteria?.offset ?? 0;
     const limit = criteria?.limit ?? 10;
 
@@ -106,6 +114,52 @@ class SqliteCardRepository implements CardRepository {
   ): Promise<(typeof catalogCards.$inferSelect)[]> {
     throwIfAborted(signal);
     const domainIds = normalizeCardDomainSelection(selection);
+    const matchingCardIds = await this.matchingCardIdsForDomains(domainIds, signal);
+    if (matchingCardIds.length === 0) return [];
+
+    const rows = await this.db
+      .select()
+      .from(catalogCards)
+      .where(inArray(catalogCards.id, matchingCardIds))
+      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id));
+    throwIfAborted(signal);
+
+    return rows;
+  }
+
+  private async summaryRowsForDomains(
+    selection: CardDomainSelection,
+    signal: AbortSignal | undefined,
+  ): Promise<
+    { readonly card: { readonly id: string; readonly name: string }; readonly media: unknown }[]
+  > {
+    throwIfAborted(signal);
+    const domainIds = normalizeCardDomainSelection(selection);
+    const matchingCardIds = await this.matchingCardIdsForDomains(domainIds, signal);
+    if (matchingCardIds.length === 0) return [];
+
+    const rows = await this.db
+      .select({
+        card: { id: catalogCards.id, name: catalogCards.name },
+        media: {
+          imageAssetId: cardMedia.imageAssetId,
+          imageHeight: cardMedia.imageHeight,
+          imageWidth: cardMedia.imageWidth,
+        },
+      })
+      .from(catalogCards)
+      .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
+      .where(inArray(catalogCards.id, matchingCardIds))
+      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id));
+    throwIfAborted(signal);
+
+    return rows;
+  }
+
+  private async matchingCardIdsForDomains(
+    domainIds: readonly string[],
+    signal: AbortSignal | undefined,
+  ): Promise<string[]> {
     const matchingCardIds = await this.db
       .select({ cardId: cardDomains.cardId })
       .from(cardDomains)
@@ -113,21 +167,8 @@ class SqliteCardRepository implements CardRepository {
       .groupBy(cardDomains.cardId)
       .having(sql`count(*) = ${domainIds.length}`);
     throwIfAborted(signal);
-    if (matchingCardIds.length === 0) return [];
 
-    const rows = await this.db
-      .select()
-      .from(catalogCards)
-      .where(
-        inArray(
-          catalogCards.id,
-          matchingCardIds.map(({ cardId }) => cardId),
-        ),
-      )
-      .orderBy(asc(catalogCards.setCode), asc(catalogCards.collectorNumber), asc(catalogCards.id));
-    throwIfAborted(signal);
-
-    return rows;
+    return matchingCardIds.map(({ cardId }) => cardId);
   }
 
   private async toDomainCards(

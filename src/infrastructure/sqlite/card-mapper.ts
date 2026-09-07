@@ -74,9 +74,20 @@ function toDomainCard({
   });
 }
 
-function toDomainCardSummary(card: unknown): CardSummary {
+function toDomainCardSummary({ card, media }: { readonly card: unknown; readonly media: unknown }): CardSummary {
   const persistedCard = catalogCardSelectSchema.pick({ id: true, name: true }).parse(card);
-  return parseCardSummary(persistedCard);
+  const persistedMedia = cardMediaSelectSchema
+    .pick({ imageAssetId: true, imageHeight: true, imageWidth: true })
+    .parse(media);
+
+  return parseCardSummary({
+    id: persistedCard.id,
+    name: persistedCard.name,
+    imageUrl: buildImageUrl(persistedMedia.imageAssetId, {
+      width: persistedMedia.imageWidth,
+      height: persistedMedia.imageHeight,
+    }),
+  });
 }
 
 export { toDomainCard, toDomainCardSummary };

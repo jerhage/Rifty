@@ -9,7 +9,7 @@ import type { CardSummaryLister } from "@/features/catalog/card/card-summary-lis
 import type { CardSummary } from "@/features/catalog/card/card-summary";
 import { Page } from "@/shared/page";
 
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 30;
 
 interface CardsDataContent {
   readonly cards: readonly CardSummary[];

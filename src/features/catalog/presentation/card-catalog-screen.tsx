@@ -1,9 +1,11 @@
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet } from "react-native";
+import { Image, useImage } from "expo-image";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
+import type { CardSummary } from "@/features/catalog/card/card-summary";
 
 import type { CardsDataContent } from "./cards-data";
 
@@ -21,9 +23,8 @@ function CardCatalogScreen({
   const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} />}
-      style={styles.scrollView}
+    <FlatList
+      columnWrapperStyle={cards.length > 0 ? styles.cardRow : undefined}
       contentContainerStyle={[
         styles.content,
         {
@@ -33,42 +34,94 @@ function CardCatalogScreen({
           paddingTop: insets.top + Spacing.four,
         },
       ]}
-    >
-      {isRefreshing && <ActivityIndicator />}
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.header}>
-          <ThemedText type="subtitle">Riftbound Cards</ThemedText>
-          <ThemedText themeColor="textSecondary">
-            {cards.length === 0 ? "No cards are available yet." : `Showing ${cards.length} cards`}
-          </ThemedText>
-        </ThemedView>
+      data={cards}
+      keyExtractor={(card) => card.id}
+      ListEmptyComponent={
+        <ThemedText themeColor="textSecondary">No cards are available yet.</ThemedText>
+      }
+      ListFooterComponent={
+        <CardCatalogFooter
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          loadMoreError={loadMoreError}
+          loadMore={loadMore}
+          retryLoadMore={retryLoadMore}
+        />
+      }
+      ListHeaderComponent={<CardCatalogHeader cardCount={cards.length} />}
+      numColumns={2}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} />}
+      renderItem={({ item }) => <CardGridItem card={item} onPress={onSelectCard} />}
+      style={styles.list}
+    />
+  );
+}
 
-        {cards.map((card) => (
-          <Pressable key={card.id} onPress={() => onSelectCard(card.id)}>
-            <ThemedView type="backgroundElement" style={styles.card}>
-              <ThemedText type="subtitle">{card.name}</ThemedText>
-            </ThemedView>
-          </Pressable>
-        ))}
+function CardCatalogHeader({ cardCount }: { readonly cardCount: number }) {
+  return (
+    <ThemedView style={styles.header}>
+      <ThemedText type="subtitle">Riftbound Cards</ThemedText>
+      <ThemedText themeColor="textSecondary">Showing {cardCount} cards</ThemedText>
+    </ThemedView>
+  );
+}
 
-        {loadMoreError ? (
-          <ThemedView style={styles.loadMoreSection}>
-            <ThemedText themeColor="textSecondary">{loadMoreError}</ThemedText>
-            <LoadMoreButton label="Try loading more" onPress={retryLoadMore} />
-          </ThemedView>
-        ) : null}
-
-        {hasMore && !loadMoreError ? (
-          <ThemedView style={styles.loadMoreSection}>
-            <LoadMoreButton
-              disabled={isLoadingMore}
-              label={isLoadingMore ? "Loading cards…" : "Load more cards"}
-              onPress={loadMore}
-            />
-          </ThemedView>
-        ) : null}
+function CardCatalogFooter({
+  hasMore,
+  isLoadingMore,
+  loadMoreError,
+  loadMore,
+  retryLoadMore,
+}: Pick<
+  CardsDataContent,
+  "hasMore" | "isLoadingMore" | "loadMoreError" | "loadMore" | "retryLoadMore"
+>) {
+  if (loadMoreError) {
+    return (
+      <ThemedView style={styles.loadMoreSection}>
+        <ThemedText themeColor="textSecondary">{loadMoreError}</ThemedText>
+        <LoadMoreButton label="Try loading more" onPress={retryLoadMore} />
       </ThemedView>
-    </ScrollView>
+    );
+  }
+
+  if (!hasMore) return null;
+
+  return (
+    <ThemedView style={styles.loadMoreSection}>
+      <LoadMoreButton
+        disabled={isLoadingMore}
+        label={isLoadingMore ? "Loading cards…" : "Load more cards"}
+        onPress={loadMore}
+      />
+    </ThemedView>
+  );
+}
+
+function CardGridItem({
+  card,
+  onPress,
+}: {
+  readonly card: CardSummary;
+  readonly onPress: (id: string) => void;
+}) {
+  const image = useImage(card.imageUrl, { maxHeight: 720, maxWidth: 512 });
+
+  return (
+    <Pressable accessibilityLabel={`Open ${card.name}`} onPress={() => onPress(card.id)} style={styles.card}>
+      {image ? (
+        <Image
+          contentFit="contain"
+          source={image}
+          style={[styles.image, { aspectRatio: image.width / image.height }]}
+          transition={150}
+        />
+      ) : (
+        <ThemedView type="backgroundElement" style={styles.imagePlaceholder}>
+          <ActivityIndicator />
+        </ThemedView>
+      )}
+    </Pressable>
   );
 }
 
@@ -100,25 +153,33 @@ function LoadMoreButton({
 export { CardCatalogScreen };
 
 const styles = StyleSheet.create({
-  scrollView: {
+  list: {
     flex: 1,
   },
   content: {
-    alignItems: "center",
-  },
-  container: {
-    flexGrow: 1,
-    gap: Spacing.three,
+    alignSelf: "center",
     maxWidth: MaxContentWidth,
     width: "100%",
   },
   header: {
     gap: Spacing.one,
-    paddingBottom: Spacing.two,
+    paddingBottom: Spacing.three,
+  },
+  cardRow: {
+    gap: Spacing.two,
+    marginBottom: Spacing.two,
   },
   card: {
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
+    flex: 1,
+    overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+  },
+  imagePlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 120,
   },
   loadMoreSection: {
     alignItems: "center",

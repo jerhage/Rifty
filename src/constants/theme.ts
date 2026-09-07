@@ -61,8 +61,7 @@ const Spacing = {
   six: 64,
 } as const;
 
-const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 const MaxContentWidth = 800;
 
-export { BottomTabInset, Colors, Fonts, MaxContentWidth, Spacing };
+export { Colors, Fonts, MaxContentWidth, Spacing };
 export type { ThemeColor };

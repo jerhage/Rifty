@@ -1,3 +1,7 @@
-import AppTabs from "@/components/app-shell/app-tabs";
+import { Stack } from "expo-router";
 
-export default AppTabs;
+function CatalogLayout() {
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
+
+export default CatalogLayout;

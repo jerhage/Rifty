@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -10,7 +10,9 @@ import {
   type CatalogQueryCriteria,
 } from "@/features/catalog/presentation/components/card-catalog-filter-sheet";
 import { CardsData } from "@/features/catalog/presentation/data/cards-data";
-import { CardCatalogScreen } from "@/features/catalog/presentation/screens/card-catalog-screen";
+import { CardNameSearchScreen } from "@/features/catalog/presentation/screens/card-name-search-screen";
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 function HomeScreen() {
   const { catalog } = useAppDependencies();
@@ -19,12 +21,21 @@ function HomeScreen() {
   const [criteria, setCriteria] = useState<CatalogQueryCriteria>({});
   const [draftCriteria, setDraftCriteria] = useState<CatalogQueryCriteria>({});
   const [isFilterSheetPresented, setIsFilterSheetPresented] = useState(false);
+  const [name, setName] = useState("");
+  const debouncedName = useDebouncedValue(name, SEARCH_DEBOUNCE_MS);
   const cardSummaryLister = useMemo<CardSummaryLister>(
     () => ({
       getSummaryPage: (pagination, options) =>
-        catalog.cards.getSummaryPage({ ...criteria, ...pagination }, options),
+        catalog.cards.getSummaryPage(
+          {
+            ...criteria,
+            ...pagination,
+            search: searchCriteriaFor(debouncedName),
+          },
+          options,
+        ),
     }),
-    [catalog.cards, criteria],
+    [catalog.cards, criteria, debouncedName],
   );
   const openFilters = useCallback(() => {
     setDraftCriteria(criteria);
@@ -44,9 +55,11 @@ function HomeScreen() {
     <>
       <CardsData cardSummaryLister={cardSummaryLister}>
         {(content) => (
-          <CardCatalogScreen
+          <CardNameSearchScreen
             {...content}
             filterButtonTop={insets.top + Spacing.three}
+            name={name}
+            onChangeName={setName}
             onOpenFilters={openFilters}
             onSelectCard={(id) => router.push({ pathname: "/cards/[id]", params: { id } })}
           />
@@ -62,6 +75,22 @@ function HomeScreen() {
       />
     </>
   );
+}
+
+function searchCriteriaFor(name: string) {
+  const text = name.trim();
+  return text ? { type: "nameOrRulesText" as const, text } : undefined;
+}
+
+function useDebouncedValue(value: string, delayMs: number): string {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedValue(value), delayMs);
+    return () => clearTimeout(timeout);
+  }, [delayMs, value]);
+
+  return debouncedValue;
 }
 
 export default HomeScreen;

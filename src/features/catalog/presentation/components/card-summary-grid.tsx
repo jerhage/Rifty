@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
+import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/catalog/card/card-summary";
 
 interface CardSummaryGridProps {
@@ -22,6 +22,7 @@ interface CardSummaryGridProps {
   readonly footer?: ReactElement | null;
   readonly header: ReactElement;
   readonly isRefreshing: boolean;
+  readonly onEndReached: () => void;
   readonly onRefresh: () => void;
   readonly onSelectCard: (id: string) => void;
 }
@@ -32,6 +33,7 @@ function CardSummaryGrid({
   footer,
   header,
   isRefreshing,
+  onEndReached,
   onRefresh,
   onSelectCard,
 }: CardSummaryGridProps) {
@@ -54,7 +56,7 @@ function CardSummaryGrid({
       contentContainerStyle={[
         styles.content,
         {
-          paddingBottom: insets.bottom + BottomTabInset + Spacing.four,
+          paddingBottom: insets.bottom + Spacing.four,
           paddingLeft: insets.left + Spacing.three,
           paddingRight: insets.right + Spacing.three,
           paddingTop: insets.top + Spacing.four,
@@ -66,6 +68,8 @@ function CardSummaryGrid({
       ListFooterComponent={footer}
       ListHeaderComponent={header}
       numColumns={2}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.5}
       onLayout={updateListWidth}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
       renderItem={({ item }) => (

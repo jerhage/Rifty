@@ -1,10 +1,11 @@
-import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
+import { SecondaryButton } from "@/components/ui/atoms/secondary-button";
 import { Spacing } from "@/constants/theme";
 
-import type { CardsDataContent } from "../data/cards-data";
+import type { CardsDataContent } from "../../data/cards-data";
 
 function CardSummaryPageFooter({
   isLoadingMore,
@@ -15,7 +16,7 @@ function CardSummaryPageFooter({
     return (
       <ThemedView style={styles.loadMoreSection}>
         <ThemedText themeColor="textSecondary">{loadMoreError}</ThemedText>
-        <RetryButton onPress={retryLoadMore} />
+        <SecondaryButton label="Try again" onPress={retryLoadMore} />
       </ThemedView>
     );
   }
@@ -30,30 +31,12 @@ function CardSummaryPageFooter({
   );
 }
 
-function RetryButton({ onPress }: { readonly onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView type="backgroundSelected" style={styles.retryButton}>
-        <ThemedText type="smallBold">Try again</ThemedText>
-      </ThemedView>
-    </Pressable>
-  );
-}
-
 export { CardSummaryPageFooter };
 
 const styles = StyleSheet.create({
   loadMoreSection: {
     alignItems: "center",
     gap: Spacing.two,
-    paddingVertical: Spacing.three,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  retryButton: {
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
   },
 });

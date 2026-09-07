@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from "expo-router";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
-import { CardDetailData } from "@/features/catalog/presentation/card-detail-data";
-import { CardDetailScreen } from "@/features/catalog/presentation/card-detail-screen";
+import { CardDetailData } from "@/features/catalog/presentation/data/card-detail-data";
+import { CardDetailScreen } from "@/features/catalog/presentation/screens/card-detail-screen";
 
 function CardDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();

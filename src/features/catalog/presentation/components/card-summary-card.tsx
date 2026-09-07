@@ -2,8 +2,8 @@ import { StyleSheet } from "react-native";
 
 import type { Card } from "@/features/catalog/card/card";
 import { Spacing } from "@/constants/theme";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { ThemedView } from "@/components/ui/atoms/themed-view";
 
 interface CardSummaryCardProps {
   readonly aspectRatio?: number;

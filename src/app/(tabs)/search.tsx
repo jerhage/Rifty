@@ -3,8 +3,8 @@ import { useRouter } from "expo-router";
 
 import type { CardSummaryLister } from "@/features/catalog/card/card-summary-lister";
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
-import { CardNameSearchScreen } from "@/features/catalog/presentation/card-name-search-screen";
-import { CardsData } from "@/features/catalog/presentation/cards-data";
+import { CardsData } from "@/features/catalog/presentation/data/cards-data";
+import { CardNameSearchScreen } from "@/features/catalog/presentation/screens/card-name-search-screen";
 
 const SEARCH_DEBOUNCE_MS = 300;
 

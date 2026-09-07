@@ -1,13 +1,13 @@
 import { StyleSheet, TextInput } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-import { CardSummaryGrid } from "./card-summary-grid";
-import { CardSummaryPageFooter } from "./card-summary-page-footer";
-import type { CardsDataContent } from "./cards-data";
+import { CardSummaryGrid } from "../components/card-summary-grid";
+import { CardSummaryPageFooter } from "../components/card-summary-page-footer";
+import type { CardsDataContent } from "../data/cards-data";
 
 interface CardNameSearchScreenProps extends CardsDataContent {
   readonly name: string;

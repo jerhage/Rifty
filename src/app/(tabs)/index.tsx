@@ -1,8 +1,8 @@
 import { useRouter } from "expo-router";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
-import { CardCatalogScreen } from "@/features/catalog/presentation/card-catalog-screen";
-import { CardsData } from "@/features/catalog/presentation/cards-data";
+import { CardsData } from "@/features/catalog/presentation/data/cards-data";
+import { CardCatalogScreen } from "@/features/catalog/presentation/screens/card-catalog-screen";
 
 function HomeScreen() {
   const { catalog } = useAppDependencies();

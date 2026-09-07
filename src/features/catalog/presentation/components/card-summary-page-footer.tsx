@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 
-import type { CardsDataContent } from "./cards-data";
+import type { CardsDataContent } from "../data/cards-data";
 
 function CardSummaryPageFooter({
   hasMore,

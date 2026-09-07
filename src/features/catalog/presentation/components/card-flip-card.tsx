@@ -1,7 +1,7 @@
 import { Image, useImage } from "expo-image";
 import { StyleSheet } from "react-native";
 
-import { CardSummaryCard } from "@/components/ui/card-summary-card";
+import { CardSummaryCard } from "./card-summary-card";
 import { FlippableCard } from "@/components/ui/flippable-card";
 import type { Card } from "@/features/catalog/card/card";
 

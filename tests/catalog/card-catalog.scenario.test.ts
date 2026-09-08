@@ -169,6 +169,26 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
+  it("counts every match, not just the page asked for", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    for (let collectorNumber = 1; collectorNumber <= 12; collectorNumber += 1) {
+      store.seedCard(
+        card(`card-${collectorNumber}`, unleashed.code, {
+          collectorNumber,
+          domainIds: collectorNumber % 2 === 0 ? ["Calm"] : ["Fury"],
+        }),
+      );
+    }
+
+    await expect(store.cards.count()).resolves.toBe(12);
+    await expect(store.cards.count({ anyDomainIds: ["Calm"] })).resolves.toBe(6);
+    await expect(store.cards.count({ limit: 3, offset: 0 })).resolves.toBe(12);
+    await expect(store.cards.count({ setCodes: ["NOPE"] })).resolves.toBe(0);
+    store.close();
+  });
+
   it("sorts card summaries by text and numeric attributes in SQL", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");

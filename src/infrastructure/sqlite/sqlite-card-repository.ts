@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, lte, or, sql, type SQL } from "drizzle-orm";
 import { match } from "ts-pattern";
 
 import type { Card, CardId } from "@/features/catalog/card/card";
@@ -34,6 +34,16 @@ class SqliteCardRepository implements CardRepository {
     if (!row) return null;
 
     return (await this.#toDomainCards([row], signal)).at(0) ?? null;
+  }
+
+  async count(criteria?: CardListCriteria, { signal }: ReadOptions = {}): Promise<number> {
+    throwIfAborted(signal);
+    const [row] = await this.db
+      .select({ total: count() })
+      .from(catalogCards)
+      .where(and(...this.#conditionsFor(criteria)));
+
+    return row?.total ?? 0;
   }
 
   async getSummaryPage(

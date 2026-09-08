@@ -140,6 +140,9 @@ class SqliteCardRepository implements CardRepository {
     if (criteria.setCodes?.length) {
       conditions.push(inArray(catalogCards.setCode, criteria.setCodes));
     }
+    if (criteria.riftboundIds?.length) {
+      conditions.push(inArray(catalogCards.riftboundId, [...new Set(criteria.riftboundIds)]));
+    }
     if (criteria.typeIds?.length) {
       conditions.push(
         inArray(

@@ -169,6 +169,27 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
+  it("resolves cards by the riftbound id a deck stores", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const kept = card("kept", unleashed.code, { collectorNumber: 1, name: "Kept" });
+    const other = card("other", unleashed.code, { collectorNumber: 2, name: "Other" });
+    store.seedCard(kept);
+    store.seedCard(other);
+
+    await expect(store.cards.getPage({ riftboundIds: [kept.riftboundId] })).resolves.toMatchObject({
+      items: [{ id: "kept" }],
+    });
+    await expect(
+      store.cards.getPage({ riftboundIds: [kept.riftboundId, other.riftboundId] }),
+    ).resolves.toMatchObject({ items: [{ id: "kept" }, { id: "other" }] });
+    await expect(store.cards.getPage({ riftboundIds: ["missing"] })).resolves.toMatchObject({
+      items: [],
+    });
+    store.close();
+  });
+
   it("counts every match, not just the page asked for", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");

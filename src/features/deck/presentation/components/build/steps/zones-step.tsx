@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { FlatList, StyleSheet, TextInput, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
@@ -28,6 +28,7 @@ interface ZonesStepProps {
   readonly onChangePoolQuery: (query: string) => void;
   readonly onEditStep: (index: number) => void;
   readonly onOpenCard: (card: Card) => void;
+  readonly onLoadMorePool: () => void;
   readonly onOpenPoolFilters: () => void;
   readonly onSave: () => void;
   readonly onSelectZone: (section: DeckSection) => void;
@@ -45,9 +46,10 @@ function ZonesStep({
   onChangeName,
   onChangePoolQuery,
   onEditStep,
+  onLoadMorePool,
   onOpenCard,
-  onOpenPoolFilters,
   onSave,
+  onOpenPoolFilters,
   onSelectZone,
   onSetQuantity,
   poolFilters,
@@ -104,24 +106,29 @@ function ZonesStep({
         />
       </View>
 
-      <ScrollView contentContainerStyle={styles.pool}>
-        {zonePool.map((card) => (
-          <BuildCardRow
-            card={card}
-            displayedQuantity={displayedCopies(draft, zone, card)}
-            key={card.id}
-            maxQuantity={remainingForCard(draft, zone, card)}
-            onChange={(quantity) => onSetQuantity(zone, card, quantity)}
-            onOpenCard={onOpenCard}
-            quantity={quantityOf(draft, zone, card.riftboundId)}
-          />
-        ))}
-        {zonePool.length === 0 ? (
+      <FlatList
+        contentContainerStyle={styles.pool}
+        data={zonePool}
+        keyExtractor={(card) => card.id}
+        onEndReached={onLoadMorePool}
+        onEndReachedThreshold={0.5}
+        ListEmptyComponent={
           <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
             No cards available for this zone yet.
           </ThemedText>
-        ) : null}
-      </ScrollView>
+        }
+        renderItem={({ item }) => (
+          <BuildCardRow
+            card={item}
+            displayedQuantity={displayedCopies(draft, zone, item)}
+            maxQuantity={remainingForCard(draft, zone, item)}
+            onChange={(quantity) => onSetQuantity(zone, item, quantity)}
+            onOpenCard={onOpenCard}
+            quantity={quantityOf(draft, zone, item.riftboundId)}
+          />
+        )}
+        style={styles.poolList}
+      />
 
       <BuildFooter actionLabel={isSaving ? "Saving…" : "Save deck"} onAction={onSave}>
         {error === null ? (
@@ -170,6 +177,9 @@ const styles = StyleSheet.create({
   },
   rule: {
     marginTop: Spacing.two + 1,
+  },
+  poolList: {
+    flex: 1,
   },
   pool: {
     gap: Spacing.two - 1,

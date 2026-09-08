@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import { FlatList, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
@@ -12,6 +12,7 @@ import { StepIntro } from "./step-intro";
 interface ChampionStepProps {
   readonly champions: readonly Card[];
   readonly legend: Card | null;
+  readonly onLoadMore: () => void;
   readonly onNext: () => void;
   readonly onOpenCard: (card: Card) => void;
   readonly onPick: (card: Card) => void;
@@ -22,6 +23,7 @@ interface ChampionStepProps {
 function ChampionStep({
   champions,
   legend,
+  onLoadMore,
   onNext,
   onOpenCard,
   onPick,
@@ -30,27 +32,30 @@ function ChampionStep({
 }: ChampionStepProps) {
   return (
     <>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <StepIntro step={step} />
-        <View style={styles.list}>
-          {champions.map((card) => (
-            <ChampionPickRow
-              card={card}
-              key={card.id}
-              onOpenCard={onOpenCard}
-              onPick={onPick}
-              selected={selected?.id === card.id}
-            />
-          ))}
-          {champions.length === 0 ? (
-            <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
-              {legend
-                ? `No champions match ${legend.name}'s character tag and domains.`
-                : "Pick a Legend first to see which champions it allows."}
-            </ThemedText>
-          ) : null}
-        </View>
-      </ScrollView>
+      <FlatList
+        contentContainerStyle={styles.content}
+        data={champions}
+        keyExtractor={(card) => card.id}
+        onEndReached={onLoadMore}
+        onEndReachedThreshold={0.5}
+        ListEmptyComponent={
+          <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
+            {legend
+              ? `No champions match ${legend.name}'s character tag and domains.`
+              : "Pick a Legend first to see which champions it allows."}
+          </ThemedText>
+        }
+        ListHeaderComponent={<StepIntro step={step} />}
+        renderItem={({ item }) => (
+          <ChampionPickRow
+            card={item}
+            onOpenCard={onOpenCard}
+            onPick={onPick}
+            selected={selected?.id === item.id}
+          />
+        )}
+        style={styles.list}
+      />
       <BuildFooter actionLabel="Build zones" onAction={onNext}>
         <ThemedText numberOfLines={1} themeColor="textSecondary" type="mono">
           {selected ? selected.name : "No Champion yet — you can skip"}
@@ -64,15 +69,16 @@ export { ChampionStep };
 export type { ChampionStepProps };
 
 const styles = StyleSheet.create({
-  scroll: {
+  list: {
+    flex: 1,
+  },
+  content: {
     alignSelf: "center",
+    gap: Spacing.two,
     maxWidth: MaxContentWidth,
     paddingBottom: Spacing.four,
-    width: "100%",
-  },
-  list: {
-    gap: Spacing.two,
     paddingHorizontal: Spacing.three,
+    width: "100%",
   },
   empty: {
     paddingVertical: Spacing.six,

@@ -23,7 +23,6 @@ export { StepIntro };
 const styles = StyleSheet.create({
   intro: {
     paddingBottom: Spacing.three,
-    paddingHorizontal: Spacing.three,
   },
   title: {
     fontSize: 23,

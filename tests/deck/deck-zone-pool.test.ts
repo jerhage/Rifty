@@ -1,15 +1,12 @@
 import {
   defaultPoolFilters,
-  matchesPoolFilters,
+  legendCriteria,
   poolCriteria,
 } from "@/features/deck/presentation/deck-zone-pool";
 
 import { card } from "../catalog/fixtures";
 
 const legend = card("legend", "OGN", { domainIds: ["Fury", "Order"] });
-const fury = card("fury", "OGN", { domainIds: ["Fury"] });
-const order = card("order", "OGN", { domainIds: ["Order"] });
-const calm = card("calm", "OGN", { domainIds: ["Calm"] });
 
 describe("deck zone pool", () => {
   it("opens on the legend's domains", () => {
@@ -17,29 +14,38 @@ describe("deck zone pool", () => {
     expect(defaultPoolFilters(null).domainIds).toEqual([]);
   });
 
-  it("treats several domains as any of them, not all of them", () => {
-    const filters = defaultPoolFilters(legend);
+  it("asks the query for any of the chosen domains, never all of them", () => {
+    const one = poolCriteria("mainDeck", { query: "", domainIds: ["Fury"], typeIds: [] });
+    const two = poolCriteria("mainDeck", defaultPoolFilters(legend));
 
-    expect(matchesPoolFilters(fury, filters)).toBe(true);
-    expect(matchesPoolFilters(order, filters)).toBe(true);
-    expect(matchesPoolFilters(calm, filters)).toBe(false);
-  });
-
-  it("only narrows the query by domain when one is chosen", () => {
-    const one = poolCriteria("mainDeck", { query: "", domainIds: ["Fury"], typeIds: [] }, 100);
-    const two = poolCriteria("mainDeck", defaultPoolFilters(legend), 100);
-
-    expect(one.domainIds).toEqual(["Fury"]);
-    // Two domains would be read as all-of by the catalog query, so they are settled in memory.
+    expect(one.anyDomainIds).toEqual(["Fury"]);
+    expect(two.anyDomainIds).toEqual(["Fury", "Order"]);
+    // domainIds is all-of, which would match only cards carrying both.
+    expect(one.domainIds).toBeUndefined();
     expect(two.domainIds).toBeUndefined();
   });
 
+  it("asks for legends carrying every chosen domain", () => {
+    const criteria = legendCriteria("", ["Calm", "Mind"]);
+
+    // A legend pick is a domain pair, so this is all-of rather than the pool's any-of.
+    expect(criteria.domainIds).toEqual(["Calm", "Mind"]);
+    expect(criteria.anyDomainIds).toBeUndefined();
+    expect(criteria.typeIds).toEqual(["Legend"]);
+  });
+
+  it("searches legends by name or rules text", () => {
+    expect(legendCriteria("  volibear  ", []).search).toEqual({
+      type: "nameOrRulesText",
+      text: "volibear",
+    });
+    expect(legendCriteria("   ", []).search).toBeUndefined();
+  });
+
   it("limits each zone to the card types it accepts", () => {
-    expect(poolCriteria("runeDeck", defaultPoolFilters(null), 100).typeIds).toEqual(["Rune"]);
-    expect(poolCriteria("battlefield", defaultPoolFilters(null), 100).typeIds).toEqual([
-      "Battlefield",
-    ]);
-    expect(poolCriteria("mainDeck", defaultPoolFilters(null), 100).typeIds).toEqual([
+    expect(poolCriteria("runeDeck", defaultPoolFilters(null)).typeIds).toEqual(["Rune"]);
+    expect(poolCriteria("battlefield", defaultPoolFilters(null)).typeIds).toEqual(["Battlefield"]);
+    expect(poolCriteria("mainDeck", defaultPoolFilters(null)).typeIds).toEqual([
       "Unit",
       "Spell",
       "Gear",

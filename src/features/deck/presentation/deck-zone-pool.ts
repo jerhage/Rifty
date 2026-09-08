@@ -54,25 +54,30 @@ function searchHint(section: DeckSection): string {
 function poolCriteria(
   section: DeckSection,
   filters: ZonePoolFilters,
-  limit: number,
-): CardListCriteria {
+): Omit<CardListCriteria, "limit" | "offset"> {
   const query = filters.query.trim();
   const chosenTypes = filters.typeIds.filter((type) => zoneCardTypes(section).includes(type));
 
   return {
     typeIds: chosenTypes.length > 0 ? chosenTypes : [...zoneCardTypes(section)],
-    // Several domains mean "any of these", which the criteria's all-of semantics cannot express,
-    // so only a single choice narrows the query and the rest is settled by matchesPoolFilters.
-    domainIds: filters.domainIds.length === 1 ? [...filters.domainIds] : undefined,
+    // A deck plays anything inside its legend's domains, so several domains mean any of them.
+    anyDomainIds: filters.domainIds.length > 0 ? [...filters.domainIds] : undefined,
     search: query ? { type: "nameOrRulesText", text: query } : undefined,
-    limit,
   };
 }
 
-function matchesPoolFilters(card: Card, filters: ZonePoolFilters): boolean {
-  if (filters.domainIds.length === 0) return true;
+function legendCriteria(
+  query: string,
+  domainIds: readonly CardDomain[],
+): Omit<CardListCriteria, "limit" | "offset"> {
+  const text = query.trim();
 
-  return card.domainIds.some((domain) => filters.domainIds.includes(domain));
+  return {
+    typeIds: ["Legend"],
+    // All of them: picking Calm and Mind asks for a legend that carries both, not either.
+    domainIds: domainIds.length > 0 ? [...domainIds] : undefined,
+    search: text ? { type: "nameOrRulesText", text } : undefined,
+  };
 }
 
 function activePoolFilterCount(filters: ZonePoolFilters): number {
@@ -84,7 +89,7 @@ export {
   allowsTypeChoice,
   defaultPoolFilters,
   emptyPoolFilters,
-  matchesPoolFilters,
+  legendCriteria,
   poolCriteria,
   searchHint,
   zoneCardTypes,

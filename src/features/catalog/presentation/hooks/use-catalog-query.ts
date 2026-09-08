@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
+import type { CardCounter } from "@/features/catalog/card/card-counter";
 import type { CardSummaryLister } from "@/features/catalog/card/card-summary-lister";
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
@@ -19,7 +20,7 @@ type CatalogSheetState =
   | { readonly type: "filter" }
   | { readonly type: "sort" };
 
-function useCatalogQuery(cardSummaryLister: CardSummaryLister) {
+function useCatalogQuery(cardSummaryLister: CardSummaryLister, cardCounter: CardCounter) {
   const [criteria, setCriteria] = useState<CatalogQueryCriteria>(defaultCriteria);
   const [draftCriteria, setDraftCriteria] = useState<CatalogQueryCriteria>(defaultCriteria);
   const [sheet, setSheet] = useState<CatalogSheetState>({ type: "hidden" });
@@ -39,6 +40,14 @@ function useCatalogQuery(cardSummaryLister: CardSummaryLister) {
     }),
     [cardSummaryLister, criteria, debouncedName],
   );
+  const counter = useMemo<CardCounter>(
+    () => ({
+      count: (_criteria, options) =>
+        cardCounter.count({ ...criteria, search: searchCriteriaFor(debouncedName) }, options),
+    }),
+    [cardCounter, criteria, debouncedName],
+  );
+
   const openFilters = useCallback(() => {
     setDraftCriteria(criteria);
     setSheet({ type: "filter" });
@@ -96,6 +105,7 @@ function useCatalogQuery(cardSummaryLister: CardSummaryLister) {
 
   return {
     applyFilters,
+    cardCounter: counter,
     cardSummaryLister: lister,
     clearDomains,
     clearFilters,

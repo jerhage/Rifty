@@ -5,6 +5,7 @@ import { match } from "ts-pattern";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
+import type { CardCounter } from "@/features/catalog/card/card-counter";
 import type { CardSummaryLister } from "@/features/catalog/card/card-summary-lister";
 import type { CardSummary } from "@/features/catalog/card/card-summary";
 import { Page } from "@/shared/page";
@@ -17,12 +18,14 @@ interface CardSummariesDataContent {
   readonly isRefreshing: boolean;
   readonly isLoadingMore: boolean;
   readonly loadMoreError: string | null;
+  readonly total: number;
   loadMore(): void;
   refresh(): void;
   retryLoadMore(): void;
 }
 
 interface CardSummariesDataProps {
+  readonly cardCounter: CardCounter;
   readonly cardSummaryLister: CardSummaryLister;
   readonly children: (content: CardSummariesDataContent) => ReactNode;
 }
@@ -33,11 +36,12 @@ type CardSummariesDataState =
   | {
       readonly type: "success";
       readonly page: Page<CardSummary>;
+      readonly total: number;
       readonly isLoadingMore: boolean;
       readonly loadMoreError: string | null;
     };
 
-function CardSummariesData({ cardSummaryLister, children }: CardSummariesDataProps) {
+function CardSummariesData({ cardCounter, cardSummaryLister, children }: CardSummariesDataProps) {
   const [state, setState] = useState<CardSummariesDataState>({ type: "loading" });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const firstPageController = useRef<AbortController | null>(null);
@@ -53,17 +57,21 @@ function CardSummariesData({ cardSummaryLister, children }: CardSummariesDataPro
 
     return {
       controller,
-      request: cardSummaryLister.getSummaryPage(
-        { limit: PAGE_SIZE, offset: 0 },
-        { signal: controller.signal },
-      ),
+      request: Promise.all([
+        cardSummaryLister.getSummaryPage(
+          { limit: PAGE_SIZE, offset: 0 },
+          { signal: controller.signal },
+        ),
+        cardCounter.count(undefined, { signal: controller.signal }),
+      ]),
     };
-  }, [cardSummaryLister]);
+  }, [cardCounter, cardSummaryLister]);
 
-  const setLoadedFirstPage = useCallback((page: Page<CardSummary>) => {
+  const setLoadedFirstPage = useCallback((page: Page<CardSummary>, total: number) => {
     setState({
       type: "success",
       page,
+      total,
       isLoadingMore: false,
       loadMoreError: null,
     });
@@ -73,8 +81,8 @@ function CardSummariesData({ cardSummaryLister, children }: CardSummariesDataPro
     setState({ type: "loading" });
     const { controller, request } = fetchFirstPage();
     void request
-      .then((page) => {
-        if (!controller.signal.aborted) setLoadedFirstPage(page);
+      .then(([page, total]) => {
+        if (!controller.signal.aborted) setLoadedFirstPage(page, total);
       })
       .catch(() => {
         if (!controller.signal.aborted) setState({ type: "loadFailed" });
@@ -85,8 +93,8 @@ function CardSummariesData({ cardSummaryLister, children }: CardSummariesDataPro
     setIsRefreshing(true);
     const { controller, request } = fetchFirstPage();
     void request
-      .then((page) => {
-        if (!controller.signal.aborted) setLoadedFirstPage(page);
+      .then(([page, total]) => {
+        if (!controller.signal.aborted) setLoadedFirstPage(page, total);
       })
       .catch(() => {
         // Keep the currently displayed page available when a refresh fails.
@@ -99,8 +107,8 @@ function CardSummariesData({ cardSummaryLister, children }: CardSummariesDataPro
   useEffect(() => {
     const { controller, request } = fetchFirstPage();
     void request
-      .then((page) => {
-        if (!controller.signal.aborted) setLoadedFirstPage(page);
+      .then(([page, total]) => {
+        if (!controller.signal.aborted) setLoadedFirstPage(page, total);
       })
       .catch(() => {
         if (!controller.signal.aborted) setState({ type: "loadFailed" });
@@ -139,6 +147,7 @@ function CardSummariesData({ cardSummaryLister, children }: CardSummariesDataPro
                 .with({ type: "success" }, (successfulState) => ({
                   type: "success" as const,
                   page: successfulState.page.append(page),
+                  total: successfulState.total,
                   isLoadingMore: false,
                   loadMoreError: null,
                 }))
@@ -184,6 +193,7 @@ function CardSummariesData({ cardSummaryLister, children }: CardSummariesDataPro
         isRefreshing,
         isLoadingMore: loadedState.isLoadingMore,
         loadMoreError: loadedState.loadMoreError,
+        total: loadedState.total,
         loadMore,
         refresh,
         retryLoadMore: loadMore,

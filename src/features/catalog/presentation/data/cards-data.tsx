@@ -8,6 +8,7 @@ import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
 import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
+import type { CardCounter } from "@/features/catalog/card/card-counter";
 import type { CardLister } from "@/features/catalog/card/card-lister";
 import { Page } from "@/shared/page";
 
@@ -18,10 +19,12 @@ interface CardsDataContent {
   readonly hasMore: boolean;
   readonly isLoadingMore: boolean;
   readonly loadMoreError: string | null;
+  readonly total: number;
   loadMore(): void;
 }
 
 interface CardsDataProps {
+  readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
   readonly children: (content: CardsDataContent) => ReactNode;
   readonly criteria: Omit<CardListCriteria, "limit" | "offset">;
@@ -33,11 +36,12 @@ type CardsDataState =
   | {
       readonly type: "success";
       readonly page: Page<Card>;
+      readonly total: number;
       readonly isLoadingMore: boolean;
       readonly loadMoreError: string | null;
     };
 
-function CardsData({ cardLister, children, criteria }: CardsDataProps) {
+function CardsData({ cardCounter, cardLister, children, criteria }: CardsDataProps) {
   const [state, setState] = useState<CardsDataState>({ type: "loading" });
   const firstPageController = useRef<AbortController | null>(null);
   const loadMoreController = useRef<AbortController | null>(null);
@@ -53,11 +57,16 @@ function CardsData({ cardLister, children, criteria }: CardsDataProps) {
     const matching = JSON.parse(criteriaKey) as CardListCriteria;
 
     setState({ type: "loading" });
-    void cardLister
-      .getPage({ ...matching, limit: PAGE_SIZE, offset: 0 }, { signal: controller.signal })
-      .then((page) => {
+    void Promise.all([
+      cardLister.getPage(
+        { ...matching, limit: PAGE_SIZE, offset: 0 },
+        { signal: controller.signal },
+      ),
+      cardCounter.count(matching, { signal: controller.signal }),
+    ])
+      .then(([page, total]) => {
         if (!controller.signal.aborted) {
-          setState({ type: "success", page, isLoadingMore: false, loadMoreError: null });
+          setState({ type: "success", page, total, isLoadingMore: false, loadMoreError: null });
         }
       })
       .catch(() => {
@@ -65,7 +74,7 @@ function CardsData({ cardLister, children, criteria }: CardsDataProps) {
       });
 
     return () => controller.abort();
-  }, [cardLister, criteriaKey]);
+  }, [cardCounter, cardLister, criteriaKey]);
 
   useEffect(
     () => () => {
@@ -99,6 +108,7 @@ function CardsData({ cardLister, children, criteria }: CardsDataProps) {
                 .with({ type: "success" }, (successful) => ({
                   type: "success" as const,
                   page: successful.page.append(page),
+                  total: successful.total,
                   isLoadingMore: false,
                   loadMoreError: null,
                 }))
@@ -141,6 +151,7 @@ function CardsData({ cardLister, children, criteria }: CardsDataProps) {
         hasMore: loaded.page.hasMore,
         isLoadingMore: loaded.isLoadingMore,
         loadMoreError: loaded.loadMoreError,
+        total: loaded.total,
         loadMore,
       }),
     )

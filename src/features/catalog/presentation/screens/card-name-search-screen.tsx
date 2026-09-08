@@ -44,6 +44,7 @@ function CardNameSearchScreen({
   onToggleType,
   refresh,
   retryLoadMore,
+  total,
 }: CardNameSearchScreenProps) {
   return (
     <ThemedView style={styles.screen}>
@@ -75,6 +76,7 @@ function CardNameSearchScreen({
             onOpenSort={onOpenSort}
             onToggleSortDirection={onToggleSortDirection}
             resultCount={cards.length}
+            total={total}
           />
         }
         isRefreshing={isRefreshing}

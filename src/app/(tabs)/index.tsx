@@ -10,11 +10,14 @@ import { CardNameSearchScreen } from "@/features/catalog/presentation/screens/ca
 function HomeScreen() {
   const { catalog } = useAppDependencies();
   const router = useRouter();
-  const catalogQuery = useCatalogQuery(catalog.cardRepository);
+  const catalogQuery = useCatalogQuery(catalog.cardRepository, catalog.cardRepository);
 
   return (
     <>
-      <CardSummariesData cardSummaryLister={catalogQuery.cardSummaryLister}>
+      <CardSummariesData
+        cardCounter={catalogQuery.cardCounter}
+        cardSummaryLister={catalogQuery.cardSummaryLister}
+      >
         {(content) => (
           <CardNameSearchScreen
             {...content}

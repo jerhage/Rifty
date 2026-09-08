@@ -3,6 +3,7 @@ import { match } from "ts-pattern";
 
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import type { Card } from "@/features/catalog/card/card";
+import type { CardCounter } from "@/features/catalog/card/card-counter";
 import type { CardLister } from "@/features/catalog/card/card-lister";
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
@@ -20,6 +21,7 @@ import type { DeckBuildDraft, DeckBuildStep } from "../deck-build-steps";
 import type { ZonePoolFilters } from "../deck-zone-pool";
 
 interface DeckBuildScreenProps {
+  readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
   readonly draft: DeckBuildDraft;
   readonly error: string | null;
@@ -60,6 +62,7 @@ interface DeckBuildScreenProps {
  * never blocks a step the player is not looking at.
  */
 function DeckBuildScreen({
+  cardCounter,
   cardLister,
   draft,
   error,
@@ -99,6 +102,7 @@ function DeckBuildScreen({
       {match(step.id)
         .with("legend", () => (
           <LegendPoolData
+            cardCounter={cardCounter}
             cardLister={cardLister}
             domainIds={legendDomainIds}
             query={legendSearchQuery}
@@ -121,7 +125,7 @@ function DeckBuildScreen({
           </LegendPoolData>
         ))
         .with("chosenChampion", () => (
-          <ChampionPoolData cardLister={cardLister} legend={draft.legend}>
+          <ChampionPoolData cardCounter={cardCounter} cardLister={cardLister} legend={draft.legend}>
             {(pool) => (
               <ChampionStep
                 champions={pool.cards}
@@ -137,7 +141,12 @@ function DeckBuildScreen({
           </ChampionPoolData>
         ))
         .with("zones", () => (
-          <ZonePoolData cardLister={cardLister} filters={poolSearchFilters} zone={zone}>
+          <ZonePoolData
+            cardCounter={cardCounter}
+            cardLister={cardLister}
+            filters={poolSearchFilters}
+            zone={zone}
+          >
             {(pool) => (
               <>
                 <ZonesStep
@@ -165,7 +174,7 @@ function DeckBuildScreen({
                   onReset={onResetPoolFilters}
                   onToggleDomain={onTogglePoolDomain}
                   onToggleType={onTogglePoolType}
-                  resultLabel={pool.cards.length === 1 ? "1 card" : `${pool.cards.length} cards`}
+                  resultLabel={pool.total === 1 ? "1 card" : `${pool.total} cards`}
                   zone={zone}
                 />
               </>

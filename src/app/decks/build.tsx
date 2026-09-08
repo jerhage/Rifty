@@ -22,6 +22,7 @@ function DeckBuildRoute() {
 
   return (
     <DeckBuildScreen
+      cardCounter={catalog.cardRepository}
       cardLister={catalog.cardRepository}
       draft={build.draft}
       error={build.error}

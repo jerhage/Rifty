@@ -13,17 +13,19 @@ function CatalogResultBar({
   onOpenSort,
   onToggleSortDirection,
   resultCount,
+  total,
 }: {
   readonly criteria: CatalogQueryCriteria;
   readonly onOpenFilters: () => void;
   readonly onOpenSort: () => void;
   readonly onToggleSortDirection: () => void;
   readonly resultCount: number;
+  readonly total: number;
 }) {
   return (
     <View style={styles.bar}>
       <ThemedText themeColor="textTertiary" type="mono">
-        {resultCount === 1 ? "1 card" : `${resultCount} cards`}
+        {countLabel(resultCount, total)}
       </ThemedText>
       <View style={styles.controls}>
         <FilterControl count={activeFilterCount(criteria)} onPress={onOpenFilters} />
@@ -35,6 +37,13 @@ function CatalogResultBar({
       </View>
     </View>
   );
+}
+
+function countLabel(shown: number, total: number): string {
+  if (total === 0) return "no cards";
+  if (shown >= total) return total === 1 ? "1 card" : `${total} cards`;
+
+  return `${shown} of ${total} cards`;
 }
 
 export { CatalogResultBar };

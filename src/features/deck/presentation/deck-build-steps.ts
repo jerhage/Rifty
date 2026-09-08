@@ -123,10 +123,25 @@ function draftFromDeck(deck: Deck, cards: readonly Card[]): DeckBuildDraft {
   };
 }
 
-function deckCardTotal(draft: DeckBuildDraft): number {
-  return draftEntries(draft)
-    .filter((entry) => entry.section !== "legend")
-    .reduce((total, entry) => total + entry.quantity, 0);
+interface PlacedCard {
+  readonly card: Card;
+  readonly quantity: number;
+  readonly section: DeckSection;
+}
+
+function placedCards(draft: DeckBuildDraft, section: DeckSection): readonly PlacedCard[] {
+  return Object.entries(draft.zoneCards)
+    .filter(([key, placed]) => placed.quantity > 0 && sectionOf(key) === section)
+    .map(([, placed]) => ({ card: placed.card, quantity: placed.quantity, section }))
+    .sort((one, other) => one.card.name.localeCompare(other.card.name));
+}
+
+function placedCardTotal(placed: readonly PlacedCard[]): number {
+  return placed.reduce((total, entry) => total + entry.quantity, 0);
+}
+
+function sectionOf(key: string): DeckSection {
+  return key.slice(0, key.indexOf(KEY_SEPARATOR)) as DeckSection;
 }
 
 /** The chosen champion starts in its own zone but occupies one of the main deck's forty. */
@@ -181,13 +196,14 @@ function copiesOfName(
 
 export {
   copiesOfName,
-  deckCardTotal,
   DECK_BUILD_STEPS,
   draftEntries,
   draftFromDeck,
   EMPTY_DRAFT,
+  placedCardTotal,
+  placedCards,
   quantityKey,
   quantityOf,
   zoneCounts,
 };
-export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId, DraftZoneCard };
+export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId, DraftZoneCard, PlacedCard };

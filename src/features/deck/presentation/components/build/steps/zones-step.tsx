@@ -11,7 +11,8 @@ import { useTheme } from "@/hooks/use-theme";
 
 import { displayedCopies, remainingForCard } from "../../../deck-build-allowance";
 import {
-  deckCardTotal,
+  placedCardTotal,
+  placedCards,
   quantityOf,
   zoneCounts,
   type DeckBuildDraft,
@@ -88,6 +89,10 @@ function ZonesStep({
     setPoolWidth((current) => (current === width ? current : width));
   };
 
+  const isPool = poolView === "pool";
+  const placed = placedCards(draft, zone);
+  const listed = isPool ? zonePool : placed.map((entry) => entry.card);
+
   return (
     <>
       <View style={styles.header}>
@@ -125,7 +130,7 @@ function ZonesStep({
         <View style={styles.viewRow}>
           <View style={styles.tabs}>
             <PoolViewTabs
-              deckCount={deckCardTotal(draft)}
+              deckCount={placedCardTotal(placed)}
               onSelect={onSelectPoolView}
               view={poolView}
             />
@@ -137,30 +142,35 @@ function ZonesStep({
           {zoneRuleSummary(zone)}
         </ThemedText>
 
-        <PoolSearchRow
-          filterCount={activePoolFilterCount(poolFilters)}
-          hint={searchHint(zone)}
-          onChangeQuery={onChangePoolQuery}
-          onOpenFilters={onOpenPoolFilters}
-          query={poolFilters.query}
-        />
+        {isPool ? (
+          <PoolSearchRow
+            filterCount={activePoolFilterCount(poolFilters)}
+            hint={searchHint(zone)}
+            onChangeQuery={onChangePoolQuery}
+            onOpenFilters={onOpenPoolFilters}
+            query={poolFilters.query}
+          />
+        ) : null}
       </View>
 
       {match(poolView)
-        .with("pool", () => (
+        .with("roles", () => <PoolViewPlaceholder message="Role breakdowns are on the way." />)
+        .with("pool", "inDeck", () => (
           <FlatList
             columnWrapperStyle={poolLayout === "grid" ? styles.tileRow : undefined}
             contentContainerStyle={[styles.pool, poolLayout === "list" && styles.poolRows]}
-            data={zonePool}
+            data={listed}
             key={poolLayout}
             keyExtractor={(card) => card.id}
             ListEmptyComponent={
               <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
-                No cards available for this zone yet.
+                {isPool
+                  ? "No cards available for this zone yet."
+                  : "Nothing added to this zone yet."}
               </ThemedText>
             }
             numColumns={poolLayout === "grid" ? 2 : 1}
-            onEndReached={onLoadMorePool}
+            onEndReached={isPool ? onLoadMorePool : undefined}
             onEndReachedThreshold={0.5}
             onLayout={measurePool}
             renderItem={({ item }) => {
@@ -182,10 +192,6 @@ function ZonesStep({
             style={styles.poolList}
           />
         ))
-        .with("inDeck", () => (
-          <PoolViewPlaceholder message="A view of the cards already in this deck is on the way." />
-        ))
-        .with("roles", () => <PoolViewPlaceholder message="Role breakdowns are on the way." />)
         .exhaustive()}
 
       <BuildFooter actionLabel={isSaving ? "Saving…" : "Save deck"} onAction={onSave}>

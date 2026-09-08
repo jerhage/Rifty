@@ -8,18 +8,21 @@ import { CATALOG_SEED_VERSION, catalogSeed } from "./generated/catalog-seed";
 import {
   cardClassifications,
   cardDomains,
+  cardImageSources,
   cardMarketplaceReferences,
   cardMedia,
+  cardSpeeds,
   cardTags,
   catalogCards,
 } from "./catalog-schema/cards";
+import { cardKeywords, keywords } from "./catalog-schema/keywords";
 import { catalogSeedStates } from "./catalog-schema/seed-state";
 import { cardSets, setMarketplaceReferences } from "./catalog-schema/sets";
 import { cardSupertypes, cardTypes, domains, rarities, tags } from "./catalog-schema/taxonomy";
 
 const CATALOG_SEED_STATE_ID = "catalog";
-// catalog_card is the widest insert (17 columns); 50 rows stays below SQLite's 999-variable limit.
-const INSERT_BATCH_SIZE = 50;
+// catalog_card is the widest insert (20 columns); 40 rows stays below SQLite's 999-variable limit.
+const INSERT_BATCH_SIZE = 40;
 
 /** Imports bundled reference data only when its content version changes. */
 async function ensureCatalogSeeded(database: SQLite.SQLiteDatabase, logger: Logger): Promise<void> {
@@ -54,8 +57,12 @@ async function clearCatalog(db: ReturnType<typeof drizzle>): Promise<void> {
   await db.delete(cardDomains);
   await db.delete(cardMarketplaceReferences);
   await db.delete(cardMedia);
+  await db.delete(cardImageSources);
   await db.delete(cardClassifications);
+  await db.delete(cardKeywords);
+  await db.delete(cardSpeeds);
   await db.delete(catalogCards);
+  await db.delete(keywords);
   await db.delete(setMarketplaceReferences);
   await db.delete(cardSets);
   await db.delete(tags);
@@ -72,6 +79,7 @@ async function insertCatalog(db: ReturnType<typeof drizzle>): Promise<void> {
   for (const rows of batches(catalogSeed.rarities)) await db.insert(rarities).values([...rows]);
   for (const rows of batches(catalogSeed.domains)) await db.insert(domains).values([...rows]);
   for (const rows of batches(catalogSeed.tags)) await db.insert(tags).values([...rows]);
+  for (const rows of batches(catalogSeed.keywords)) await db.insert(keywords).values([...rows]);
   for (const rows of batches(catalogSeed.cardSets)) await db.insert(cardSets).values([...rows]);
   for (const rows of batches(catalogSeed.setMarketplaceReferences)) {
     await db.insert(setMarketplaceReferences).values([...rows]);
@@ -82,12 +90,17 @@ async function insertCatalog(db: ReturnType<typeof drizzle>): Promise<void> {
     await db.insert(cardClassifications).values([...rows]);
   }
   for (const rows of batches(catalogSeed.cardMedia)) await db.insert(cardMedia).values([...rows]);
+  for (const rows of batches(catalogSeed.cardImageSources))
+    await db.insert(cardImageSources).values([...rows]);
   for (const rows of batches(catalogSeed.cardDomains))
     await db.insert(cardDomains).values([...rows]);
   for (const rows of batches(catalogSeed.cardTags)) await db.insert(cardTags).values([...rows]);
   for (const rows of batches(catalogSeed.cardMarketplaceReferences)) {
     await db.insert(cardMarketplaceReferences).values([...rows]);
   }
+  for (const rows of batches(catalogSeed.cardKeywords))
+    await db.insert(cardKeywords).values([...rows]);
+  for (const rows of batches(catalogSeed.cardSpeeds)) await db.insert(cardSpeeds).values([...rows]);
 }
 
 function* batches<Value>(values: readonly Value[]): Generator<readonly Value[]> {

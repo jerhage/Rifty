@@ -2,7 +2,7 @@ import { ActivityIndicator, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { SecondaryButton } from "@/components/ui/atoms/secondary-button";
+import { Button } from "@/components/ui/atoms/button";
 import { Spacing } from "@/constants/theme";
 
 import type { CardSummariesDataContent } from "../../data/card-summaries-data";
@@ -16,7 +16,7 @@ function CardSummaryPageFooter({
     return (
       <ThemedView style={styles.loadMoreSection}>
         <ThemedText themeColor="textSecondary">{loadMoreError}</ThemedText>
-        <SecondaryButton label="Try again" onPress={retryLoadMore} />
+        <Button label="Try again" onPress={retryLoadMore} variant="secondary" />
       </ThemedView>
     );
   }

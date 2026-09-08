@@ -1,7 +1,8 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
+import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
@@ -181,9 +182,7 @@ function CardSummariesData({ cardCounter, cardSummaryLister, children }: CardSum
     .with({ type: "loadFailed" }, () => (
       <ThemedView style={styles.centered}>
         <ThemedText>Could not load cards.</ThemedText>
-        <Pressable onPress={retryFirstPage} style={styles.retryButton}>
-          <ThemedText type="linkPrimary">Try again</ThemedText>
-        </Pressable>
+        <Button label="Try again" onPress={retryFirstPage} variant="link" />
       </ThemedView>
     ))
     .with({ type: "success" }, (loadedState) =>
@@ -211,8 +210,5 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.two,
     justifyContent: "center",
-  },
-  retryButton: {
-    padding: Spacing.two,
   },
 });

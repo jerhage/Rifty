@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import { PrimaryButton } from "@/components/ui/atoms/primary-button";
+import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
@@ -32,7 +32,7 @@ function SheetFace({
       </View>
       <ScrollView contentContainerStyle={styles.body}>{body}</ScrollView>
       <View style={[styles.footer, { borderTopColor: theme.border }]}>
-        <PrimaryButton label={confirmLabel} onPress={onConfirm} />
+        <Button label={confirmLabel} onPress={onConfirm} variant="primary" />
       </View>
     </View>
   );

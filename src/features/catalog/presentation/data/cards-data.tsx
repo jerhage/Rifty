@@ -2,7 +2,7 @@ import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
-import { SecondaryButton } from "@/components/ui/atoms/secondary-button";
+import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
@@ -142,7 +142,11 @@ function CardsData({ cardCounter, cardLister, children, criteria }: CardsDataPro
     .with({ type: "loadFailed" }, () => (
       <ThemedView style={styles.centered}>
         <ThemedText type="body">Could not load cards.</ThemedText>
-        <SecondaryButton label="Try again" onPress={() => setState({ type: "loading" })} />
+        <Button
+          label="Try again"
+          onPress={() => setState({ type: "loading" })}
+          variant="secondary"
+        />
       </ThemedView>
     ))
     .with({ type: "success" }, (loaded) =>

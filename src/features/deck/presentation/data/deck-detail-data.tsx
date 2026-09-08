@@ -2,7 +2,7 @@ import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
-import { SecondaryButton } from "@/components/ui/atoms/secondary-button";
+import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
@@ -90,7 +90,7 @@ function DeckDetailData({
     .with({ type: "loadFailed" }, () => (
       <ThemedView style={styles.centered}>
         <ThemedText type="body">Could not load the deck.</ThemedText>
-        <SecondaryButton label="Try again" onPress={reload} />
+        <Button label="Try again" onPress={reload} variant="secondary" />
       </ThemedView>
     ))
     .with({ type: "success" }, ({ cards, deck }) => children({ cards, deck, reload }))

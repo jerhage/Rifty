@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Chip } from "@/components/ui/atoms/chip";
 import { ColorDot } from "@/components/ui/atoms/color-dot";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
-import { PrimaryButton } from "@/components/ui/atoms/primary-button";
+import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
@@ -106,7 +106,7 @@ function PoolFilterSheet({
             <ThemedText themeColor="textSecondary" type="mono" style={styles.result}>
               {resultLabel}
             </ThemedText>
-            <PrimaryButton label="Show results" onPress={onDismiss} />
+            <Button label="Show results" onPress={onDismiss} variant="primary" />
           </View>
         </View>
       </RNHostView>

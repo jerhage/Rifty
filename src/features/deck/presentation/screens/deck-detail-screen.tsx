@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
-import { SecondaryButton } from "@/components/ui/atoms/secondary-button";
+import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
@@ -52,7 +52,7 @@ function DeckDetailScreen({
           <ThemedText style={styles.title} type="display">
             {deck.name}
           </ThemedText>
-          <SecondaryButton label="Edit" onPress={onEdit} />
+          <Button label="Edit" onPress={onEdit} variant="link" />
         </View>
         <View style={styles.metaRow}>
           <ThemedText themeColor="textTertiary" type="mono">

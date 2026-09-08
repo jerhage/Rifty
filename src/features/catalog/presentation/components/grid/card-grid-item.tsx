@@ -7,7 +7,7 @@ import type { CardSummary } from "@/features/catalog/card/card-summary";
 import { useTheme } from "@/hooks/use-theme";
 
 import { CARD_ASPECT_RATIO, CardArt } from "./card-art";
-import { CardDomainBar } from "./card-domain-bar";
+import { DomainBar } from "@/components/ui/atoms/domain-bar";
 
 /** One card in the catalog grid: its face in a fixed frame, with the name beneath. */
 function CardGridItem({
@@ -46,7 +46,7 @@ function CardGridItem({
             <ActivityIndicator />
           </View>
         )}
-        <CardDomainBar domainIds={card.domainIds} />
+        <DomainBar domainIds={card.domainIds} />
       </View>
       <ThemedText numberOfLines={2} type="body" style={styles.name}>
         {card.name}

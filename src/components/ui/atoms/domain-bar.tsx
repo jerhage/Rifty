@@ -7,13 +7,19 @@ import { useDomainColors } from "@/hooks/use-theme";
  * A card's domains as one bar along the bottom edge of its art. A dual-domain card splits the bar
  * evenly so both colors read at a glance, rather than one standing in for the pair.
  */
-function CardDomainBar({ domainIds }: { readonly domainIds: readonly CardDomain[] }) {
+function DomainBar({
+  domainIds,
+  height = 3,
+}: {
+  readonly domainIds: readonly CardDomain[];
+  readonly height?: number;
+}) {
   const domainColors = useDomainColors();
 
   if (domainIds.length === 0) return null;
 
   return (
-    <View style={styles.bar}>
+    <View style={[styles.bar, { height }]}>
       {domainIds.map((domainId) => (
         <View
           key={domainId}
@@ -24,13 +30,12 @@ function CardDomainBar({ domainIds }: { readonly domainIds: readonly CardDomain[
   );
 }
 
-export { CardDomainBar };
+export { DomainBar };
 
 const styles = StyleSheet.create({
   bar: {
     bottom: 0,
     flexDirection: "row",
-    height: 3,
     left: 0,
     position: "absolute",
     right: 0,

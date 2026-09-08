@@ -34,7 +34,6 @@ function DeckBuilder({
       cardLister={cardLister}
       draft={build.draft}
       error={build.error}
-      isEditing={build.isEditing}
       isPoolFilterOpen={build.isPoolFilterOpen}
       isSaving={build.isSaving}
       legendDomainIds={build.legendDomainIds}
@@ -60,6 +59,7 @@ function DeckBuilder({
       onToggleLegendDomain={build.toggleLegendDomain}
       onTogglePoolDomain={build.togglePoolDomain}
       onTogglePoolType={build.togglePoolType}
+      mode={build.mode}
       poolFilters={build.poolFilters}
       poolLayout={build.poolLayout}
       poolSearchFilters={build.poolQueryFilters}

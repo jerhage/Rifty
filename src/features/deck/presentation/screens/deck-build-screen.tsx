@@ -18,6 +18,7 @@ import { ChampionPoolData } from "../data/champion-pool-data";
 import { LegendPoolData } from "../data/legend-pool-data";
 import { ZonePoolData } from "../data/zone-pool-data";
 import type { DeckBuildDraft, DeckBuildStep } from "../deck-build-steps";
+import type { DeckBuildMode } from "../hooks/use-deck-build";
 import type { ZonePoolFilters, ZonePoolLayout, ZonePoolView } from "../deck-zone-pool";
 
 interface DeckBuildScreenProps {
@@ -25,13 +26,13 @@ interface DeckBuildScreenProps {
   readonly cardLister: CardLister;
   readonly draft: DeckBuildDraft;
   readonly error: string | null;
-  readonly isEditing: boolean;
   readonly isSaving: boolean;
   readonly legendDomainIds: readonly CardDomain[];
   readonly isPoolFilterOpen: boolean;
   /** What the field shows; `legendSearchQuery` is the settled value the query uses. */
   readonly legendQuery: string;
   readonly legendSearchQuery: string;
+  readonly mode: DeckBuildMode;
   readonly onBack: () => void;
   readonly onChangeLegendQuery: (query: string) => void;
   readonly onChangeName: (name: string) => void;
@@ -71,12 +72,12 @@ function DeckBuildScreen({
   cardLister,
   draft,
   error,
-  isEditing,
   isSaving,
   isPoolFilterOpen,
   legendDomainIds,
   legendQuery,
   legendSearchQuery,
+  mode,
   onBack,
   onChangeLegendQuery,
   onChangeName,
@@ -108,7 +109,7 @@ function DeckBuildScreen({
 }: DeckBuildScreenProps) {
   return (
     <ThemedView style={styles.screen}>
-      <BuildProgressHeader isEditing={isEditing} onBack={onBack} stepIndex={stepIndex} />
+      <BuildProgressHeader mode={mode} onBack={onBack} stepIndex={stepIndex} />
       {match(step.id)
         .with("legend", () => (
           <LegendPoolData

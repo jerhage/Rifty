@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
@@ -6,13 +7,14 @@ import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 import { DECK_BUILD_STEPS } from "../../deck-build-steps";
+import type { DeckBuildMode } from "../../hooks/use-deck-build";
 
 function BuildProgressHeader({
-  isEditing,
+  mode,
   onBack,
   stepIndex,
 }: {
-  readonly isEditing: boolean;
+  readonly mode: DeckBuildMode;
   readonly onBack: () => void;
   readonly stepIndex: number;
 }) {
@@ -36,7 +38,7 @@ function BuildProgressHeader({
           <ThemedText type="small">←</ThemedText>
         </Pressable>
         <ThemedText themeColor="textSecondary" type="mono">
-          {`${isEditing ? "Edit deck" : "New deck"} · step ${stepIndex + 1} of ${DECK_BUILD_STEPS.length} · ${step?.label ?? ""}`}
+          {`${modeLabel(mode)} · step ${stepIndex + 1} of ${DECK_BUILD_STEPS.length} · ${step?.label ?? ""}`}
         </ThemedText>
       </View>
       <View style={styles.track}>
@@ -52,6 +54,13 @@ function BuildProgressHeader({
       </View>
     </View>
   );
+}
+
+function modeLabel(mode: DeckBuildMode): string {
+  return match(mode)
+    .with("new", () => "New deck")
+    .with("edit", () => "Edit deck")
+    .exhaustive();
 }
 
 export { BuildProgressHeader };

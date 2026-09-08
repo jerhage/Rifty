@@ -10,7 +10,7 @@ import type { Deck, DeckSection } from "@/features/deck/deck/deck";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
 import type { DeckSaver } from "@/features/deck/deck/deck-saver";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
-import { saveDeck } from "@/features/deck/deck/use-cases/save-deck";
+import { saveDeck, type DeckDraft } from "@/features/deck/deck/use-cases/save-deck";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 import {
@@ -41,6 +41,8 @@ type DeckBuildStart =
   | { readonly type: "new" }
   | { readonly type: "edit"; readonly deck: Deck; readonly cards: readonly Card[] };
 
+type DeckBuildMode = DeckBuildStart["type"];
+
 const ZONES_STEP_INDEX = DECK_BUILD_STEPS.findIndex((step) => step.id === "zones");
 
 function useDeckBuild(
@@ -48,11 +50,11 @@ function useDeckBuild(
   capabilities: DeckBuildCapabilities,
   { onExit, onSaved }: { readonly onExit: () => void; readonly onSaved: () => void },
 ) {
-  const [stepIndex, setStepIndex] = useState(() => (start.type === "edit" ? ZONES_STEP_INDEX : 0));
-  const [draft, setDraft] = useState<DeckBuildDraft>(() => initialDraft(start));
+  const [stepIndex, setStepIndex] = useState(() => openingStep(start));
+  const [draft, setDraft] = useState<DeckBuildDraft>(() => openingDraft(start));
   const [zone, setZoneState] = useState<DeckSection>("mainDeck");
   const [poolFilters, setPoolFilters] = useState<ZonePoolFilters>(() =>
-    defaultPoolFilters(initialDraft(start).legend),
+    defaultPoolFilters(openingDraft(start).legend),
   );
   const [poolLayout, setPoolLayout] = useState<ZonePoolLayout>("list");
   const [poolView, setPoolView] = useState<ZonePoolView>("pool");
@@ -64,7 +66,6 @@ function useDeckBuild(
 
   const step = DECK_BUILD_STEPS[stepIndex] ?? DECK_BUILD_STEPS[0];
 
-  /** Backing out of the first step leaves the builder, since there is no step behind it. */
   const back = useCallback(() => {
     if (stepIndex === 0) {
       onExit();
@@ -186,13 +187,7 @@ function useDeckBuild(
 
     setIsSaving(true);
     const result = await saveDeck(
-      {
-        id: start.type === "edit" ? start.deck.id : capabilities.idGenerator.next(),
-        name,
-        notes: start.type === "edit" ? start.deck.notes : "",
-        createdAt: start.type === "edit" ? start.deck.createdAt : capabilities.clock.now(),
-        entries,
-      },
+      { ...deckIdentity(start, capabilities), name, entries },
       capabilities,
     );
     const failure = match(result)
@@ -216,7 +211,7 @@ function useDeckBuild(
     draft,
     error,
     goToStep,
-    isEditing: start.type === "edit",
+    mode: start.type,
     isPoolFilterOpen,
     isSaving,
     next,
@@ -249,8 +244,36 @@ function useDeckBuild(
   };
 }
 
-function initialDraft(start: DeckBuildStart): DeckBuildDraft {
-  return start.type === "edit" ? draftFromDeck(start.deck, start.cards) : EMPTY_DRAFT;
+function openingDraft(start: DeckBuildStart): DeckBuildDraft {
+  return match(start)
+    .with({ type: "new" }, () => EMPTY_DRAFT)
+    .with({ type: "edit" }, ({ cards, deck }) => draftFromDeck(deck, cards))
+    .exhaustive();
+}
+
+function openingStep(start: DeckBuildStart): number {
+  return match(start)
+    .with({ type: "new" }, () => 0)
+    .with({ type: "edit" }, () => ZONES_STEP_INDEX)
+    .exhaustive();
+}
+
+function deckIdentity(
+  start: DeckBuildStart,
+  { clock, idGenerator }: DeckBuildCapabilities,
+): Pick<DeckDraft, "id" | "notes" | "createdAt"> {
+  return match(start)
+    .with({ type: "new" }, () => ({
+      id: idGenerator.next(),
+      notes: "",
+      createdAt: clock.now(),
+    }))
+    .with({ type: "edit" }, ({ deck }) => ({
+      id: deck.id,
+      notes: deck.notes,
+      createdAt: deck.createdAt,
+    }))
+    .exhaustive();
 }
 
 function toggle<Value>(values: readonly Value[], value: Value): Value[] {
@@ -260,4 +283,4 @@ function toggle<Value>(values: readonly Value[], value: Value): Value[] {
 }
 
 export { useDeckBuild };
-export type { DeckBuildCapabilities, DeckBuildStart };
+export type { DeckBuildCapabilities, DeckBuildMode, DeckBuildStart };

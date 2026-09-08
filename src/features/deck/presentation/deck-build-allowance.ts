@@ -50,4 +50,12 @@ function remainingForCard(draft: DeckBuildDraft, section: DeckSection, card: Car
   return byCopies === null ? byCapacity : Math.min(byCopies, byCapacity);
 }
 
-export { lockedCopies, remainingForCard, zoneCapacity };
+/**
+ * The deck names one of its main deck cards as the chosen champion, so that printing cannot be
+ * taken out from under it.
+ */
+function minimumForCard(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
+  return section === "mainDeck" && draft.chosenChampion?.riftboundId === card.riftboundId ? 1 : 0;
+}
+
+export { lockedCopies, minimumForCard, remainingForCard, zoneCapacity };

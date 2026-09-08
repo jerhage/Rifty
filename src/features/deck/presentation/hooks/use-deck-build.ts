@@ -13,6 +13,8 @@ import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legali
 import { saveDeck, type DeckDraft } from "@/features/deck/deck/use-cases/save-deck";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
+import { minimumForCard } from "../deck-build-allowance";
+
 import {
   chooseChampion,
   DECK_BUILD_STEPS,
@@ -148,7 +150,10 @@ function useDeckBuild(
       ...current,
       zoneCards: {
         ...current.zoneCards,
-        [quantityKey(section, card.riftboundId)]: { card, quantity },
+        [quantityKey(section, card.riftboundId)]: {
+          card,
+          quantity: Math.max(minimumForCard(current, section, card), quantity),
+        },
       },
     }));
   }, []);

@@ -8,11 +8,13 @@ type StepperSurface = "inline" | "overlay";
 
 function CardStepper({
   maxQuantity,
+  minQuantity,
   onChange,
   quantity,
   surface = "inline",
 }: {
   readonly maxQuantity: number | null;
+  readonly minQuantity: number;
   readonly onChange: (quantity: number) => void;
   readonly quantity: number;
   readonly surface?: StepperSurface;
@@ -29,9 +31,9 @@ function CardStepper({
       ]}
     >
       <StepButton
-        disabled={quantity === 0}
+        disabled={quantity <= minQuantity}
         label="−"
-        onPress={() => onChange(Math.max(0, quantity - 1))}
+        onPress={() => onChange(Math.max(minQuantity, quantity - 1))}
       />
       <ThemedText
         style={[styles.quantity, { color: quantity > 0 ? theme.text : theme.textTertiary }]}

@@ -17,6 +17,7 @@ import { CardStepper } from "./card-stepper";
 function BuildCardTile({
   card,
   maxQuantity,
+  minQuantity,
   onChange,
   onOpenCard,
   quantity,
@@ -24,6 +25,7 @@ function BuildCardTile({
 }: {
   readonly card: Card;
   readonly maxQuantity: number | null;
+  readonly minQuantity: number;
   readonly onChange: (quantity: number) => void;
   readonly onOpenCard: (card: Card) => void;
   readonly quantity: number;
@@ -63,6 +65,7 @@ function BuildCardTile({
         <View style={styles.stepper}>
           <CardStepper
             maxQuantity={maxQuantity}
+            minQuantity={minQuantity}
             onChange={onChange}
             quantity={quantity}
             surface="overlay"

@@ -13,6 +13,7 @@ import { CardStepper } from "./card-stepper";
 function BuildCardRow({
   card,
   maxQuantity,
+  minQuantity,
   onChange,
   onOpenCard,
   quantity,
@@ -20,6 +21,7 @@ function BuildCardRow({
   readonly card: Card;
   /** The most this printing may hold here, sharing its allowance with other printings. */
   readonly maxQuantity: number | null;
+  readonly minQuantity: number;
   readonly onChange: (quantity: number) => void;
   readonly onOpenCard: (card: Card) => void;
   /** What the row reads, which includes the champion's own slot. */
@@ -63,7 +65,12 @@ function BuildCardRow({
         </View>
       </Pressable>
 
-      <CardStepper maxQuantity={maxQuantity} onChange={onChange} quantity={quantity} />
+      <CardStepper
+        maxQuantity={maxQuantity}
+        minQuantity={minQuantity}
+        onChange={onChange}
+        quantity={quantity}
+      />
     </View>
   );
 }

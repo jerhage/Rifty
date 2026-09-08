@@ -1,4 +1,8 @@
-import { lockedCopies, remainingForCard } from "@/features/deck/presentation/deck-build-allowance";
+import {
+  lockedCopies,
+  minimumForCard,
+  remainingForCard,
+} from "@/features/deck/presentation/deck-build-allowance";
 import {
   chooseChampion,
   EMPTY_DRAFT,
@@ -60,6 +64,15 @@ describe("deck build allowance", () => {
     );
 
     expect(quantityOf(draft, "mainDeck", survivor.riftboundId)).toBe(3);
+  });
+
+  it("holds the chosen champion's own printing at one copy in the main deck", () => {
+    const draft = chooseChampion(EMPTY_DRAFT, survivor);
+
+    expect(minimumForCard(draft, "mainDeck", survivor)).toBe(1);
+    expect(minimumForCard(draft, "mainDeck", survivorAlt)).toBe(0);
+    expect(minimumForCard(draft, "sideboard", survivor)).toBe(0);
+    expect(minimumForCard(EMPTY_DRAFT, "mainDeck", survivor)).toBe(0);
   });
 
   it("counts the champion's seated copy against its other printings", () => {

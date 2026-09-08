@@ -9,7 +9,7 @@ import type { Card } from "@/features/catalog/card/card";
 import type { DeckSection, DeckVerification } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 
-import { remainingForCard } from "../../../deck-build-allowance";
+import { minimumForCard, remainingForCard } from "../../../deck-build-allowance";
 import {
   placedCardTotal,
   placedCards,
@@ -177,6 +177,7 @@ function ZonesStep({
               const placement = {
                 card: item,
                 maxQuantity: remainingForCard(draft, zone, item),
+                minQuantity: minimumForCard(draft, zone, item),
                 onChange: (quantity: number) => onSetQuantity(zone, item, quantity),
                 onOpenCard,
                 quantity: quantityOf(draft, zone, item.riftboundId),

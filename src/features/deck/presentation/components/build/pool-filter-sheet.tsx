@@ -10,7 +10,7 @@ import { Spacing } from "@/constants/theme";
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
 import type { DeckSection } from "@/features/deck/deck/deck";
-import { orderedDomains } from "@/features/catalog/presentation/catalog-facet-order";
+import { ORDERED_DOMAINS } from "@/features/catalog/presentation/catalog-facet-order";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import {
@@ -69,7 +69,7 @@ function PoolFilterSheet({
           <ScrollView contentContainerStyle={styles.body}>
             <LabelledSection label="Domain">
               <View style={styles.chips}>
-                {orderedDomains.map((domainId) => (
+                {ORDERED_DOMAINS.map((domainId) => (
                   <Chip
                     adornment={<ColorDot color={domainColors[domainId]} />}
                     key={domainId}

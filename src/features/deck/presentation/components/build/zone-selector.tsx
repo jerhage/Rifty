@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { DeckSection } from "@/features/deck/deck/deck";
-import { zoneRules } from "@/features/deck/deck/deck-legality";
+import { ZONE_RULES } from "@/features/deck/deck/deck-legality";
 import { useTheme } from "@/hooks/use-theme";
 
 function ZoneSelector({
@@ -19,7 +19,7 @@ function ZoneSelector({
 
   return (
     <View style={styles.row}>
-      {zoneRules.map((rule) => {
+      {ZONE_RULES.map((rule) => {
         const count = counts[rule.section] ?? 0;
         const isComplete = count === rule.requiredCount;
         const isSelected = rule.section === selected;

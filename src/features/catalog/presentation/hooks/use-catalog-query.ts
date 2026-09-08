@@ -12,7 +12,7 @@ import { sortForId, toggledSort } from "../catalog-sort-options";
 const SEARCH_DEBOUNCE_MS = 300;
 
 /** The catalog opens alphabetically; browsing a card list by name is the common case. */
-const defaultCriteria: CatalogQueryCriteria = { sort: sortForId("name") };
+const DEFAULT_CRITERIA: CatalogQueryCriteria = { sort: sortForId("name") };
 
 /** Which face of the catalog bottom sheet is showing, if any. */
 type CatalogSheetState =
@@ -21,8 +21,8 @@ type CatalogSheetState =
   | { readonly type: "sort" };
 
 function useCatalogQuery(cardSummaryLister: CardSummaryLister, cardCounter: CardCounter) {
-  const [criteria, setCriteria] = useState<CatalogQueryCriteria>(defaultCriteria);
-  const [draftCriteria, setDraftCriteria] = useState<CatalogQueryCriteria>(defaultCriteria);
+  const [criteria, setCriteria] = useState<CatalogQueryCriteria>(DEFAULT_CRITERIA);
+  const [draftCriteria, setDraftCriteria] = useState<CatalogQueryCriteria>(DEFAULT_CRITERIA);
   const [sheet, setSheet] = useState<CatalogSheetState>({ type: "hidden" });
   const [name, setName] = useState("");
   const debouncedName = useDebouncedValue(name, SEARCH_DEBOUNCE_MS);

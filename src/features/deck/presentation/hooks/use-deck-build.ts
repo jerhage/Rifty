@@ -10,19 +10,19 @@ import type { DeckSection } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
 import type { DeckSaver } from "@/features/deck/deck/deck-saver";
-import { riftboundStandard, verifyDeck } from "@/features/deck/deck/deck-legality";
+import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 import { createDeck } from "@/features/deck/deck/use-cases/create-deck";
 import { setDeckCardQuantity } from "@/features/deck/deck/use-cases/set-deck-card-quantity";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 import {
-  deckBuildSteps,
+  DECK_BUILD_STEPS,
   draftEntries,
-  emptyDraft,
+  EMPTY_DRAFT,
   quantityKey,
   type DeckBuildDraft,
 } from "../deck-build-steps";
-import { defaultPoolFilters, emptyPoolFilters, type ZonePoolFilters } from "../deck-zone-pool";
+import { defaultPoolFilters, EMPTY_POOL_FILTERS, type ZonePoolFilters } from "../deck-zone-pool";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -36,16 +36,16 @@ interface DeckBuildCapabilities {
 
 function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [draft, setDraft] = useState<DeckBuildDraft>(emptyDraft);
+  const [draft, setDraft] = useState<DeckBuildDraft>(EMPTY_DRAFT);
   const [zone, setZoneState] = useState<DeckSection>("mainDeck");
-  const [poolFilters, setPoolFilters] = useState<ZonePoolFilters>(emptyPoolFilters);
+  const [poolFilters, setPoolFilters] = useState<ZonePoolFilters>(EMPTY_POOL_FILTERS);
   const [legendQuery, setLegendQuery] = useState("");
   const [legendDomainIds, setLegendDomainIds] = useState<readonly CardDomain[]>([]);
   const [isPoolFilterOpen, setIsPoolFilterOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const step = deckBuildSteps[stepIndex] ?? deckBuildSteps[0];
+  const step = DECK_BUILD_STEPS[stepIndex] ?? DECK_BUILD_STEPS[0];
 
   const back = useCallback(() => setStepIndex((index) => Math.max(0, index - 1)), []);
 
@@ -53,14 +53,14 @@ function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) 
   const goToStep = useCallback(
     (index: number) => {
       setStepIndex(index);
-      if (deckBuildSteps[index]?.id === "zones") {
+      if (DECK_BUILD_STEPS[index]?.id === "zones") {
         setPoolFilters(defaultPoolFilters(draft.legend));
       }
     },
     [draft.legend],
   );
   const next = useCallback(
-    () => goToStep(Math.min(deckBuildSteps.length - 1, stepIndex + 1)),
+    () => goToStep(Math.min(DECK_BUILD_STEPS.length - 1, stepIndex + 1)),
     [goToStep, stepIndex],
   );
 
@@ -147,7 +147,7 @@ function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) 
           updatedAt: "1970-01-01T00:00:00.000Z",
           entries,
         },
-        riftboundStandard,
+        RIFTBOUND_STANDARD,
       ),
     [draft.name, entries],
   );

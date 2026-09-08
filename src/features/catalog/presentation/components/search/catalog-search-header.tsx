@@ -10,7 +10,7 @@ import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
-import { orderedCardTypes, orderedDomains } from "../../catalog-facet-order";
+import { ORDERED_CARD_TYPES, ORDERED_DOMAINS } from "../../catalog-facet-order";
 import type { CatalogQueryCriteria } from "../../catalog-query-criteria";
 import { DomainChip } from "./domain-chip";
 import { TypeChip } from "./type-chip";
@@ -90,7 +90,7 @@ function CatalogSearchHeader({
             onPress={onClearDomains}
             selected={selectedDomains.length === 0}
           />
-          {orderedDomains.map((domainId) => (
+          {ORDERED_DOMAINS.map((domainId) => (
             <DomainChip
               dotColor={domainColors[domainId]}
               key={domainId}
@@ -103,7 +103,7 @@ function CatalogSearchHeader({
 
         <HorizontalScroller gap={Spacing.two - 2} style={styles.typeRow}>
           <TypeChip label="All" onPress={onClearTypes} selected={selectedTypes.length === 0} />
-          {orderedCardTypes.map((typeId) => (
+          {ORDERED_CARD_TYPES.map((typeId) => (
             <TypeChip
               key={typeId}
               label={typeId}

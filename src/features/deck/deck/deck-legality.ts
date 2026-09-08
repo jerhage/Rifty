@@ -17,7 +17,7 @@ interface ZoneRule {
   readonly copyLimit: number | null;
 }
 
-const zoneRules: readonly ZoneRule[] = [
+const ZONE_RULES: readonly ZoneRule[] = [
   { section: "mainDeck", label: "Main deck", requiredCount: 40, copyLimit: 3 },
   { section: "runeDeck", label: "Rune deck", requiredCount: 12, copyLimit: null },
   { section: "battlefield", label: "Battlefields", requiredCount: 3, copyLimit: 1 },
@@ -28,10 +28,10 @@ const zoneRules: readonly ZoneRule[] = [
  * Three copies of a name in total across the champion zone, the main deck and the sideboard, so
  * a card cannot hide extra copies in one of them.
  */
-const sharedCopyLimit = 3;
-const sharedCopySections: readonly DeckSection[] = ["chosenChampion", "mainDeck", "sideboard"];
+const SHARED_COPY_LIMIT = 3;
+const SHARED_COPY_SECTIONS: readonly DeckSection[] = ["chosenChampion", "mainDeck", "sideboard"];
 
-const riftboundStandard: TournamentRuleset = {
+const RIFTBOUND_STANDARD: TournamentRuleset = {
   id: "riftbound-standard",
   format: "Standard",
   version: "2026.1",
@@ -39,13 +39,13 @@ const riftboundStandard: TournamentRuleset = {
 
 /** Sections whose copies of a card count against the same allowance as `section`. */
 function sectionsSharingAllowance(section: DeckSection): readonly DeckSection[] {
-  return sharedCopySections.includes(section) ? sharedCopySections : [section];
+  return SHARED_COPY_SECTIONS.includes(section) ? SHARED_COPY_SECTIONS : [section];
 }
 
 function copyAllowance(section: DeckSection): number | null {
-  if (sharedCopySections.includes(section)) return sharedCopyLimit;
+  if (SHARED_COPY_SECTIONS.includes(section)) return SHARED_COPY_LIMIT;
 
-  const rule = zoneRules.find((candidate) => candidate.section === section);
+  const rule = ZONE_RULES.find((candidate) => candidate.section === section);
 
   // A zone with no rule is the legend, which is a singleton. `null` on a rule means no limit at
   // all, so it must not collapse into a default of one.
@@ -87,7 +87,7 @@ function verifyDeck(deck: Deck, ruleset: TournamentRuleset): DeckVerification {
   const violations = [
     ...singletonViolations(deck, "legend", "Legend"),
     ...singletonViolations(deck, "chosenChampion", "Chosen Champion"),
-    ...zoneRules.flatMap((rule) => zoneViolations(deck, rule)),
+    ...ZONE_RULES.flatMap((rule) => zoneViolations(deck, rule)),
     ...sharedCopyViolations(deck),
   ];
 
@@ -129,7 +129,7 @@ function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolat
     });
   }
 
-  if (rule.copyLimit !== null && !sharedCopySections.includes(rule.section)) {
+  if (rule.copyLimit !== null && !SHARED_COPY_SECTIONS.includes(rule.section)) {
     for (const entry of deck.entries) {
       if (entry.section !== rule.section || entry.quantity <= rule.copyLimit) continue;
 
@@ -149,7 +149,7 @@ function sharedCopyViolations(deck: Deck): readonly DeckLegalityViolation[] {
   const copiesByCard = new Map<CardRiftboundId, number>();
 
   for (const entry of deck.entries) {
-    if (!sharedCopySections.includes(entry.section)) continue;
+    if (!SHARED_COPY_SECTIONS.includes(entry.section)) continue;
 
     copiesByCard.set(
       entry.cardRiftboundId,
@@ -158,12 +158,12 @@ function sharedCopyViolations(deck: Deck): readonly DeckLegalityViolation[] {
   }
 
   return [...copiesByCard]
-    .filter(([, copies]) => copies > sharedCopyLimit)
+    .filter(([, copies]) => copies > SHARED_COPY_LIMIT)
     .map(([cardRiftboundId, copies]) => ({
       type: "cardConstraint" as const,
       cardRiftboundId,
       rule: "shared-copy-limit",
-      message: `Main deck and sideboard share a limit of ${sharedCopyLimit} copies. This card has ${copies}.`,
+      message: `Main deck and sideboard share a limit of ${SHARED_COPY_LIMIT} copies. This card has ${copies}.`,
     }));
 }
 
@@ -187,5 +187,5 @@ function copiesLabel(limit: number): string {
   return limit === 1 ? "one copy" : `${limit} copies`;
 }
 
-export { copyAllowance, remainingCopies, riftboundStandard, verifyDeck, zoneRules, zoneTotal };
+export { copyAllowance, remainingCopies, RIFTBOUND_STANDARD, verifyDeck, ZONE_RULES, zoneTotal };
 export type { ZoneRule };

@@ -11,7 +11,7 @@ interface DeckBuildStep {
   readonly blurb: string;
 }
 
-const deckBuildSteps: readonly DeckBuildStep[] = [
+const DECK_BUILD_STEPS: readonly DeckBuildStep[] = [
   {
     id: "legend",
     label: "Legend",
@@ -47,7 +47,7 @@ interface DeckBuildDraft {
   readonly zoneCards: Readonly<Record<string, DraftZoneCard>>;
 }
 
-const emptyDraft: DeckBuildDraft = {
+const EMPTY_DRAFT: DeckBuildDraft = {
   name: "",
   legend: null,
   chosenChampion: null,
@@ -146,9 +146,9 @@ function copiesOfName(
 
 export {
   copiesOfName,
-  deckBuildSteps,
+  DECK_BUILD_STEPS,
   draftEntries,
-  emptyDraft,
+  EMPTY_DRAFT,
   quantityKey,
   quantityOf,
   zoneCounts,

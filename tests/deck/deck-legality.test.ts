@@ -1,5 +1,5 @@
 import type { Deck, DeckEntry } from "@/features/deck/deck/deck";
-import { riftboundStandard, verifyDeck } from "@/features/deck/deck/deck-legality";
+import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 
 import { deck } from "./fixtures";
 
@@ -45,7 +45,7 @@ function withEntries(entries: DeckEntry[]): Deck {
 }
 
 function rulesBroken(entries: DeckEntry[]): string[] {
-  const verification = verifyDeck(withEntries(entries), riftboundStandard);
+  const verification = verifyDeck(withEntries(entries), RIFTBOUND_STANDARD);
 
   return verification.type === "illegal"
     ? verification.violations.map((violation) => violation.rule).sort()
@@ -54,12 +54,12 @@ function rulesBroken(entries: DeckEntry[]): string[] {
 
 describe("deck legality", () => {
   it("accepts a deck that satisfies every zone", () => {
-    const verification = verifyDeck(withEntries(legalEntries()), riftboundStandard);
+    const verification = verifyDeck(withEntries(legalEntries()), RIFTBOUND_STANDARD);
 
     expect(verification).toEqual({
       type: "legal",
       deck: withEntries(legalEntries()),
-      ruleset: riftboundStandard,
+      ruleset: RIFTBOUND_STANDARD,
     });
   });
 
@@ -129,7 +129,7 @@ describe("deck legality", () => {
   it("names the offending card on a copy-limit violation", () => {
     const entries = legalEntries().filter((entry) => entry.section !== "battlefield");
     entries.push({ section: "battlefield", cardRiftboundId: "ogn-bf1", quantity: 3 });
-    const verification = verifyDeck(withEntries(entries), riftboundStandard);
+    const verification = verifyDeck(withEntries(entries), RIFTBOUND_STANDARD);
 
     expect(verification).toMatchObject({
       type: "illegal",

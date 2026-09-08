@@ -20,7 +20,7 @@ interface CatalogSortOption {
   readonly ascendingLabel: string;
 }
 
-const sortOptions: readonly CatalogSortOption[] = [
+const SORT_OPTIONS: readonly CatalogSortOption[] = [
   {
     id: "catalogOrder",
     label: "Catalog order",
@@ -74,7 +74,7 @@ function sortIdOf(sort: CardSort | undefined): CatalogSortId {
 function sortOptionFor(sort: CardSort | undefined): CatalogSortOption {
   const id = sortIdOf(sort);
 
-  return sortOptions.find((option) => option.id === id) ?? sortOptions[0];
+  return SORT_OPTIONS.find((option) => option.id === id) ?? SORT_OPTIONS[0];
 }
 
 function sortDirectionOf(sort: CardSort | undefined): CardSortDirection | null {
@@ -103,7 +103,7 @@ function buildSort(id: CatalogSortId, direction: CardSortDirection): CardSort | 
 
 /** Choosing an attribute adopts its natural direction rather than keeping the previous one. */
 function sortForId(id: CatalogSortId): CardSort | undefined {
-  const option = sortOptions.find((candidate) => candidate.id === id);
+  const option = SORT_OPTIONS.find((candidate) => candidate.id === id);
 
   return option?.defaultDirection === null || option === undefined
     ? undefined
@@ -144,7 +144,7 @@ export {
   sortIdOf,
   sortOptionFor,
   sortOptionLabel,
-  sortOptions,
+  SORT_OPTIONS,
   sortWithDirection,
   toggledSort,
 };

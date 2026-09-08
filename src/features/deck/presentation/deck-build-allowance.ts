@@ -1,20 +1,20 @@
 import type { Card } from "@/features/catalog/card/card";
 import { cardIdentityName } from "@/features/catalog/presentation/card-identity";
 import type { DeckSection } from "@/features/deck/deck/deck";
-import { copyAllowance, zoneRules } from "@/features/deck/deck/deck-legality";
+import { copyAllowance, ZONE_RULES } from "@/features/deck/deck/deck-legality";
 
 import { copiesOfName, quantityOf, zoneCounts, type DeckBuildDraft } from "./deck-build-steps";
 
-const sharedSections: readonly DeckSection[] = ["chosenChampion", "mainDeck", "sideboard"];
+const SHARED_SECTIONS: readonly DeckSection[] = ["chosenChampion", "mainDeck", "sideboard"];
 
 /**
  * The rune deck is the one zone the builder will not let you overfill. The other three are worked
  * on over time and are allowed to sit above or below their target.
  */
-const cappedSections: readonly DeckSection[] = ["runeDeck"];
+const CAPPED_SECTIONS: readonly DeckSection[] = ["runeDeck"];
 
 function sectionsSharingWith(section: DeckSection): readonly DeckSection[] {
-  return sharedSections.includes(section) ? sharedSections : [section];
+  return SHARED_SECTIONS.includes(section) ? SHARED_SECTIONS : [section];
 }
 
 /**
@@ -29,9 +29,9 @@ function lockedCopies(draft: DeckBuildDraft, section: DeckSection, card: Card): 
 }
 
 function zoneCapacity(section: DeckSection): number | null {
-  if (!cappedSections.includes(section)) return null;
+  if (!CAPPED_SECTIONS.includes(section)) return null;
 
-  return zoneRules.find((rule) => rule.section === section)?.requiredCount ?? null;
+  return ZONE_RULES.find((rule) => rule.section === section)?.requiredCount ?? null;
 }
 
 /** How many more of this card the zone will take, or `null` where nothing limits it. */

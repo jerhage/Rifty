@@ -7,7 +7,7 @@ import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
-import { orderedDomains } from "@/features/catalog/presentation/catalog-facet-order";
+import { ORDERED_DOMAINS } from "@/features/catalog/presentation/catalog-facet-order";
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import { useDomainColors } from "@/hooks/use-theme";
 
@@ -63,7 +63,7 @@ function LegendStep({
               style={styles.search}
             />
             <HorizontalScroller style={styles.domains}>
-              {orderedDomains.map((domainId) => (
+              {ORDERED_DOMAINS.map((domainId) => (
                 <Chip
                   adornment={<ColorDot color={domainColors[domainId]} />}
                   key={domainId}

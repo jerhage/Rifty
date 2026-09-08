@@ -3,7 +3,7 @@ import type { CardListCriteria } from "@/features/catalog/card/card-list-criteri
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
 import type { DeckSection } from "@/features/deck/deck/deck";
-import { zoneRules } from "@/features/deck/deck/deck-legality";
+import { ZONE_RULES } from "@/features/deck/deck/deck-legality";
 
 interface ZonePoolFilters {
   readonly query: string;
@@ -11,11 +11,11 @@ interface ZonePoolFilters {
   readonly typeIds: readonly CardType[];
 }
 
-const emptyPoolFilters: ZonePoolFilters = { query: "", domainIds: [], typeIds: [] };
+const EMPTY_POOL_FILTERS: ZonePoolFilters = { query: "", domainIds: [], typeIds: [] };
 
 /** A deck plays within its legend's domains, so the pool starts narrowed to them. */
 function defaultPoolFilters(legend: Card | null): ZonePoolFilters {
-  return { ...emptyPoolFilters, domainIds: legend ? [...legend.domainIds] : [] };
+  return { ...EMPTY_POOL_FILTERS, domainIds: legend ? [...legend.domainIds] : [] };
 }
 
 /** Card types a zone will accept. Runes and battlefields take exactly one, so they offer no choice. */
@@ -31,7 +31,7 @@ function allowsTypeChoice(section: DeckSection): boolean {
 }
 
 function zoneRuleSummary(section: DeckSection): string {
-  const rule = zoneRules.find((candidate) => candidate.section === section);
+  const rule = ZONE_RULES.find((candidate) => candidate.section === section);
 
   if (!rule) return "";
 
@@ -46,7 +46,7 @@ function zoneRuleSummary(section: DeckSection): string {
 }
 
 function searchHint(section: DeckSection): string {
-  const rule = zoneRules.find((candidate) => candidate.section === section);
+  const rule = ZONE_RULES.find((candidate) => candidate.section === section);
 
   return `Search ${rule ? rule.label.toLowerCase() : "cards"}`;
 }
@@ -88,7 +88,7 @@ export {
   activePoolFilterCount,
   allowsTypeChoice,
   defaultPoolFilters,
-  emptyPoolFilters,
+  EMPTY_POOL_FILTERS,
   legendCriteria,
   poolCriteria,
   searchHint,

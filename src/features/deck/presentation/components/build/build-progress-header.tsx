@@ -5,7 +5,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-import { deckBuildSteps } from "../../deck-build-steps";
+import { DECK_BUILD_STEPS } from "../../deck-build-steps";
 
 function BuildProgressHeader({
   onBack,
@@ -16,7 +16,7 @@ function BuildProgressHeader({
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const step = deckBuildSteps[stepIndex];
+  const step = DECK_BUILD_STEPS[stepIndex];
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
@@ -34,11 +34,11 @@ function BuildProgressHeader({
           <ThemedText type="small">←</ThemedText>
         </Pressable>
         <ThemedText themeColor="textSecondary" type="mono">
-          {`New deck · step ${stepIndex + 1} of ${deckBuildSteps.length} · ${step?.label ?? ""}`}
+          {`New deck · step ${stepIndex + 1} of ${DECK_BUILD_STEPS.length} · ${step?.label ?? ""}`}
         </ThemedText>
       </View>
       <View style={styles.track}>
-        {deckBuildSteps.map((candidate, index) => (
+        {DECK_BUILD_STEPS.map((candidate, index) => (
           <View
             key={candidate.id}
             style={[

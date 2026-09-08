@@ -11,7 +11,7 @@ import {
   sortForId,
   sortIdOf,
   sortOptionFor,
-  sortOptions,
+  SORT_OPTIONS,
   sortWithDirection,
 } from "../../catalog-sort-options";
 import { SheetFace } from "./sheet-face";
@@ -38,7 +38,7 @@ function CatalogSortFace({
       body={
         <>
           <View style={styles.options}>
-            {sortOptions.map(({ id, label, note }) => (
+            {SORT_OPTIONS.map(({ id, label, note }) => (
               <RadioRow
                 key={id}
                 label={label}

@@ -4,7 +4,7 @@ import {
   remainingForCard,
 } from "@/features/deck/presentation/deck-build-allowance";
 import {
-  emptyDraft,
+  EMPTY_DRAFT,
   quantityKey,
   zoneCounts,
   type DeckBuildDraft,
@@ -18,7 +18,7 @@ const evolutionary = card("evolutionary", "OGN", { name: "Kai'Sa - Evolutionary"
 const rune = card("rune", "OGN", { name: "Fury Rune" });
 
 function draftWith(overrides: Partial<DeckBuildDraft>): DeckBuildDraft {
-  return { ...emptyDraft, ...overrides };
+  return { ...EMPTY_DRAFT, ...overrides };
 }
 
 describe("deck build allowance", () => {
@@ -150,10 +150,10 @@ describe("deck build allowance", () => {
   });
 
   it("offers the full rune deck when it is empty", () => {
-    expect(remainingForCard(emptyDraft, "runeDeck", rune)).toBe(12);
+    expect(remainingForCard(EMPTY_DRAFT, "runeDeck", rune)).toBe(12);
   });
 
   it("allows one copy of a battlefield", () => {
-    expect(remainingForCard(emptyDraft, "battlefield", rune)).toBe(1);
+    expect(remainingForCard(EMPTY_DRAFT, "battlefield", rune)).toBe(1);
   });
 });

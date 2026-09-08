@@ -5,7 +5,7 @@ import { cardTypeSchema, type CardType } from "@/features/catalog/value-objects/
  * Chips read in play order rather than the schema's alphabetical order. Both ranks are keyed by the
  * full union, so adding a domain or card type is a compile error here until it is given a position.
  */
-const domainRank: Record<CardDomain, number> = {
+const DOMAIN_RANK: Record<CardDomain, number> = {
   Body: 0,
   Calm: 1,
   Chaos: 2,
@@ -15,7 +15,7 @@ const domainRank: Record<CardDomain, number> = {
   Colorless: 6,
 };
 
-const typeRank: Record<CardType, number> = {
+const TYPE_RANK: Record<CardType, number> = {
   Unit: 0,
   Spell: 1,
   Gear: 2,
@@ -24,12 +24,12 @@ const typeRank: Record<CardType, number> = {
   Rune: 5,
 };
 
-const orderedDomains = [...cardDomainSchema.options].sort(
-  (left, right) => domainRank[left] - domainRank[right],
+const ORDERED_DOMAINS = [...cardDomainSchema.options].sort(
+  (left, right) => DOMAIN_RANK[left] - DOMAIN_RANK[right],
 );
 
-const orderedCardTypes = [...cardTypeSchema.options].sort(
-  (left, right) => typeRank[left] - typeRank[right],
+const ORDERED_CARD_TYPES = [...cardTypeSchema.options].sort(
+  (left, right) => TYPE_RANK[left] - TYPE_RANK[right],
 );
 
-export { orderedCardTypes, orderedDomains };
+export { ORDERED_CARD_TYPES, ORDERED_DOMAINS };

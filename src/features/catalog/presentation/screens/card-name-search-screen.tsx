@@ -9,9 +9,9 @@ import { CardSummaryGrid } from "../components/grid/card-summary-grid";
 import { CardSummaryPageFooter } from "../components/grid/card-summary-page-footer";
 import { CatalogResultBar } from "../components/search/catalog-result-bar";
 import { CatalogSearchHeader } from "../components/search/catalog-search-header";
-import type { CardsDataContent } from "../data/cards-data";
+import type { CardSummariesDataContent } from "../data/card-summaries-data";
 
-interface CardNameSearchScreenProps extends CardsDataContent {
+interface CardNameSearchScreenProps extends CardSummariesDataContent {
   readonly criteria: CatalogQueryCriteria;
   readonly name: string;
   readonly onChangeName: (name: string) => void;

@@ -1,30 +1,30 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
+import { SecondaryButton } from "@/components/ui/atoms/secondary-button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
-import type { CardSummaryLister } from "@/features/catalog/card/card-summary-lister";
-import type { CardSummary } from "@/features/catalog/card/card-summary";
+import type { Card } from "@/features/catalog/card/card";
+import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
+import type { CardLister } from "@/features/catalog/card/card-lister";
 import { Page } from "@/shared/page";
 
 const PAGE_SIZE = 30;
 
 interface CardsDataContent {
-  readonly cards: readonly CardSummary[];
+  readonly cards: readonly Card[];
   readonly hasMore: boolean;
-  readonly isRefreshing: boolean;
   readonly isLoadingMore: boolean;
   readonly loadMoreError: string | null;
   loadMore(): void;
-  refresh(): void;
-  retryLoadMore(): void;
 }
 
 interface CardsDataProps {
-  readonly cardSummaryLister: CardSummaryLister;
+  readonly cardLister: CardLister;
   readonly children: (content: CardsDataContent) => ReactNode;
+  readonly criteria: Omit<CardListCriteria, "limit" | "offset">;
 }
 
 type CardsDataState =
@@ -32,84 +32,40 @@ type CardsDataState =
   | { readonly type: "loadFailed" }
   | {
       readonly type: "success";
-      readonly page: Page<CardSummary>;
+      readonly page: Page<Card>;
       readonly isLoadingMore: boolean;
       readonly loadMoreError: string | null;
     };
 
-function CardsData({ cardSummaryLister, children }: CardsDataProps) {
+function CardsData({ cardLister, children, criteria }: CardsDataProps) {
   const [state, setState] = useState<CardsDataState>({ type: "loading" });
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const firstPageController = useRef<AbortController | null>(null);
   const loadMoreController = useRef<AbortController | null>(null);
   const isLoadingMoreRef = useRef(false);
+  const criteriaKey = JSON.stringify(criteria);
 
-  const fetchFirstPage = useCallback(() => {
+  useEffect(() => {
     firstPageController.current?.abort();
     loadMoreController.current?.abort();
     isLoadingMoreRef.current = false;
     const controller = new AbortController();
     firstPageController.current = controller;
+    const matching = JSON.parse(criteriaKey) as CardListCriteria;
 
-    return {
-      controller,
-      request: cardSummaryLister.getSummaryPage(
-        { limit: PAGE_SIZE, offset: 0 },
-        { signal: controller.signal },
-      ),
-    };
-  }, [cardSummaryLister]);
-
-  const setLoadedFirstPage = useCallback((page: Page<CardSummary>) => {
-    setState({
-      type: "success",
-      page,
-      isLoadingMore: false,
-      loadMoreError: null,
-    });
-  }, []);
-
-  const retryFirstPage = useCallback(() => {
     setState({ type: "loading" });
-    const { controller, request } = fetchFirstPage();
-    void request
+    void cardLister
+      .getPage({ ...matching, limit: PAGE_SIZE, offset: 0 }, { signal: controller.signal })
       .then((page) => {
-        if (!controller.signal.aborted) setLoadedFirstPage(page);
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setState({ type: "loadFailed" });
-      });
-  }, [fetchFirstPage, setLoadedFirstPage]);
-
-  const refresh = useCallback(() => {
-    setIsRefreshing(true);
-    const { controller, request } = fetchFirstPage();
-    void request
-      .then((page) => {
-        if (!controller.signal.aborted) setLoadedFirstPage(page);
-      })
-      .catch(() => {
-        // Keep the currently displayed page available when a refresh fails.
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setIsRefreshing(false);
-      });
-  }, [fetchFirstPage, setLoadedFirstPage]);
-
-  useEffect(() => {
-    const { controller, request } = fetchFirstPage();
-    void request
-      .then((page) => {
-        if (!controller.signal.aborted) setLoadedFirstPage(page);
+        if (!controller.signal.aborted) {
+          setState({ type: "success", page, isLoadingMore: false, loadMoreError: null });
+        }
       })
       .catch(() => {
         if (!controller.signal.aborted) setState({ type: "loadFailed" });
       });
 
-    return () => {
-      controller.abort();
-    };
-  }, [fetchFirstPage, setLoadedFirstPage]);
+    return () => controller.abort();
+  }, [cardLister, criteriaKey]);
 
   useEffect(
     () => () => {
@@ -123,22 +79,26 @@ function CardsData({ cardSummaryLister, children }: CardsDataProps) {
     if (isLoadingMoreRef.current) return;
 
     match(state)
-      .with({ type: "success", isLoadingMore: false, page: { hasMore: true } }, (loadedState) => {
-        const offset = loadedState.page.items.length;
+      .with({ type: "success", isLoadingMore: false, page: { hasMore: true } }, (loaded) => {
+        const offset = loaded.page.items.length;
         loadMoreController.current?.abort();
         const controller = new AbortController();
         loadMoreController.current = controller;
         isLoadingMoreRef.current = true;
-        setState({ ...loadedState, isLoadingMore: true, loadMoreError: null });
-        void cardSummaryLister
-          .getSummaryPage({ limit: PAGE_SIZE, offset }, { signal: controller.signal })
+        setState({ ...loaded, isLoadingMore: true, loadMoreError: null });
+
+        void cardLister
+          .getPage(
+            { ...(JSON.parse(criteriaKey) as CardListCriteria), limit: PAGE_SIZE, offset },
+            { signal: controller.signal },
+          )
           .then((page) => {
             if (controller.signal.aborted) return;
             setState((current) =>
               match(current)
-                .with({ type: "success" }, (successfulState) => ({
+                .with({ type: "success" }, (successful) => ({
                   type: "success" as const,
-                  page: successfulState.page.append(page),
+                  page: successful.page.append(page),
                   isLoadingMore: false,
                   loadMoreError: null,
                 }))
@@ -150,8 +110,8 @@ function CardsData({ cardSummaryLister, children }: CardsDataProps) {
             if (controller.signal.aborted) return;
             setState((current) =>
               match(current)
-                .with({ type: "success" }, (successfulState) => ({
-                  ...successfulState,
+                .with({ type: "success" }, (successful) => ({
+                  ...successful,
                   isLoadingMore: false,
                   loadMoreError: "Could not load more cards.",
                 }))
@@ -161,7 +121,7 @@ function CardsData({ cardSummaryLister, children }: CardsDataProps) {
           });
       })
       .otherwise(() => undefined);
-  }, [cardSummaryLister, state]);
+  }, [cardLister, criteriaKey, state]);
 
   return match(state)
     .with({ type: "loading" }, () => (
@@ -171,38 +131,30 @@ function CardsData({ cardSummaryLister, children }: CardsDataProps) {
     ))
     .with({ type: "loadFailed" }, () => (
       <ThemedView style={styles.centered}>
-        <ThemedText>Could not load cards.</ThemedText>
-        <Pressable onPress={retryFirstPage} style={styles.retryButton}>
-          <ThemedText type="linkPrimary">Try again</ThemedText>
-        </Pressable>
+        <ThemedText type="body">Could not load cards.</ThemedText>
+        <SecondaryButton label="Try again" onPress={() => setState({ type: "loading" })} />
       </ThemedView>
     ))
-    .with({ type: "success" }, (loadedState) =>
+    .with({ type: "success" }, (loaded) =>
       children({
-        cards: loadedState.page.items,
-        hasMore: loadedState.page.hasMore,
-        isRefreshing,
-        isLoadingMore: loadedState.isLoadingMore,
-        loadMoreError: loadedState.loadMoreError,
+        cards: loaded.page.items,
+        hasMore: loaded.page.hasMore,
+        isLoadingMore: loaded.isLoadingMore,
+        loadMoreError: loaded.loadMoreError,
         loadMore,
-        refresh,
-        retryLoadMore: loadMore,
       }),
     )
     .exhaustive();
 }
 
 export { CardsData };
-export type { CardsDataContent, CardsDataProps };
+export type { CardsDataContent };
 
 const styles = StyleSheet.create({
   centered: {
     alignItems: "center",
     flex: 1,
-    gap: Spacing.two,
+    gap: Spacing.three,
     justifyContent: "center",
-  },
-  retryButton: {
-    padding: Spacing.two,
   },
 });

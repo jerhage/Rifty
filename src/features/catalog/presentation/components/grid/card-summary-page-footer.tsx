@@ -5,13 +5,13 @@ import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { SecondaryButton } from "@/components/ui/atoms/secondary-button";
 import { Spacing } from "@/constants/theme";
 
-import type { CardsDataContent } from "../../data/cards-data";
+import type { CardSummariesDataContent } from "../../data/card-summaries-data";
 
 function CardSummaryPageFooter({
   isLoadingMore,
   loadMoreError,
   retryLoadMore,
-}: Pick<CardsDataContent, "isLoadingMore" | "loadMoreError" | "retryLoadMore">) {
+}: Pick<CardSummariesDataContent, "isLoadingMore" | "loadMoreError" | "retryLoadMore">) {
   if (loadMoreError) {
     return (
       <ThemedView style={styles.loadMoreSection}>

@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import { CardCatalogFilterSheet } from "@/features/catalog/presentation/components/sheet/card-catalog-filter-sheet";
 import { CardSetsData } from "@/features/catalog/presentation/data/card-sets-data";
-import { CardsData } from "@/features/catalog/presentation/data/cards-data";
+import { CardSummariesData } from "@/features/catalog/presentation/data/card-summaries-data";
 import { useCatalogQuery } from "@/features/catalog/presentation/hooks/use-catalog-query";
 import { CardNameSearchScreen } from "@/features/catalog/presentation/screens/card-name-search-screen";
 
@@ -14,7 +14,7 @@ function HomeScreen() {
 
   return (
     <>
-      <CardsData cardSummaryLister={catalogQuery.cardSummaryLister}>
+      <CardSummariesData cardSummaryLister={catalogQuery.cardSummaryLister}>
         {(content) => (
           <CardNameSearchScreen
             {...content}
@@ -31,7 +31,7 @@ function HomeScreen() {
             onToggleType={catalogQuery.toggleType}
           />
         )}
-      </CardsData>
+      </CardSummariesData>
       <CardSetsData setLister={catalog.setRepository}>
         {(cardSets) => (
           <CardCatalogFilterSheet

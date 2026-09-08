@@ -68,6 +68,7 @@ function BuildCardTile({
             maxQuantity={maxQuantity}
             onChange={onChange}
             quantity={quantity}
+            surface="overlay"
           />
         </View>
       </Pressable>
@@ -103,9 +104,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   stepper: {
-    bottom: Spacing.one,
+    bottom: Spacing.two,
     position: "absolute",
-    right: Spacing.one,
+    right: Spacing.two,
   },
   name: {
     fontWeight: 500,

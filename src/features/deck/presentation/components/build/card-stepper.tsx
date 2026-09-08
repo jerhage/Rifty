@@ -4,11 +4,15 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
+type StepperSurface = "inline" | "overlay";
+
+/** Over card art the plate has to be opaque, or the glyphs disappear into the painting. */
 function CardStepper({
   displayedQuantity,
   maxQuantity,
   onChange,
   quantity,
+  surface = "inline",
 }: {
   /** What the stepper reads, which includes the champion's own slot. */
   readonly displayedQuantity: number;
@@ -17,11 +21,19 @@ function CardStepper({
   readonly onChange: (quantity: number) => void;
   /** Copies the stepper owns, on top of anything already held. */
   readonly quantity: number;
+  readonly surface?: StepperSurface;
 }) {
   const theme = useTheme();
 
   return (
-    <View style={[styles.stepper, { backgroundColor: theme.fill, borderColor: theme.border }]}>
+    <View
+      style={[
+        styles.stepper,
+        surface === "overlay"
+          ? { backgroundColor: theme.background, borderColor: theme.borderStrong }
+          : { backgroundColor: theme.fill, borderColor: theme.border },
+      ]}
+    >
       <StepButton
         disabled={quantity === 0}
         label="−"
@@ -75,6 +87,7 @@ function StepButton({
 }
 
 export { CardStepper };
+export type { StepperSurface };
 
 const styles = StyleSheet.create({
   stepper: {

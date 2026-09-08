@@ -3,6 +3,7 @@ import { deleteDeck } from "@/features/deck/deck/use-cases/delete-deck";
 import { findDeck } from "@/features/deck/deck/use-cases/find-deck";
 import { listDecks } from "@/features/deck/deck/use-cases/list-decks";
 import { renameDeck } from "@/features/deck/deck/use-cases/rename-deck";
+import { saveDeck } from "@/features/deck/deck/use-cases/save-deck";
 import { setDeckCardQuantity } from "@/features/deck/deck/use-cases/set-deck-card-quantity";
 
 import { createSqliteScenarioStore } from "../sqlite-scenario-store";
@@ -194,6 +195,123 @@ describe("deck editing scenarios", () => {
       setDeckCardQuantity(
         "ember",
         { section: "runeDeck", cardRiftboundId: "ogn-rune", quantity: 12 },
+        dependencies,
+      ),
+    ).resolves.toMatchObject({ type: "success" });
+    store.close();
+  });
+
+  it("saves a whole deck, then saves over it with what the builder holds", async () => {
+    const store = createSqliteScenarioStore();
+    const dependencies = capabilities(store.deckStore);
+    const draft = {
+      id: "ember",
+      name: "Ember Tempo",
+      notes: "",
+      createdAt: "2026-09-01T10:00:00.000Z",
+      entries: [{ section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 3 }] as const,
+    };
+
+    await expect(saveDeck(draft, dependencies)).resolves.toMatchObject({
+      type: "success",
+      deck: { entries: [{ cardRiftboundId: "ogn-014", quantity: 3 }] },
+    });
+
+    await expect(
+      saveDeck(
+        {
+          ...draft,
+          name: "Ember Aggro",
+          entries: [{ section: "mainDeck", cardRiftboundId: "ogn-020", quantity: 2 }],
+        },
+        dependencies,
+      ),
+    ).resolves.toMatchObject({ type: "success" });
+
+    await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
+      type: "success",
+      deck: {
+        name: "Ember Aggro",
+        createdAt: "2026-09-01T10:00:00.000Z",
+        entries: [{ cardRiftboundId: "ogn-020", quantity: 2 }],
+      },
+    });
+    await expect(listDecks(dependencies)).resolves.toMatchObject({
+      type: "success",
+      decks: [{ id: "ember" }],
+    });
+    store.close();
+  });
+
+  it("refuses to save a deck over another deck's name, but keeps its own", async () => {
+    const store = createSqliteScenarioStore();
+    const dependencies = capabilities(store.deckStore);
+    store.seedDeck(deck("iron", { name: "Iron Wall" }));
+    store.seedDeck(deck("ember", { name: "Ember Tempo" }));
+
+    await expect(
+      saveDeck(
+        {
+          id: "ember",
+          name: "iron wall",
+          notes: "",
+          createdAt: "2026-09-01T10:00:00.000Z",
+          entries: [],
+        },
+        dependencies,
+      ),
+    ).resolves.toEqual({ type: "nameTaken" });
+    await expect(
+      saveDeck(
+        {
+          id: "ember",
+          name: "Ember Tempo",
+          notes: "",
+          createdAt: "2026-09-01T10:00:00.000Z",
+          entries: [],
+        },
+        dependencies,
+      ),
+    ).resolves.toMatchObject({ type: "success" });
+    store.close();
+  });
+
+  it("refuses a save that puts a fourth copy of a card in the shared zones", async () => {
+    const store = createSqliteScenarioStore();
+    const dependencies = capabilities(store.deckStore);
+
+    const rejected = await saveDeck(
+      {
+        id: "ember",
+        name: "Ember Tempo",
+        notes: "",
+        createdAt: "2026-09-01T10:00:00.000Z",
+        entries: [
+          { section: "chosenChampion", cardRiftboundId: "ogn-hero", quantity: 1 },
+          { section: "mainDeck", cardRiftboundId: "ogn-hero", quantity: 3 },
+        ],
+      },
+      dependencies,
+    );
+
+    expect(rejected).toMatchObject({ type: "copyLimitExceeded" });
+    await expect(findDeck("ember", dependencies)).resolves.toEqual({ type: "notFound" });
+    store.close();
+  });
+
+  it("saves a deck whose zones are still the wrong size", async () => {
+    const store = createSqliteScenarioStore();
+    const dependencies = capabilities(store.deckStore);
+
+    await expect(
+      saveDeck(
+        {
+          id: "ember",
+          name: "Ember Tempo",
+          notes: "",
+          createdAt: "2026-09-01T10:00:00.000Z",
+          entries: [{ section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 3 }],
+        },
         dependencies,
       ),
     ).resolves.toMatchObject({ type: "success" });

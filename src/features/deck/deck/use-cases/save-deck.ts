@@ -1,0 +1,69 @@
+import type { Clock } from "@/application/ports/clock";
+
+import {
+  parseDeck,
+  type Deck,
+  type DeckEntry,
+  type DeckId,
+  type DeckLegalityViolation,
+  type DeckName,
+} from "../deck";
+import { RIFTBOUND_STANDARD, verifyDeck } from "../deck-legality";
+import type { DeckLister } from "../deck-lister";
+import type { DeckSaver } from "../deck-saver";
+
+type SaveDeckResult =
+  | { readonly type: "success"; readonly deck: Deck }
+  | { readonly type: "nameTaken" }
+  | { readonly type: "copyLimitExceeded"; readonly violations: readonly DeckLegalityViolation[] }
+  | { readonly type: "saveFailed" };
+
+interface DeckDraft {
+  readonly id: DeckId;
+  readonly name: DeckName;
+  readonly notes: string;
+  readonly createdAt: string;
+  readonly entries: readonly DeckEntry[];
+}
+
+interface SaveDeckCapabilities {
+  readonly clock: Clock;
+  readonly deckLister: DeckLister;
+  readonly deckSaver: DeckSaver;
+}
+
+async function saveDeck(
+  draft: DeckDraft,
+  { clock, deckLister, deckSaver }: SaveDeckCapabilities,
+): Promise<SaveDeckResult> {
+  try {
+    const wanted = draft.name.trim().toLowerCase();
+    const existing = await deckLister.getAll();
+    if (
+      existing.some((deck) => deck.id !== draft.id && deck.name.trim().toLowerCase() === wanted)
+    ) {
+      return { type: "nameTaken" };
+    }
+
+    const deck = parseDeck({ ...draft, entries: [...draft.entries], updatedAt: clock.now() });
+    const violations = copyLimitViolations(deck);
+    if (violations.length > 0) return { type: "copyLimitExceeded", violations };
+
+    await deckSaver.save(deck);
+
+    return { type: "success", deck };
+  } catch {
+    return { type: "saveFailed" };
+  }
+}
+
+function copyLimitViolations(deck: Deck): readonly DeckLegalityViolation[] {
+  const verification = verifyDeck(deck, RIFTBOUND_STANDARD);
+
+  return verification.type === "illegal"
+    ? verification.violations.filter((violation) => violation.rule.endsWith("-copy-limit"))
+    : [];
+}
+
+export { saveDeck };
+export type { DeckDraft, SaveDeckCapabilities, SaveDeckResult };

@@ -11,7 +11,6 @@ function DeckBuildRoute() {
   const capabilities = useMemo(
     () => ({
       clock,
-      deckFinder: decks.deckRepository,
       deckLister: decks.deckRepository,
       deckSaver: decks.deckRepository,
       idGenerator,

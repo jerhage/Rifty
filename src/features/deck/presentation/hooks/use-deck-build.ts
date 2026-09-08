@@ -7,12 +7,10 @@ import type { Card } from "@/features/catalog/card/card";
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
 import type { DeckSection } from "@/features/deck/deck/deck";
-import type { DeckFinder } from "@/features/deck/deck/deck-finder";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
 import type { DeckSaver } from "@/features/deck/deck/deck-saver";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
-import { createDeck } from "@/features/deck/deck/use-cases/create-deck";
-import { setDeckCardQuantity } from "@/features/deck/deck/use-cases/set-deck-card-quantity";
+import { saveDeck } from "@/features/deck/deck/use-cases/save-deck";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 import {
@@ -28,7 +26,6 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 interface DeckBuildCapabilities {
   readonly clock: Clock;
-  readonly deckFinder: DeckFinder;
   readonly deckLister: DeckLister;
   readonly deckSaver: DeckSaver;
   readonly idGenerator: IdGenerator;
@@ -160,20 +157,24 @@ function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) 
     }
 
     setIsSaving(true);
-    const created = await createDeck(name, capabilities);
-    const failure = await match(created)
-      .with({ type: "nameTaken" }, () => Promise.resolve("You already have a deck with that name."))
-      .with({ type: "saveFailed" }, () => Promise.resolve("Could not save the deck. Try again."))
-      .with({ type: "success" }, async ({ deck }) => {
-        for (const entry of entries) {
-          const result = await setDeckCardQuantity(deck.id, entry, capabilities);
-          if (result.type === "copyLimitReached") {
-            return `Only ${result.allowed} copies of a card are allowed.`;
-          }
-          if (result.type !== "success") return "Could not save the deck. Try again.";
-        }
-        return null;
-      })
+    const result = await saveDeck(
+      {
+        id: capabilities.idGenerator.next(),
+        name,
+        notes: "",
+        createdAt: capabilities.clock.now(),
+        entries,
+      },
+      capabilities,
+    );
+    const failure = match(result)
+      .with({ type: "nameTaken" }, () => "You already have a deck with that name.")
+      .with(
+        { type: "copyLimitExceeded" },
+        ({ violations }) => violations[0]?.message ?? "Too many copies of a card.",
+      )
+      .with({ type: "saveFailed" }, () => "Could not save the deck. Try again.")
+      .with({ type: "success" }, () => null)
       .exhaustive();
 
     setIsSaving(false);

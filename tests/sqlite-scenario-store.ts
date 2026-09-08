@@ -13,6 +13,7 @@ import {
   cardClassifications,
   cardDomains,
   cardMarketplaceReferences,
+  cardImageSources,
   cardMedia,
   cardTags,
   catalogCards,
@@ -28,7 +29,6 @@ import {
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
 import { SqliteDeckRepository } from "@/infrastructure/sqlite/sqlite-deck-repository";
 import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
-import { parseImageUrl } from "@/shared/image-url";
 
 /** The real engine and committed migrations, holding both catalog and deck tables. */
 interface SqliteScenarioStore extends CatalogDataStore {
@@ -98,7 +98,11 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
       database.insert(domains).values({ id: domainId, name: domainId }).onConflictDoNothing().run();
     }
     for (const tagId of card.tagIds) {
-      database.insert(tags).values({ id: tagId, name: tagId }).onConflictDoNothing().run();
+      database
+        .insert(tags)
+        .values({ id: tagId, name: tagId, kind: "trait" })
+        .onConflictDoNothing()
+        .run();
     }
 
     database
@@ -120,6 +124,9 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         isAlternateArt: card.isAlternateArt,
         isOvernumbered: card.isOvernumbered,
         isSignature: card.isSignature,
+        poolCode: null,
+        championName: null,
+        isCanonical: true,
         sourceUpdatedAt: card.sourceUpdatedAt,
       })
       .run();
@@ -132,17 +139,18 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         rarityId: card.classification.rarityId,
       })
       .run();
-    const image = parseImageUrl(card.imageUrl);
     database
       .insert(cardMedia)
       .values({
         cardId: card.id,
-        imageAssetId: image.assetId,
-        imageWidth: image.dimensions.width,
-        imageHeight: image.dimensions.height,
+        imageFile: `${card.riftboundId}.webp`,
         artist: null,
         accessibilityText: null,
       })
+      .run();
+    database
+      .insert(cardImageSources)
+      .values({ cardId: card.id, url: card.imageUrl, priority: 0 })
       .run();
 
     if (card.domainIds.length > 0) {

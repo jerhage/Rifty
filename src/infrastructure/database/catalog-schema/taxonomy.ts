@@ -60,6 +60,7 @@ const tagSelectSchema = createSelectSchema(tags);
 const tagInsertSchema = createInsertSchema(tags, {
   id: (schema) => schema.trim().min(1),
   name: (schema) => schema.trim().min(1),
+  kind: tagKindSchema,
 });
 
 export {

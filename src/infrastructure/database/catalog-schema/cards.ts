@@ -75,12 +75,22 @@ const cardMedia = sqliteTable("card_media", {
   cardId: text("card_id")
     .primaryKey()
     .references(() => catalogCards.id),
-  imageAssetId: text("image_asset_id").notNull(),
-  imageWidth: integer("image_width").notNull(),
-  imageHeight: integer("image_height").notNull(),
+  imageFile: text("image_file").notNull().default(""),
   artist: text(),
   accessibilityText: text("accessibility_text"),
 });
+
+const cardImageSources = sqliteTable(
+  "card_image_source",
+  {
+    cardId: text("card_id")
+      .notNull()
+      .references(() => catalogCards.id),
+    url: text().notNull(),
+    priority: integer().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.cardId, table.url] })],
+);
 
 const cardClassifications = sqliteTable(
   "card_classification",
@@ -154,9 +164,7 @@ const cardMarketplaceReferenceInsertSchema = createInsertSchema(cardMarketplaceR
 
 const cardMediaSelectSchema = createSelectSchema(cardMedia);
 const cardMediaInsertSchema = createInsertSchema(cardMedia, {
-  imageAssetId: (schema) => schema.trim().min(1),
-  imageWidth: (schema) => schema.int().positive(),
-  imageHeight: (schema) => schema.int().positive(),
+  imageFile: (schema) => schema.trim().min(1),
 });
 
 const cardClassificationSelectSchema = createSelectSchema(cardClassifications);
@@ -165,6 +173,12 @@ const cardDomainSelectSchema = createSelectSchema(cardDomains);
 const cardDomainInsertSchema = createInsertSchema(cardDomains);
 const cardTagSelectSchema = createSelectSchema(cardTags);
 const cardTagInsertSchema = createInsertSchema(cardTags);
+const cardImageSourceSelectSchema = createSelectSchema(cardImageSources);
+const cardImageSourceInsertSchema = createInsertSchema(cardImageSources, {
+  cardId: (schema) => schema.trim().min(1),
+  url: (schema) => schema.trim().min(1),
+  priority: (schema) => schema.int().nonnegative(),
+});
 const cardSpeedSelectSchema = createSelectSchema(cardSpeeds, { speed: cardSpeedSchema });
 const cardSpeedInsertSchema = createInsertSchema(cardSpeeds, {
   cardId: (schema) => schema.trim().min(1),
@@ -178,6 +192,9 @@ export {
   cardDomainInsertSchema,
   cardDomainSelectSchema,
   cardDomains,
+  cardImageSourceInsertSchema,
+  cardImageSourceSelectSchema,
+  cardImageSources,
   cardMarketplaceReferenceInsertSchema,
   cardMarketplaceReferenceSelectSchema,
   cardMarketplaceReferences,

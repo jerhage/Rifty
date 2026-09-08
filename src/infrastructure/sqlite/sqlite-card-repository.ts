@@ -16,7 +16,7 @@ import {
   cardClassifications,
   cardDomains,
   cardMarketplaceReferences,
-  cardMedia,
+  cardImageSources,
   cardTags,
   catalogCards,
 } from "@/infrastructure/database/catalog-schema/cards";
@@ -85,14 +85,13 @@ class SqliteCardRepository implements CardRepository {
           name: catalogCards.name,
           orientation: catalogCards.orientation,
         },
-        media: {
-          imageAssetId: cardMedia.imageAssetId,
-          imageHeight: cardMedia.imageHeight,
-          imageWidth: cardMedia.imageWidth,
-        },
+        source: { url: cardImageSources.url },
       })
       .from(catalogCards)
-      .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
+      .innerJoin(
+        cardImageSources,
+        and(eq(cardImageSources.cardId, catalogCards.id), eq(cardImageSources.priority, 0)),
+      )
       .where(and(...this.#conditionsFor(criteria)))
       .orderBy(...this.#orderBy(criteria))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
@@ -301,13 +300,16 @@ class SqliteCardRepository implements CardRepository {
     const cardIds = rows.map((row) => row.id);
     // Batch each relation for this page. Otherwise 2 domains * 3 tags * 2 references would produce 12 rows per card in one join
     // and require additional processing for deduping. This is fine for now since we arent' performance limited.
-    const [classifications, media, domainsByCardId, tags, marketplaceReferences] =
+    const [classifications, imageSources, domainsByCardId, tags, marketplaceReferences] =
       await Promise.all([
         this.db
           .select()
           .from(cardClassifications)
           .where(inArray(cardClassifications.cardId, cardIds)),
-        this.db.select().from(cardMedia).where(inArray(cardMedia.cardId, cardIds)),
+        this.db
+          .select()
+          .from(cardImageSources)
+          .where(and(inArray(cardImageSources.cardId, cardIds), eq(cardImageSources.priority, 0))),
         this.#domainRowsFor(cardIds, signal),
         this.db
           .select()
@@ -325,21 +327,21 @@ class SqliteCardRepository implements CardRepository {
       ]);
     throwIfAborted(signal);
     const classificationsByCardId = new Map(classifications.map((row) => [row.cardId, row]));
-    const mediaByCardId = new Map(media.map((row) => [row.cardId, row]));
+    const imageSourcesByCardId = new Map(imageSources.map((row) => [row.cardId, row]));
     const tagsByCardId = groupByCardId(tags);
     const marketplaceReferencesByCardId = groupByCardId(marketplaceReferences);
 
     return rows.map((card) => {
       const classification = classificationsByCardId.get(card.id);
-      const mediaRow = mediaByCardId.get(card.id);
-      if (!classification || !mediaRow) {
+      const sourceRow = imageSourcesByCardId.get(card.id);
+      if (!classification || !sourceRow) {
         throw new Error(`Catalog card ${card.id} is missing required related data.`);
       }
 
       return toDomainCard({
         card,
         classification,
-        media: mediaRow,
+        source: sourceRow,
         domains: domainsByCardId.get(card.id) ?? [],
         tags: tagsByCardId.get(card.id) ?? [],
         marketplaceReferences: marketplaceReferencesByCardId.get(card.id) ?? [],

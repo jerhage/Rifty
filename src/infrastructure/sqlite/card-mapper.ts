@@ -3,17 +3,16 @@ import { parseCardSummary, type CardSummary } from "@/features/catalog/card/card
 import {
   cardClassificationSelectSchema,
   cardDomainSelectSchema,
+  cardImageSourceSelectSchema,
   cardMarketplaceReferenceSelectSchema,
-  cardMediaSelectSchema,
   cardTagSelectSchema,
   catalogCardSelectSchema,
 } from "@/infrastructure/database/catalog-schema/cards";
-import { buildImageUrl } from "@/shared/image-url";
 
 interface CardPersistenceShape {
   readonly card: unknown;
   readonly classification: unknown;
-  readonly media: unknown;
+  readonly source: unknown;
   readonly domains: readonly unknown[];
   readonly tags: readonly unknown[];
   readonly marketplaceReferences: readonly unknown[];
@@ -22,14 +21,13 @@ interface CardPersistenceShape {
 function toDomainCard({
   card,
   classification,
-  media,
+  source,
   domains,
   tags,
   marketplaceReferences,
 }: CardPersistenceShape): Card {
   const persistedCard = catalogCardSelectSchema.parse(card);
   const persistedClassification = cardClassificationSelectSchema.parse(classification);
-  const persistedMedia = cardMediaSelectSchema.parse(media);
 
   return parseCard({
     id: persistedCard.id,
@@ -60,10 +58,7 @@ function toDomainCard({
     },
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     tagIds: tags.map((tag) => cardTagSelectSchema.parse(tag).tagId),
-    imageUrl: buildImageUrl(persistedMedia.imageAssetId, {
-      width: persistedMedia.imageWidth,
-      height: persistedMedia.imageHeight,
-    }),
+    imageUrl: cardImageSourceSelectSchema.pick({ url: true }).parse(source).url,
     marketplaceReferences: marketplaceReferences.map((reference) => {
       const persistedReference = cardMarketplaceReferenceSelectSchema.parse(reference);
       return {
@@ -77,29 +72,22 @@ function toDomainCard({
 function toDomainCardSummary({
   card,
   domains,
-  media,
+  source,
 }: {
   readonly card: unknown;
   readonly domains: readonly unknown[];
-  readonly media: unknown;
+  readonly source: unknown;
 }): CardSummary {
   const persistedCard = catalogCardSelectSchema
     .pick({ id: true, riftboundId: true, name: true, orientation: true })
     .parse(card);
-  const persistedMedia = cardMediaSelectSchema
-    .pick({ imageAssetId: true, imageHeight: true, imageWidth: true })
-    .parse(media);
-
   return parseCardSummary({
     id: persistedCard.id,
     riftboundId: persistedCard.riftboundId,
     name: persistedCard.name,
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     orientation: persistedCard.orientation,
-    imageUrl: buildImageUrl(persistedMedia.imageAssetId, {
-      width: persistedMedia.imageWidth,
-      height: persistedMedia.imageHeight,
-    }),
+    imageUrl: cardImageSourceSelectSchema.pick({ url: true }).parse(source).url,
   });
 }
 

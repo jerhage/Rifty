@@ -6,7 +6,7 @@ import type { IdGenerator } from "@/application/ports/id-generator";
 import type { Card } from "@/features/catalog/card/card";
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
-import type { DeckSection } from "@/features/deck/deck/deck";
+import type { Deck, DeckSection } from "@/features/deck/deck/deck";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
 import type { DeckSaver } from "@/features/deck/deck/deck-saver";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
@@ -16,11 +16,12 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   DECK_BUILD_STEPS,
   draftEntries,
+  draftFromDeck,
   EMPTY_DRAFT,
   quantityKey,
   type DeckBuildDraft,
 } from "../deck-build-steps";
-import { defaultPoolFilters, EMPTY_POOL_FILTERS, type ZonePoolFilters } from "../deck-zone-pool";
+import { defaultPoolFilters, type ZonePoolFilters } from "../deck-zone-pool";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -31,11 +32,23 @@ interface DeckBuildCapabilities {
   readonly idGenerator: IdGenerator;
 }
 
-function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) {
-  const [stepIndex, setStepIndex] = useState(0);
-  const [draft, setDraft] = useState<DeckBuildDraft>(EMPTY_DRAFT);
+type DeckBuildStart =
+  | { readonly type: "new" }
+  | { readonly type: "edit"; readonly deck: Deck; readonly cards: readonly Card[] };
+
+const ZONES_STEP_INDEX = DECK_BUILD_STEPS.findIndex((step) => step.id === "zones");
+
+function useDeckBuild(
+  start: DeckBuildStart,
+  capabilities: DeckBuildCapabilities,
+  onSaved: () => void,
+) {
+  const [stepIndex, setStepIndex] = useState(() => (start.type === "edit" ? ZONES_STEP_INDEX : 0));
+  const [draft, setDraft] = useState<DeckBuildDraft>(() => initialDraft(start));
   const [zone, setZoneState] = useState<DeckSection>("mainDeck");
-  const [poolFilters, setPoolFilters] = useState<ZonePoolFilters>(EMPTY_POOL_FILTERS);
+  const [poolFilters, setPoolFilters] = useState<ZonePoolFilters>(() =>
+    defaultPoolFilters(initialDraft(start).legend),
+  );
   const [legendQuery, setLegendQuery] = useState("");
   const [legendDomainIds, setLegendDomainIds] = useState<readonly CardDomain[]>([]);
   const [isPoolFilterOpen, setIsPoolFilterOpen] = useState(false);
@@ -159,10 +172,10 @@ function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) 
     setIsSaving(true);
     const result = await saveDeck(
       {
-        id: capabilities.idGenerator.next(),
+        id: start.type === "edit" ? start.deck.id : capabilities.idGenerator.next(),
         name,
-        notes: "",
-        createdAt: capabilities.clock.now(),
+        notes: start.type === "edit" ? start.deck.notes : "",
+        createdAt: start.type === "edit" ? start.deck.createdAt : capabilities.clock.now(),
         entries,
       },
       capabilities,
@@ -180,7 +193,7 @@ function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) 
     setIsSaving(false);
     setError(failure);
     if (failure === null) onSaved();
-  }, [capabilities, draft.name, entries, onSaved]);
+  }, [capabilities, draft.name, entries, onSaved, start]);
 
   return {
     back,
@@ -216,6 +229,10 @@ function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) 
   };
 }
 
+function initialDraft(start: DeckBuildStart): DeckBuildDraft {
+  return start.type === "edit" ? draftFromDeck(start.deck, start.cards) : EMPTY_DRAFT;
+}
+
 function toggle<Value>(values: readonly Value[], value: Value): Value[] {
   return values.includes(value)
     ? values.filter((candidate) => candidate !== value)
@@ -223,4 +240,4 @@ function toggle<Value>(values: readonly Value[], value: Value): Value[] {
 }
 
 export { useDeckBuild };
-export type { DeckBuildCapabilities };
+export type { DeckBuildCapabilities, DeckBuildStart };

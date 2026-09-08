@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
+import { SecondaryButton } from "@/components/ui/atoms/secondary-button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
@@ -18,11 +19,19 @@ interface DeckDetailScreenProps {
   readonly cards: readonly Card[];
   readonly deck: Deck;
   readonly now: string;
+  readonly onEdit: () => void;
   readonly onOpenCard: (card: Card) => void;
   readonly verification: DeckVerification;
 }
 
-function DeckDetailScreen({ cards, deck, now, onOpenCard, verification }: DeckDetailScreenProps) {
+function DeckDetailScreen({
+  cards,
+  deck,
+  now,
+  onEdit,
+  onOpenCard,
+  verification,
+}: DeckDetailScreenProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const groups = deckGroups(deck, cards);
@@ -39,7 +48,12 @@ function DeckDetailScreen({ cards, deck, now, onOpenCard, verification }: DeckDe
           },
         ]}
       >
-        <ThemedText type="display">{deck.name}</ThemedText>
+        <View style={styles.titleRow}>
+          <ThemedText style={styles.title} type="display">
+            {deck.name}
+          </ThemedText>
+          <SecondaryButton label="Edit" onPress={onEdit} />
+        </View>
         <View style={styles.metaRow}>
           <ThemedText themeColor="textTertiary" type="mono">
             {deckCountLabel(deck)} · {editedLabel(deck.updatedAt, now)}
@@ -112,6 +126,15 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     paddingTop: Spacing.three,
     width: "100%",
+  },
+  titleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: Spacing.three,
+    justifyContent: "space-between",
+  },
+  title: {
+    flexShrink: 1,
   },
   metaRow: {
     alignItems: "baseline",

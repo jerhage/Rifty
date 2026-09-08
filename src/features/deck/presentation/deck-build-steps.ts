@@ -1,6 +1,6 @@
 import type { Card } from "@/features/catalog/card/card";
 import { cardIdentityName } from "@/features/catalog/presentation/card-identity";
-import type { DeckEntry, DeckSection } from "@/features/deck/deck/deck";
+import type { Deck, DeckEntry, DeckSection } from "@/features/deck/deck/deck";
 
 type DeckBuildStepId = "legend" | "chosenChampion" | "zones";
 
@@ -94,6 +94,35 @@ function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
   return entries;
 }
 
+function draftFromDeck(deck: Deck, cards: readonly Card[]): DeckBuildDraft {
+  const byRiftboundId = new Map(cards.map((card) => [card.riftboundId, card]));
+  const cardFor = (section: DeckSection) => {
+    const entry = deck.entries.find((candidate) => candidate.section === section);
+
+    return entry ? (byRiftboundId.get(entry.cardRiftboundId) ?? null) : null;
+  };
+
+  const zoneCards: Record<string, DraftZoneCard> = {};
+  for (const entry of deck.entries) {
+    if (entry.section === "legend" || entry.section === "chosenChampion") continue;
+
+    const card = byRiftboundId.get(entry.cardRiftboundId);
+    if (!card) continue;
+
+    zoneCards[quantityKey(entry.section, entry.cardRiftboundId)] = {
+      card,
+      quantity: entry.quantity,
+    };
+  }
+
+  return {
+    name: deck.name,
+    legend: cardFor("legend"),
+    chosenChampion: cardFor("chosenChampion"),
+    zoneCards,
+  };
+}
+
 /** The chosen champion starts in its own zone but occupies one of the main deck's forty. */
 function zoneCounts(draft: DeckBuildDraft): Record<string, number> {
   const counts = draftEntries(draft).reduce<Record<string, number>>((totals, entry) => {
@@ -148,6 +177,7 @@ export {
   copiesOfName,
   DECK_BUILD_STEPS,
   draftEntries,
+  draftFromDeck,
   EMPTY_DRAFT,
   quantityKey,
   quantityOf,

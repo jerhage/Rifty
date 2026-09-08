@@ -62,7 +62,7 @@ function useCatalogQuery(cardSummaryLister: CardSummaryLister) {
   const clearFilters = useCallback(
     () =>
       setDraftCriteria((current) => ({
-        domainIds: current.domainIds,
+        anyDomainIds: current.anyDomainIds,
         sort: current.sort,
         typeIds: current.typeIds,
       })),
@@ -74,13 +74,16 @@ function useCatalogQuery(cardSummaryLister: CardSummaryLister) {
    * draft, so the grid reacts to a tap without a second confirming gesture.
    */
   const toggleDomain = useCallback((domainId: CardDomain) => {
-    setCriteria((current) => ({ ...current, domainIds: toggleId(current.domainIds, domainId) }));
+    setCriteria((current) => ({
+      ...current,
+      anyDomainIds: toggleId(current.anyDomainIds, domainId),
+    }));
   }, []);
   const toggleType = useCallback((typeId: CardType) => {
     setCriteria((current) => ({ ...current, typeIds: toggleId(current.typeIds, typeId) }));
   }, []);
   const clearDomains = useCallback(() => {
-    setCriteria((current) => ({ ...current, domainIds: undefined }));
+    setCriteria((current) => ({ ...current, anyDomainIds: undefined }));
   }, []);
   const clearTypes = useCallback(() => {
     setCriteria((current) => ({ ...current, typeIds: undefined }));

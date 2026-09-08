@@ -39,7 +39,7 @@ function CatalogSearchHeader({
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const domainColors = useDomainColors();
-  const selectedDomains = criteria.domainIds ?? [];
+  const selectedDomains = criteria.anyDomainIds ?? [];
   const selectedTypes = criteria.typeIds ?? [];
 
   return (

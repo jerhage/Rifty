@@ -15,6 +15,8 @@ const EMPTY_POOL_FILTERS: ZonePoolFilters = { query: "", domainIds: [], typeIds:
 
 type ZonePoolLayout = "list" | "grid";
 
+type ZonePoolView = "pool" | "inDeck" | "roles";
+
 function poolCardSubtitle(card: Card): string {
   const energy = card.attributes.energy === null ? null : `${card.attributes.energy}E`;
   const might = card.attributes.might === null ? null : `${card.attributes.might}M`;
@@ -107,4 +109,4 @@ export {
   zoneCardTypes,
   zoneRuleSummary,
 };
-export type { ZonePoolFilters, ZonePoolLayout };
+export type { ZonePoolFilters, ZonePoolLayout, ZonePoolView };

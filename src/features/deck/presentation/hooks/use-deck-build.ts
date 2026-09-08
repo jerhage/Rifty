@@ -21,7 +21,12 @@ import {
   quantityKey,
   type DeckBuildDraft,
 } from "../deck-build-steps";
-import { defaultPoolFilters, type ZonePoolFilters } from "../deck-zone-pool";
+import {
+  defaultPoolFilters,
+  type ZonePoolFilters,
+  type ZonePoolLayout,
+  type ZonePoolView,
+} from "../deck-zone-pool";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -49,6 +54,8 @@ function useDeckBuild(
   const [poolFilters, setPoolFilters] = useState<ZonePoolFilters>(() =>
     defaultPoolFilters(initialDraft(start).legend),
   );
+  const [poolLayout, setPoolLayout] = useState<ZonePoolLayout>("list");
+  const [poolView, setPoolView] = useState<ZonePoolView>("pool");
   const [legendQuery, setLegendQuery] = useState("");
   const [legendDomainIds, setLegendDomainIds] = useState<readonly CardDomain[]>([]);
   const [isPoolFilterOpen, setIsPoolFilterOpen] = useState(false);
@@ -212,11 +219,15 @@ function useDeckBuild(
     legendDomainIds,
     legendQuery,
     poolFilters,
+    poolLayout,
     poolQueryFilters,
+    poolView,
     setLegendQuery,
     resetPoolFilters,
     save,
+    setPoolLayout,
     setPoolQuery,
+    setPoolView,
     setQuantity,
     setZone,
     step,

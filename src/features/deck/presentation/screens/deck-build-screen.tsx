@@ -18,7 +18,7 @@ import { ChampionPoolData } from "../data/champion-pool-data";
 import { LegendPoolData } from "../data/legend-pool-data";
 import { ZonePoolData } from "../data/zone-pool-data";
 import type { DeckBuildDraft, DeckBuildStep } from "../deck-build-steps";
-import type { ZonePoolFilters } from "../deck-zone-pool";
+import type { ZonePoolFilters, ZonePoolLayout, ZonePoolView } from "../deck-zone-pool";
 
 interface DeckBuildScreenProps {
   readonly cardCounter: CardCounter;
@@ -44,13 +44,17 @@ interface DeckBuildScreenProps {
   readonly onPickChampion: (card: Card) => void;
   readonly onPickLegend: (card: Card) => void;
   readonly onSave: () => void;
+  readonly onSelectPoolLayout: (layout: ZonePoolLayout) => void;
+  readonly onSelectPoolView: (view: ZonePoolView) => void;
   readonly onSelectZone: (section: DeckSection) => void;
   readonly onSetQuantity: (section: DeckSection, card: Card, quantity: number) => void;
   readonly onToggleLegendDomain: (domainId: CardDomain) => void;
   readonly onTogglePoolDomain: (domainId: CardDomain) => void;
   readonly onTogglePoolType: (typeId: CardType) => void;
   readonly poolFilters: ZonePoolFilters;
+  readonly poolLayout: ZonePoolLayout;
   readonly poolSearchFilters: ZonePoolFilters;
+  readonly poolView: ZonePoolView;
   readonly step: DeckBuildStep;
   readonly stepIndex: number;
   readonly verification: DeckVerification;
@@ -84,13 +88,17 @@ function DeckBuildScreen({
   onPickLegend,
   onResetPoolFilters,
   onSave,
+  onSelectPoolLayout,
+  onSelectPoolView,
   onSelectZone,
   onSetQuantity,
   onToggleLegendDomain,
   onTogglePoolDomain,
   onTogglePoolType,
   poolFilters,
+  poolLayout,
   poolSearchFilters,
+  poolView,
   step,
   stepIndex,
   verification,
@@ -160,9 +168,13 @@ function DeckBuildScreen({
                   onOpenCard={onOpenCard}
                   onOpenPoolFilters={onOpenPoolFilters}
                   onSave={onSave}
+                  onSelectPoolLayout={onSelectPoolLayout}
+                  onSelectPoolView={onSelectPoolView}
                   onSelectZone={onSelectZone}
                   onSetQuantity={onSetQuantity}
                   poolFilters={poolFilters}
+                  poolLayout={poolLayout}
+                  poolView={poolView}
                   verification={verification}
                   zone={zone}
                   zonePool={pool.cards}

@@ -123,6 +123,12 @@ function draftFromDeck(deck: Deck, cards: readonly Card[]): DeckBuildDraft {
   };
 }
 
+function deckCardTotal(draft: DeckBuildDraft): number {
+  return draftEntries(draft)
+    .filter((entry) => entry.section !== "legend")
+    .reduce((total, entry) => total + entry.quantity, 0);
+}
+
 /** The chosen champion starts in its own zone but occupies one of the main deck's forty. */
 function zoneCounts(draft: DeckBuildDraft): Record<string, number> {
   const counts = draftEntries(draft).reduce<Record<string, number>>((totals, entry) => {
@@ -175,6 +181,7 @@ function copiesOfName(
 
 export {
   copiesOfName,
+  deckCardTotal,
   DECK_BUILD_STEPS,
   draftEntries,
   draftFromDeck,

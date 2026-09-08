@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { FlatList, StyleSheet, TextInput, View, type LayoutChangeEvent } from "react-native";
 
+import { match } from "ts-pattern";
+
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
@@ -8,13 +10,19 @@ import type { DeckSection, DeckVerification } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 
 import { displayedCopies, remainingForCard } from "../../../deck-build-allowance";
-import { quantityOf, zoneCounts, type DeckBuildDraft } from "../../../deck-build-steps";
+import {
+  deckCardTotal,
+  quantityOf,
+  zoneCounts,
+  type DeckBuildDraft,
+} from "../../../deck-build-steps";
 import {
   activePoolFilterCount,
   searchHint,
   zoneRuleSummary,
   type ZonePoolFilters,
   type ZonePoolLayout,
+  type ZonePoolView,
 } from "../../../deck-zone-pool";
 import { BuildCardRow } from "../build-card-row";
 import { BuildCardTile } from "../build-card-tile";
@@ -22,6 +30,8 @@ import { BuildFooter } from "../build-footer";
 import { BuildPickChip } from "../build-pick-chip";
 import { PoolLayoutToggle } from "../pool-layout-toggle";
 import { PoolSearchRow } from "../pool-search-row";
+import { PoolViewPlaceholder } from "../pool-view-placeholder";
+import { PoolViewTabs } from "../pool-view-tabs";
 import { ZoneSelector } from "../zone-selector";
 
 interface ZonesStepProps {
@@ -35,9 +45,13 @@ interface ZonesStepProps {
   readonly onLoadMorePool: () => void;
   readonly onOpenPoolFilters: () => void;
   readonly onSave: () => void;
+  readonly onSelectPoolLayout: (layout: ZonePoolLayout) => void;
+  readonly onSelectPoolView: (view: ZonePoolView) => void;
   readonly onSelectZone: (section: DeckSection) => void;
   readonly onSetQuantity: (section: DeckSection, card: Card, quantity: number) => void;
   readonly poolFilters: ZonePoolFilters;
+  readonly poolLayout: ZonePoolLayout;
+  readonly poolView: ZonePoolView;
   readonly verification: DeckVerification;
   readonly zone: DeckSection;
   readonly zonePool: readonly Card[];
@@ -54,15 +68,18 @@ function ZonesStep({
   onOpenCard,
   onSave,
   onOpenPoolFilters,
+  onSelectPoolLayout,
+  onSelectPoolView,
   onSelectZone,
   onSetQuantity,
   poolFilters,
+  poolLayout,
+  poolView,
   verification,
   zone,
   zonePool,
 }: ZonesStepProps) {
   const theme = useTheme();
-  const [layout, setLayout] = useState<ZonePoolLayout>("list");
   const [poolWidth, setPoolWidth] = useState<number | null>(null);
   const tileWidth = poolWidth === null ? null : (poolWidth - Spacing.three * 2 - Spacing.three) / 2;
 
@@ -105,12 +122,20 @@ function ZonesStep({
           <ZoneSelector counts={zoneCounts(draft)} onSelect={onSelectZone} selected={zone} />
         </View>
 
-        <View style={styles.ruleRow}>
-          <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.rule}>
-            {zoneRuleSummary(zone)}
-          </ThemedText>
-          <PoolLayoutToggle layout={layout} onSelect={setLayout} />
+        <View style={styles.viewRow}>
+          <View style={styles.tabs}>
+            <PoolViewTabs
+              deckCount={deckCardTotal(draft)}
+              onSelect={onSelectPoolView}
+              view={poolView}
+            />
+          </View>
+          <PoolLayoutToggle layout={poolLayout} onSelect={onSelectPoolLayout} />
         </View>
+
+        <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.rule}>
+          {zoneRuleSummary(zone)}
+        </ThemedText>
 
         <PoolSearchRow
           filterCount={activePoolFilterCount(poolFilters)}
@@ -121,39 +146,47 @@ function ZonesStep({
         />
       </View>
 
-      <FlatList
-        columnWrapperStyle={layout === "grid" ? styles.tileRow : undefined}
-        contentContainerStyle={[styles.pool, layout === "list" && styles.poolRows]}
-        data={zonePool}
-        key={layout}
-        keyExtractor={(card) => card.id}
-        ListEmptyComponent={
-          <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
-            No cards available for this zone yet.
-          </ThemedText>
-        }
-        numColumns={layout === "grid" ? 2 : 1}
-        onEndReached={onLoadMorePool}
-        onEndReachedThreshold={0.5}
-        onLayout={measurePool}
-        renderItem={({ item }) => {
-          const placement = {
-            card: item,
-            displayedQuantity: displayedCopies(draft, zone, item),
-            maxQuantity: remainingForCard(draft, zone, item),
-            onChange: (quantity: number) => onSetQuantity(zone, item, quantity),
-            onOpenCard,
-            quantity: quantityOf(draft, zone, item.riftboundId),
-          };
+      {match(poolView)
+        .with("pool", () => (
+          <FlatList
+            columnWrapperStyle={poolLayout === "grid" ? styles.tileRow : undefined}
+            contentContainerStyle={[styles.pool, poolLayout === "list" && styles.poolRows]}
+            data={zonePool}
+            key={poolLayout}
+            keyExtractor={(card) => card.id}
+            ListEmptyComponent={
+              <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
+                No cards available for this zone yet.
+              </ThemedText>
+            }
+            numColumns={poolLayout === "grid" ? 2 : 1}
+            onEndReached={onLoadMorePool}
+            onEndReachedThreshold={0.5}
+            onLayout={measurePool}
+            renderItem={({ item }) => {
+              const placement = {
+                card: item,
+                displayedQuantity: displayedCopies(draft, zone, item),
+                maxQuantity: remainingForCard(draft, zone, item),
+                onChange: (quantity: number) => onSetQuantity(zone, item, quantity),
+                onOpenCard,
+                quantity: quantityOf(draft, zone, item.riftboundId),
+              };
 
-          return layout === "grid" ? (
-            <BuildCardTile {...placement} width={tileWidth} />
-          ) : (
-            <BuildCardRow {...placement} />
-          );
-        }}
-        style={styles.poolList}
-      />
+              return poolLayout === "grid" ? (
+                <BuildCardTile {...placement} width={tileWidth} />
+              ) : (
+                <BuildCardRow {...placement} />
+              );
+            }}
+            style={styles.poolList}
+          />
+        ))
+        .with("inDeck", () => (
+          <PoolViewPlaceholder message="A view of the cards already in this deck is on the way." />
+        ))
+        .with("roles", () => <PoolViewPlaceholder message="Role breakdowns are on the way." />)
+        .exhaustive()}
 
       <BuildFooter actionLabel={isSaving ? "Saving…" : "Save deck"} onAction={onSave}>
         {error === null ? (
@@ -200,15 +233,18 @@ const styles = StyleSheet.create({
   zones: {
     marginTop: Spacing.three - 5,
   },
-  ruleRow: {
+  viewRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: Spacing.two + 1,
+    gap: Spacing.two - 1,
     marginTop: Spacing.two + 1,
   },
-  rule: {
+  tabs: {
     flex: 1,
     minWidth: 0,
+  },
+  rule: {
+    marginTop: Spacing.two + 1,
   },
   poolList: {
     flex: 1,

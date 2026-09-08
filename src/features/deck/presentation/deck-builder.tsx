@@ -50,13 +50,17 @@ function DeckBuilder({
       onPickLegend={build.pickLegend}
       onResetPoolFilters={build.resetPoolFilters}
       onSave={() => void build.save()}
+      onSelectPoolLayout={build.setPoolLayout}
+      onSelectPoolView={build.setPoolView}
       onSelectZone={build.setZone}
       onSetQuantity={build.setQuantity}
       onToggleLegendDomain={build.toggleLegendDomain}
       onTogglePoolDomain={build.togglePoolDomain}
       onTogglePoolType={build.togglePoolType}
       poolFilters={build.poolFilters}
+      poolLayout={build.poolLayout}
       poolSearchFilters={build.poolQueryFilters}
+      poolView={build.poolView}
       step={build.step}
       stepIndex={build.stepIndex}
       verification={build.verification}

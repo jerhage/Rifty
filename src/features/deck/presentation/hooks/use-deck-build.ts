@@ -10,6 +10,7 @@ import type { DeckSection } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
 import type { DeckSaver } from "@/features/deck/deck/deck-saver";
+import { riftboundStandard, verifyDeck } from "@/features/deck/deck/deck-legality";
 import { createDeck } from "@/features/deck/deck/use-cases/create-deck";
 import { setDeckCardQuantity } from "@/features/deck/deck/use-cases/set-deck-card-quantity";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -134,6 +135,23 @@ function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) 
 
   const entries = useMemo(() => draftEntries(draft), [draft]);
 
+  /** Judged against a stand-in deck: the draft is not saved yet, so it has no identity. */
+  const verification = useMemo(
+    () =>
+      verifyDeck(
+        {
+          id: "draft",
+          name: draft.name || "Draft",
+          notes: "",
+          createdAt: "1970-01-01T00:00:00.000Z",
+          updatedAt: "1970-01-01T00:00:00.000Z",
+          entries,
+        },
+        riftboundStandard,
+      ),
+    [draft.name, entries],
+  );
+
   const save = useCallback(async () => {
     const name = draft.name.trim();
     if (name.length === 0) {
@@ -189,6 +207,7 @@ function useDeckBuild(capabilities: DeckBuildCapabilities, onSaved: () => void) 
     setZone,
     step,
     stepIndex,
+    verification,
     toggleLegendDomain,
     togglePoolDomain,
     togglePoolType,

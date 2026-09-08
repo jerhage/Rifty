@@ -6,7 +6,6 @@ import { useTheme } from "@/hooks/use-theme";
 
 type StepperSurface = "inline" | "overlay";
 
-/** Over card art the plate has to be opaque, or the glyphs disappear into the painting. */
 function CardStepper({
   displayedQuantity,
   maxQuantity,
@@ -14,12 +13,9 @@ function CardStepper({
   quantity,
   surface = "inline",
 }: {
-  /** What the stepper reads, which includes the champion's own slot. */
   readonly displayedQuantity: number;
-  /** The most this printing may hold here, sharing its allowance with other printings. */
   readonly maxQuantity: number | null;
   readonly onChange: (quantity: number) => void;
-  /** Copies the stepper owns, on top of anything already held. */
   readonly quantity: number;
   readonly surface?: StepperSurface;
 }) {

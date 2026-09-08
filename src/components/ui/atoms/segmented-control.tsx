@@ -29,7 +29,6 @@ function SegmentedControl({
   );
 }
 
-/** An option shows its icon when it has one, and its label otherwise; the label always names it. */
 function SegmentedOption({
   glyph,
   icon,

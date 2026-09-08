@@ -37,7 +37,7 @@ function DeckList({
       decks={savedDecks}
       now={clock.now()}
       onNewDeck={() => router.push("/decks/build")}
-      onOpenDeck={() => undefined}
+      onOpenDeck={(deckId) => router.push({ pathname: "/decks/[id]", params: { id: deckId } })}
     />
   );
 }

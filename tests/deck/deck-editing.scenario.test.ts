@@ -93,12 +93,12 @@ describe("deck editing scenarios", () => {
 
     await setDeckCardQuantity(
       "ember",
-      { section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 4 },
+      { section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 2 },
       dependencies,
     );
     await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
       type: "success",
-      deck: { entries: [{ cardRiftboundId: "ogn-014", quantity: 4 }] },
+      deck: { entries: [{ cardRiftboundId: "ogn-014", quantity: 2 }] },
     });
 
     await setDeckCardQuantity(
@@ -120,7 +120,7 @@ describe("deck editing scenarios", () => {
 
     await setDeckCardQuantity(
       "ember",
-      { section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 3 },
+      { section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 2 },
       dependencies,
     );
     await setDeckCardQuantity(
@@ -133,11 +133,70 @@ describe("deck editing scenarios", () => {
       type: "success",
       deck: {
         entries: [
-          { section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 3 },
+          { section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 2 },
           { section: "sideboard", cardRiftboundId: "ogn-014", quantity: 1 },
         ],
       },
     });
+    store.close();
+  });
+
+  it("refuses a fourth copy across the zones that share an allowance", async () => {
+    const store = createSqliteScenarioStore();
+    const dependencies = capabilities(store.deckStore);
+    store.seedDeck(
+      deck("ember", {
+        entries: [
+          { section: "chosenChampion", cardRiftboundId: "ogn-hero", quantity: 1 },
+          { section: "mainDeck", cardRiftboundId: "ogn-hero", quantity: 2 },
+        ],
+      }),
+    );
+
+    await expect(
+      setDeckCardQuantity(
+        "ember",
+        { section: "sideboard", cardRiftboundId: "ogn-hero", quantity: 1 },
+        dependencies,
+      ),
+    ).resolves.toEqual({ type: "copyLimitReached", allowed: 0 });
+
+    await expect(
+      setDeckCardQuantity(
+        "ember",
+        { section: "mainDeck", cardRiftboundId: "ogn-hero", quantity: 3 },
+        dependencies,
+      ),
+    ).resolves.toEqual({ type: "copyLimitReached", allowed: 2 });
+  });
+
+  it("lets a zone size drift while it is being built", async () => {
+    const store = createSqliteScenarioStore();
+    const dependencies = capabilities(store.deckStore);
+    store.seedDeck(deck("ember", { entries: [] }));
+
+    await expect(
+      setDeckCardQuantity(
+        "ember",
+        { section: "mainDeck", cardRiftboundId: "ogn-a", quantity: 3 },
+        dependencies,
+      ),
+    ).resolves.toMatchObject({ type: "success" });
+    store.close();
+  });
+
+  it("allows any number of copies in the rune deck", async () => {
+    const store = createSqliteScenarioStore();
+    const dependencies = capabilities(store.deckStore);
+    store.seedDeck(deck("ember", { entries: [] }));
+
+    await expect(
+      setDeckCardQuantity(
+        "ember",
+        { section: "runeDeck", cardRiftboundId: "ogn-rune", quantity: 12 },
+        dependencies,
+      ),
+    ).resolves.toMatchObject({ type: "success" });
     store.close();
   });
 

@@ -6,12 +6,12 @@ import { deck } from "./fixtures";
 const CHAMPION = "ogn-champion";
 
 /**
- * A deck that satisfies every rule: 40 main across 14 distinct cards so no card exceeds three
- * copies, the chosen champion among them, 12 runes, 3 battlefields and a 10-card sideboard.
+ * A deck that satisfies every rule. The champion sits once in its own zone and twice in the main
+ * deck, which is its full allowance of three; its zone copy is one of the forty.
  */
 function legalEntries(): DeckEntry[] {
   const mainDeck: DeckEntry[] = [
-    { section: "mainDeck", cardRiftboundId: CHAMPION, quantity: 3 },
+    { section: "mainDeck", cardRiftboundId: CHAMPION, quantity: 2 },
     ...Array.from({ length: 12 }, (_unused, index) => ({
       section: "mainDeck" as const,
       cardRiftboundId: `ogn-main-${index}`,
@@ -74,13 +74,24 @@ describe("deck legality", () => {
     ]);
   });
 
-  it("requires the chosen champion to also sit in the main deck", () => {
+  it("does not require the chosen champion to appear in the main deck", () => {
     const entries = legalEntries().filter(
       (entry) => !(entry.section === "mainDeck" && entry.cardRiftboundId === CHAMPION),
     );
-    entries.push({ section: "mainDeck", cardRiftboundId: "ogn-swap", quantity: 3 });
+    entries.push({ section: "mainDeck", cardRiftboundId: "ogn-swap", quantity: 2 });
 
-    expect(rulesBroken(entries)).toEqual(["chosen-champion-in-main-deck"]);
+    expect(rulesBroken(entries)).toEqual([]);
+  });
+
+  it("counts the champion zone against the shared copy limit", () => {
+    const entries = legalEntries();
+    const inMain = entries.find(
+      (entry) => entry.section === "mainDeck" && entry.cardRiftboundId === CHAMPION,
+    );
+    // One in the champion zone plus three in the main deck is one copy too many.
+    if (inMain) inMain.quantity = 3;
+
+    expect(rulesBroken(entries)).toEqual(["mainDeck-size", "shared-copy-limit"]);
   });
 
   it("counts main deck and sideboard copies against one shared limit", () => {

@@ -24,9 +24,12 @@ const zoneRules: readonly ZoneRule[] = [
   { section: "sideboard", label: "Sideboard", requiredCount: 10, copyLimit: 3 },
 ];
 
-/** The main deck and sideboard share one allowance, so a card cannot hide extra copies in either. */
+/**
+ * Three copies of a name in total across the champion zone, the main deck and the sideboard, so
+ * a card cannot hide extra copies in one of them.
+ */
 const sharedCopyLimit = 3;
-const sharedCopySections: readonly DeckSection[] = ["mainDeck", "sideboard"];
+const sharedCopySections: readonly DeckSection[] = ["chosenChampion", "mainDeck", "sideboard"];
 
 const riftboundStandard: TournamentRuleset = {
   id: "riftbound-standard",
@@ -34,11 +37,56 @@ const riftboundStandard: TournamentRuleset = {
   version: "2026.1",
 };
 
+/** Sections whose copies of a card count against the same allowance as `section`. */
+function sectionsSharingAllowance(section: DeckSection): readonly DeckSection[] {
+  return sharedCopySections.includes(section) ? sharedCopySections : [section];
+}
+
+function copyAllowance(section: DeckSection): number | null {
+  if (sharedCopySections.includes(section)) return sharedCopyLimit;
+
+  const rule = zoneRules.find((candidate) => candidate.section === section);
+
+  // A zone with no rule is the legend, which is a singleton. `null` on a rule means no limit at
+  // all, so it must not collapse into a default of one.
+  return rule ? rule.copyLimit : 1;
+}
+
+/** Copies of a card already held in the sections that share this one's allowance. */
+function copiesHeldElsewhere(
+  deck: Deck,
+  section: DeckSection,
+  cardRiftboundId: CardRiftboundId,
+): number {
+  const sharing = sectionsSharingAllowance(section);
+
+  return deck.entries
+    .filter(
+      (entry) =>
+        entry.cardRiftboundId === cardRiftboundId &&
+        entry.section !== section &&
+        sharing.includes(entry.section),
+    )
+    .reduce((total, entry) => total + entry.quantity, 0);
+}
+
+/** How many more copies this section will take, or `null` where the zone sets no limit. */
+function remainingCopies(
+  deck: Deck,
+  section: DeckSection,
+  cardRiftboundId: CardRiftboundId,
+): number | null {
+  const allowance = copyAllowance(section);
+
+  if (allowance === null) return null;
+
+  return Math.max(0, allowance - copiesHeldElsewhere(deck, section, cardRiftboundId));
+}
+
 function verifyDeck(deck: Deck, ruleset: TournamentRuleset): DeckVerification {
   const violations = [
     ...singletonViolations(deck, "legend", "Legend"),
     ...singletonViolations(deck, "chosenChampion", "Chosen Champion"),
-    ...chosenChampionViolations(deck),
     ...zoneRules.flatMap((rule) => zoneViolations(deck, rule)),
     ...sharedCopyViolations(deck),
   ];
@@ -69,30 +117,9 @@ function singletonViolations(
   ];
 }
 
-function chosenChampionViolations(deck: Deck): readonly DeckLegalityViolation[] {
-  const champion = deck.entries.find((entry) => entry.section === "chosenChampion");
-
-  if (!champion) return [];
-
-  const inMainDeck = deck.entries.some(
-    (entry) => entry.section === "mainDeck" && entry.cardRiftboundId === champion.cardRiftboundId,
-  );
-
-  return inMainDeck
-    ? []
-    : [
-        {
-          type: "cardConstraint",
-          cardRiftboundId: champion.cardRiftboundId,
-          rule: "chosen-champion-in-main-deck",
-          message: "Your Chosen Champion also has to be in the main deck.",
-        },
-      ];
-}
-
 function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolation[] {
   const violations: DeckLegalityViolation[] = [];
-  const total = sectionTotal(deck, rule.section);
+  const total = zoneTotal(deck, rule.section);
 
   if (total !== rule.requiredCount) {
     violations.push({
@@ -146,9 +173,19 @@ function sectionTotal(deck: Deck, section: DeckSection): number {
     .reduce((total, entry) => total + entry.quantity, 0);
 }
 
+/**
+ * The chosen champion starts in its own zone but occupies one of the main deck's forty, so the
+ * main deck's size counts it.
+ */
+function zoneTotal(deck: Deck, section: DeckSection): number {
+  const own = sectionTotal(deck, section);
+
+  return section === "mainDeck" ? own + sectionTotal(deck, "chosenChampion") : own;
+}
+
 function copiesLabel(limit: number): string {
   return limit === 1 ? "one copy" : `${limit} copies`;
 }
 
-export { riftboundStandard, verifyDeck, zoneRules };
+export { copyAllowance, remainingCopies, riftboundStandard, verifyDeck, zoneRules, zoneTotal };
 export type { ZoneRule };

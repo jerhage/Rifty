@@ -2,11 +2,13 @@ import type { Clock } from "@/application/ports/clock";
 
 import { parseDeck, type CardRiftboundId, type Deck, type DeckId, type DeckSection } from "../deck";
 import type { DeckFinder } from "../deck-finder";
+import { remainingCopies } from "../deck-legality";
 import type { DeckSaver } from "../deck-saver";
 
 type SetDeckCardQuantityResult =
   | { readonly type: "success"; readonly deck: Deck }
   | { readonly type: "notFound" }
+  | { readonly type: "copyLimitReached"; readonly allowed: number }
   | { readonly type: "saveFailed" };
 
 interface DeckCardQuantity {
@@ -22,6 +24,10 @@ interface SetDeckCardQuantityCapabilities {
   readonly deckSaver: DeckSaver;
 }
 
+/**
+ * Copy limits are enforced here, unlike zone sizes: a deck is allowed to sit at 38 of 40 while you
+ * work on it, but a fourth copy of a card is never a legal position to pass through.
+ */
 async function setDeckCardQuantity(
   id: DeckId,
   { cardRiftboundId, quantity, section }: DeckCardQuantity,
@@ -30,6 +36,9 @@ async function setDeckCardQuantity(
   try {
     const current = await deckFinder.get(id);
     if (!current) return { type: "notFound" };
+
+    const allowed = remainingCopies(current, section, cardRiftboundId);
+    if (allowed !== null && quantity > allowed) return { type: "copyLimitReached", allowed };
 
     const others = current.entries.filter(
       (entry) => entry.section !== section || entry.cardRiftboundId !== cardRiftboundId,

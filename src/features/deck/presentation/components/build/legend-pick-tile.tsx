@@ -1,36 +1,21 @@
 import { Image } from "expo-image";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
+import { DomainBar } from "@/components/ui/atoms/domain-bar";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
-import type { CardSummary } from "@/features/catalog/card/card-summary";
+import type { Card } from "@/features/catalog/card/card";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
-function CardPickGrid({
-  cards,
-  onPick,
-  selectedId,
-}: {
-  readonly cards: readonly CardSummary[];
-  readonly onPick: (card: CardSummary) => void;
-  readonly selectedId: string | null;
-}) {
-  return (
-    <ScrollView contentContainerStyle={styles.grid}>
-      {cards.map((card) => (
-        <CardPickTile card={card} key={card.id} onPick={onPick} selected={card.id === selectedId} />
-      ))}
-    </ScrollView>
-  );
-}
-
-function CardPickTile({
+function LegendPickTile({
   card,
+  onOpenCard,
   onPick,
   selected,
 }: {
-  readonly card: CardSummary;
-  readonly onPick: (card: CardSummary) => void;
+  readonly card: Card;
+  readonly onOpenCard: (card: Card) => void;
+  readonly onPick: (card: Card) => void;
   readonly selected: boolean;
 }) {
   const theme = useTheme();
@@ -39,9 +24,11 @@ function CardPickTile({
 
   return (
     <Pressable
+      accessibilityHint="Press and hold to see the full card"
       accessibilityLabel={`Choose ${card.name}`}
       accessibilityRole="button"
       accessibilityState={{ selected }}
+      onLongPress={() => onOpenCard(card)}
       onPress={() => onPick(card)}
       style={({ pressed }) => [
         styles.tile,
@@ -52,15 +39,16 @@ function CardPickTile({
         pressed && styles.pressed,
       ]}
     >
-      <View style={[styles.frame, { borderColor: theme.border }]}>
+      <View style={[styles.art, { backgroundColor: theme.background }]}>
         <Image contentFit="contain" source={card.imageUrl} style={styles.image} transition={150} />
         {selected ? (
           <View style={[styles.check, { backgroundColor: accent }]}>
-            <ThemedText style={{ color: theme.onAccent }} type="mono">
+            <ThemedText style={[styles.checkMark, { color: theme.onAccent }]} type="mono">
               ✓
             </ThemedText>
           </View>
         ) : null}
+        <DomainBar domainIds={card.domainIds} height={2.5} />
       </View>
       <ThemedText numberOfLines={2} type="body" style={styles.name}>
         {card.name}
@@ -69,16 +57,9 @@ function CardPickTile({
   );
 }
 
-export { CardPickGrid };
+export { LegendPickTile };
 
 const styles = StyleSheet.create({
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.three - 5,
-    paddingBottom: Spacing.four,
-    paddingHorizontal: Spacing.three,
-  },
   tile: {
     borderRadius: Radius.large - 2,
     borderWidth: 1.5,
@@ -86,10 +67,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: Spacing.two + 1,
   },
-  frame: {
+  art: {
     aspectRatio: 5 / 7,
     borderRadius: Radius.small + 4,
-    borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
     width: "100%",
   },
@@ -101,13 +81,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 999,
     bottom: Spacing.one + 2,
-    height: 20,
+    height: 18,
     justifyContent: "center",
     position: "absolute",
     right: Spacing.one + 2,
-    width: 20,
+    width: 18,
+  },
+  checkMark: {
+    fontWeight: 700,
   },
   name: {
+    fontSize: 12.5,
     fontWeight: 600,
     marginTop: Spacing.two,
   },

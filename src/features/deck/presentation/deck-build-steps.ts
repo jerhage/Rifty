@@ -1,5 +1,6 @@
-import type { CardSummary } from "@/features/catalog/card/card-summary";
-import type { DeckEntry } from "@/features/deck/deck/deck";
+import type { Card } from "@/features/catalog/card/card";
+import { cardIdentityName } from "@/features/catalog/presentation/card-identity";
+import type { DeckEntry, DeckSection } from "@/features/deck/deck/deck";
 
 type DeckBuildStepId = "legend" | "chosenChampion" | "zones";
 
@@ -22,7 +23,8 @@ const deckBuildSteps: readonly DeckBuildStep[] = [
     id: "chosenChampion",
     label: "Chosen Champion",
     title: "Name your Champion",
-    blurb: "Your headline card. It has to appear in the main deck as well.",
+    blurb:
+      "One champion unit is your Chosen Champion. It starts in the champion zone and shares its three copies with the main deck.",
   },
   {
     id: "zones",
@@ -32,16 +34,36 @@ const deckBuildSteps: readonly DeckBuildStep[] = [
   },
 ];
 
-interface DeckBuildDraft {
-  readonly name: string;
-  readonly legend: CardSummary | null;
-  readonly chosenChampion: CardSummary | null;
+interface DraftZoneCard {
+  readonly card: Card;
+  readonly quantity: number;
 }
 
-/**
- * Both picks are optional: the design lets you skip either and come back, and a deck saves whether
- * or not it is legal.
- */
+interface DeckBuildDraft {
+  readonly name: string;
+  readonly legend: Card | null;
+  readonly chosenChampion: Card | null;
+  /** Cards placed in the four buildable zones, keyed by section and printing. */
+  readonly zoneCards: Readonly<Record<string, DraftZoneCard>>;
+}
+
+const emptyDraft: DeckBuildDraft = {
+  name: "",
+  legend: null,
+  chosenChampion: null,
+  zoneCards: {},
+};
+
+const KEY_SEPARATOR = " ";
+
+function quantityKey(section: DeckSection, cardRiftboundId: string): string {
+  return `${section}${KEY_SEPARATOR}${cardRiftboundId}`;
+}
+
+function quantityOf(draft: DeckBuildDraft, section: DeckSection, cardRiftboundId: string): number {
+  return draft.zoneCards[quantityKey(section, cardRiftboundId)]?.quantity ?? 0;
+}
+
 function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
   const entries: DeckEntry[] = [];
 
@@ -56,8 +78,79 @@ function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
     });
   }
 
+  for (const [key, placed] of Object.entries(draft.zoneCards)) {
+    if (placed.quantity <= 0) continue;
+
+    const separatorIndex = key.indexOf(KEY_SEPARATOR);
+    if (separatorIndex < 0) continue;
+
+    entries.push({
+      section: key.slice(0, separatorIndex) as DeckSection,
+      cardRiftboundId: key.slice(separatorIndex + 1),
+      quantity: placed.quantity,
+    });
+  }
+
   return entries;
 }
 
-export { deckBuildSteps, draftEntries };
-export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId };
+/** The chosen champion starts in its own zone but occupies one of the main deck's forty. */
+function zoneCounts(draft: DeckBuildDraft): Record<string, number> {
+  const counts = draftEntries(draft).reduce<Record<string, number>>((totals, entry) => {
+    totals[entry.section] = (totals[entry.section] ?? 0) + entry.quantity;
+    return totals;
+  }, {});
+
+  if (draft.chosenChampion) counts.mainDeck = (counts.mainDeck ?? 0) + 1;
+
+  return counts;
+}
+
+/**
+ * Copies of a card held in the given sections, counted across printings: a regular art and an
+ * alternate art of the same card draw on one allowance.
+ */
+function copiesOfName(
+  draft: DeckBuildDraft,
+  identityName: string,
+  sections: readonly DeckSection[],
+  exclude?: { readonly section: DeckSection; readonly cardRiftboundId: string },
+): number {
+  let total = 0;
+
+  if (
+    draft.chosenChampion &&
+    cardIdentityName(draft.chosenChampion) === identityName &&
+    sections.includes("chosenChampion")
+  ) {
+    total += 1;
+  }
+
+  for (const [key, placed] of Object.entries(draft.zoneCards)) {
+    if (cardIdentityName(placed.card) !== identityName || placed.quantity <= 0) continue;
+
+    const separatorIndex = key.indexOf(KEY_SEPARATOR);
+    const section = key.slice(0, separatorIndex) as DeckSection;
+    const cardRiftboundId = key.slice(separatorIndex + 1);
+
+    if (!sections.includes(section)) continue;
+    if (exclude && exclude.section === section && exclude.cardRiftboundId === cardRiftboundId) {
+      continue;
+    }
+
+    total += placed.quantity;
+  }
+
+  return total;
+}
+
+export {
+  copiesOfName,
+  deckBuildSteps,
+  draftEntries,
+  emptyDraft,
+  quantityKey,
+  quantityOf,
+  zoneCounts,
+};
+export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId, DraftZoneCard };

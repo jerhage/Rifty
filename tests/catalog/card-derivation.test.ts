@@ -1,3 +1,4 @@
+import { downloadTargetFor, imageFileNames } from "../../scripts/card-image-file";
 import {
   cardSpeeds,
   championName,
@@ -112,6 +113,25 @@ describe("card derivation", () => {
     expect(
       championName({ name: "Daisy!", champion: "Ivern", supertypeId: "Signature", typeId: "Unit" }),
     ).toBe("Ivern");
+  });
+
+  it("names every local file webp and keeps two printings of one id apart", () => {
+    const cards = [
+      { id: "a", riftboundId: "opp-247-298", imageUrl: "https://x/a.png" },
+      { id: "b", riftboundId: "opp-247-298", imageUrl: "https://x/b.webp" },
+      { id: "c", riftboundId: "ogn-001-298", imageUrl: "https://x/c.webp" },
+    ];
+
+    expect([...imageFileNames(cards).values()]).toEqual([
+      "opp-247-298.webp",
+      "opp-247-298-2.webp",
+      "ogn-001-298.webp",
+    ]);
+  });
+
+  it("downloads under the source's own format, then converts to the webp it is named for", () => {
+    expect(downloadTargetFor("opp-247-298.webp", "https://x/a.png")).toBe("opp-247-298.png");
+    expect(downloadTargetFor("opp-247-298.webp", "https://x/a.webp")).toBe("opp-247-298.webp");
   });
 
   it("reads the pool, the collector number, and both printing marks from the id", () => {

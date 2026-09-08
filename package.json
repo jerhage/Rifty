@@ -6,6 +6,7 @@
   "scripts": {
     "start": "expo start",
     "start:clear": "expo start --clear",
+    "convert:card-images": "find data/images -type f ! -name '*.webp' ! -name '*.json' -exec sh -c 'for f; do cwebp -quiet -q 82 \"$f\" -o \"${f%.*}.webp\" && rm \"$f\"; done' _ {} +",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",

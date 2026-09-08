@@ -47,6 +47,8 @@ function baseNameOf(riftboundId: string): string {
     .toLowerCase();
 }
 
+const IMAGE_EXTENSION = ".webp";
+
 function extensionOf(url: string): string {
   const extension = extname(new URL(url).pathname).toLowerCase();
 
@@ -62,12 +64,11 @@ function imageFileNames(cards: readonly SourcedCard[]): ReadonlyMap<string, stri
     if (source === undefined) continue;
 
     const base = baseNameOf(riftboundIdOf(card));
-    const extension = extensionOf(source);
-    let fileName = `${base}${extension}`;
+    let fileName = `${base}${IMAGE_EXTENSION}`;
     let suffix = 1;
     while (taken.has(fileName)) {
       suffix += 1;
-      fileName = `${base}-${suffix}${extension}`;
+      fileName = `${base}-${suffix}${IMAGE_EXTENSION}`;
     }
     taken.add(fileName);
     named.set(card.id, fileName);
@@ -76,5 +77,13 @@ function imageFileNames(cards: readonly SourcedCard[]): ReadonlyMap<string, stri
   return named;
 }
 
-export { imageFileNames, imageSourcesOf };
+function downloadTargetFor(fileName: string, sourceUrl: string): string {
+  const extension = extensionOf(sourceUrl);
+
+  return extension === IMAGE_EXTENSION
+    ? fileName
+    : fileName.replace(new RegExp(`\\${IMAGE_EXTENSION}$`), extension);
+}
+
+export { downloadTargetFor, imageFileNames, imageSourcesOf };
 export type { SourcedCard };

@@ -1,7 +1,12 @@
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { imageFileNames, imageSourcesOf, type SourcedCard } from "./card-image-file";
+import {
+  downloadTargetFor,
+  imageFileNames,
+  imageSourcesOf,
+  type SourcedCard,
+} from "./card-image-file";
 
 const inputDirectory = process.env.CARD_FETCH_OUTPUT_DIRECTORY ?? "data/api";
 const imageDirectory = process.env.CARD_IMAGE_DIRECTORY ?? "data/images";
@@ -16,6 +21,7 @@ const userAgent =
 interface PendingImage {
   readonly cardId: string;
   readonly fileName: string;
+  readonly downloadAs: string;
   readonly sources: readonly string[];
 }
 
@@ -48,7 +54,17 @@ function planDownloads(cards: readonly SourcedCard[]): readonly PendingImage[] {
     const fileName = named.get(card.id);
     if (fileName === undefined) return [];
 
-    return [{ cardId: card.id, fileName, sources: imageSourcesOf(card) }];
+    const sources = imageSourcesOf(card);
+    const [preferred] = sources;
+
+    return [
+      {
+        cardId: card.id,
+        fileName,
+        downloadAs: preferred === undefined ? fileName : downloadTargetFor(fileName, preferred),
+        sources,
+      },
+    ];
   });
 }
 
@@ -70,7 +86,7 @@ async function download(image: PendingImage): Promise<void> {
         if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
 
         await writeFile(
-          join(imageDirectory, image.fileName),
+          join(imageDirectory, image.downloadAs),
           new Uint8Array(await response.arrayBuffer()),
         );
 
@@ -98,7 +114,7 @@ const failures: string[] = [];
 
 async function worker(): Promise<void> {
   for (let image = queue.shift(); image !== undefined; image = queue.shift()) {
-    if (await alreadyOnDisk(image.fileName)) {
+    if ((await alreadyOnDisk(image.fileName)) || (await alreadyOnDisk(image.downloadAs))) {
       skipped += 1;
       continue;
     }

@@ -13,3 +13,5 @@ This application also uses zod to implement the adage of "Parse, don't validate"
 
 I also have some crude scripts for processing raw data and transforming into seed data for the database. Currently limited by the data I can collect but will get more and/or derive some data such as
 card speed (normal / action / reaction) from the raw data I already have (will require parsing the card text since the data I have doesn't treat this as a first class citizen).
+
+I have a generated seed file in the infra layer for convenience but obviously this won't scale. For now it will suffice. I can run a script to regenerate the seed data when needed. I use a hash for versioning. The app will check if it uses the current version, and, if not, clear the relevant tables and re-seed based on the generated seed file.

@@ -22,7 +22,6 @@ interface GroupDefinition {
 
 const GROUP_DEFINITIONS: readonly GroupDefinition[] = [
   { title: "Legend", sections: ["legend"] },
-  { title: "Chosen Champion", sections: ["chosenChampion"] },
   { title: "Units", sections: ["mainDeck"], typeIds: ["Unit"] },
   { title: "Spells & Gear", sections: ["mainDeck"], typeIds: ["Spell", "Gear"] },
   { title: "Runes & Battlefields", sections: ["mainDeck"], typeIds: ["Rune", "Battlefield"] },
@@ -31,10 +30,18 @@ const GROUP_DEFINITIONS: readonly GroupDefinition[] = [
   { title: "Sideboard", sections: ["sideboard"] },
 ];
 
-function deckCards(deck: Deck, cards: readonly Card[]): readonly DeckCard[] {
+const CURVE_SECTIONS: readonly DeckSection[] = ["mainDeck"];
+
+function deckCards(
+  deck: Deck,
+  cards: readonly Card[],
+  sections?: readonly DeckSection[],
+): readonly DeckCard[] {
   const byRiftboundId = new Map(cards.map((card) => [card.riftboundId, card]));
 
   return deck.entries.flatMap((entry) => {
+    if (sections && !sections.includes(entry.section)) return [];
+
     const card = byRiftboundId.get(entry.cardRiftboundId);
 
     return card ? [{ card, quantity: entry.quantity }] : [];
@@ -79,8 +86,8 @@ function energyCurve(
     { label: "4", matches: (energy: number) => energy === 4 },
     { label: "5+", matches: (energy: number) => energy >= 5 },
   ];
-  const counted = deckCards(deck, cards).filter(
-    (held) => held.card.attributes.energy !== null && held.card.classification.typeId !== "Legend",
+  const counted = deckCards(deck, cards, CURVE_SECTIONS).filter(
+    (held) => held.card.attributes.energy !== null,
   );
 
   return buckets.map((bucket) => ({

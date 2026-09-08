@@ -35,6 +35,7 @@ async function createDeck(
       notes: "",
       createdAt,
       updatedAt: createdAt,
+      chosenChampionRiftboundId: null,
       entries: [],
     });
     await deckSaver.save(deck);

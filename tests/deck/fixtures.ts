@@ -9,6 +9,7 @@ function deck(id: string, options: Partial<Omit<Deck, "id">> = {}): Deck {
     notes: options.notes ?? "",
     createdAt: options.createdAt ?? "2026-09-01T10:00:00.000Z",
     updatedAt: options.updatedAt ?? "2026-09-01T10:00:00.000Z",
+    chosenChampionRiftboundId: options.chosenChampionRiftboundId ?? null,
     entries: options.entries ?? [{ section: "mainDeck", cardRiftboundId: "ogn-001", quantity: 4 }],
   };
 }

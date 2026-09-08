@@ -4,14 +4,7 @@ import { z } from "zod/v4";
 const cardRiftboundIdSchema = z.string().trim().min(1);
 const deckIdSchema = z.string().trim().min(1);
 const deckNameSchema = z.string().trim().min(1);
-const deckSectionSchema = z.enum([
-  "legend",
-  "chosenChampion",
-  "mainDeck",
-  "runeDeck",
-  "battlefield",
-  "sideboard",
-]);
+const deckSectionSchema = z.enum(["legend", "mainDeck", "runeDeck", "battlefield", "sideboard"]);
 const deckEntrySchema = z.object({
   section: deckSectionSchema,
   cardRiftboundId: cardRiftboundIdSchema,
@@ -21,6 +14,9 @@ const deckEntrySchema = z.object({
 /**
  * A saved deck intentionally permits incomplete and tournament-illegal compositions. It only
  * enforces structural invariants needed to store and edit card quantities unambiguously.
+ *
+ * The chosen champion is one of the main deck's cards, named here so the game knows which card
+ * starts in the champion zone. It is not a section of its own.
  */
 const deckSchema = z
   .object({
@@ -29,6 +25,7 @@ const deckSchema = z
     notes: z.string(),
     createdAt: z.string().trim().min(1),
     updatedAt: z.string().trim().min(1),
+    chosenChampionRiftboundId: cardRiftboundIdSchema.nullable(),
     entries: z.array(deckEntrySchema),
   })
   .superRefine((deck, context) => {

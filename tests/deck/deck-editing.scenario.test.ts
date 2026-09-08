@@ -33,6 +33,7 @@ describe("deck editing scenarios", () => {
         notes: "",
         createdAt: "2026-09-07T12:00:00.000Z",
         updatedAt: "2026-09-07T12:00:00.000Z",
+        chosenChampionRiftboundId: null,
         entries: [],
       },
     });
@@ -147,9 +148,10 @@ describe("deck editing scenarios", () => {
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(
       deck("ember", {
+        chosenChampionRiftboundId: "ogn-hero",
         entries: [
-          { section: "chosenChampion", cardRiftboundId: "ogn-hero", quantity: 1 },
-          { section: "mainDeck", cardRiftboundId: "ogn-hero", quantity: 2 },
+          { section: "mainDeck", cardRiftboundId: "ogn-hero", quantity: 1 },
+          { section: "sideboard", cardRiftboundId: "ogn-hero", quantity: 2 },
         ],
       }),
     );
@@ -157,18 +159,18 @@ describe("deck editing scenarios", () => {
     await expect(
       setDeckCardQuantity(
         "ember",
-        { section: "sideboard", cardRiftboundId: "ogn-hero", quantity: 1 },
+        { section: "mainDeck", cardRiftboundId: "ogn-hero", quantity: 3 },
         dependencies,
       ),
-    ).resolves.toEqual({ type: "copyLimitReached", allowed: 0 });
+    ).resolves.toEqual({ type: "copyLimitReached", allowed: 1 });
 
     await expect(
       setDeckCardQuantity(
         "ember",
-        { section: "mainDeck", cardRiftboundId: "ogn-hero", quantity: 3 },
+        { section: "mainDeck", cardRiftboundId: "ogn-hero", quantity: 1 },
         dependencies,
       ),
-    ).resolves.toEqual({ type: "copyLimitReached", allowed: 2 });
+    ).resolves.toMatchObject({ type: "success" });
   });
 
   it("lets a zone size drift while it is being built", async () => {
@@ -209,6 +211,7 @@ describe("deck editing scenarios", () => {
       name: "Ember Tempo",
       notes: "",
       createdAt: "2026-09-01T10:00:00.000Z",
+      chosenChampionRiftboundId: null,
       entries: [{ section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 3 }] as const,
     };
 
@@ -256,6 +259,7 @@ describe("deck editing scenarios", () => {
           name: "iron wall",
           notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
+          chosenChampionRiftboundId: null,
           entries: [],
         },
         dependencies,
@@ -268,6 +272,7 @@ describe("deck editing scenarios", () => {
           name: "Ember Tempo",
           notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
+          chosenChampionRiftboundId: null,
           entries: [],
         },
         dependencies,
@@ -286,9 +291,10 @@ describe("deck editing scenarios", () => {
         name: "Ember Tempo",
         notes: "",
         createdAt: "2026-09-01T10:00:00.000Z",
+        chosenChampionRiftboundId: "ogn-hero",
         entries: [
-          { section: "chosenChampion", cardRiftboundId: "ogn-hero", quantity: 1 },
           { section: "mainDeck", cardRiftboundId: "ogn-hero", quantity: 3 },
+          { section: "sideboard", cardRiftboundId: "ogn-hero", quantity: 1 },
         ],
       },
       dependencies,
@@ -310,6 +316,7 @@ describe("deck editing scenarios", () => {
           name: "Ember Tempo",
           notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
+          chosenChampionRiftboundId: null,
           entries: [{ section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 3 }],
         },
         dependencies,

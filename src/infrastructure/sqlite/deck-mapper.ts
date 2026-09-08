@@ -18,6 +18,7 @@ function toDomainDeck({ deck, cards }: DeckPersistenceShape): Deck {
     notes: persistedDeck.notes,
     createdAt: persistedDeck.createdAt,
     updatedAt: persistedDeck.updatedAt,
+    chosenChampionRiftboundId: persistedDeck.chosenChampionRiftboundId,
     entries: cards.map((card) => {
       const persistedCard = deckCardSelectSchema.parse(card);
       return {

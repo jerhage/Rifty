@@ -25,11 +25,11 @@ const ZONE_RULES: readonly ZoneRule[] = [
 ];
 
 /**
- * Three copies of a name in total across the champion zone, the main deck and the sideboard, so
- * a card cannot hide extra copies in one of them.
+ * Three copies of a name in total across the main deck and the sideboard, so a card cannot hide
+ * extra copies in one of them.
  */
 const SHARED_COPY_LIMIT = 3;
-const SHARED_COPY_SECTIONS: readonly DeckSection[] = ["chosenChampion", "mainDeck", "sideboard"];
+const SHARED_COPY_SECTIONS: readonly DeckSection[] = ["mainDeck", "sideboard"];
 
 const RIFTBOUND_STANDARD: TournamentRuleset = {
   id: "riftbound-standard",
@@ -86,7 +86,7 @@ function remainingCopies(
 function verifyDeck(deck: Deck, ruleset: TournamentRuleset): DeckVerification {
   const violations = [
     ...singletonViolations(deck, "legend", "Legend"),
-    ...singletonViolations(deck, "chosenChampion", "Chosen Champion"),
+    ...championViolations(deck),
     ...ZONE_RULES.flatMap((rule) => zoneViolations(deck, rule)),
     ...sharedCopyViolations(deck),
   ];
@@ -117,9 +117,39 @@ function singletonViolations(
   ];
 }
 
+/** The chosen champion is a main deck card, so the deck has to actually hold a copy of it. */
+function championViolations(deck: Deck): readonly DeckLegalityViolation[] {
+  const cardRiftboundId = deck.chosenChampionRiftboundId;
+
+  if (cardRiftboundId === null) {
+    return [
+      {
+        type: "deckConstraint",
+        rule: "chosenChampion-required",
+        message: "Pick a Chosen Champion.",
+      },
+    ];
+  }
+
+  const held = deck.entries.some(
+    (entry) => entry.section === "mainDeck" && entry.cardRiftboundId === cardRiftboundId,
+  );
+
+  return held
+    ? []
+    : [
+        {
+          type: "cardConstraint",
+          cardRiftboundId,
+          rule: "chosenChampion-in-main-deck",
+          message: "Your Chosen Champion has to be one of the main deck's cards.",
+        },
+      ];
+}
+
 function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolation[] {
   const violations: DeckLegalityViolation[] = [];
-  const total = zoneTotal(deck, rule.section);
+  const total = sectionTotal(deck, rule.section);
 
   if (total !== rule.requiredCount) {
     violations.push({
@@ -173,19 +203,9 @@ function sectionTotal(deck: Deck, section: DeckSection): number {
     .reduce((total, entry) => total + entry.quantity, 0);
 }
 
-/**
- * The chosen champion starts in its own zone but occupies one of the main deck's forty, so the
- * main deck's size counts it.
- */
-function zoneTotal(deck: Deck, section: DeckSection): number {
-  const own = sectionTotal(deck, section);
-
-  return section === "mainDeck" ? own + sectionTotal(deck, "chosenChampion") : own;
-}
-
 function copiesLabel(limit: number): string {
   return limit === 1 ? "one copy" : `${limit} copies`;
 }
 
-export { copyAllowance, remainingCopies, RIFTBOUND_STANDARD, verifyDeck, ZONE_RULES, zoneTotal };
+export { copyAllowance, remainingCopies, RIFTBOUND_STANDARD, verifyDeck, ZONE_RULES };
 export type { ZoneRule };

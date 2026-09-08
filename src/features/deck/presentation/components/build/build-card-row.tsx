@@ -12,7 +12,6 @@ import { CardStepper } from "./card-stepper";
 
 function BuildCardRow({
   card,
-  displayedQuantity,
   maxQuantity,
   onChange,
   onOpenCard,
@@ -24,14 +23,13 @@ function BuildCardRow({
   readonly onChange: (quantity: number) => void;
   readonly onOpenCard: (card: Card) => void;
   /** What the row reads, which includes the champion's own slot. */
-  readonly displayedQuantity: number;
   /** Copies the stepper owns, on top of anything already held. */
   readonly quantity: number;
 }) {
   const theme = useTheme();
   const domainColors = useDomainColors();
   const accent = domainColors[card.domainIds[0] ?? "Colorless"];
-  const inDeck = displayedQuantity > 0;
+  const inDeck = quantity > 0;
 
   return (
     <View
@@ -65,12 +63,7 @@ function BuildCardRow({
         </View>
       </Pressable>
 
-      <CardStepper
-        displayedQuantity={displayedQuantity}
-        maxQuantity={maxQuantity}
-        onChange={onChange}
-        quantity={quantity}
-      />
+      <CardStepper maxQuantity={maxQuantity} onChange={onChange} quantity={quantity} />
     </View>
   );
 }

@@ -6,6 +6,7 @@ const deck = {
   notes: "",
   createdAt: "2026-09-07T00:00:00.000Z",
   updatedAt: "2026-09-07T00:00:00.000Z",
+  chosenChampionRiftboundId: null,
   entries: [{ section: "mainDeck", cardRiftboundId: "ogn-001-298", quantity: 4 }],
 };
 

@@ -1,13 +1,7 @@
 import type { Deck, DeckSection } from "@/features/deck/deck/deck";
 
 /** Sections that make up the deck proper; the sideboard is counted and shown separately. */
-const MAIN_SECTIONS: readonly DeckSection[] = [
-  "legend",
-  "chosenChampion",
-  "mainDeck",
-  "runeDeck",
-  "battlefield",
-];
+const MAIN_SECTIONS: readonly DeckSection[] = ["legend", "mainDeck", "runeDeck", "battlefield"];
 
 function cardCount(deck: Deck, sections: readonly DeckSection[]): number {
   return deck.entries

@@ -50,10 +50,16 @@ class SqliteDeckRepository implements DeckRepository {
           notes: deck.notes,
           createdAt: deck.createdAt,
           updatedAt: deck.updatedAt,
+          chosenChampionRiftboundId: deck.chosenChampionRiftboundId,
         })
         .onConflictDoUpdate({
           target: decks.id,
-          set: { name: deck.name, notes: deck.notes, updatedAt: deck.updatedAt },
+          set: {
+            name: deck.name,
+            notes: deck.notes,
+            updatedAt: deck.updatedAt,
+            chosenChampionRiftboundId: deck.chosenChampionRiftboundId,
+          },
         })
         .run();
       tx.delete(deckCards).where(eq(deckCards.deckId, deck.id)).run();

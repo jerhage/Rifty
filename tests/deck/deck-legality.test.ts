@@ -6,12 +6,12 @@ import { deck } from "./fixtures";
 const CHAMPION = "ogn-champion";
 
 /**
- * A deck that satisfies every rule. The champion sits once in its own zone and twice in the main
- * deck, which is its full allowance of three; its zone copy is one of the forty.
+ * A deck that satisfies every rule. The champion is a main deck card like any other, held at its
+ * full allowance of three.
  */
 function legalEntries(): DeckEntry[] {
   const mainDeck: DeckEntry[] = [
-    { section: "mainDeck", cardRiftboundId: CHAMPION, quantity: 2 },
+    { section: "mainDeck", cardRiftboundId: CHAMPION, quantity: 3 },
     ...Array.from({ length: 12 }, (_unused, index) => ({
       section: "mainDeck" as const,
       cardRiftboundId: `ogn-main-${index}`,
@@ -30,7 +30,6 @@ function legalEntries(): DeckEntry[] {
 
   return [
     { section: "legend", cardRiftboundId: "ogn-legend", quantity: 1 },
-    { section: "chosenChampion", cardRiftboundId: CHAMPION, quantity: 1 },
     ...mainDeck,
     { section: "runeDeck", cardRiftboundId: "ogn-rune", quantity: 12 },
     { section: "battlefield", cardRiftboundId: "ogn-bf1", quantity: 1 },
@@ -40,12 +39,12 @@ function legalEntries(): DeckEntry[] {
   ];
 }
 
-function withEntries(entries: DeckEntry[]): Deck {
-  return deck("under-test", { entries });
+function withEntries(entries: DeckEntry[], champion: string | null = CHAMPION): Deck {
+  return deck("under-test", { entries, chosenChampionRiftboundId: champion });
 }
 
-function rulesBroken(entries: DeckEntry[]): string[] {
-  const verification = verifyDeck(withEntries(entries), RIFTBOUND_STANDARD);
+function rulesBroken(entries: DeckEntry[], champion: string | null = CHAMPION): string[] {
+  const verification = verifyDeck(withEntries(entries, champion), RIFTBOUND_STANDARD);
 
   return verification.type === "illegal"
     ? verification.violations.map((violation) => violation.rule).sort()
@@ -64,7 +63,7 @@ describe("deck legality", () => {
   });
 
   it("reports every zone of an empty deck rather than stopping at the first", () => {
-    expect(rulesBroken([])).toEqual([
+    expect(rulesBroken([], null)).toEqual([
       "battlefield-size",
       "chosenChampion-required",
       "legend-required",
@@ -74,24 +73,23 @@ describe("deck legality", () => {
     ]);
   });
 
-  it("does not require the chosen champion to appear in the main deck", () => {
+  it("requires the chosen champion to be one of the main deck's cards", () => {
     const entries = legalEntries().filter(
       (entry) => !(entry.section === "mainDeck" && entry.cardRiftboundId === CHAMPION),
     );
-    entries.push({ section: "mainDeck", cardRiftboundId: "ogn-swap", quantity: 2 });
+    entries.push({ section: "mainDeck", cardRiftboundId: "ogn-swap", quantity: 3 });
 
-    expect(rulesBroken(entries)).toEqual([]);
+    expect(rulesBroken(entries)).toEqual(["chosenChampion-in-main-deck"]);
   });
 
-  it("counts the champion zone against the shared copy limit", () => {
-    const entries = legalEntries();
-    const inMain = entries.find(
-      (entry) => entry.section === "mainDeck" && entry.cardRiftboundId === CHAMPION,
+  it("counts the champion's copies against the shared limit like any other card", () => {
+    const entries = legalEntries().filter(
+      (entry) => !(entry.section === "sideboard" && entry.cardRiftboundId === "ogn-side-last"),
     );
-    // One in the champion zone plus three in the main deck is one copy too many.
-    if (inMain) inMain.quantity = 3;
+    // Three in the main deck plus one in the sideboard is one copy too many.
+    entries.push({ section: "sideboard", cardRiftboundId: CHAMPION, quantity: 1 });
 
-    expect(rulesBroken(entries)).toEqual(["mainDeck-size", "shared-copy-limit"]);
+    expect(rulesBroken(entries)).toEqual(["shared-copy-limit"]);
   });
 
   it("counts main deck and sideboard copies against one shared limit", () => {

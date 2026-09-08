@@ -1,11 +1,9 @@
+import { lockedCopies, remainingForCard } from "@/features/deck/presentation/deck-build-allowance";
 import {
-  displayedCopies,
-  lockedCopies,
-  remainingForCard,
-} from "@/features/deck/presentation/deck-build-allowance";
-import {
+  chooseChampion,
   EMPTY_DRAFT,
   quantityKey,
+  quantityOf,
   zoneCounts,
   type DeckBuildDraft,
 } from "@/features/deck/presentation/deck-build-steps";
@@ -43,42 +41,32 @@ describe("deck build allowance", () => {
     expect(remainingForCard(draft, "mainDeck", evolutionary)).toBe(3);
   });
 
-  it("counts the chosen champion against the main deck, across printings", () => {
-    const draft = draftWith({ chosenChampion: survivor });
-
-    expect(lockedCopies(draft, "mainDeck", survivor)).toBe(1);
-    expect(remainingForCard(draft, "mainDeck", survivorAlt)).toBe(2);
-  });
-
-  it("seats the chosen champion in the main deck", () => {
-    const draft = draftWith({ chosenChampion: survivor });
+  it("seats the chosen champion in the main deck as an ordinary card", () => {
+    const draft = chooseChampion(EMPTY_DRAFT, survivor);
 
     expect(zoneCounts(draft).mainDeck).toBe(1);
-    expect(displayedCopies(draft, "mainDeck", survivor)).toBe(1);
-    expect(displayedCopies(draft, "mainDeck", survivorAlt)).toBe(0);
+    expect(quantityOf(draft, "mainDeck", survivor.riftboundId)).toBe(1);
+    expect(quantityOf(draft, "mainDeck", survivorAlt.riftboundId)).toBe(0);
   });
 
-  it("splits the champion's remaining two copies across its printings", () => {
-    const withChampion = draftWith({ chosenChampion: survivor });
-    // Nothing is in the main deck yet, so either printing may take the two that are left.
-    expect(remainingForCard(withChampion, "mainDeck", survivor)).toBe(2);
-    expect(remainingForCard(withChampion, "mainDeck", survivorAlt)).toBe(2);
+  it("keeps the copies already held when a card becomes the champion", () => {
+    const draft = chooseChampion(
+      draftWith({
+        zoneCards: {
+          [quantityKey("mainDeck", survivor.riftboundId)]: { card: survivor, quantity: 3 },
+        },
+      }),
+      survivor,
+    );
 
-    const withOneRegular = draftWith({
-      chosenChampion: survivor,
-      zoneCards: {
-        [quantityKey("mainDeck", survivor.riftboundId)]: { card: survivor, quantity: 1 },
-      },
-    });
-    expect(remainingForCard(withOneRegular, "mainDeck", survivorAlt)).toBe(1);
+    expect(quantityOf(draft, "mainDeck", survivor.riftboundId)).toBe(3);
+  });
 
-    const withTwoRegular = draftWith({
-      chosenChampion: survivor,
-      zoneCards: {
-        [quantityKey("mainDeck", survivor.riftboundId)]: { card: survivor, quantity: 2 },
-      },
-    });
-    expect(remainingForCard(withTwoRegular, "mainDeck", survivorAlt)).toBe(0);
+  it("counts the champion's seated copy against its other printings", () => {
+    const draft = chooseChampion(EMPTY_DRAFT, survivor);
+
+    expect(lockedCopies(draft, "mainDeck", survivorAlt)).toBe(1);
+    expect(remainingForCard(draft, "mainDeck", survivorAlt)).toBe(2);
   });
 
   it("counts the sideboard against the main deck", () => {

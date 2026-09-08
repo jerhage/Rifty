@@ -16,7 +16,6 @@ import { CardStepper } from "./card-stepper";
 
 function BuildCardTile({
   card,
-  displayedQuantity,
   maxQuantity,
   onChange,
   onOpenCard,
@@ -24,7 +23,6 @@ function BuildCardTile({
   width,
 }: {
   readonly card: Card;
-  readonly displayedQuantity: number;
   readonly maxQuantity: number | null;
   readonly onChange: (quantity: number) => void;
   readonly onOpenCard: (card: Card) => void;
@@ -35,7 +33,7 @@ function BuildCardTile({
   const domainColors = useDomainColors();
   const image = useImage(card.imageUrl, { maxHeight: 720, maxWidth: 512 });
   const accent = domainColors[card.domainIds[0] ?? "Colorless"];
-  const inDeck = displayedQuantity > 0;
+  const inDeck = quantity > 0;
 
   return (
     <View style={[styles.tile, width === null ? undefined : { flexBasis: width, width }]}>
@@ -64,7 +62,6 @@ function BuildCardTile({
 
         <View style={styles.stepper}>
           <CardStepper
-            displayedQuantity={displayedQuantity}
             maxQuantity={maxQuantity}
             onChange={onChange}
             quantity={quantity}

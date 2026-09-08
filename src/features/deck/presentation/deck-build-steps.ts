@@ -70,14 +70,6 @@ function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
   if (draft.legend) {
     entries.push({ section: "legend", cardRiftboundId: draft.legend.riftboundId, quantity: 1 });
   }
-  if (draft.chosenChampion) {
-    entries.push({
-      section: "chosenChampion",
-      cardRiftboundId: draft.chosenChampion.riftboundId,
-      quantity: 1,
-    });
-  }
-
   for (const [key, placed] of Object.entries(draft.zoneCards)) {
     if (placed.quantity <= 0) continue;
 
@@ -104,7 +96,7 @@ function draftFromDeck(deck: Deck, cards: readonly Card[]): DeckBuildDraft {
 
   const zoneCards: Record<string, DraftZoneCard> = {};
   for (const entry of deck.entries) {
-    if (entry.section === "legend" || entry.section === "chosenChampion") continue;
+    if (entry.section === "legend") continue;
 
     const card = byRiftboundId.get(entry.cardRiftboundId);
     if (!card) continue;
@@ -118,7 +110,10 @@ function draftFromDeck(deck: Deck, cards: readonly Card[]): DeckBuildDraft {
   return {
     name: deck.name,
     legend: cardFor("legend"),
-    chosenChampion: cardFor("chosenChampion"),
+    chosenChampion:
+      deck.chosenChampionRiftboundId === null
+        ? null
+        : (byRiftboundId.get(deck.chosenChampionRiftboundId) ?? null),
     zoneCards,
   };
 }
@@ -144,16 +139,25 @@ function sectionOf(key: string): DeckSection {
   return key.slice(0, key.indexOf(KEY_SEPARATOR)) as DeckSection;
 }
 
-/** The chosen champion starts in its own zone but occupies one of the main deck's forty. */
+/** The champion is a main deck card, so choosing one puts a copy there if none is held yet. */
+function chooseChampion(draft: DeckBuildDraft, champion: Card): DeckBuildDraft {
+  const key = quantityKey("mainDeck", champion.riftboundId);
+
+  return {
+    ...draft,
+    chosenChampion: champion,
+    zoneCards: {
+      ...draft.zoneCards,
+      [key]: { card: champion, quantity: Math.max(1, draft.zoneCards[key]?.quantity ?? 0) },
+    },
+  };
+}
+
 function zoneCounts(draft: DeckBuildDraft): Record<string, number> {
-  const counts = draftEntries(draft).reduce<Record<string, number>>((totals, entry) => {
+  return draftEntries(draft).reduce<Record<string, number>>((totals, entry) => {
     totals[entry.section] = (totals[entry.section] ?? 0) + entry.quantity;
     return totals;
   }, {});
-
-  if (draft.chosenChampion) counts.mainDeck = (counts.mainDeck ?? 0) + 1;
-
-  return counts;
 }
 
 /**
@@ -167,14 +171,6 @@ function copiesOfName(
   exclude?: { readonly section: DeckSection; readonly cardRiftboundId: string },
 ): number {
   let total = 0;
-
-  if (
-    draft.chosenChampion &&
-    cardIdentityName(draft.chosenChampion) === identityName &&
-    sections.includes("chosenChampion")
-  ) {
-    total += 1;
-  }
 
   for (const [key, placed] of Object.entries(draft.zoneCards)) {
     if (cardIdentityName(placed.card) !== identityName || placed.quantity <= 0) continue;
@@ -195,6 +191,7 @@ function copiesOfName(
 }
 
 export {
+  chooseChampion,
   copiesOfName,
   DECK_BUILD_STEPS,
   draftEntries,

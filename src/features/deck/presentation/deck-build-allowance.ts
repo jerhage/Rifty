@@ -5,7 +5,7 @@ import { copyAllowance, ZONE_RULES } from "@/features/deck/deck/deck-legality";
 
 import { copiesOfName, quantityOf, zoneCounts, type DeckBuildDraft } from "./deck-build-steps";
 
-const SHARED_SECTIONS: readonly DeckSection[] = ["chosenChampion", "mainDeck", "sideboard"];
+const SHARED_SECTIONS: readonly DeckSection[] = ["mainDeck", "sideboard"];
 
 /**
  * The rune deck is the one zone the builder will not let you overfill. The other three are worked
@@ -19,7 +19,7 @@ function sectionsSharingWith(section: DeckSection): readonly DeckSection[] {
 
 /**
  * Copies of this card already committed somewhere the player cannot change from this zone — the
- * champion zone copy, the other shared zone, or another printing of the same card.
+ * other shared zone, or another printing of the same card.
  */
 function lockedCopies(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
   return copiesOfName(draft, cardIdentityName(card), sectionsSharingWith(section), {
@@ -50,18 +50,4 @@ function remainingForCard(draft: DeckBuildDraft, section: DeckSection, card: Car
   return byCopies === null ? byCapacity : Math.min(byCopies, byCapacity);
 }
 
-/**
- * The chosen champion's own printing already sits in the main deck, so its row starts at one and
- * the stepper adds on top of that.
- */
-function championCopies(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
-  if (section !== "mainDeck") return 0;
-
-  return draft.chosenChampion?.riftboundId === card.riftboundId ? 1 : 0;
-}
-
-function displayedCopies(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
-  return quantityOf(draft, section, card.riftboundId) + championCopies(draft, section, card);
-}
-
-export { displayedCopies, lockedCopies, remainingForCard, zoneCapacity };
+export { lockedCopies, remainingForCard, zoneCapacity };

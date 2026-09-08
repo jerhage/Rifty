@@ -9,7 +9,7 @@ import type { Card } from "@/features/catalog/card/card";
 import type { DeckSection, DeckVerification } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 
-import { displayedCopies, remainingForCard } from "../../../deck-build-allowance";
+import { remainingForCard } from "../../../deck-build-allowance";
 import {
   placedCardTotal,
   placedCards,
@@ -176,7 +176,6 @@ function ZonesStep({
             renderItem={({ item }) => {
               const placement = {
                 card: item,
-                displayedQuantity: displayedCopies(draft, zone, item),
                 maxQuantity: remainingForCard(draft, zone, item),
                 onChange: (quantity: number) => onSetQuantity(zone, item, quantity),
                 onOpenCard,

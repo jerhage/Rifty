@@ -2,6 +2,7 @@ import type { Clock } from "@/application/ports/clock";
 
 import {
   parseDeck,
+  type CardRiftboundId,
   type Deck,
   type DeckEntry,
   type DeckId,
@@ -23,6 +24,7 @@ interface DeckDraft {
   readonly name: DeckName;
   readonly notes: string;
   readonly createdAt: string;
+  readonly chosenChampionRiftboundId: CardRiftboundId | null;
   readonly entries: readonly DeckEntry[];
 }
 

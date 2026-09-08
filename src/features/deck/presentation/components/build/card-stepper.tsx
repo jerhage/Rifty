@@ -7,13 +7,11 @@ import { useTheme } from "@/hooks/use-theme";
 type StepperSurface = "inline" | "overlay";
 
 function CardStepper({
-  displayedQuantity,
   maxQuantity,
   onChange,
   quantity,
   surface = "inline",
 }: {
-  readonly displayedQuantity: number;
   readonly maxQuantity: number | null;
   readonly onChange: (quantity: number) => void;
   readonly quantity: number;
@@ -36,13 +34,10 @@ function CardStepper({
         onPress={() => onChange(Math.max(0, quantity - 1))}
       />
       <ThemedText
-        style={[
-          styles.quantity,
-          { color: displayedQuantity > 0 ? theme.text : theme.textTertiary },
-        ]}
+        style={[styles.quantity, { color: quantity > 0 ? theme.text : theme.textTertiary }]}
         type="monoValue"
       >
-        {displayedQuantity}
+        {quantity}
       </ThemedText>
       <StepButton
         disabled={maxQuantity !== null && quantity >= maxQuantity}

@@ -14,6 +14,7 @@ import { saveDeck, type DeckDraft } from "@/features/deck/deck/use-cases/save-de
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 import {
+  chooseChampion,
   DECK_BUILD_STEPS,
   draftEntries,
   draftFromDeck,
@@ -129,11 +130,12 @@ function useDeckBuild(
     );
   }, []);
 
-  const pickChampion = useCallback((chosenChampion: Card) => {
-    setDraft((current) => ({
-      ...current,
-      chosenChampion: current.chosenChampion?.id === chosenChampion.id ? null : chosenChampion,
-    }));
+  const pickChampion = useCallback((champion: Card) => {
+    setDraft((current) =>
+      current.chosenChampion?.id === champion.id
+        ? { ...current, chosenChampion: null }
+        : chooseChampion(current, champion),
+    );
   }, []);
 
   const changeName = useCallback((name: string) => {
@@ -171,11 +173,12 @@ function useDeckBuild(
           notes: "",
           createdAt: "1970-01-01T00:00:00.000Z",
           updatedAt: "1970-01-01T00:00:00.000Z",
+          chosenChampionRiftboundId: draft.chosenChampion?.riftboundId ?? null,
           entries,
         },
         RIFTBOUND_STANDARD,
       ),
-    [draft.name, entries],
+    [draft.chosenChampion, draft.name, entries],
   );
 
   const save = useCallback(async () => {
@@ -187,7 +190,12 @@ function useDeckBuild(
 
     setIsSaving(true);
     const result = await saveDeck(
-      { ...deckIdentity(start, capabilities), name, entries },
+      {
+        ...deckIdentity(start, capabilities),
+        name,
+        chosenChampionRiftboundId: draft.chosenChampion?.riftboundId ?? null,
+        entries,
+      },
       capabilities,
     );
     const failure = match(result)
@@ -203,7 +211,7 @@ function useDeckBuild(
     setIsSaving(false);
     setError(failure);
     if (failure === null) onSaved();
-  }, [capabilities, draft.name, entries, onSaved, start]);
+  }, [capabilities, draft.chosenChampion, draft.name, entries, onSaved, start]);
 
   return {
     back,

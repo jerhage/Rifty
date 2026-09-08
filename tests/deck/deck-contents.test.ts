@@ -19,16 +19,23 @@ const mid = card("mid", "OGN", {
   classification: { typeId: "Spell", supertypeId: null, rarityId: "common" },
   tagIds: ["Freljord"],
 });
+const champion = card("champion", "OGN", {
+  name: "Volibear - Furious",
+  attributes: { energy: 2, might: 4, power: null },
+  tagIds: [],
+});
 const big = card("big", "OGN", {
   name: "Big Unit",
   attributes: { energy: 7, might: 8, power: null },
   tagIds: [],
 });
 
-const cards = [legend, cheap, mid, big];
+const cards = [legend, champion, cheap, mid, big];
 const built = deck("d1", {
+  chosenChampionRiftboundId: champion.riftboundId,
   entries: [
     { section: "legend", cardRiftboundId: legend.riftboundId, quantity: 1 },
+    { section: "mainDeck", cardRiftboundId: champion.riftboundId, quantity: 1 },
     { section: "mainDeck", cardRiftboundId: cheap.riftboundId, quantity: 3 },
     { section: "mainDeck", cardRiftboundId: mid.riftboundId, quantity: 2 },
     { section: "sideboard", cardRiftboundId: big.riftboundId, quantity: 1 },
@@ -39,7 +46,7 @@ describe("deck contents", () => {
   it("splits the main deck by card type and keeps other zones apart", () => {
     expect(deckGroups(built, cards).map((group) => [group.title, group.count])).toEqual([
       ["Legend", 1],
-      ["Units", 3],
+      ["Units", 4],
       ["Spells & Gear", 2],
       ["Sideboard", 1],
     ]);
@@ -49,13 +56,13 @@ describe("deck contents", () => {
     expect(deckGroups(built, [cheap]).map((group) => group.title)).toEqual(["Units"]);
   });
 
-  it("buckets the energy curve and leaves the legend out of it", () => {
+  it("curves the main deck, leaving other zones out", () => {
     expect(energyCurve(built, cards)).toEqual([
       { label: "0-1", count: 3 },
-      { label: "2", count: 0 },
+      { label: "2", count: 1 },
       { label: "3", count: 2 },
       { label: "4", count: 0 },
-      { label: "5+", count: 1 },
+      { label: "5+", count: 0 },
     ]);
   });
 

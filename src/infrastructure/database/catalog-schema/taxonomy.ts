@@ -1,5 +1,8 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { z } from "zod/v4";
+
+const tagKindSchema = z.enum(["character", "region", "trait"]);
 
 const cardTypes = sqliteTable("card_type", {
   id: text().primaryKey(),
@@ -25,6 +28,7 @@ const domains = sqliteTable("domain", {
 const tags = sqliteTable("tag", {
   id: text().primaryKey(),
   name: text().notNull().unique(),
+  kind: text().notNull().default("trait"),
 });
 
 const cardTypeSelectSchema = createSelectSchema(cardTypes);
@@ -72,6 +76,7 @@ export {
   rarityInsertSchema,
   raritySelectSchema,
   tagInsertSchema,
+  tagKindSchema,
   tagSelectSchema,
   tags,
 };

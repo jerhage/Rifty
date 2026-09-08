@@ -6,6 +6,7 @@ import { cardSets, marketplaceSchema } from "./sets";
 import { cardSupertypes, cardTypes, domains, rarities, tags } from "./taxonomy";
 
 const cardOrientationSchema = z.enum(["landscape", "portrait"]);
+const cardSpeedSchema = z.enum(["normal", "action", "reaction"]);
 
 /** Catalog tables persist individual card printings and their related data. */
 const catalogCards = sqliteTable(
@@ -30,13 +31,29 @@ const catalogCards = sqliteTable(
     isAlternateArt: integer("is_alternate_art", { mode: "boolean" }).notNull(),
     isOvernumbered: integer("is_overnumbered", { mode: "boolean" }).notNull(),
     isSignature: integer("is_signature", { mode: "boolean" }).notNull(),
+    poolCode: text("pool_code"),
+    championName: text("champion_name"),
+    isCanonical: integer("is_canonical", { mode: "boolean" }).notNull().default(true),
     sourceUpdatedAt: text("source_updated_at").notNull(),
   },
   (table) => [
     index("card_set_collector_number").on(table.setCode, table.collectorNumber),
     index("card_clean_name").on(table.cleanName),
     index("catalog_card_riftbound_id").on(table.riftboundId),
+    index("catalog_card_champion_name").on(table.championName),
+    index("catalog_card_pool_code").on(table.poolCode),
   ],
+);
+
+const cardSpeeds = sqliteTable(
+  "card_speed",
+  {
+    cardId: text("card_id")
+      .notNull()
+      .references(() => catalogCards.id),
+    speed: text().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.cardId, table.speed] })],
 );
 
 const cardMarketplaceReferences = sqliteTable(
@@ -148,6 +165,11 @@ const cardDomainSelectSchema = createSelectSchema(cardDomains);
 const cardDomainInsertSchema = createInsertSchema(cardDomains);
 const cardTagSelectSchema = createSelectSchema(cardTags);
 const cardTagInsertSchema = createInsertSchema(cardTags);
+const cardSpeedSelectSchema = createSelectSchema(cardSpeeds, { speed: cardSpeedSchema });
+const cardSpeedInsertSchema = createInsertSchema(cardSpeeds, {
+  cardId: (schema) => schema.trim().min(1),
+  speed: cardSpeedSchema,
+});
 
 export {
   cardClassificationInsertSchema,
@@ -163,6 +185,10 @@ export {
   cardMediaInsertSchema,
   cardMediaSelectSchema,
   cardOrientationSchema,
+  cardSpeedInsertSchema,
+  cardSpeedSchema,
+  cardSpeedSelectSchema,
+  cardSpeeds,
   cardTagInsertSchema,
   cardTagSelectSchema,
   cardTags,

@@ -2,18 +2,33 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { z } from "zod/v4";
-import { parseImageUrl } from "../src/shared/image-url";
 import { cardDomainSchema } from "../src/features/catalog/value-objects/card-domain";
 import { cardTypeSchema } from "../src/features/catalog/value-objects/card-type";
+import {
+  cardSpeeds,
+  championName,
+  keywordsWithMagnitude,
+  ownedKeywords,
+  printingIdentity,
+  withMagnitudeDefaults,
+} from "./card-derivation";
+import { imageFileNames, imageSourcesOf } from "./card-image-file";
+import type { SourcedCard } from "./card-image-file";
 
 import {
   cardClassificationInsertSchema,
   cardDomainInsertSchema,
+  cardImageSourceInsertSchema,
   cardMarketplaceReferenceInsertSchema,
   cardMediaInsertSchema,
+  cardSpeedInsertSchema,
   cardTagInsertSchema,
   catalogCardInsertSchema,
 } from "../src/infrastructure/database/catalog-schema/cards";
+import {
+  cardKeywordInsertSchema,
+  keywordInsertSchema,
+} from "../src/infrastructure/database/catalog-schema/keywords";
 import {
   cardSetInsertSchema,
   setMarketplaceReferenceInsertSchema,
@@ -28,11 +43,17 @@ import {
 import type {
   cardClassifications,
   cardDomains,
+  cardImageSources,
   cardMarketplaceReferences,
   cardMedia,
+  cardSpeeds as cardSpeedTable,
   cardTags,
   catalogCards,
 } from "../src/infrastructure/database/catalog-schema/cards";
+import type {
+  cardKeywords,
+  keywords,
+} from "../src/infrastructure/database/catalog-schema/keywords";
 import type {
   cardSets,
   setMarketplaceReferences,
@@ -46,10 +67,13 @@ import type {
 } from "../src/infrastructure/database/catalog-schema/taxonomy";
 
 const dataDirectory = process.env.CATALOG_DATA_DIRECTORY ?? "data";
+const apiDirectory = join(dataDirectory, "api");
 const outputPath =
   process.env.CATALOG_SEED_OUTPUT_PATH ?? "src/infrastructure/database/generated/catalog-seed.ts";
 const nullableString = z.string().nullish();
+const nullableInteger = z.number().int().nullish();
 const marketplaceId = z.union([z.string(), z.array(z.string())]).nullish();
+const orientationSchema = z.enum(["landscape", "portrait"]);
 const rawSetSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -85,7 +109,7 @@ const rawCardSchema = z.object({
     accessibility_text: nullableString,
   }),
   tags: z.array(z.string()),
-  orientation: z.enum(["landscape", "portrait"]),
+  orientation: orientationSchema,
   metadata: z.object({
     clean_name: nullableString,
     updated_on: z.string(),
@@ -94,19 +118,102 @@ const rawCardSchema = z.object({
     signature: z.boolean(),
   }),
 });
-const pageSchema = <Item extends z.ZodType>(item: Item) =>
-  z.object({
-    items: z.array(item),
-    total: z.number().int().nonnegative(),
-    page: z.number().int().positive(),
-    size: z.number().int().positive(),
-    pages: z.number().int().positive(),
-  });
+const apiCardSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  cardType: z.string(),
+  supertype: nullableString,
+  rarity: z.string(),
+  domain: z.array(cardDomainSchema),
+  tags: z.array(z.string()),
+  regions: z.array(z.string()),
+  champion: nullableString,
+  setCode: z.string(),
+  number: z.string(),
+  riftboundId: z.string(),
+  artist: nullableString,
+  imageUrl: z.string(),
+  imageSourceUrl: z.string().optional(),
+  thumbnailUrl: z.string().optional(),
+  cost: nullableInteger,
+  might: nullableInteger,
+  power: nullableInteger,
+  text: nullableString,
+  textRich: nullableString,
+  flavor: nullableString,
+  orientation: orientationSchema,
+  alternateArt: z.boolean(),
+  signature: z.boolean(),
+  raw: z.unknown().optional(),
+});
+const rawImageSchema = z.object({ media: z.object({ image_url: nullableString }) });
+const cardFileSchema = z.object({
+  setCode: z.string(),
+  fetchedAt: z.string(),
+  count: z.number().int().nonnegative(),
+  cards: z.array(apiCardSchema),
+});
+const setPageSchema = z.object({
+  items: z.array(rawSetSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  size: z.number().int().positive(),
+  pages: z.number().int().positive(),
+});
+const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Showcase", "Promo"];
+const KEYWORD_REMINDER = /\[([^\]]+)\]\s*_?\(([^)]*)\)/g;
+const LEADING_DIGITS = /(\d+)/;
 type RawCard = z.output<typeof rawCardSchema>;
 type RawSet = z.output<typeof rawSetSchema>;
-type Page<Item> = { items: Item[]; total: number; page: number; size: number; pages: number };
+type ApiCard = z.output<typeof apiCardSchema>;
+type SetPage = z.output<typeof setPageSchema>;
+type FetchedCard = { card: ApiCard; fetchedAt: string };
 type Taxonomy = typeof cardTypes.$inferInsert;
 type Marketplace = "cardmarket" | "tcgplayer";
+type MarketplaceReference = { marketplace: Marketplace; externalId: string };
+type NormalizedCard = {
+  id: string;
+  riftboundId: string;
+  setCode: string;
+  collectorNumber: number;
+  name: string;
+  cleanName: string;
+  energy: number | null;
+  might: number | null;
+  power: number | null;
+  rulesTextRich: string;
+  rulesTextPlain: string;
+  flavourText: string | null;
+  orientation: z.output<typeof orientationSchema>;
+  isAlternateArt: boolean;
+  isOvernumbered: boolean;
+  isSignature: boolean;
+  poolCode: string | null;
+  championName: string | null;
+  sourceUpdatedAt: string;
+  typeId: string;
+  supertypeId: string | null;
+  rarityId: string;
+  domainIds: readonly string[];
+  tagIds: readonly string[];
+  regions: readonly string[];
+  imageSources: readonly string[];
+  artist: string | null;
+  accessibilityText: string | null;
+  marketplaceReferences: readonly MarketplaceReference[];
+};
+type CardCore = Omit<
+  NormalizedCard,
+  | "championName"
+  | "collectorNumber"
+  | "id"
+  | "imageSources"
+  | "isOvernumbered"
+  | "isSignature"
+  | "poolCode"
+  | "regions"
+  | "riftboundId"
+>;
 type Seed = {
   cardSets: (typeof cardSets.$inferInsert)[];
   setMarketplaceReferences: (typeof setMarketplaceReferences.$inferInsert)[];
@@ -115,40 +222,47 @@ type Seed = {
   rarities: (typeof rarities.$inferInsert)[];
   domains: (typeof domains.$inferInsert)[];
   tags: (typeof tags.$inferInsert)[];
+  keywords: (typeof keywords.$inferInsert)[];
   catalogCards: (typeof catalogCards.$inferInsert)[];
   cardMarketplaceReferences: (typeof cardMarketplaceReferences.$inferInsert)[];
   cardMedia: (typeof cardMedia.$inferInsert)[];
+  cardImageSources: (typeof cardImageSources.$inferInsert)[];
   cardClassifications: (typeof cardClassifications.$inferInsert)[];
   cardDomains: (typeof cardDomains.$inferInsert)[];
   cardTags: (typeof cardTags.$inferInsert)[];
+  cardKeywords: (typeof cardKeywords.$inferInsert)[];
+  cardSpeeds: (typeof cardSpeedTable.$inferInsert)[];
 };
 
-const files = await readdir(dataDirectory);
-const cardPages = await Promise.all(
-  files
-    .filter((file) => /^cards-page-\d+\.json$/.test(file))
-    .sort(naturalCompare)
-    .map(readCardPage),
+const dataFiles = await readdir(dataDirectory);
+const apiFiles = await readdir(apiDirectory);
+const fetchedCards = dedupeById(
+  (
+    await Promise.all(
+      apiFiles
+        .filter((file) => /^cards-[^.]+\.json$/.test(file))
+        .sort(naturalCompare)
+        .map(readCardFile),
+    )
+  ).flat(),
 );
 const setPages = await Promise.all(
-  files
+  dataFiles
     .filter((file) => /^sets-page-\d+\.json$/.test(file))
     .sort(naturalCompare)
     .map(readSetPage),
 );
-if (cardPages.length === 0 || setPages.length === 0)
-  throw new Error("Expected card and set pages in data/.");
-assertComplete(cardPages, "card");
+if (fetchedCards.length === 0 || setPages.length === 0)
+  throw new Error("Expected card files in data/api/ and set pages in data/.");
 assertComplete(setPages, "set");
-const cards = latestCardsByRiftboundId(cardPages.flatMap((page) => page.items));
 const sets = setPages.flatMap((page) => page.items);
-assertUnique(cards, (card) => card.riftbound_id, "Riftbound card id");
 assertUnique(sets, (cardSet) => cardSet.set_id, "set code");
 const setCodes = new Set(sets.map((cardSet) => cardSet.set_id));
-for (const card of cards)
-  if (!setCodes.has(card.set.set_id))
-    throw new Error(`Card ${card.id} refers to missing set ${card.set.set_id}.`);
-const seed = buildSeed(cards, sets);
+const imageFiles = imageFileNames(fetchedCards.map((entry) => imageCardOf(entry.card)));
+const everyCard = fetchedCards.map(normalize);
+const regionNames = new Set(everyCard.flatMap((card) => card.regions));
+const cards = everyCard.filter((card) => setCodes.has(card.setCode));
+const seed = buildSeed(cards, sets, regionNames, imageFiles);
 assertValid(seed);
 const version = createHash("sha256").update(JSON.stringify(seed)).digest("hex");
 await mkdir(dirname(outputPath), { recursive: true });
@@ -157,23 +271,35 @@ await writeFile(
   `// Generated by scripts/generate-catalog-seed.ts. Do not edit manually.\nexport const CATALOG_SEED_VERSION = ${JSON.stringify(version)} as const;\nexport const catalogSeed = ${JSON.stringify(seed, null, 2)} as const;\n`,
 );
 console.log(
-  `Generated ${outputPath} with ${seed.catalogCards.length} cards (${version.slice(0, 12)}).`,
+  `Generated ${outputPath} with ${seed.catalogCards.length} cards, ${seed.keywords.length} keywords (${version.slice(0, 12)}).`,
 );
-
-async function readCardPage(file: string): Promise<Page<RawCard>> {
-  return pageSchema(rawCardSchema).parse(
-    JSON.parse(await readFile(join(dataDirectory, file), "utf8")),
+if (everyCard.length !== cards.length) {
+  console.warn(
+    `Skipped ${everyCard.length - cards.length} cards belonging to sets missing from data/sets-page-*.json.`,
   );
 }
-async function readSetPage(file: string): Promise<Page<RawSet>> {
-  return pageSchema(rawSetSchema).parse(
-    JSON.parse(await readFile(join(dataDirectory, file), "utf8")),
+if (seed.cardMedia.length !== seed.catalogCards.length) {
+  console.warn(
+    `${seed.catalogCards.length - seed.cardMedia.length} cards carry no image source and have no media row.`,
   );
+}
+
+async function readCardFile(file: string): Promise<FetchedCard[]> {
+  const contents = cardFileSchema.parse(
+    JSON.parse(await readFile(join(apiDirectory, file), "utf8")),
+  );
+  if (contents.cards.length !== contents.count)
+    throw new Error(`Incomplete card file ${file}: ${contents.cards.length}/${contents.count}.`);
+
+  return contents.cards.map((card) => ({ card, fetchedAt: contents.fetchedAt }));
+}
+async function readSetPage(file: string): Promise<SetPage> {
+  return setPageSchema.parse(JSON.parse(await readFile(join(dataDirectory, file), "utf8")));
 }
 function naturalCompare(left: string, right: string): number {
   return left.localeCompare(right, undefined, { numeric: true });
 }
-function assertComplete<Item>(pages: readonly Page<Item>[], label: string): void {
+function assertComplete(pages: readonly SetPage[], label: string): void {
   if (pages.reduce((count, page) => count + page.items.length, 0) !== pages.at(0)?.total)
     throw new Error(`Incomplete ${label} pages.`);
 }
@@ -191,26 +317,117 @@ function assertUnique<Item>(
   }
 }
 
-function latestCardsByRiftboundId(cards: readonly RawCard[]): RawCard[] {
-  const cardsByRiftboundId = new Map<string, RawCard>();
+function dedupeById(fetched: readonly FetchedCard[]): FetchedCard[] {
+  const byId = new Map<string, FetchedCard>();
 
-  for (const card of cards) {
-    const existing = cardsByRiftboundId.get(card.riftbound_id);
-    // The provider emits stale and current records for some single-set printings. A Riftbound ID
-    // identifies that printing, so retain its newest source record; source ID breaks timestamp ties.
-    if (
-      existing === undefined ||
-      card.metadata.updated_on > existing.metadata.updated_on ||
-      (card.metadata.updated_on === existing.metadata.updated_on && card.id > existing.id)
-    ) {
-      cardsByRiftboundId.set(card.riftbound_id, card);
-    }
-  }
+  for (const entry of fetched) if (!byId.has(entry.card.id)) byId.set(entry.card.id, entry);
 
-  return [...cardsByRiftboundId.values()];
+  return [...byId.values()];
 }
 
-function buildSeed(cards: readonly RawCard[], sets: readonly RawSet[]): Seed {
+function imageCardOf(card: ApiCard): SourcedCard {
+  const raw = rawImageSchema.safeParse(card.raw);
+
+  return {
+    id: card.id,
+    riftboundId: card.riftboundId,
+    imageUrl: card.imageUrl,
+    imageSourceUrl: card.imageSourceUrl,
+    thumbnailUrl: card.thumbnailUrl,
+    raw: { media: { image_url: raw.success ? (raw.data.media.image_url ?? null) : null } },
+  };
+}
+
+function normalize({ card, fetchedAt }: FetchedCard): NormalizedCard {
+  const raw = rawCardSchema.safeParse(card.raw);
+  const identity = printingIdentity(card.riftboundId);
+
+  return {
+    ...(raw.success ? fromRaw(raw.data) : fromFlat(card, fetchedAt)),
+    id: card.id,
+    riftboundId: card.riftboundId,
+    isOvernumbered: identity.isOvernumbered,
+    isSignature: identity.isSignature,
+    poolCode: identity.poolCode,
+    championName: championName({
+      name: card.name,
+      champion: card.champion ?? null,
+      supertypeId: card.supertype ?? null,
+      typeId: card.cardType,
+    }),
+    regions: card.regions,
+    imageSources: imageSourcesOf(imageCardOf(card)),
+    collectorNumber: raw.success
+      ? raw.data.collector_number
+      : (collectorNumber(card.number) ?? identity.collectorNumber ?? 0),
+  };
+}
+
+function fromRaw(card: RawCard): CardCore {
+  return {
+    setCode: card.set.set_id,
+    name: card.name,
+    cleanName: card.metadata.clean_name ?? normalizedName(card.name),
+    energy: card.attributes.energy,
+    might: card.attributes.might,
+    power: card.attributes.power,
+    rulesTextRich: card.text.rich,
+    rulesTextPlain: card.text.plain,
+    flavourText: card.text.flavour ?? null,
+    orientation: card.orientation,
+    isAlternateArt: card.metadata.alternate_art,
+    sourceUpdatedAt: card.metadata.updated_on,
+    typeId: card.classification.type,
+    supertypeId: card.classification.supertype ?? null,
+    rarityId: card.classification.rarity,
+    domainIds: card.classification.domain,
+    tagIds: card.tags,
+    artist: card.media.artist ?? null,
+    accessibilityText: card.media.accessibility_text ?? null,
+    marketplaceReferences: marketplaces<MarketplaceReference>(card, (marketplace, externalId) => ({
+      marketplace,
+      externalId,
+    })),
+  };
+}
+
+function fromFlat(card: ApiCard, fetchedAt: string): CardCore {
+  return {
+    setCode: card.setCode,
+    name: card.name,
+    cleanName: normalizedName(card.name),
+    energy: card.cost ?? null,
+    might: card.might ?? null,
+    power: card.power ?? null,
+    rulesTextRich: card.textRich ?? card.text ?? "",
+    rulesTextPlain: card.text ?? "",
+    flavourText: card.flavor ?? null,
+    orientation: card.orientation,
+    isAlternateArt: card.alternateArt,
+    sourceUpdatedAt: fetchedAt,
+    typeId: card.cardType,
+    supertypeId: card.supertype ?? null,
+    rarityId: card.rarity,
+    domainIds: card.domain,
+    tagIds: card.tags,
+    artist: card.artist ?? null,
+    accessibilityText: null,
+    marketplaceReferences: [],
+  };
+}
+
+function collectorNumber(printed: string): number | null {
+  const digits = LEADING_DIGITS.exec(printed);
+
+  return digits ? Number(digits[1]) : null;
+}
+
+function buildSeed(
+  cards: readonly NormalizedCard[],
+  sets: readonly RawSet[],
+  regionNames: ReadonlySet<string>,
+  imageFiles: ReadonlyMap<string, string>,
+): Seed {
   const cardSets = sets
     .map((value) => ({
       code: value.set_id,
@@ -220,6 +437,16 @@ function buildSeed(cards: readonly RawCard[], sets: readonly RawSet[]): Seed {
       publishedOn: value.published_on,
     }))
     .sort((left, right) => left.code.localeCompare(right.code));
+  const ordered = [...cards].sort((left, right) => left.id.localeCompare(right.id));
+  const magnitudeIds = keywordsWithMagnitude(ordered.map((card) => card.rulesTextPlain));
+  const remindersByCard = new Map(
+    ordered.map((card) => [card.id, remindersIn(card.rulesTextPlain)] as const),
+  );
+  const keywordNames = new Map<string, string>();
+  const canonicalIds = canonicalCardIds(ordered);
+  const championNames = new Set(
+    ordered.map((card) => card.championName).filter((name) => name !== null),
+  );
   const types = new Map<string, Taxonomy>();
   const supertypes = new Map<string, Taxonomy>();
   const rarities = new Map<string, Taxonomy>();
@@ -228,61 +455,84 @@ function buildSeed(cards: readonly RawCard[], sets: readonly RawSet[]): Seed {
   const catalogCards: Seed["catalogCards"] = [];
   const cardMarketplaceReferences: Seed["cardMarketplaceReferences"] = [];
   const cardMedia: Seed["cardMedia"] = [];
+  const cardImageSources: Seed["cardImageSources"] = [];
   const cardClassifications: Seed["cardClassifications"] = [];
   const cardDomains: Seed["cardDomains"] = [];
   const cardTags: Seed["cardTags"] = [];
-  for (const card of [...cards].sort((left, right) => left.id.localeCompare(right.id))) {
-    add(types, card.classification.type);
-    add(rarities, card.classification.rarity);
-    if (card.classification.supertype) add(supertypes, card.classification.supertype);
+  const cardKeywords: Seed["cardKeywords"] = [];
+  const cardSpeedRows: Seed["cardSpeeds"] = [];
+  for (const card of ordered) {
+    for (const keyword of ownedKeywords(card.rulesTextPlain))
+      keywordNames.set(keyword.id, keyword.name);
+  }
+  const reminderTexts = chosenReminders(keywordNames, remindersByCard);
+  for (const card of ordered) {
+    add(types, card.typeId);
+    add(rarities, card.rarityId);
+    if (card.supertypeId) add(supertypes, card.supertypeId);
     catalogCards.push({
       id: card.id,
-      riftboundId: card.riftbound_id,
-      setCode: card.set.set_id,
-      collectorNumber: card.collector_number,
+      riftboundId: card.riftboundId,
+      setCode: card.setCode,
+      collectorNumber: card.collectorNumber,
       name: card.name,
-      cleanName: card.metadata.clean_name ?? normalizedName(card.name),
-      energy: card.attributes.energy,
-      might: card.attributes.might,
-      power: card.attributes.power,
-      rulesTextRich: card.text.rich,
-      rulesTextPlain: card.text.plain,
-      flavourText: card.text.flavour ?? null,
+      cleanName: card.cleanName,
+      energy: card.energy,
+      might: card.might,
+      power: card.power,
+      rulesTextRich: card.rulesTextRich,
+      rulesTextPlain: card.rulesTextPlain,
+      flavourText: card.flavourText,
       orientation: card.orientation,
-      isAlternateArt: card.metadata.alternate_art,
-      isOvernumbered: card.metadata.overnumbered,
-      isSignature: card.metadata.signature,
-      sourceUpdatedAt: card.metadata.updated_on,
+      isAlternateArt: card.isAlternateArt,
+      isOvernumbered: card.isOvernumbered,
+      isSignature: card.isSignature,
+      poolCode: card.poolCode,
+      championName: card.championName,
+      isCanonical: canonicalIds.has(card.id),
+      sourceUpdatedAt: card.sourceUpdatedAt,
     });
     cardClassifications.push({
       cardId: card.id,
-      typeId: card.classification.type,
-      supertypeId: card.classification.supertype ?? null,
-      rarityId: card.classification.rarity,
+      typeId: card.typeId,
+      supertypeId: card.supertypeId,
+      rarityId: card.rarityId,
     });
-    const image = parseImageUrl(card.media.image_url);
-    cardMedia.push({
-      cardId: card.id,
-      imageAssetId: image.assetId,
-      imageWidth: image.dimensions.width,
-      imageHeight: image.dimensions.height,
-      artist: card.media.artist ?? null,
-      accessibilityText: card.media.accessibility_text ?? null,
-    });
+    const imageFile = imageFiles.get(card.id);
+    if (imageFile !== undefined) {
+      cardMedia.push({
+        cardId: card.id,
+        imageFile,
+        artist: card.artist,
+        accessibilityText: card.accessibilityText,
+      });
+    }
+    for (const [priority, url] of card.imageSources.entries())
+      cardImageSources.push({ cardId: card.id, url, priority });
     cardMarketplaceReferences.push(
-      ...marketplaces<Seed["cardMarketplaceReferences"][number]>(
-        card,
-        (marketplace, externalId) => ({ cardId: card.id, marketplace, externalId }),
-      ),
+      ...card.marketplaceReferences.map((reference) => ({ cardId: card.id, ...reference })),
     );
-    for (const domainId of card.classification.domain) {
+    for (const domainId of card.domainIds) {
       add(domains, domainId);
       cardDomains.push({ cardId: card.id, domainId });
     }
-    for (const tagId of card.tags) {
+    for (const tagId of card.tagIds) {
       add(tags, tagId);
       cardTags.push({ cardId: card.id, tagId });
     }
+    const reminders = remindersByCard.get(card.id) ?? new Map<string, string>();
+    for (const keyword of withMagnitudeDefaults(ownedKeywords(card.rulesTextPlain), magnitudeIds)) {
+      const reminder = reminders.get(keyword.id) ?? null;
+      cardKeywords.push({
+        cardId: card.id,
+        keywordId: keyword.id,
+        value: keyword.value,
+        cost: keyword.cost,
+        reminder: reminder === reminderTexts.get(keyword.id) ? null : reminder,
+      });
+    }
+    for (const speed of cardSpeeds(card.rulesTextPlain))
+      cardSpeedRows.push({ cardId: card.id, speed });
   }
   return {
     cardSets,
@@ -297,9 +547,17 @@ function buildSeed(cards: readonly RawCard[], sets: readonly RawSet[]): Seed {
     ),
     cardTypes: taxonomyRows(types),
     cardSupertypes: taxonomyRows(supertypes),
-    rarities: taxonomyRows(rarities).map((rarity, sortOrder) => ({ ...rarity, sortOrder })),
+    rarities: taxonomyRows(rarities)
+      .sort((left, right) => rarityRank(left.id) - rarityRank(right.id))
+      .map((rarity, sortOrder) => ({ ...rarity, sortOrder })),
     domains: taxonomyRows(domains),
-    tags: taxonomyRows(tags),
+    tags: taxonomyRows(tags).map((tag) => ({
+      ...tag,
+      kind: tagKind(tag.id, regionNames, championNames),
+    })),
+    keywords: [...keywordNames]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([id, name]) => ({ id, name, reminderText: reminderTexts.get(id) ?? null })),
     catalogCards,
     cardMarketplaceReferences: uniqueBy(cardMarketplaceReferences, (row) => [
       row.cardId,
@@ -307,11 +565,89 @@ function buildSeed(cards: readonly RawCard[], sets: readonly RawSet[]): Seed {
       row.externalId,
     ]),
     cardMedia,
+    cardImageSources: uniqueBy(cardImageSources, (row) => [row.cardId, row.url]),
     cardClassifications,
     cardDomains: uniqueBy(cardDomains, (row) => [row.cardId, row.domainId]),
     cardTags: uniqueBy(cardTags, (row) => [row.cardId, row.tagId]),
+    cardKeywords,
+    cardSpeeds: cardSpeedRows,
   };
 }
+
+function remindersIn(text: string): Map<string, string> {
+  const reminders = new Map<string, string>();
+
+  for (const match of text.matchAll(KEYWORD_REMINDER)) {
+    const [keyword] = ownedKeywords(`[${match[1] ?? ""}]`);
+    const reminder = (match[2] ?? "").trim();
+    if (keyword === undefined || reminder.length === 0 || reminders.has(keyword.id)) continue;
+    reminders.set(keyword.id, reminder);
+  }
+
+  return reminders;
+}
+
+function chosenReminders(
+  keywordNames: ReadonlyMap<string, string>,
+  remindersByCard: ReadonlyMap<string, ReadonlyMap<string, string>>,
+): Map<string, string> {
+  const counts = new Map<string, Map<string, number>>();
+  for (const reminders of remindersByCard.values()) {
+    for (const [keywordId, reminder] of reminders) {
+      if (!keywordNames.has(keywordId)) continue;
+      const variants = counts.get(keywordId) ?? new Map<string, number>();
+      variants.set(reminder, (variants.get(reminder) ?? 0) + 1);
+      counts.set(keywordId, variants);
+    }
+  }
+
+  const chosen = new Map<string, string>();
+  for (const [keywordId, variants] of counts) {
+    const [best] = [...variants].sort(
+      ([leftReminder, leftCount], [rightReminder, rightCount]) =>
+        rightCount - leftCount || leftReminder.localeCompare(rightReminder),
+    );
+    if (best) chosen.set(keywordId, best[0]);
+  }
+
+  return chosen;
+}
+
+function canonicalCardIds(cards: readonly NormalizedCard[]): ReadonlySet<string> {
+  const chosen = new Map<string, NormalizedCard>();
+
+  for (const card of cards) {
+    const held = chosen.get(card.riftboundId);
+    if (held === undefined || outranks(card, held)) chosen.set(card.riftboundId, card);
+  }
+
+  return new Set([...chosen.values()].map((card) => card.id));
+}
+
+function outranks(card: NormalizedCard, held: NormalizedCard): boolean {
+  if (card.isAlternateArt !== held.isAlternateArt) return !card.isAlternateArt;
+  if (card.isSignature !== held.isSignature) return !card.isSignature;
+
+  return card.id < held.id;
+}
+
+function tagKind(
+  tagId: string,
+  regionNames: ReadonlySet<string>,
+  championNames: ReadonlySet<string>,
+): "character" | "region" | "trait" {
+  if (regionNames.has(tagId)) return "region";
+  if (championNames.has(tagId)) return "character";
+
+  return "trait";
+}
+
+function rarityRank(id: string): number {
+  const index = RARITY_ORDER.indexOf(id);
+
+  return index === -1 ? RARITY_ORDER.length : index;
+}
+
 function marketplaces<Row>(
   value: {
     cardmarket_id?: string | string[] | null | undefined;
@@ -356,10 +692,14 @@ function assertValid(seed: Seed): void {
   seed.rarities.forEach((row) => rarityInsertSchema.parse(row));
   seed.domains.forEach((row) => domainInsertSchema.parse(row));
   seed.tags.forEach((row) => tagInsertSchema.parse(row));
+  seed.keywords.forEach((row) => keywordInsertSchema.parse(row));
   seed.catalogCards.forEach((row) => catalogCardInsertSchema.parse(row));
   seed.cardMarketplaceReferences.forEach((row) => cardMarketplaceReferenceInsertSchema.parse(row));
   seed.cardMedia.forEach((row) => cardMediaInsertSchema.parse(row));
+  seed.cardImageSources.forEach((row) => cardImageSourceInsertSchema.parse(row));
   seed.cardClassifications.forEach((row) => cardClassificationInsertSchema.parse(row));
   seed.cardDomains.forEach((row) => cardDomainInsertSchema.parse(row));
   seed.cardTags.forEach((row) => cardTagInsertSchema.parse(row));
+  seed.cardKeywords.forEach((row) => cardKeywordInsertSchema.parse(row));
+  seed.cardSpeeds.forEach((row) => cardSpeedInsertSchema.parse(row));
 }

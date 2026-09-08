@@ -1,4 +1,5 @@
-import { FlatList, StyleSheet, TextInput, View } from "react-native";
+import { useState } from "react";
+import { FlatList, StyleSheet, TextInput, View, type LayoutChangeEvent } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
@@ -13,10 +14,13 @@ import {
   searchHint,
   zoneRuleSummary,
   type ZonePoolFilters,
+  type ZonePoolLayout,
 } from "../../../deck-zone-pool";
 import { BuildCardRow } from "../build-card-row";
+import { BuildCardTile } from "../build-card-tile";
 import { BuildFooter } from "../build-footer";
 import { BuildPickChip } from "../build-pick-chip";
+import { PoolLayoutToggle } from "../pool-layout-toggle";
 import { PoolSearchRow } from "../pool-search-row";
 import { ZoneSelector } from "../zone-selector";
 
@@ -58,6 +62,14 @@ function ZonesStep({
   zonePool,
 }: ZonesStepProps) {
   const theme = useTheme();
+  const [layout, setLayout] = useState<ZonePoolLayout>("list");
+  const [poolWidth, setPoolWidth] = useState<number | null>(null);
+  const tileWidth = poolWidth === null ? null : (poolWidth - Spacing.three * 2 - Spacing.three) / 2;
+
+  const measurePool = ({ nativeEvent }: LayoutChangeEvent) => {
+    const width = nativeEvent.layout.width;
+    setPoolWidth((current) => (current === width ? current : width));
+  };
 
   return (
     <>
@@ -93,9 +105,12 @@ function ZonesStep({
           <ZoneSelector counts={zoneCounts(draft)} onSelect={onSelectZone} selected={zone} />
         </View>
 
-        <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.rule}>
-          {zoneRuleSummary(zone)}
-        </ThemedText>
+        <View style={styles.ruleRow}>
+          <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.rule}>
+            {zoneRuleSummary(zone)}
+          </ThemedText>
+          <PoolLayoutToggle layout={layout} onSelect={setLayout} />
+        </View>
 
         <PoolSearchRow
           filterCount={activePoolFilterCount(poolFilters)}
@@ -107,26 +122,36 @@ function ZonesStep({
       </View>
 
       <FlatList
-        contentContainerStyle={styles.pool}
+        columnWrapperStyle={layout === "grid" ? styles.tileRow : undefined}
+        contentContainerStyle={[styles.pool, layout === "list" && styles.poolRows]}
         data={zonePool}
+        key={layout}
         keyExtractor={(card) => card.id}
-        onEndReached={onLoadMorePool}
-        onEndReachedThreshold={0.5}
         ListEmptyComponent={
           <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
             No cards available for this zone yet.
           </ThemedText>
         }
-        renderItem={({ item }) => (
-          <BuildCardRow
-            card={item}
-            displayedQuantity={displayedCopies(draft, zone, item)}
-            maxQuantity={remainingForCard(draft, zone, item)}
-            onChange={(quantity) => onSetQuantity(zone, item, quantity)}
-            onOpenCard={onOpenCard}
-            quantity={quantityOf(draft, zone, item.riftboundId)}
-          />
-        )}
+        numColumns={layout === "grid" ? 2 : 1}
+        onEndReached={onLoadMorePool}
+        onEndReachedThreshold={0.5}
+        onLayout={measurePool}
+        renderItem={({ item }) => {
+          const placement = {
+            card: item,
+            displayedQuantity: displayedCopies(draft, zone, item),
+            maxQuantity: remainingForCard(draft, zone, item),
+            onChange: (quantity: number) => onSetQuantity(zone, item, quantity),
+            onOpenCard,
+            quantity: quantityOf(draft, zone, item.riftboundId),
+          };
+
+          return layout === "grid" ? (
+            <BuildCardTile {...placement} width={tileWidth} />
+          ) : (
+            <BuildCardRow {...placement} />
+          );
+        }}
         style={styles.poolList}
       />
 
@@ -175,17 +200,31 @@ const styles = StyleSheet.create({
   zones: {
     marginTop: Spacing.three - 5,
   },
-  rule: {
+  ruleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: Spacing.two + 1,
     marginTop: Spacing.two + 1,
+  },
+  rule: {
+    flex: 1,
+    minWidth: 0,
   },
   poolList: {
     flex: 1,
   },
   pool: {
-    gap: Spacing.two - 1,
     paddingBottom: Spacing.four,
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.three - 4,
+  },
+  poolRows: {
+    gap: Spacing.two - 1,
+  },
+  tileRow: {
+    gap: Spacing.three,
+    justifyContent: "center",
+    marginBottom: Spacing.three,
   },
   empty: {
     paddingVertical: Spacing.six,

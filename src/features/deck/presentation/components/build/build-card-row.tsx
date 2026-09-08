@@ -7,6 +7,9 @@ import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
+import { poolCardSubtitle } from "../../deck-zone-pool";
+import { CardStepper } from "./card-stepper";
+
 function BuildCardRow({
   card,
   displayedQuantity,
@@ -57,69 +60,19 @@ function BuildCardRow({
             {card.name}
           </ThemedText>
           <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.sub}>
-            {subtitle(card)}
+            {poolCardSubtitle(card)}
           </ThemedText>
         </View>
       </Pressable>
 
-      <View style={[styles.stepper, { backgroundColor: theme.fill, borderColor: theme.border }]}>
-        <StepButton
-          disabled={quantity === 0}
-          label="−"
-          onPress={() => onChange(Math.max(0, quantity - 1))}
-        />
-        <ThemedText
-          style={[styles.quantity, { color: inDeck ? theme.text : theme.textTertiary }]}
-          type="monoValue"
-        >
-          {displayedQuantity}
-        </ThemedText>
-        <StepButton
-          disabled={maxQuantity !== null && quantity >= maxQuantity}
-          label="+"
-          onPress={() => onChange(quantity + 1)}
-        />
-      </View>
+      <CardStepper
+        displayedQuantity={displayedQuantity}
+        maxQuantity={maxQuantity}
+        onChange={onChange}
+        quantity={quantity}
+      />
     </View>
   );
-}
-
-function StepButton({
-  disabled,
-  label,
-  onPress,
-}: {
-  readonly disabled: boolean;
-  readonly label: string;
-  readonly onPress: () => void;
-}) {
-  const theme = useTheme();
-
-  return (
-    <Pressable
-      accessibilityLabel={label === "+" ? "Add a copy" : "Remove a copy"}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [styles.step, pressed && styles.pressed]}
-    >
-      <ThemedText
-        style={[styles.stepLabel, { color: disabled ? theme.border : theme.textSecondary }]}
-      >
-        {label}
-      </ThemedText>
-    </Pressable>
-  );
-}
-
-function subtitle(card: Card): string {
-  const energy = card.attributes.energy === null ? null : `${card.attributes.energy}E`;
-  const might = card.attributes.might === null ? null : `${card.attributes.might}M`;
-
-  return [card.classification.typeId, energy, might]
-    .filter((part): part is string => part !== null)
-    .join(" · ");
 }
 
 export { BuildCardRow };
@@ -162,28 +115,6 @@ const styles = StyleSheet.create({
   },
   sub: {
     marginTop: Spacing.one,
-  },
-  stepper: {
-    alignItems: "center",
-    borderRadius: Radius.medium,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    padding: 2,
-  },
-  step: {
-    alignItems: "center",
-    borderRadius: Radius.medium,
-    height: 30,
-    justifyContent: "center",
-    width: 30,
-  },
-  stepLabel: {
-    fontSize: 16,
-  },
-  quantity: {
-    fontSize: 13,
-    textAlign: "center",
-    width: 20,
   },
   pressed: {
     opacity: 0.5,

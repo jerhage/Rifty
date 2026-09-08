@@ -1,8 +1,8 @@
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
+import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { FilterGlyph } from "@/components/ui/icons/filter-glyph";
-import { SearchGlyph } from "@/components/ui/icons/search-glyph";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -24,31 +24,7 @@ function PoolSearchRow({
 
   return (
     <View style={styles.row}>
-      <View style={[styles.field, { backgroundColor: theme.fill, borderColor: theme.border }]}>
-        <SearchGlyph color={theme.textSecondary} />
-        <TextInput
-          accessibilityLabel={hint}
-          autoCapitalize="none"
-          autoCorrect={false}
-          onChangeText={onChangeQuery}
-          placeholder={hint}
-          placeholderTextColor={theme.textTertiary}
-          style={[styles.input, { color: theme.text }]}
-          value={query}
-        />
-        {query.length > 0 ? (
-          <Pressable
-            accessibilityLabel="Clear search"
-            accessibilityRole="button"
-            onPress={() => onChangeQuery("")}
-            style={({ pressed }) => pressed && styles.pressed}
-          >
-            <ThemedText themeColor="textSecondary" type="mono">
-              Clr
-            </ThemedText>
-          </Pressable>
-        ) : null}
-      </View>
+      <SearchField hint={hint} onChangeQuery={onChangeQuery} query={query} style={styles.field} />
 
       <Pressable
         accessibilityLabel={isFiltered ? `Filters, ${filterCount} active` : "Filters"}
@@ -75,28 +51,14 @@ function PoolSearchRow({
 export { PoolSearchRow };
 
 const styles = StyleSheet.create({
+  field: {
+    flex: 1,
+  },
   row: {
     alignItems: "center",
     flexDirection: "row",
     gap: Spacing.two - 1,
     marginTop: Spacing.two + 1,
-  },
-  field: {
-    alignItems: "center",
-    borderRadius: Radius.medium,
-    borderWidth: StyleSheet.hairlineWidth,
-    flex: 1,
-    flexDirection: "row",
-    gap: Spacing.two + 1,
-    height: 38,
-    minWidth: 0,
-    paddingHorizontal: Spacing.three - 5,
-  },
-  input: {
-    flex: 1,
-    fontSize: 13.5,
-    minWidth: 0,
-    padding: 0,
   },
   filter: {
     alignItems: "center",

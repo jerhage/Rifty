@@ -42,7 +42,10 @@ const cardListCriteriaSchema = z.object({
   typeIds: z.array(cardTypeSchema).optional(),
   supertypeIds: z.array(taxonomyIdSchema).optional(),
   rarityIds: z.array(taxonomyIdSchema).optional(),
+  /** Use for an 'AND' query (e.g. show me cards that have both calm AND mind domains)*/
   domainIds: z.array(cardDomainSchema).optional(),
+  /** Use for an 'OR' query (e.g. show me cards that have either calm OR mind domains) */
+  anyDomainIds: z.array(cardDomainSchema).optional(),
   tagIds: z.array(taxonomyIdSchema).optional(),
   energy: cardNumericFilterSchema.optional(),
   might: cardNumericFilterSchema.optional(),

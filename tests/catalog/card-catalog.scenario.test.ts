@@ -148,6 +148,27 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
+  it("matches any of the given domains, unlike the all-of domain filter", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const calm = card("calm", unleashed.code, { collectorNumber: 1, domainIds: ["Calm"] });
+    const mind = card("mind", unleashed.code, { collectorNumber: 2, domainIds: ["Mind"] });
+    const both = card("both", unleashed.code, { collectorNumber: 3, domainIds: ["Calm", "Mind"] });
+    const fury = card("fury", unleashed.code, { collectorNumber: 4, domainIds: ["Fury"] });
+    for (const seeded of [calm, mind, both, fury]) store.seedCard(seeded);
+
+    await expect(
+      store.cards.getSummaryPage({ anyDomainIds: ["Calm", "Mind"] }),
+    ).resolves.toMatchObject({
+      items: [{ id: "calm" }, { id: "mind" }, { id: "both" }],
+    });
+    await expect(
+      store.cards.getSummaryPage({ domainIds: ["Calm", "Mind"] }),
+    ).resolves.toMatchObject({ items: [{ id: "both" }] });
+    store.close();
+  });
+
   it("sorts card summaries by text and numeric attributes in SQL", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");

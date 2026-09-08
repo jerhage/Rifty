@@ -177,6 +177,17 @@ class SqliteCardRepository implements CardRepository {
         ),
       );
     }
+    if (criteria.anyDomainIds?.length) {
+      conditions.push(
+        inArray(
+          catalogCards.id,
+          this.db
+            .select({ cardId: cardDomains.cardId })
+            .from(cardDomains)
+            .where(inArray(cardDomains.domainId, [...new Set(criteria.anyDomainIds)])),
+        ),
+      );
+    }
     if (criteria.tagIds?.length) {
       const tagIds = [...new Set(criteria.tagIds)];
       conditions.push(

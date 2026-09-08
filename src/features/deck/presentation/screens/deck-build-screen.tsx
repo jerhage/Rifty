@@ -25,6 +25,7 @@ interface DeckBuildScreenProps {
   readonly cardLister: CardLister;
   readonly draft: DeckBuildDraft;
   readonly error: string | null;
+  readonly isEditing: boolean;
   readonly isSaving: boolean;
   readonly legendDomainIds: readonly CardDomain[];
   readonly isPoolFilterOpen: boolean;
@@ -70,6 +71,7 @@ function DeckBuildScreen({
   cardLister,
   draft,
   error,
+  isEditing,
   isSaving,
   isPoolFilterOpen,
   legendDomainIds,
@@ -106,7 +108,7 @@ function DeckBuildScreen({
 }: DeckBuildScreenProps) {
   return (
     <ThemedView style={styles.screen}>
-      <BuildProgressHeader onBack={onBack} stepIndex={stepIndex} />
+      <BuildProgressHeader isEditing={isEditing} onBack={onBack} stepIndex={stepIndex} />
       {match(step.id)
         .with("legend", () => (
           <LegendPoolData

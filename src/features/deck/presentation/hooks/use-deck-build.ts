@@ -46,7 +46,7 @@ const ZONES_STEP_INDEX = DECK_BUILD_STEPS.findIndex((step) => step.id === "zones
 function useDeckBuild(
   start: DeckBuildStart,
   capabilities: DeckBuildCapabilities,
-  onSaved: () => void,
+  { onExit, onSaved }: { readonly onExit: () => void; readonly onSaved: () => void },
 ) {
   const [stepIndex, setStepIndex] = useState(() => (start.type === "edit" ? ZONES_STEP_INDEX : 0));
   const [draft, setDraft] = useState<DeckBuildDraft>(() => initialDraft(start));
@@ -64,7 +64,15 @@ function useDeckBuild(
 
   const step = DECK_BUILD_STEPS[stepIndex] ?? DECK_BUILD_STEPS[0];
 
-  const back = useCallback(() => setStepIndex((index) => Math.max(0, index - 1)), []);
+  /** Backing out of the first step leaves the builder, since there is no step behind it. */
+  const back = useCallback(() => {
+    if (stepIndex === 0) {
+      onExit();
+      return;
+    }
+
+    setStepIndex(stepIndex - 1);
+  }, [onExit, stepIndex]);
 
   /** The zones step opens on the legend's own domains rather than the whole catalog. */
   const goToStep = useCallback(
@@ -208,6 +216,7 @@ function useDeckBuild(
     draft,
     error,
     goToStep,
+    isEditing: start.type === "edit",
     isPoolFilterOpen,
     isSaving,
     next,

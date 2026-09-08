@@ -8,9 +8,11 @@ import { useTheme } from "@/hooks/use-theme";
 import { DECK_BUILD_STEPS } from "../../deck-build-steps";
 
 function BuildProgressHeader({
+  isEditing,
   onBack,
   stepIndex,
 }: {
+  readonly isEditing: boolean;
   readonly onBack: () => void;
   readonly stepIndex: number;
 }) {
@@ -34,7 +36,7 @@ function BuildProgressHeader({
           <ThemedText type="small">←</ThemedText>
         </Pressable>
         <ThemedText themeColor="textSecondary" type="mono">
-          {`New deck · step ${stepIndex + 1} of ${DECK_BUILD_STEPS.length} · ${step?.label ?? ""}`}
+          {`${isEditing ? "Edit deck" : "New deck"} · step ${stepIndex + 1} of ${DECK_BUILD_STEPS.length} · ${step?.label ?? ""}`}
         </ThemedText>
       </View>
       <View style={styles.track}>

@@ -13,6 +13,7 @@ function DeckBuilder({
   capabilities,
   cardCounter,
   cardLister,
+  onExit,
   onOpenCard,
   onSaved,
   start,
@@ -20,11 +21,12 @@ function DeckBuilder({
   readonly capabilities: DeckBuildCapabilities;
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
+  readonly onExit: () => void;
   readonly onOpenCard: (card: Card) => void;
   readonly onSaved: () => void;
   readonly start: DeckBuildStart;
 }) {
-  const build = useDeckBuild(start, capabilities, onSaved);
+  const build = useDeckBuild(start, capabilities, { onExit, onSaved });
 
   return (
     <DeckBuildScreen
@@ -32,6 +34,7 @@ function DeckBuilder({
       cardLister={cardLister}
       draft={build.draft}
       error={build.error}
+      isEditing={build.isEditing}
       isPoolFilterOpen={build.isPoolFilterOpen}
       isSaving={build.isSaving}
       legendDomainIds={build.legendDomainIds}

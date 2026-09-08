@@ -32,6 +32,7 @@ function DeckBuildRoute() {
         capabilities={capabilities}
         cardCounter={catalog.cardRepository}
         cardLister={catalog.cardRepository}
+        onExit={goBack}
         onOpenCard={openCard}
         onSaved={goBack}
         start={{ type: "new" }}
@@ -50,6 +51,7 @@ function DeckBuildRoute() {
           capabilities={capabilities}
           cardCounter={catalog.cardRepository}
           cardLister={catalog.cardRepository}
+          onExit={goBack}
           onOpenCard={openCard}
           onSaved={goBack}
           start={{ type: "edit", cards, deck }}

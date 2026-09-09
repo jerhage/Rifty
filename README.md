@@ -1,9 +1,9 @@
 # Riftbound Companion App
 
-This application is a companion app for the Riftbound TCG. With it, Riftbound enjoyers can browser cards with insightful analytics and create casual and/or tournament ready decks.
+This application is a companion app for the Riftbound TCG. With it, Riftbound enjoyers can browse cards with insightful analytics and create casual and/or tournament ready decks.
 Deck building is meant to be a playground for players but comes with tournament legality built in as a validation check but not a blocker.
 
-Decks also offer analytical insights based on the card composition. (Tournament / meta analytics may come at a later date.)
+Decks also offer analytical insights based on the card composition. I'm still enriching my data to provide better insights such as hand rolled 'role' designations to classify decks. (Tournament / meta analytics may come at a later date.)
 
 This app started as just a fun way for me to explore my ideas on scalable frontend architecture. However, as a Riftbound player myself, I feel like there is potential to add value to other players on the deck building journeys.
 
@@ -26,7 +26,7 @@ Another planned feature is multiple language support to make providing translati
   </tr>
 </table>
 
-# For developers or those who are curious
+# Application Architecture For Those Who Are Curious
 
 This application uses a ports & adapters architecutre that separates the concerns of the domain from the implementation of said concerns. Everything the domain cares about lives
 in the features directory. This ranges from defining the domain models, business logic, UI, and interfaces for dependencies that application uses.
@@ -41,3 +41,5 @@ I also have some crude scripts for processing raw data and transforming into see
 card speed (normal / action / reaction) from the raw data I already have (will require parsing the card text since the data I have doesn't treat this as a first class citizen).
 
 All images are just being hosted on my machine over LAN using python's http server and pointing it to my local dir.
+
+As for analytics, everything is being pulled from the local sqlite db. This works OK for now, but querying can be a bit awkward. I'm considering keeping the sqlite db more as an application DB and then creating parquet files to leverage a columnar db querying workflow. Is it necessary? No. But would it be fun? I think so.

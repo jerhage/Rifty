@@ -37,6 +37,7 @@ function BuildCardTile({
   const image = useImage(card.imageUrl, {
     maxHeight: 720,
     maxWidth: 512,
+    // TODO: send this to Sentry once error reporting is wired up.
     onError: () => undefined,
   });
   const accent = domainColors[card.domainIds[0] ?? "Colorless"];

@@ -17,6 +17,10 @@ const champion = card("champion", "OGN", {
   name: "Volibear - Furious (Alternate Art)",
   attributes: { energy: 2, might: 4, power: null },
 });
+const championPrint = card("champion-print", "OGN", {
+  name: "Volibear - Furious",
+  attributes: { energy: 2, might: 4, power: null },
+});
 const staple = card("staple", "OGN", {
   name: "Staple Unit",
   attributes: { energy: 1, might: 1, power: 2 },
@@ -37,6 +41,13 @@ const library: readonly CardCopy[] = [
   { card: staple, quantity: 3 },
   { card: pair, quantity: 2 },
   { card: single, quantity: 1 },
+];
+
+const splitPrintings: readonly CardCopy[] = [
+  { card: champion, quantity: 2 },
+  { card: championPrint, quantity: 1 },
+  { card: staple, quantity: 3 },
+  { card: pair, quantity: 3 },
 ];
 
 function identity<T>(items: readonly T[]): readonly T[] {
@@ -101,6 +112,42 @@ describe("draw odds", () => {
 
     expect(drawOdds(library, null).pinned).toBeNull();
     expect(drawOdds(without, champion).pinned).toBeNull();
+  });
+
+  it("sums two printings of one card into a single copy count", () => {
+    const odds = drawOdds(splitPrintings, null);
+
+    expect(odds.poolSize).toBe(9);
+    expect(odds.copyOdds.map((entry) => entry.copies)).toEqual([3]);
+  });
+
+  it("keeps two cards with different identities in their own copy counts", () => {
+    const mixed: readonly CardCopy[] = [
+      { card: staple, quantity: 2 },
+      { card: pair, quantity: 1 },
+    ];
+
+    expect(drawOdds(mixed, null).copyOdds.map((entry) => entry.copies)).toEqual([2, 1]);
+  });
+
+  it("counts every printing of the pinned card as copies of one card", () => {
+    const odds = drawOdds(splitPrintings, champion).pinned;
+
+    expect(odds?.name).toBe("Volibear - Furious");
+    expect(odds?.copies).toBe(3);
+    expect(odds?.opening).toBeCloseTo(0.880952, 6);
+    expect(odds?.byTurnThree).toBeCloseTo(0.988095, 6);
+    expect(drawOdds(splitPrintings, championPrint).pinned?.copies).toBe(3);
+  });
+
+  it("has no pinned row when the pool holds no printing of the pinned card", () => {
+    const without: readonly CardCopy[] = [
+      { card: staple, quantity: 3 },
+      { card: pair, quantity: 3 },
+    ];
+
+    expect(drawOdds(without, champion).pinned).toBeNull();
+    expect(drawOdds(without, championPrint).pinned).toBeNull();
   });
 
   it("gives an empty library no buckets rather than odds against nothing", () => {

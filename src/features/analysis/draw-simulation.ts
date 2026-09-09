@@ -1,6 +1,5 @@
 import type { CardCopy } from "@/features/analysis/card-copy";
 import type { Card } from "@/features/catalog/card/card";
-import { cardIdentityName } from "@/features/catalog/card/card-identity";
 
 const OPENING_HAND_SIZE = 4;
 const TURN_THREE_CARDS_SEEN = 6;
@@ -51,38 +50,49 @@ function copyCount(copies: readonly CardCopy[]): number {
   return copies.reduce((total, entry) => total + entry.quantity, 0);
 }
 
+function copiesByIdentity(copies: readonly CardCopy[]): ReadonlyMap<string, number> {
+  const held = new Map<string, number>();
+
+  for (const entry of copies) {
+    const identity = entry.card.identityName;
+
+    held.set(identity, (held.get(identity) ?? 0) + entry.quantity);
+  }
+
+  return held;
+}
+
 function pinnedOdds(
-  copies: readonly CardCopy[],
+  held: ReadonlyMap<string, number>,
   pinned: Card | null,
   poolSize: number,
 ): PinnedOdds | null {
   if (pinned === null) return null;
 
-  const entry = copies.find((candidate) => candidate.card.riftboundId === pinned.riftboundId);
-  if (!entry) return null;
+  const quantity = held.get(pinned.identityName) ?? 0;
+  if (quantity <= 0) return null;
 
   return {
-    name: cardIdentityName(entry.card),
-    copies: entry.quantity,
-    opening: atLeastOneChance(poolSize, entry.quantity, OPENING_HAND_SIZE),
-    byTurnThree: atLeastOneChance(poolSize, entry.quantity, TURN_THREE_CARDS_SEEN),
+    name: pinned.identityName,
+    copies: quantity,
+    opening: atLeastOneChance(poolSize, quantity, OPENING_HAND_SIZE),
+    byTurnThree: atLeastOneChance(poolSize, quantity, TURN_THREE_CARDS_SEEN),
   };
 }
 
 function drawOdds(copies: readonly CardCopy[], pinned: Card | null): DrawOdds {
   const poolSize = copyCount(copies);
-  const counts = [...new Set(copies.map((entry) => entry.quantity))].sort(
-    (left, right) => right - left,
-  );
+  const held = copiesByIdentity(copies);
+  const counts = [...new Set(held.values())].sort((left, right) => right - left);
 
   return {
     poolSize,
-    copyOdds: counts.map((held) => ({
-      copies: held,
-      opening: atLeastOneChance(poolSize, held, OPENING_HAND_SIZE),
-      byTurnThree: atLeastOneChance(poolSize, held, TURN_THREE_CARDS_SEEN),
+    copyOdds: counts.map((count) => ({
+      copies: count,
+      opening: atLeastOneChance(poolSize, count, OPENING_HAND_SIZE),
+      byTurnThree: atLeastOneChance(poolSize, count, TURN_THREE_CARDS_SEEN),
     })),
-    pinned: pinnedOdds(copies, pinned, poolSize),
+    pinned: pinnedOdds(held, pinned, poolSize),
   };
 }
 

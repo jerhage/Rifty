@@ -7,7 +7,7 @@ import {
   totalPower,
 } from "@/features/analysis/card-metrics";
 
-import { card, carriedKeyword, grantedKeyword } from "../catalog/fixtures";
+import { card, carriedKeyword, controllerKeyword, grantedKeyword, tokenKeyword } from "../catalog/fixtures";
 
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",
@@ -110,6 +110,20 @@ describe("card metrics", () => {
 
     expect(mix.keywords.map((entry) => entry.id)).toEqual(["tank"]);
     expect(mix.carrying).toBe(1);
+  });
+
+  it("counts keywords that act on the controller, such as Add", () => {
+    const ramp = card("ramp", "OGN", { keywords: [controllerKeyword("add", "Add")] });
+    const mix = keywordMix([{ card: ramp, quantity: 2 }]);
+
+    expect(mix.keywords.map((entry) => entry.id)).toEqual(["add"]);
+    expect(mix.carrying).toBe(2);
+  });
+
+  it("leaves out a keyword carried by a token the card creates", () => {
+    const summoner = card("summoner", "OGN", { keywords: [tokenKeyword("assault", "Assault", 4)] });
+
+    expect(keywordMix([{ card: summoner, quantity: 1 }])).toEqual({ carrying: 0, keywords: [] });
   });
 
   it("counts no keyword when it is handed no copies", () => {

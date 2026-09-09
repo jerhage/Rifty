@@ -11,6 +11,14 @@ function grantedKeyword(id: string, name: string, value: number | null = null): 
   return { id, name, value, targets: [{ kind: "unit", isToken: false, allegiance: "friendly" }] };
 }
 
+function controllerKeyword(id: string, name: string, value: number | null = null): CardKeyword {
+  return { id, name, value, targets: [{ kind: "player", isToken: false, allegiance: "own" }] };
+}
+
+function tokenKeyword(id: string, name: string, value: number | null = null): CardKeyword {
+  return { id, name, value, targets: [{ kind: "unit", isToken: true, allegiance: "own" }] };
+}
+
 function cardSet(code: string, publishedOn: string, name = code): CardSet {
   return {
     code,
@@ -83,4 +91,4 @@ function card(
   };
 }
 
-export { card, cardSet, carriedKeyword, grantedKeyword };
+export { card, cardSet, carriedKeyword, controllerKeyword, grantedKeyword, tokenKeyword };

@@ -11,10 +11,10 @@ import type { Deck, DeckVerification } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 
 import { DeckCardRow } from "../components/detail/deck-card-row";
-import { EnergyCurve } from "../components/detail/energy-curve";
+import { AttributeCurve } from "../components/detail/attribute-curve";
 import { KeywordTally } from "../components/detail/keyword-tally";
 import { SpeedMix } from "../components/detail/speed-mix";
-import { deckCards, deckGroups, energyCurve, keywordMix, speedMix } from "../deck-contents";
+import { abilityCardCount, deckGroups, energyCurve, keywordMix, speedMix } from "../deck-contents";
 import { deckCountLabel, editedLabel } from "../deck-summary-format";
 
 interface DeckDetailScreenProps {
@@ -37,10 +37,7 @@ function DeckDetailScreen({
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const groups = deckGroups(deck, cards);
-  const mainDeckCards = deckCards(deck, cards, ["mainDeck"]).reduce(
-    (total, held) => total + held.quantity,
-    0,
-  );
+  const abilityCards = abilityCardCount(deck, cards);
 
   return (
     <ThemedView style={styles.screen}>
@@ -79,9 +76,9 @@ function DeckDetailScreen({
         ) : null}
 
         <View style={styles.panels}>
-          <EnergyCurve buckets={energyCurve(deck, cards)} />
-          <SpeedMix cardCount={mainDeckCards} speeds={speedMix(deck, cards)} />
-          <KeywordTally cardCount={mainDeckCards} mix={keywordMix(deck, cards)} />
+          <AttributeCurve buckets={energyCurve(deck, cards)} title="Energy curve" />
+          <SpeedMix cardCount={abilityCards} speeds={speedMix(deck, cards)} />
+          <KeywordTally cardCount={abilityCards} mix={keywordMix(deck, cards)} />
         </View>
 
         {groups.map((group) => (

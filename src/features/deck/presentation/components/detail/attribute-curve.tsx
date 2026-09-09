@@ -4,10 +4,16 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-function EnergyCurve({
+import type { CurveBucket } from "../../deck-contents";
+
+function AttributeCurve({
   buckets,
+  note,
+  title,
 }: {
-  readonly buckets: readonly { label: string; count: number }[];
+  readonly buckets: readonly CurveBucket[];
+  readonly note?: string;
+  readonly title: string;
 }) {
   const theme = useTheme();
   const highest = Math.max(1, ...buckets.map((bucket) => bucket.count));
@@ -19,9 +25,16 @@ function EnergyCurve({
         { backgroundColor: theme.backgroundElement, borderColor: theme.border },
       ]}
     >
-      <ThemedText themeColor="textTertiary" type="mono">
-        Energy curve
-      </ThemedText>
+      <View style={styles.header}>
+        <ThemedText themeColor="textTertiary" type="mono">
+          {title}
+        </ThemedText>
+        {note === undefined ? null : (
+          <ThemedText themeColor="textTertiary" type="mono">
+            {note}
+          </ThemedText>
+        )}
+      </View>
       <View style={styles.bars}>
         {buckets.map((bucket) => (
           <View key={bucket.label} style={styles.column}>
@@ -49,7 +62,7 @@ function EnergyCurve({
   );
 }
 
-export { EnergyCurve };
+export { AttributeCurve };
 
 const styles = StyleSheet.create({
   panel: {
@@ -57,6 +70,11 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     gap: Spacing.three - 4,
     padding: Spacing.three - 2,
+  },
+  header: {
+    alignItems: "baseline",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   bars: {
     alignItems: "flex-end",

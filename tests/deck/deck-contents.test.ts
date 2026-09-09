@@ -2,7 +2,9 @@ import {
   deckGroups,
   energyCurve,
   keywordMix,
+  mightCurve,
   speedMix,
+  totalPower,
 } from "@/features/deck/presentation/deck-contents";
 
 import { card } from "../catalog/fixtures";
@@ -10,13 +12,15 @@ import { deck } from "./fixtures";
 
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",
+  speeds: ["reaction"],
+  keywords: [{ id: "vision", name: "Vision", value: null }],
   attributes: { energy: null, might: null, power: null },
   classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
 });
 const cheap = card("cheap", "OGN", {
   name: "Cheap Unit",
   keywords: [{ id: "shield", name: "Shield", value: 2 }],
-  attributes: { energy: 1, might: 1, power: null },
+  attributes: { energy: 1, might: 1, power: 1 },
   tagIds: ["Volibear", "Freljord"],
 });
 const mid = card("mid", "OGN", {
@@ -78,20 +82,38 @@ describe("deck contents", () => {
     ]);
   });
 
+  it("curves might over the main deck and totals its power", () => {
+    expect(mightCurve(built, cards)).toEqual([
+      { label: "0-1", count: 3 },
+      { label: "2", count: 0 },
+      { label: "3", count: 0 },
+      { label: "4", count: 1 },
+      { label: "5", count: 0 },
+      { label: "6+", count: 0 },
+    ]);
+    expect(totalPower(built, cards)).toBe(3);
+  });
+
+  it("counts the legend alongside the main deck, since it is in play from the start", () => {
+    expect(speedMix(built, cards).find((entry) => entry.speed === "reaction")?.count).toBe(3);
+    expect(keywordMix(built, cards).keywords.map((keyword) => keyword.id)).toContain("vision");
+  });
+
   it("counts a card at every speed it can be played, so shares can pass the deck size", () => {
     expect(speedMix(built, cards)).toEqual([
-      { speed: "normal", count: 4, share: 4 / 6 },
-      { speed: "action", count: 2, share: 2 / 6 },
-      { speed: "reaction", count: 2, share: 2 / 6 },
+      { speed: "normal", count: 4, share: 4 / 7 },
+      { speed: "action", count: 2, share: 2 / 7 },
+      { speed: "reaction", count: 3, share: 3 / 7 },
     ]);
   });
 
   it("tallies keywords by copies held, most common first, and sums their values", () => {
     expect(keywordMix(built, cards)).toEqual({
-      carrying: 5,
+      carrying: 6,
       keywords: [
         { id: "shield", name: "Shield", count: 3, totalValue: 6 },
         { id: "tank", name: "Tank", count: 2, totalValue: null },
+        { id: "vision", name: "Vision", count: 1, totalValue: null },
       ],
     });
   });

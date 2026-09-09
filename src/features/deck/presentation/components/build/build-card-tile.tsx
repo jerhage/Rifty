@@ -1,7 +1,8 @@
 import { useImage } from "expo-image";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { DomainBar } from "@/components/ui/atoms/domain-bar";
+import { Skeleton } from "@/components/ui/atoms/skeleton";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
@@ -56,9 +57,7 @@ function BuildCardTile({
         {image ? (
           <CardArt image={image} isLandscape={card.orientation === "landscape"} width={width} />
         ) : (
-          <View style={styles.placeholder}>
-            <ActivityIndicator />
-          </View>
+          <Skeleton style={StyleSheet.absoluteFill} />
         )}
         <DomainBar domainIds={card.domainIds} />
 
@@ -97,11 +96,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
     width: "100%",
-  },
-  placeholder: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
   },
   stepper: {
     bottom: Spacing.two,

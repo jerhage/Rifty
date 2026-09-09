@@ -1,7 +1,7 @@
-import { Image } from "expo-image";
 import { StyleSheet, View } from "react-native";
 import { match } from "ts-pattern";
 
+import { CardImage } from "@/components/ui/atoms/card-image";
 import { Radius } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
 import { useTheme } from "@/hooks/use-theme";
@@ -21,14 +21,7 @@ function CardHero({ card }: { readonly card: Card }) {
         { aspectRatio, backgroundColor: theme.backgroundElement, borderColor: theme.border },
       ]}
     >
-      <Image
-        accessible
-        accessibilityLabel={`${card.name} card image`}
-        contentFit="contain"
-        source={card.imageUrl}
-        style={styles.image}
-        transition={150}
-      />
+      <CardImage contentFit="contain" source={card.imageUrl} style={styles.image} />
     </View>
   );
 }

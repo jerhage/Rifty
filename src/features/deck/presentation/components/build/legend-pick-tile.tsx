@@ -1,6 +1,6 @@
-import { Image } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
 
+import { CardImage } from "@/components/ui/atoms/card-image";
 import { DomainBar } from "@/components/ui/atoms/domain-bar";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
@@ -40,7 +40,7 @@ function LegendPickTile({
       ]}
     >
       <View style={[styles.art, { backgroundColor: theme.background }]}>
-        <Image contentFit="contain" source={card.imageUrl} style={styles.image} transition={150} />
+        <CardImage contentFit="contain" source={card.imageUrl} style={styles.image} />
         {selected ? (
           <View style={[styles.check, { backgroundColor: accent }]}>
             <ThemedText style={[styles.checkMark, { color: theme.onAccent }]} type="mono">

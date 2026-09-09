@@ -1,6 +1,6 @@
-import { Image } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
 
+import { CardImage } from "@/components/ui/atoms/card-image";
 import { DomainBar } from "@/components/ui/atoms/domain-bar";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
@@ -40,7 +40,7 @@ function ChampionPickRow({
       ]}
     >
       <View style={[styles.thumb, { backgroundColor: theme.background }]}>
-        <Image contentFit="contain" source={card.imageUrl} style={styles.image} transition={150} />
+        <CardImage contentFit="contain" source={card.imageUrl} style={styles.image} />
         <DomainBar domainIds={card.domainIds} height={2} />
       </View>
 

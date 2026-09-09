@@ -1,7 +1,8 @@
 import { useImage } from "expo-image";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { Skeleton } from "@/components/ui/atoms/skeleton";
 import { Radius, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/catalog/card/card-summary";
 import { useTheme } from "@/hooks/use-theme";
@@ -42,9 +43,7 @@ function CardGridItem({
         {image ? (
           <CardArt image={image} isLandscape={card.orientation === "landscape"} width={width} />
         ) : (
-          <View style={styles.placeholder}>
-            <ActivityIndicator />
-          </View>
+          <Skeleton style={StyleSheet.absoluteFill} />
         )}
         <DomainBar domainIds={card.domainIds} />
       </View>
@@ -69,11 +68,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
     width: "100%",
-  },
-  placeholder: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
   },
   name: {
     fontWeight: 500,

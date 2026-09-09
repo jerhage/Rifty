@@ -14,13 +14,15 @@ const SEARCH_DEBOUNCE_MS = 300;
 /** The catalog opens alphabetically; browsing a card list by name is the common case. */
 const DEFAULT_CRITERIA: CatalogQueryCriteria = { sort: sortForId("name") };
 
+type CardSummaryBrowser = CardSummaryLister & CardCounter;
+
 /** Which face of the catalog bottom sheet is showing, if any. */
 type CatalogSheetState =
   | { readonly type: "hidden" }
   | { readonly type: "filter" }
   | { readonly type: "sort" };
 
-function useCatalogQuery(cardSummaryLister: CardSummaryLister, cardCounter: CardCounter) {
+function useCatalogQuery(cards: CardSummaryBrowser) {
   const [criteria, setCriteria] = useState<CatalogQueryCriteria>(DEFAULT_CRITERIA);
   const [draftCriteria, setDraftCriteria] = useState<CatalogQueryCriteria>(DEFAULT_CRITERIA);
   const [sheet, setSheet] = useState<CatalogSheetState>({ type: "hidden" });
@@ -29,7 +31,7 @@ function useCatalogQuery(cardSummaryLister: CardSummaryLister, cardCounter: Card
   const lister = useMemo<CardSummaryLister>(
     () => ({
       getSummaryPage: (pagination, options) =>
-        cardSummaryLister.getSummaryPage(
+        cards.getSummaryPage(
           {
             ...criteria,
             ...pagination,
@@ -38,14 +40,14 @@ function useCatalogQuery(cardSummaryLister: CardSummaryLister, cardCounter: Card
           options,
         ),
     }),
-    [cardSummaryLister, criteria, debouncedName],
+    [cards, criteria, debouncedName],
   );
   const counter = useMemo<CardCounter>(
     () => ({
       count: (_criteria, options) =>
-        cardCounter.count({ ...criteria, search: searchCriteriaFor(debouncedName) }, options),
+        cards.count({ ...criteria, search: searchCriteriaFor(debouncedName) }, options),
     }),
-    [cardCounter, criteria, debouncedName],
+    [cards, criteria, debouncedName],
   );
 
   const openFilters = useCallback(() => {
@@ -143,4 +145,5 @@ function searchCriteriaFor(name: string) {
 }
 
 export { useCatalogQuery };
+export type { CardSummaryBrowser };
 export type { CatalogSheetState };

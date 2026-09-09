@@ -10,7 +10,7 @@ import { CardNameSearchScreen } from "@/features/catalog/presentation/screens/ca
 function HomeScreen() {
   const { catalog } = useAppDependencies();
   const router = useRouter();
-  const catalogQuery = useCatalogQuery(catalog.cardRepository, catalog.cardRepository);
+  const catalogQuery = useCatalogQuery(catalog.cardRepository);
 
   return (
     <>

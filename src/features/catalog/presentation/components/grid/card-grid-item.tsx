@@ -21,7 +21,11 @@ function CardGridItem({
   readonly width: number | null;
 }) {
   const theme = useTheme();
-  const image = useImage(card.imageUrl, { maxHeight: 720, maxWidth: 512 });
+  const image = useImage(card.imageUrl, {
+    maxHeight: 720,
+    maxWidth: 512,
+    onError: () => undefined,
+  });
 
   return (
     <Pressable

@@ -34,7 +34,11 @@ function BuildCardTile({
 }) {
   const theme = useTheme();
   const domainColors = useDomainColors();
-  const image = useImage(card.imageUrl, { maxHeight: 720, maxWidth: 512 });
+  const image = useImage(card.imageUrl, {
+    maxHeight: 720,
+    maxWidth: 512,
+    onError: () => undefined,
+  });
   const accent = domainColors[card.domainIds[0] ?? "Colorless"];
   const inDeck = quantity > 0;
 

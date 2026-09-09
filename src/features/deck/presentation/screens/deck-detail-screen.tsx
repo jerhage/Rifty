@@ -12,7 +12,8 @@ import { useTheme } from "@/hooks/use-theme";
 
 import { DeckCardRow } from "../components/detail/deck-card-row";
 import { EnergyCurve } from "../components/detail/energy-curve";
-import { deckGroups, energyCurve } from "../deck-contents";
+import { SpeedMix } from "../components/detail/speed-mix";
+import { deckCards, deckGroups, energyCurve, speedMix } from "../deck-contents";
 import { deckCountLabel, editedLabel } from "../deck-summary-format";
 
 interface DeckDetailScreenProps {
@@ -35,6 +36,10 @@ function DeckDetailScreen({
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const groups = deckGroups(deck, cards);
+  const mainDeckCards = deckCards(deck, cards, ["mainDeck"]).reduce(
+    (total, held) => total + held.quantity,
+    0,
+  );
 
   return (
     <ThemedView style={styles.screen}>
@@ -74,6 +79,7 @@ function DeckDetailScreen({
 
         <View style={styles.panels}>
           <EnergyCurve buckets={energyCurve(deck, cards)} />
+          <SpeedMix cardCount={mainDeckCards} speeds={speedMix(deck, cards)} />
         </View>
 
         {groups.map((group) => (

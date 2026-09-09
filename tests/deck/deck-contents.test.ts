@@ -1,4 +1,9 @@
-import { deckGroups, energyCurve, keywordTally } from "@/features/deck/presentation/deck-contents";
+import {
+  deckGroups,
+  energyCurve,
+  keywordTally,
+  speedMix,
+} from "@/features/deck/presentation/deck-contents";
 
 import { card } from "../catalog/fixtures";
 import { deck } from "./fixtures";
@@ -15,6 +20,7 @@ const cheap = card("cheap", "OGN", {
 });
 const mid = card("mid", "OGN", {
   name: "Mid Spell",
+  speeds: ["action", "reaction"],
   attributes: { energy: 3, might: null, power: null },
   classification: { typeId: "Spell", supertypeId: null, rarityId: "common" },
   tagIds: ["Freljord"],
@@ -63,6 +69,14 @@ describe("deck contents", () => {
       { label: "3", count: 2 },
       { label: "4", count: 0 },
       { label: "5+", count: 0 },
+    ]);
+  });
+
+  it("counts a card at every speed it can be played, so shares can pass the deck size", () => {
+    expect(speedMix(built, cards)).toEqual([
+      { speed: "normal", count: 4, share: 4 / 6 },
+      { speed: "action", count: 2, share: 2 / 6 },
+      { speed: "reaction", count: 2, share: 2 / 6 },
     ]);
   });
 

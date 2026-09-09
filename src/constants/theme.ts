@@ -121,7 +121,21 @@ const Radius = {
   sheet: 22,
 } as const;
 
+/** Speed accents from the design, converted from oklch and darkened for the light scheme. */
+const SpeedColors = {
+  light: {
+    normal: "#596475",
+    action: "#7B6000",
+    reaction: "#006EA0",
+  },
+  dark: {
+    normal: "#B3BFD2",
+    action: "#E6CA53",
+    reaction: "#3CB5EB",
+  },
+} as const;
+
 const MaxContentWidth = 800;
 
-export { Colors, DomainColors, Fonts, MaxContentWidth, Radius, Spacing };
+export { Colors, DomainColors, Fonts, MaxContentWidth, Radius, Spacing, SpeedColors };
 export type { ThemeColor };

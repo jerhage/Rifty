@@ -4,6 +4,7 @@ import {
   cardClassificationSelectSchema,
   cardDomainSelectSchema,
   cardMediaSelectSchema,
+  cardSpeedSelectSchema,
   cardMarketplaceReferenceSelectSchema,
   cardTagSelectSchema,
   catalogCardSelectSchema,
@@ -14,6 +15,7 @@ interface CardPersistenceShape {
   readonly classification: unknown;
   readonly media: unknown;
   readonly imageBaseUrl: string;
+  readonly speeds: readonly unknown[];
   readonly domains: readonly unknown[];
   readonly tags: readonly unknown[];
   readonly marketplaceReferences: readonly unknown[];
@@ -24,6 +26,7 @@ function toDomainCard({
   classification,
   media,
   imageBaseUrl,
+  speeds,
   domains,
   tags,
   marketplaceReferences,
@@ -59,6 +62,7 @@ function toDomainCard({
       rarityId: persistedClassification.rarityId,
     },
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
+    speeds: speeds.map((speed) => cardSpeedSelectSchema.parse(speed).speed),
     tagIds: tags.map((tag) => cardTagSelectSchema.parse(tag).tagId),
     imageUrl: cardImageUrl(imageBaseUrl, media),
     marketplaceReferences: marketplaceReferences.map((reference) => {

@@ -17,6 +17,7 @@ import {
   cardDomains,
   cardMarketplaceReferences,
   cardMedia,
+  cardSpeeds,
   cardTags,
   catalogCards,
 } from "@/infrastructure/database/catalog-schema/cards";
@@ -304,13 +305,18 @@ class SqliteCardRepository implements CardRepository {
     const cardIds = rows.map((row) => row.id);
     // Batch each relation for this page. Otherwise 2 domains * 3 tags * 2 references would produce 12 rows per card in one join
     // and require additional processing for deduping. This is fine for now since we arent' performance limited.
-    const [classifications, media, domainsByCardId, tags, marketplaceReferences] =
+    const [classifications, media, speeds, domainsByCardId, tags, marketplaceReferences] =
       await Promise.all([
         this.db
           .select()
           .from(cardClassifications)
           .where(inArray(cardClassifications.cardId, cardIds)),
         this.db.select().from(cardMedia).where(inArray(cardMedia.cardId, cardIds)),
+        this.db
+          .select()
+          .from(cardSpeeds)
+          .where(inArray(cardSpeeds.cardId, cardIds))
+          .orderBy(asc(cardSpeeds.speed)),
         this.#domainRowsFor(cardIds, signal),
         this.db
           .select()
@@ -329,6 +335,7 @@ class SqliteCardRepository implements CardRepository {
     throwIfAborted(signal);
     const classificationsByCardId = new Map(classifications.map((row) => [row.cardId, row]));
     const mediaByCardId = new Map(media.map((row) => [row.cardId, row]));
+    const speedsByCardId = groupByCardId(speeds);
     const tagsByCardId = groupByCardId(tags);
     const marketplaceReferencesByCardId = groupByCardId(marketplaceReferences);
 
@@ -344,6 +351,7 @@ class SqliteCardRepository implements CardRepository {
         classification,
         media: mediaRow,
         imageBaseUrl: this.imageBaseUrl,
+        speeds: speedsByCardId.get(card.id) ?? [],
         domains: domainsByCardId.get(card.id) ?? [],
         tags: tagsByCardId.get(card.id) ?? [],
         marketplaceReferences: marketplaceReferencesByCardId.get(card.id) ?? [],

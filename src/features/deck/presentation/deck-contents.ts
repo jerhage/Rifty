@@ -1,4 +1,5 @@
 import type { Card } from "@/features/catalog/card/card";
+import type { CardSpeed } from "@/features/catalog/value-objects/card-speed";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
 import type { Deck, DeckSection } from "@/features/deck/deck/deck";
 
@@ -31,6 +32,7 @@ const GROUP_DEFINITIONS: readonly GroupDefinition[] = [
 ];
 
 const CURVE_SECTIONS: readonly DeckSection[] = ["mainDeck"];
+const SPEED_ORDER: readonly CardSpeed[] = ["normal", "action", "reaction"];
 
 function deckCards(
   deck: Deck,
@@ -98,6 +100,28 @@ function energyCurve(
   }));
 }
 
+interface SpeedShare {
+  readonly speed: CardSpeed;
+  readonly count: number;
+  readonly share: number;
+}
+
+/**
+ * A card played at more than one speed counts in each, so the shares can add past the deck size.
+ */
+function speedMix(deck: Deck, cards: readonly Card[]): readonly SpeedShare[] {
+  const held = deckCards(deck, cards, CURVE_SECTIONS);
+  const total = held.reduce((sum, entry) => sum + entry.quantity, 0);
+
+  return SPEED_ORDER.map((speed) => {
+    const count = held
+      .filter((entry) => entry.card.speeds.includes(speed))
+      .reduce((sum, entry) => sum + entry.quantity, 0);
+
+    return { speed, count, share: total === 0 ? 0 : count / total };
+  });
+}
+
 function keywordTally(
   deck: Deck,
   cards: readonly Card[],
@@ -115,5 +139,5 @@ function keywordTally(
     .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name));
 }
 
-export { deckCards, deckGroups, energyCurve, keywordTally };
-export type { DeckCard, DeckGroup };
+export { deckCards, deckGroups, energyCurve, keywordTally, speedMix };
+export type { DeckCard, DeckGroup, SpeedShare };

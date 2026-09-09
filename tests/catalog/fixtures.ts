@@ -25,6 +25,7 @@ function card(
       | "rulesText"
       | "classification"
       | "domainIds"
+      | "speeds"
       | "orientation"
       | "tagIds"
       | "marketplaceReferences"
@@ -55,6 +56,7 @@ function card(
       rarityId: "common",
     },
     domainIds: options.domainIds ?? ["Chaos"],
+    speeds: options.speeds ?? ["normal"],
     tagIds: options.tagIds ?? [],
     imageUrl: `http://localhost:8787/${setCode.toLowerCase()}-${id}-100.webp`,
     marketplaceReferences: options.marketplaceReferences ?? [

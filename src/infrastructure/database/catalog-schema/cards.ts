@@ -2,11 +2,12 @@ import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod/v4";
 
+import { cardSpeedSchema } from "../../../features/catalog/value-objects/card-speed";
+
 import { cardSets, marketplaceSchema } from "./sets";
 import { cardSupertypes, cardTypes, domains, rarities, tags } from "./taxonomy";
 
 const cardOrientationSchema = z.enum(["landscape", "portrait"]);
-const cardSpeedSchema = z.enum(["normal", "action", "reaction"]);
 
 /** Catalog tables persist individual card printings and their related data. */
 const catalogCards = sqliteTable(
@@ -203,7 +204,6 @@ export {
   cardMediaSelectSchema,
   cardOrientationSchema,
   cardSpeedInsertSchema,
-  cardSpeedSchema,
   cardSpeedSelectSchema,
   cardSpeeds,
   cardTagInsertSchema,

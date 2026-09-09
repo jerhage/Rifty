@@ -15,6 +15,7 @@ import {
   cardMarketplaceReferences,
   cardImageSources,
   cardMedia,
+  cardSpeeds,
   cardTags,
   catalogCards,
 } from "@/infrastructure/database/catalog-schema/cards";
@@ -154,6 +155,12 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
       .insert(cardImageSources)
       .values({ cardId: card.id, url: card.imageUrl, priority: 0 })
       .run();
+    if (card.speeds.length > 0) {
+      database
+        .insert(cardSpeeds)
+        .values(card.speeds.map((speed) => ({ cardId: card.id, speed })))
+        .run();
+    }
 
     if (card.domainIds.length > 0) {
       database

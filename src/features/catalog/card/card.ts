@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 
 import { marketplaceReferenceSchema } from "../value-objects/marketplace-reference";
 import { cardDomainSchema } from "../value-objects/card-domain";
+import { cardSpeedSchema } from "../value-objects/card-speed";
 import { cardTypeSchema } from "../value-objects/card-type";
 import { setCodeSchema } from "../value-objects/set-code";
 import { taxonomyIdSchema } from "../value-objects/taxonomy-id";
@@ -38,6 +39,7 @@ const cardSchema = z.object({
   sourceUpdatedAt: z.string().trim().min(1),
   classification: cardClassificationSchema,
   domainIds: z.array(cardDomainSchema),
+  speeds: z.array(cardSpeedSchema),
   tagIds: z.array(taxonomyIdSchema),
   imageUrl: z.url(),
   marketplaceReferences: z.array(marketplaceReferenceSchema),

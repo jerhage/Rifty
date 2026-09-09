@@ -14,21 +14,8 @@ This application also uses zod to implement the adage of "Parse, don't validate"
 I also have some crude scripts for processing raw data and transforming into seed data for the database. Currently limited by the data I can collect but will get more and/or derive some data such as
 card speed (normal / action / reaction) from the raw data I already have (will require parsing the card text since the data I have doesn't treat this as a first class citizen).
 
-I have a generated seed file in the infra layer for convenience but obviously this won't scale. For now it will suffice. I can run a script to regenerate the seed data when needed. I use a hash for versioning. The app will check if it uses the current version, and, if not, clear the relevant tables and re-seed based on the generated seed file.
+Previously i was committing a generated seed file for convenience despite it not being good practice. Now I'm hosting images myself and it no longer makes sense to keep the seed in version control. At request, I could provide a seed file that can be used to populate the DB but it would still lack the images. I prefer not to point towards external image hosts since it eats their bandwidth, so no solution for sharing this yet.
 
-## Card data and images
+# Hosting Images
 
-The catalog seed and the card art are both generated from local data and are not tracked. A fresh
-clone builds them in order:
-
-```sh
-npm run fetch:cards          # card data from the riftbound API, per set, into data/api
-npm run fetch:card-images    # card art into data/images, named after the riftbound ID
-npm run convert:card-images  # cwebp every downloaded image, so the app only ever serves webp
-npm run generate:catalog-seed
-```
-
-`npm start` serves `data/images` over the LAN on port 8787 alongside the dev server, and the app
-loads card art from there. Any card whose image is missing from disk is listed in
-`data/missing-images.json` when the seed is generated.
-
+All images are just being hosted on my machine over LAN using python's http server and pointing it to my local dir.

@@ -1,13 +1,14 @@
 import { useCallback, useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Radius, Spacing } from "@/constants/theme";
 import type { RandomSource } from "@/application/ports/random-source";
-import { drawOdds, handStats } from "@/features/analysis/draw-simulation";
+import { MULLIGAN_LIMIT, drawOdds, handStats } from "@/features/analysis/draw-simulation";
 import { DrawOddsPanel } from "@/features/analysis/presentation/components/draw-odds";
 import { HandStatsPanel } from "@/features/analysis/presentation/components/hand-stats";
 import type { Card } from "@/features/catalog/card/card";
@@ -24,7 +25,6 @@ interface DrawSimulationScreenProps {
   readonly deck: Deck;
   readonly onBack: () => void;
   readonly onKeep: () => void;
-  readonly onOpenCard: (card: Card) => void;
   readonly randomSource: RandomSource;
 }
 
@@ -33,7 +33,6 @@ function DrawSimulationScreen({
   deck,
   onBack,
   onKeep,
-  onOpenCard,
   randomSource,
 }: DrawSimulationScreenProps) {
   const insets = useSafeAreaInsets();
@@ -47,7 +46,64 @@ function DrawSimulationScreen({
     <Item,>(items: readonly Item[]): readonly Item[] => shuffle(items, () => randomSource.next()),
     [randomSource],
   );
-  const { hand, handNumber, redraw } = useDrawSimulation(copies, shuffleCards);
+  const {
+    hand,
+    handNumber,
+    mulligan,
+    notice,
+    selected,
+    dealFreshHand,
+    takeMulligan,
+    toggleSelection,
+  } = useDrawSimulation(copies, shuffleCards);
+
+  const handLabel = match(mulligan)
+    .with(
+      { type: "spent" },
+      (spent) => `Opening hand · Hand ${handNumber} · Mulliganed ${spent.replaced}`,
+    )
+    .with({ type: "available" }, () => `Opening hand · Hand ${handNumber}`)
+    .exhaustive();
+
+  const limitMessage = match(notice)
+    .with({ type: "none" }, () => null)
+    .with(
+      { type: "selectionLimit" },
+      () => "Two is the mulligan limit. Tap a chosen card again to deselect it.",
+    )
+    .with({ type: "mulliganSpent" }, () => "One mulligan per game — this hand is set.")
+    .exhaustive();
+
+  const statusNote = match(mulligan)
+    .with({ type: "spent" }, (spent) =>
+      spent.replaced === 0
+        ? "The deck ran out before the redraw. No second mulligan."
+        : `You mulliganed ${spent.replaced}. No second mulligan.`,
+    )
+    .with({ type: "available" }, () =>
+      selected.length === 0 ? "Tap up to two cards to mulligan" : `Redraws ${selected.length}`,
+    )
+    .exhaustive();
+
+  const statusCounter = match(mulligan)
+    .with({ type: "spent" }, () => "0 left")
+    .with(
+      { type: "available" },
+      () => `${MULLIGAN_LIMIT - selected.length} of ${MULLIGAN_LIMIT} left`,
+    )
+    .exhaustive();
+
+  const mulliganLabel = match(mulligan)
+    .with({ type: "spent" }, () => "Mulligan spent")
+    .with({ type: "available" }, () =>
+      selected.length === 0 ? "Mulligan" : `Mulligan ${selected.length}`,
+    )
+    .exhaustive();
+
+  const mulliganDisabled = match(mulligan)
+    .with({ type: "spent" }, () => true)
+    .with({ type: "available" }, () => selected.length === 0)
+    .exhaustive();
 
   return (
     <ThemedView style={styles.screen}>
@@ -74,7 +130,7 @@ function DrawSimulationScreen({
           <ThemedText type="small">←</ThemedText>
         </Pressable>
         <ThemedText themeColor="textSecondary" type="mono">
-          {`Opening hand · Hand ${handNumber}`}
+          {handLabel}
         </ThemedText>
       </View>
 
@@ -89,7 +145,7 @@ function DrawSimulationScreen({
       >
         <ThemedText type="display">Would you keep it?</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.subtitle} type="body">
-          {`Four off the top of ${odds.poolSize}. Judge, then redraw.`}
+          {`Four off the top of ${odds.poolSize}. You may mulligan up to two and redraw them — once.`}
         </ThemedText>
 
         <View style={styles.hand}>
@@ -97,7 +153,8 @@ function DrawSimulationScreen({
             <HandCardTile
               card={card}
               key={`${card.riftboundId}-${index}`}
-              onOpenCard={onOpenCard}
+              onToggleSelection={() => toggleSelection(index)}
+              selected={selected.includes(index)}
             />
           ))}
         </View>
@@ -107,6 +164,19 @@ function DrawSimulationScreen({
             The main deck has no cards to draw from yet.
           </ThemedText>
         ) : null}
+
+        <View style={[styles.status, { backgroundColor: theme.fill, borderColor: theme.border }]}>
+          <ThemedText
+            style={styles.statusNote}
+            themeColor={limitMessage === null ? "textSecondary" : "warning"}
+            type="body"
+          >
+            {limitMessage ?? statusNote}
+          </ThemedText>
+          <ThemedText themeColor="textTertiary" type="mono">
+            {statusCounter}
+          </ThemedText>
+        </View>
 
         <View style={styles.panels}>
           <HandStatsPanel stats={handStats(hand)} />
@@ -127,9 +197,15 @@ function DrawSimulationScreen({
         ]}
       >
         <View style={styles.primary}>
-          <Button label="Redraw" onPress={redraw} variant="primary" />
+          <Button
+            disabled={mulliganDisabled}
+            label={mulliganLabel}
+            onPress={takeMulligan}
+            variant="primary"
+          />
         </View>
         <Button label="Keep" onPress={onKeep} variant="secondary" />
+        <Button label="New" onPress={dealFreshHand} variant="secondary" />
       </View>
     </ThemedView>
   );
@@ -175,6 +251,21 @@ const styles = StyleSheet.create({
   },
   empty: {
     marginTop: Spacing.three,
+  },
+  status: {
+    alignItems: "center",
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    flexDirection: "row",
+    gap: Spacing.two + 2,
+    justifyContent: "space-between",
+    marginTop: Spacing.three - 5,
+    paddingHorizontal: Spacing.three - 4,
+    paddingVertical: Spacing.two + 2,
+  },
+  statusNote: {
+    flex: 1,
+    minWidth: 0,
   },
   panels: {
     gap: Spacing.two + 2,

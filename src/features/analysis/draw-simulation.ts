@@ -2,6 +2,7 @@ import type { CardCopy } from "@/features/analysis/card-copy";
 import type { Card } from "@/features/catalog/card/card";
 
 const OPENING_HAND_SIZE = 4;
+const MULLIGAN_LIMIT = 2;
 const TURN_THREE_CARDS_SEEN = 6;
 const EARLY_PLAY_ENERGY = 2;
 
@@ -32,6 +33,22 @@ interface HandStats {
   readonly earlyPlays: number;
   readonly verdict: HandVerdict;
 }
+
+interface DealtHand {
+  readonly hand: readonly Card[];
+  readonly pool: readonly Card[];
+  readonly cursor: number;
+}
+
+interface MulliganedHand {
+  readonly hand: readonly Card[];
+  readonly cursor: number;
+  readonly replaced: number;
+}
+
+type MulliganSelection =
+  | { readonly type: "selected"; readonly indexes: readonly number[] }
+  | { readonly type: "atLimit" };
 
 function atLeastOneChance(poolSize: number, copies: number, draws: number): number {
   if (poolSize <= 0 || copies <= 0 || draws <= 0) return 0;
@@ -117,23 +134,64 @@ function handStats(hand: readonly Card[]): HandStats {
   };
 }
 
-function openingHand(
+function dealHand(
   copies: readonly CardCopy[],
   shuffle: <T>(items: readonly T[]) => readonly T[],
-): readonly Card[] {
+): DealtHand {
   const library = copies.flatMap((entry) =>
     Array.from({ length: entry.quantity }, () => entry.card),
   );
+  const pool = shuffle(library);
+  const dealt = Math.min(OPENING_HAND_SIZE, pool.length);
 
-  return shuffle(library).slice(0, OPENING_HAND_SIZE);
+  return { hand: pool.slice(0, dealt), pool, cursor: dealt };
+}
+
+function mulliganHand(dealt: DealtHand, indexes: readonly number[]): MulliganedHand {
+  const hand = [...dealt.hand];
+  const inHandOrder = [...indexes].sort((left, right) => left - right);
+  let cursor = dealt.cursor;
+
+  for (const index of inHandOrder) {
+    const replacement = dealt.pool[cursor];
+
+    if (replacement === undefined) break;
+
+    hand[index] = replacement;
+    cursor += 1;
+  }
+
+  return { hand, cursor, replaced: cursor - dealt.cursor };
+}
+
+function toggleMulliganSelection(indexes: readonly number[], index: number): MulliganSelection {
+  if (indexes.includes(index)) {
+    return { type: "selected", indexes: indexes.filter((selected) => selected !== index) };
+  }
+
+  if (indexes.length >= MULLIGAN_LIMIT) return { type: "atLimit" };
+
+  return { type: "selected", indexes: [...indexes, index] };
 }
 
 export {
+  MULLIGAN_LIMIT,
   OPENING_HAND_SIZE,
   TURN_THREE_CARDS_SEEN,
   atLeastOneChance,
+  dealHand,
   drawOdds,
   handStats,
-  openingHand,
+  mulliganHand,
+  toggleMulliganSelection,
 };
-export type { CopyOdds, DrawOdds, HandStats, HandVerdict, PinnedOdds };
+export type {
+  CopyOdds,
+  DealtHand,
+  DrawOdds,
+  HandStats,
+  HandVerdict,
+  MulliganSelection,
+  MulliganedHand,
+  PinnedOdds,
+};

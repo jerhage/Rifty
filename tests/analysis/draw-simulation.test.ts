@@ -1,9 +1,11 @@
 import type { CardCopy } from "@/features/analysis/card-copy";
 import {
   atLeastOneChance,
+  dealHand,
   drawOdds,
   handStats,
-  openingHand,
+  mulliganHand,
+  toggleMulliganSelection,
 } from "@/features/analysis/draw-simulation";
 
 import { card } from "../catalog/fixtures";
@@ -48,6 +50,23 @@ const splitPrintings: readonly CardCopy[] = [
   { card: championPrint, quantity: 1 },
   { card: staple, quantity: 3 },
   { card: pair, quantity: 3 },
+];
+
+const smallLibrary: readonly CardCopy[] = [
+  { card: champion, quantity: 1 },
+  { card: staple, quantity: 1 },
+  { card: pair, quantity: 1 },
+  { card: single, quantity: 1 },
+  { card: legend, quantity: 1 },
+  { card: sideboarded, quantity: 1 },
+];
+
+const shortLibrary: readonly CardCopy[] = [
+  { card: champion, quantity: 1 },
+  { card: staple, quantity: 1 },
+  { card: pair, quantity: 1 },
+  { card: single, quantity: 1 },
+  { card: legend, quantity: 1 },
 ];
 
 function identity<T>(items: readonly T[]): readonly T[] {
@@ -192,20 +211,115 @@ describe("hand stats", () => {
   });
 });
 
-describe("opening hand", () => {
+describe("dealing a hand", () => {
   it("expands every copy, so a three-of can arrive more than once", () => {
-    expect(openingHand(library, identity)).toEqual([champion, champion, champion, staple]);
+    expect(dealHand(library, identity).hand).toEqual([champion, champion, champion, staple]);
   });
 
   it("deals from the shuffled order it is given", () => {
-    expect(openingHand(library, reversed)).toEqual([single, pair, pair, staple]);
+    expect(dealHand(library, reversed).hand).toEqual([single, pair, pair, staple]);
   });
 
   it("deals four cards and leaves out what it was never given", () => {
-    const hand = openingHand(library, identity);
+    const { hand } = dealHand(library, identity);
 
     expect(hand).toHaveLength(4);
     expect(hand).not.toContain(legend);
     expect(hand).not.toContain(sideboarded);
+  });
+
+  it("keeps the rest of the shuffled pool behind a cursor past the hand", () => {
+    const dealt = dealHand(library, identity);
+
+    expect(dealt.pool).toHaveLength(9);
+    expect(dealt.cursor).toBe(4);
+    expect(dealt.pool.slice(0, 4)).toEqual(dealt.hand);
+  });
+
+  it("deals only what a pool shorter than an opening hand holds", () => {
+    const dealt = dealHand([{ card: staple, quantity: 2 }], identity);
+
+    expect(dealt.hand).toEqual([staple, staple]);
+    expect(dealt.cursor).toBe(2);
+  });
+});
+
+describe("mulliganing a hand", () => {
+  it("replaces one card with the next off the pool", () => {
+    const dealt = dealHand(library, identity);
+    const redrawn = mulliganHand(dealt, [1]);
+
+    expect(redrawn.hand).toEqual([champion, staple, champion, staple]);
+    expect(redrawn.cursor).toBe(5);
+    expect(redrawn.replaced).toBe(1);
+  });
+
+  it("replaces two cards with the next two off the pool", () => {
+    const dealt = dealHand(smallLibrary, identity);
+    const redrawn = mulliganHand(dealt, [0, 2]);
+
+    expect(redrawn.hand).toEqual([legend, staple, sideboarded, single]);
+    expect(redrawn.cursor).toBe(6);
+    expect(redrawn.replaced).toBe(2);
+  });
+
+  it("takes replacements in hand order however the selection was made", () => {
+    const dealt = dealHand(smallLibrary, identity);
+
+    expect(mulliganHand(dealt, [2, 0])).toEqual(mulliganHand(dealt, [0, 2]));
+  });
+
+  it("leaves the hand and the cursor alone when nothing is selected", () => {
+    const dealt = dealHand(library, identity);
+    const redrawn = mulliganHand(dealt, []);
+
+    expect(redrawn.hand).toEqual(dealt.hand);
+    expect(redrawn.cursor).toBe(dealt.cursor);
+    expect(redrawn.replaced).toBe(0);
+  });
+
+  it("never draws the same card twice or moves the pool it drew from", () => {
+    const dealt = dealHand(smallLibrary, identity);
+    const redrawn = mulliganHand(dealt, [0, 1]);
+
+    expect(redrawn.hand.slice(0, 2)).toEqual(dealt.pool.slice(4, 6));
+    expect(dealt.pool).toHaveLength(6);
+  });
+
+  it("replaces as many as the pool still holds and reports how many it redrew", () => {
+    const dealt = dealHand(shortLibrary, identity);
+    const redrawn = mulliganHand(dealt, [1, 3]);
+
+    expect(redrawn.hand).toEqual([champion, legend, pair, single]);
+    expect(redrawn.cursor).toBe(5);
+    expect(redrawn.replaced).toBe(1);
+  });
+
+  it("redraws nothing when the pool is spent, rather than emptying the hand", () => {
+    const dealt = dealHand([{ card: staple, quantity: 3 }], identity);
+    const redrawn = mulliganHand(dealt, [0, 1]);
+
+    expect(redrawn.hand).toEqual([staple, staple, staple]);
+    expect(redrawn.cursor).toBe(3);
+    expect(redrawn.replaced).toBe(0);
+  });
+});
+
+describe("choosing which cards to mulligan", () => {
+  it("adds a card that is not chosen yet", () => {
+    expect(toggleMulliganSelection([], 2)).toEqual({ type: "selected", indexes: [2] });
+    expect(toggleMulliganSelection([2], 0)).toEqual({ type: "selected", indexes: [2, 0] });
+  });
+
+  it("removes a card that was already chosen", () => {
+    expect(toggleMulliganSelection([2, 0], 2)).toEqual({ type: "selected", indexes: [0] });
+  });
+
+  it("refuses a third card", () => {
+    expect(toggleMulliganSelection([0, 1], 3)).toEqual({ type: "atLimit" });
+  });
+
+  it("still lets a chosen card go once the limit is reached", () => {
+    expect(toggleMulliganSelection([0, 1], 1)).toEqual({ type: "selected", indexes: [0] });
   });
 });

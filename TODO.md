@@ -14,3 +14,20 @@
 - [x] Convert the remaining card art to WebP.
 
 - [ ] Store the full list of known regions. We're currently building the region list from the `regions[]` values found on cards. That gives us 11 regions, but misses Mount Targon, The Void, Icathia, and Kathkan, causing them to be treated as traits instead. Since Runeterra's regions are a known, fixed list, store that list directly rather than relying on cards to tell us which regions exist.
+
+- [ ] Change testing to use local `__tests__` directories
+- [ ] Add better test coverage, especially for usecases and ui hooks
+
+## Deck analytics
+
+Each of these works off data we already store. Take them one at a time.
+
+- [ ] Draw simulation. Hypergeometric odds of opening a given card or count from the 40.
+- [ ] Proactive vs reactive split, from `card_speed`.
+- [ ] Keyword density, from `card_keyword` including the numeric values.
+- [ ] Might curve and total power, alongside the energy curve.
+- [ ] Off-domain count. Cards outside the legend's domain identity.
+- [ ] Trait density, using `tag.kind = 'trait'` so Poro no longer counts as Piltover.
+- [ ] Champion card count, from `champion_name`.
+- [ ] Copy distribution. How much of the deck is 1-of, 2-of, 3-of.
+- [ ] Rarity mix.

@@ -24,6 +24,7 @@
 
 Each of these works off data we already store. Take them one at a time.
 
+- [ ] Offer both draw horizons in the draw odds panel as a toggle. Cards seen by turn 3 is 6 on the play and 7 on the draw, since the starting player skips their first draw. We show 6 today and label it only as "by T3", which hides which side of the table it assumes.
 - [ ] Draw simulation. Hypergeometric odds of opening a given card or count from the 40.
 - [x] Proactive vs reactive split, from `card_speed`.
 - [x] Keyword density, from `card_keyword` including the numeric values.

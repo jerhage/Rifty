@@ -2,7 +2,7 @@ import { findCard } from "@/features/catalog/card/use-cases/find-card";
 import { listCards } from "@/features/catalog/card/use-cases/list-cards";
 import { Page } from "@/shared/page";
 
-import { card, cardSet } from "./fixtures";
+import { card, cardSet, carriedKeyword } from "./fixtures";
 import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 
 describe("card catalog scenarios", () => {
@@ -35,6 +35,33 @@ describe("card catalog scenarios", () => {
         ],
       },
     });
+    store.close();
+  });
+
+  it("keeps an occurrence with several targets as one keyword rather than one per target", async () => {
+    const store = createSqliteScenarioStore();
+    const venture = cardSet("VEN", "2026-08-14T00:00:00", "Venture");
+    const threshold = card("threshold", venture.code, {
+      name: "Threshold of the Gray",
+      keywords: [
+        {
+          id: "add",
+          name: "Add",
+          value: null,
+          targets: [
+            { kind: "player", isToken: false, allegiance: "enemy" },
+            { kind: "player", isToken: false, allegiance: "own" },
+          ],
+        },
+        carriedKeyword("shield", "Shield", 2),
+      ],
+    });
+    store.seedSet(venture);
+    store.seedCard(threshold);
+
+    const found = await findCard(threshold.id, { cardFinder: store.cards });
+
+    expect(found).toEqual({ type: "success", card: threshold });
     store.close();
   });
 

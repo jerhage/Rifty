@@ -79,7 +79,7 @@ describe("catalog seed", () => {
     expect(() => assertValid(seed)).not.toThrow();
   });
 
-  it("records a keyword at each scope the card prints it at", () => {
+  it("records a keyword once per target it is printed at", () => {
     const cards: readonly NormalizedCard[] = [
       card("a", { rulesTextPlain: "[Empowered]\nOther friendly units here have [Empowered]." }),
     ];
@@ -88,22 +88,52 @@ describe("catalog seed", () => {
 
     expect(seed.cardKeywords).toEqual([
       {
+        id: 1,
         cardId: "a",
         keywordId: "empowered",
-        scope: "self",
         value: null,
         cost: null,
         reminder: null,
+        source: "derived",
       },
       {
+        id: 2,
         cardId: "a",
         keywordId: "empowered",
-        scope: "other",
         value: null,
         cost: null,
         reminder: null,
+        source: "derived",
       },
     ]);
+    expect(seed.cardKeywordTargets).toEqual([
+      { cardKeywordId: 1, targetKind: "self", targetIsToken: false, allegiance: "own" },
+      { cardKeywordId: 2, targetKind: "unit", targetIsToken: false, allegiance: "friendly" },
+    ]);
+  });
+
+  it("gives one occurrence a row for each target it names", () => {
+    const cards: readonly NormalizedCard[] = [
+      card("a", {
+        rulesTextPlain: "When combat starts here, the attacker and defender each [Add] [1].",
+      }),
+    ];
+
+    const { seed } = buildSeed(cards, [set("OGN")], imagesFor(cards));
+
+    expect(seed.cardKeywords).toHaveLength(1);
+    expect(seed.cardKeywordTargets).toEqual([
+      { cardKeywordId: 1, targetKind: "player", targetIsToken: false, allegiance: "own" },
+      { cardKeywordId: 1, targetKind: "player", targetIsToken: false, allegiance: "enemy" },
+    ]);
+  });
+
+  it("refuses to guess a target it has no phrase for", () => {
+    const cards: readonly NormalizedCard[] = [
+      card("a", { rulesTextPlain: "When you hold here, [Vision] twice." }),
+    ];
+
+    expect(() => buildSeed(cards, [set("OGN")], imagesFor(cards))).toThrow(/Unclassified keyword/);
   });
 
   it("skips a card whose set is absent rather than dropping it silently", () => {

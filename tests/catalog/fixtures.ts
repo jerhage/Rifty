@@ -1,7 +1,15 @@
-import type { Card } from "@/features/catalog/card/card";
+import type { Card, CardKeyword } from "@/features/catalog/card/card";
 import type { CardSet } from "@/features/catalog/set/card-set";
 
 import { identityName } from "../../scripts/card-derivation";
+
+function carriedKeyword(id: string, name: string, value: number | null = null): CardKeyword {
+  return { id, name, value, targets: [{ kind: "self", isToken: false, allegiance: "own" }] };
+}
+
+function grantedKeyword(id: string, name: string, value: number | null = null): CardKeyword {
+  return { id, name, value, targets: [{ kind: "unit", isToken: false, allegiance: "friendly" }] };
+}
 
 function cardSet(code: string, publishedOn: string, name = code): CardSet {
   return {
@@ -75,4 +83,4 @@ function card(
   };
 }
 
-export { card, cardSet };
+export { card, cardSet, carriedKeyword, grantedKeyword };

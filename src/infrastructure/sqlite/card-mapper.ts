@@ -1,8 +1,8 @@
 import { z } from "zod/v4";
 
-import { parseCard, type Card } from "@/features/catalog/card/card";
+import { parseCard, type Card, type CardKeyword } from "@/features/catalog/card/card";
 import { parseCardSummary, type CardSummary } from "@/features/catalog/card/card-summary";
-import { keywordScopeSchema } from "@/features/catalog/value-objects/keyword-scope";
+import { cardKeywordTargetSelectSchema } from "@/infrastructure/database/catalog-schema/keywords";
 import {
   cardClassificationSelectSchema,
   cardDomainSelectSchema,
@@ -16,8 +16,14 @@ import {
 const cardKeywordRowSchema = z.object({
   id: z.string(),
   name: z.string(),
-  scope: keywordScopeSchema,
   value: z.number().int().nullable(),
+  targets: z.array(
+    cardKeywordTargetSelectSchema.pick({
+      targetKind: true,
+      targetIsToken: true,
+      allegiance: true,
+    }),
+  ),
 });
 
 interface CardPersistenceShape {
@@ -75,7 +81,7 @@ function toDomainCard({
     },
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     speeds: speeds.map((speed) => cardSpeedSelectSchema.parse(speed).speed),
-    keywords: keywords.map((keyword) => cardKeywordRowSchema.parse(keyword)),
+    keywords: keywords.map((keyword) => toDomainKeyword(keyword)),
     championName: persistedCard.championName,
     identityName: persistedCard.identityName,
     tagIds: tags.map((tag) => cardTagSelectSchema.parse(tag).tagId),
@@ -112,6 +118,21 @@ function toDomainCardSummary({
     orientation: persistedCard.orientation,
     imageUrl: cardImageUrl(imageBaseUrl, media),
   });
+}
+
+function toDomainKeyword(keyword: unknown): CardKeyword {
+  const persistedKeyword = cardKeywordRowSchema.parse(keyword);
+
+  return {
+    id: persistedKeyword.id,
+    name: persistedKeyword.name,
+    value: persistedKeyword.value,
+    targets: persistedKeyword.targets.map((target) => ({
+      kind: target.targetKind,
+      isToken: target.targetIsToken,
+      allegiance: target.allegiance,
+    })),
+  };
 }
 
 function cardImageUrl(imageBaseUrl: string, media: unknown): string {

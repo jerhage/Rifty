@@ -12,7 +12,7 @@ import {
   printingIdentity,
   withMagnitudeDefaults,
 } from "./card-derivation";
-import type { KeywordOccurrence, KeywordScope } from "./card-derivation";
+import type { KeywordOccurrence, KeywordTarget } from "./card-derivation";
 import { imageSourcesOf } from "./card-image-file";
 import type { SourcedCard } from "./card-image-file";
 
@@ -28,6 +28,7 @@ import {
 } from "../src/infrastructure/database/catalog-schema/cards";
 import {
   cardKeywordInsertSchema,
+  cardKeywordTargetInsertSchema,
   keywordInsertSchema,
 } from "../src/infrastructure/database/catalog-schema/keywords";
 import {
@@ -52,6 +53,7 @@ import type {
   catalogCards,
 } from "../src/infrastructure/database/catalog-schema/cards";
 import type {
+  cardKeywordTargets,
   cardKeywords,
   keywords,
 } from "../src/infrastructure/database/catalog-schema/keywords";
@@ -146,6 +148,7 @@ const apiCardSchema = z.object({
 const rawImageSchema = z.object({ media: z.object({ image_url: nullableString }) });
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Showcase", "Promo"];
 const KEYWORD_REMINDER = /\[([^\]]+)\]\s*_?\(([^)]*)\)/g;
+const DERIVED_SOURCE = "derived";
 const LEADING_DIGITS = /(\d+)/;
 const REPORTED_SAMPLE = 5;
 type RawCard = z.output<typeof rawCardSchema>;
@@ -217,6 +220,7 @@ type Seed = {
   cardDomains: (typeof cardDomains.$inferInsert)[];
   cardTags: (typeof cardTags.$inferInsert)[];
   cardKeywords: (typeof cardKeywords.$inferInsert)[];
+  cardKeywordTargets: (typeof cardKeywordTargets.$inferInsert)[];
   cardSpeeds: (typeof cardSpeedTable.$inferInsert)[];
 };
 type BuiltSeed = {
@@ -386,6 +390,7 @@ function buildSeed(
   const cardDomains: Seed["cardDomains"] = [];
   const cardTags: Seed["cardTags"] = [];
   const cardKeywords: Seed["cardKeywords"] = [];
+  const cardKeywordTargets: Seed["cardKeywordTargets"] = [];
   const cardSpeedRows: Seed["cardSpeeds"] = [];
   for (const card of ordered) {
     for (const keyword of keywordOccurrences(card.rulesTextPlain))
@@ -453,14 +458,24 @@ function buildSeed(
       magnitudeIds,
     )) {
       const reminder = reminders.get(keyword.id) ?? null;
+      const id = cardKeywords.length + 1;
       cardKeywords.push({
+        id,
         cardId: card.id,
         keywordId: keyword.id,
-        scope: keywordScope(card.id, keyword),
         value: keyword.value,
         cost: keyword.cost,
         reminder: reminder === reminderTexts.get(keyword.id) ? null : reminder,
+        source: DERIVED_SOURCE,
       });
+      for (const target of keywordTargets(card.id, keyword)) {
+        cardKeywordTargets.push({
+          cardKeywordId: id,
+          targetKind: target.kind,
+          targetIsToken: target.isToken,
+          allegiance: target.allegiance,
+        });
+      }
     }
     for (const speed of cardSpeeds(card.rulesTextPlain))
       cardSpeedRows.push({ cardId: card.id, speed });
@@ -502,16 +517,17 @@ function buildSeed(
       cardDomains: uniqueBy(cardDomains, (row) => [row.cardId, row.domainId]),
       cardTags: uniqueBy(cardTags, (row) => [row.cardId, row.tagId]),
       cardKeywords,
+      cardKeywordTargets,
       cardSpeeds: cardSpeedRows,
     },
     skipped,
   };
 }
 
-function keywordScope(cardId: string, occurrence: KeywordOccurrence): KeywordScope {
+function keywordTargets(cardId: string, occurrence: KeywordOccurrence): readonly KeywordTarget[] {
   return match(occurrence.targeting)
-    .with({ type: "targeted" }, ({ scope }) => scope)
-    .with({ type: "unclassified" }, ({ leadIn, trailing }): KeywordScope => {
+    .with({ type: "targeted" }, ({ targets }) => targets)
+    .with({ type: "unclassified" }, ({ leadIn, trailing }): readonly KeywordTarget[] => {
       throw new Error(
         `Unclassified keyword [${occurrence.name}] on ${cardId}: lead-in ${JSON.stringify(
           leadIn,
@@ -648,6 +664,7 @@ function assertValid(seed: Seed): void {
   seed.cardDomains.forEach((row) => cardDomainInsertSchema.parse(row));
   seed.cardTags.forEach((row) => cardTagInsertSchema.parse(row));
   seed.cardKeywords.forEach((row) => cardKeywordInsertSchema.parse(row));
+  seed.cardKeywordTargets.forEach((row) => cardKeywordTargetInsertSchema.parse(row));
   seed.cardSpeeds.forEach((row) => cardSpeedInsertSchema.parse(row));
   assertEveryCardHasMedia(seed);
   assertOneCanonicalPrintingPerCard(seed);

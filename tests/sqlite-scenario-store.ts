@@ -8,7 +8,11 @@ import type { CardSet } from "@/features/catalog/set/card-set";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { CatalogDataStore } from "@/infrastructure/database/catalog-data-store";
 import type { DeckDataStore } from "@/infrastructure/database/deck-data-store";
-import { cardKeywords, keywords } from "@/infrastructure/database/catalog-schema/keywords";
+import {
+  cardKeywordTargets,
+  cardKeywords,
+  keywords,
+} from "@/infrastructure/database/catalog-schema/keywords";
 import { deckCards, decks } from "@/infrastructure/database/deck-schema/decks";
 import {
   cardClassifications,
@@ -49,6 +53,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
   applyMigrations(client);
 
   const database = drizzle({ client });
+  let nextCardKeywordId = 1;
 
   function seedSet(cardSet: CardSet): void {
     database
@@ -163,15 +168,30 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         .values({ id: keyword.id, name: keyword.name })
         .onConflictDoNothing()
         .run();
+      const cardKeywordId = nextCardKeywordId;
+      nextCardKeywordId += 1;
       database
         .insert(cardKeywords)
         .values({
+          id: cardKeywordId,
           cardId: card.id,
           keywordId: keyword.id,
-          scope: keyword.scope,
           value: keyword.value,
         })
         .run();
+      if (keyword.targets.length > 0) {
+        database
+          .insert(cardKeywordTargets)
+          .values(
+            keyword.targets.map((target) => ({
+              cardKeywordId,
+              targetKind: target.kind,
+              targetIsToken: target.isToken,
+              allegiance: target.allegiance,
+            })),
+          )
+          .run();
+      }
     }
     if (card.speeds.length > 0) {
       database

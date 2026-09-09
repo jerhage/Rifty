@@ -4,16 +4,22 @@ import { marketplaceReferenceSchema } from "../value-objects/marketplace-referen
 import { cardDomainSchema } from "../value-objects/card-domain";
 import { cardSpeedSchema } from "../value-objects/card-speed";
 import { cardTypeSchema } from "../value-objects/card-type";
-import { keywordScopeSchema } from "../value-objects/keyword-scope";
+import { keywordAllegianceSchema } from "../value-objects/keyword-allegiance";
+import { keywordTargetKindSchema } from "../value-objects/keyword-target-kind";
 import { setCodeSchema } from "../value-objects/set-code";
 import { taxonomyIdSchema } from "../value-objects/taxonomy-id";
 
 const cardIdSchema = z.string().trim().min(1);
+const cardKeywordTargetSchema = z.object({
+  kind: keywordTargetKindSchema,
+  isToken: z.boolean(),
+  allegiance: keywordAllegianceSchema,
+});
 const cardKeywordSchema = z.object({
   id: z.string().trim().min(1),
   name: z.string().trim().min(1),
-  scope: keywordScopeSchema,
   value: z.number().int().positive().nullable(),
+  targets: z.array(cardKeywordTargetSchema),
 });
 const cardOrientationSchema = z.enum(["landscape", "portrait"]);
 const cardAttributesSchema = z.object({
@@ -63,6 +69,7 @@ type CardId = z.output<typeof cardIdSchema>;
 type CardAttributes = z.output<typeof cardAttributesSchema>;
 type CardClassification = z.output<typeof cardClassificationSchema>;
 type CardKeyword = z.output<typeof cardKeywordSchema>;
+type CardKeywordTarget = z.output<typeof cardKeywordTargetSchema>;
 type Card = z.output<typeof cardSchema>;
 
 export {
@@ -73,4 +80,4 @@ export {
   cardSchema,
   parseCard,
 };
-export type { Card, CardAttributes, CardClassification, CardId, CardKeyword };
+export type { Card, CardAttributes, CardClassification, CardId, CardKeyword, CardKeywordTarget };

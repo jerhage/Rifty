@@ -34,7 +34,11 @@ import {
   cardTags,
   catalogCards,
 } from "@/infrastructure/database/catalog-schema/cards";
-import { cardKeywords, keywords } from "@/infrastructure/database/catalog-schema/keywords";
+import {
+  cardKeywordTargets,
+  cardKeywords,
+  keywords,
+} from "@/infrastructure/database/catalog-schema/keywords";
 
 import { toDomainCard, toDomainCardSummary } from "./card-mapper";
 import type { SqliteDatabase } from "./sqlite-database";
@@ -149,6 +153,32 @@ class SqliteCardRepository implements CardRepository {
     throwIfAborted(signal);
 
     return groupByCardId(rows);
+  }
+
+  async #targetRowsFor(
+    keywordRows: readonly { readonly cardKeywordId: number }[],
+    signal: AbortSignal | undefined,
+  ): Promise<Map<number, (typeof cardKeywordTargets.$inferSelect)[]>> {
+    if (keywordRows.length === 0) return new Map();
+
+    const rows = await this.db
+      .select()
+      .from(cardKeywordTargets)
+      .where(
+        inArray(
+          cardKeywordTargets.cardKeywordId,
+          keywordRows.map((row) => row.cardKeywordId),
+        ),
+      )
+      .orderBy(asc(cardKeywordTargets.targetKind), asc(cardKeywordTargets.allegiance));
+    throwIfAborted(signal);
+
+    return rows.reduce((grouped, row) => {
+      const group = grouped.get(row.cardKeywordId);
+      if (group) group.push(row);
+      else grouped.set(row.cardKeywordId, [row]);
+      return grouped;
+    }, new Map<number, (typeof cardKeywordTargets.$inferSelect)[]>());
   }
 
   #conditionsFor(criteria: CardListCriteria | undefined): SQL[] {
@@ -354,16 +384,16 @@ class SqliteCardRepository implements CardRepository {
         .orderBy(asc(cardSpeeds.speed)),
       this.db
         .select({
+          cardKeywordId: cardKeywords.id,
           cardId: cardKeywords.cardId,
           id: cardKeywords.keywordId,
           name: keywords.name,
-          scope: cardKeywords.scope,
           value: cardKeywords.value,
         })
         .from(cardKeywords)
         .innerJoin(keywords, eq(keywords.id, cardKeywords.keywordId))
         .where(inArray(cardKeywords.cardId, cardIds))
-        .orderBy(asc(keywords.name), asc(cardKeywords.scope)),
+        .orderBy(asc(keywords.name), asc(cardKeywords.id)),
       this.#domainRowsFor(cardIds, signal),
       this.db
         .select()
@@ -380,10 +410,16 @@ class SqliteCardRepository implements CardRepository {
         ),
     ]);
     throwIfAborted(signal);
+    const targetsByCardKeywordId = await this.#targetRowsFor(cardKeywordRows, signal);
     const classificationsByCardId = new Map(classifications.map((row) => [row.cardId, row]));
     const mediaByCardId = new Map(media.map((row) => [row.cardId, row]));
     const speedsByCardId = groupByCardId(speeds);
-    const keywordsByCardId = groupByCardId(cardKeywordRows);
+    const keywordsByCardId = groupByCardId(
+      cardKeywordRows.map((row) => ({
+        ...row,
+        targets: targetsByCardKeywordId.get(row.cardKeywordId) ?? [],
+      })),
+    );
     const tagsByCardId = groupByCardId(tags);
     const marketplaceReferencesByCardId = groupByCardId(marketplaceReferences);
 

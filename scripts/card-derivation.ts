@@ -1,10 +1,44 @@
 import { match } from "ts-pattern";
 
 type CardSpeed = "normal" | "action" | "reaction";
-type KeywordScope = "self" | "other";
+type KeywordTargetKind =
+  | "self"
+  | "unit"
+  | "gear"
+  | "spell"
+  | "card"
+  | "player"
+  | "effect"
+  | "cost"
+  | "rule";
+type KeywordAllegiance = "own" | "friendly" | "enemy" | "any_player" | "unspecified";
+
+interface KeywordTarget {
+  readonly kind: KeywordTargetKind;
+  readonly isToken: boolean;
+  readonly allegiance: KeywordAllegiance;
+}
+
+type TargetPhrase =
+  | {
+      readonly type: "leadIn";
+      readonly leadIn: RegExp;
+      readonly targets: readonly KeywordTarget[];
+    }
+  | {
+      readonly type: "trailing";
+      readonly trailing: RegExp;
+      readonly targets: readonly KeywordTarget[];
+    }
+  | {
+      readonly type: "surrounding";
+      readonly leadIn: RegExp;
+      readonly trailing: RegExp;
+      readonly targets: readonly KeywordTarget[];
+    };
 
 type KeywordTargeting =
-  | { readonly type: "targeted"; readonly scope: KeywordScope }
+  | { readonly type: "targeted"; readonly targets: readonly KeywordTarget[] }
   | { readonly type: "unclassified"; readonly leadIn: string; readonly trailing: string };
 
 interface OwnedKeyword {
@@ -47,54 +81,145 @@ const TRAILING_WINDOW = 40;
 const ABILITY_OPENER = /(?:^|[\n.;:—–]|&quot;|")$/;
 const CONTROLLER_KEYWORDS = new Set(["add", "burn", "predict"]);
 const GAINED_KEYWORDS = new Set(["add"]);
+const QUOTE = /&quot;|"/g;
 
-const OTHER_ACTOR_LEAD_INS: readonly RegExp[] = [
-  /\bthey$/i,
-  /\bthey (?:may|can|must)$/i,
-  /\beach player$/i,
+function on(kind: KeywordTargetKind, allegiance: KeywordAllegiance): KeywordTarget {
+  return { kind, isToken: false, allegiance };
+}
+
+function onToken(kind: KeywordTargetKind, allegiance: KeywordAllegiance): KeywordTarget {
+  return { kind, isToken: true, allegiance };
+}
+
+const SELF = on("self", "own");
+const OWN_PLAYER = on("player", "own");
+const ENEMY_PLAYER = on("player", "enemy");
+const ANY_PLAYER = on("player", "any_player");
+const FRIENDLY_UNIT = on("unit", "friendly");
+const ENEMY_UNIT = on("unit", "enemy");
+const ANY_UNIT = on("unit", "unspecified");
+const FRIENDLY_UNIT_TOKEN = onToken("unit", "friendly");
+const FRIENDLY_GEAR = on("gear", "friendly");
+const ENEMY_GEAR = on("gear", "enemy");
+const ANY_GEAR = on("gear", "unspecified");
+const FRIENDLY_GEAR_TOKEN = onToken("gear", "friendly");
+const FRIENDLY_SPELL = on("spell", "friendly");
+const ANY_SPELL = on("spell", "unspecified");
+const ENEMY_CARD = on("card", "enemy");
+const ANY_CARD = on("card", "unspecified");
+const FRIENDLY_EFFECT = on("effect", "friendly");
+const FRIENDLY_COST = on("cost", "friendly");
+const KEYWORD_RULE = on("rule", "unspecified");
+
+function before(leadIn: RegExp, ...targets: readonly KeywordTarget[]): TargetPhrase {
+  return { type: "leadIn", leadIn, targets };
+}
+
+function after(trailing: RegExp, ...targets: readonly KeywordTarget[]): TargetPhrase {
+  return { type: "trailing", trailing, targets };
+}
+
+function around(
+  leadIn: RegExp,
+  trailing: RegExp,
+  ...targets: readonly KeywordTarget[]
+): TargetPhrase {
+  return { type: "surrounding", leadIn, trailing, targets };
+}
+
+const ACTOR_LEAD_INS: readonly TargetPhrase[] = [
+  before(/\bthe attacker and defender each$/i, OWN_PLAYER, ENEMY_PLAYER),
+  before(/\bchoose an opponent\. they$/i, ENEMY_PLAYER),
+  before(/\bthey$/i, ANY_PLAYER),
+  before(/\bthey (?:may|can|must)$/i, ANY_PLAYER),
+  before(/\beach player$/i, ANY_PLAYER),
 ];
 
-const SELF_LEAD_INS: readonly RegExp[] = [
-  /\bI have$/i,
-  /\bI gain$/i,
-  /\bI get$/i,
-  /\bI keep$/i,
-  /\bI['’]m$/i,
-  /\bI am$/i,
-  /\bI was$/i,
-  /\bI become$/i,
-  /\bI can be$/i,
-  /\bgives? me$/i,
-  /\bto me$/i,
-  /\bmy$/i,
+const SELF_LEAD_INS: readonly TargetPhrase[] = [
+  before(/\bI have$/i, SELF),
+  before(/\bI gain$/i, SELF),
+  before(/\bI get$/i, SELF),
+  before(/\bI keep$/i, SELF),
+  before(/\bI['\u2019]m$/i, SELF),
+  before(/\bI am$/i, SELF),
+  before(/\bI was$/i, SELF),
+  before(/\bI become$/i, SELF),
+  before(/\bI can be$/i, SELF),
+  before(/\bgives? me$/i, SELF),
+  before(/\bto me$/i, SELF),
+  before(/\bmy$/i, SELF),
+  before(/\bif this is$/i, SELF),
 ];
 
-const OTHER_LEAD_INS: readonly RegExp[] = [
-  /\bother friendly units here have$/i,
-  /\bgives? (?:it|them|him|her|those|these)$/i,
-  /\bgives? (?:a|an|the|your|their|each|one|another|every|all|any)\b[\w' +]*$/i,
-  /\beach gives?$/i,
-  /\b(?:have|has|gains?|gets?)$/i,
-  /\bwith$/i,
-  /\bbecomes?$/i,
-  /\bfrom$/i,
-  /\bignores?$/i,
-  /\bwithout$/i,
-  /\bone or more$/i,
-  /\bthat(?: are| is|['’]s)$/i,
-  /\bif (?:it|this|that|they|he|she)(?:['’]s|['’]re| is| are| was| were)?$/i,
-  /\byour(?: [\w'’-]+)?$/i,
-  /\b(?:a|an|the|their|its|other|another|each|every|all|any|friendly|enemy|opposing)$/i,
-  /\b(?:units?|cards?|spells?|gears?|tokens?|opponents?|opponents['’]|players?)$/i,
+const TARGET_LEAD_INS: readonly TargetPhrase[] = [
+  around(/\byour$/i, /^[ \t]+effects?\b/i, FRIENDLY_EFFECT),
+  around(/\bfriendly$/i, /^[ \t]+costs?\b/i, FRIENDLY_COST),
+  around(/\byour opponents['\u2019]$/i, /^[ \t]+cards?\b/i, ENEMY_CARD),
+  around(/\bwhen you play a$/i, /^[ \t]+units?\b/i, ANY_UNIT),
+  around(/\bfor each of your$/i, /^[ \t]+units?\b/i, FRIENDLY_UNIT),
+  around(/\bkill a friendly$/i, /^[ \t]+units?\b/i, FRIENDLY_UNIT),
+  around(/\bone or more$/i, /^[ \t]+units?\b/i, ANY_UNIT),
+  before(/\b(?:players? )?ignores?$/i, KEYWORD_RULE),
+  before(/\bother friendly units here have$/i, FRIENDLY_UNIT),
+  before(/\bfriendly (?:buffed )?units(?: [\w'\u2019-]+)* have$/i, FRIENDLY_UNIT),
+  before(/\bunits here(?: with \[[^\]]*\])? (?:have|with)$/i, ANY_UNIT),
+  before(/\byour token units have$/i, FRIENDLY_UNIT_TOKEN),
+  before(/\byour (?:other )?units (?:here )?have$/i, FRIENDLY_UNIT),
+  before(/\byour (?:mechs|sand soldiers) (?:each )?have$/i, FRIENDLY_UNIT),
+  before(/\bsand soldiers you play have$/i, FRIENDLY_UNIT),
+  before(/\byour units that are$/i, FRIENDLY_UNIT),
+  before(/\byour equipment (?:everywhere have|each gives?)$/i, FRIENDLY_GEAR),
+  before(/\byour spells have$/i, FRIENDLY_SPELL),
+  before(/\b(?:each |two |up to two )?(?:unit|gear) tokens? with$/i, FRIENDLY_UNIT_TOKEN),
+  before(/\b(?:your |a |an |each |two |up to two )?cards? with$/i, ANY_CARD),
+  before(/\bspells? with$/i, ANY_SPELL),
+  before(/\b(?:a friendly|your|friendly) units? with(?:out)?$/i, FRIENDLY_UNIT),
+  before(/\bunits? with(?:out)?$/i, ANY_UNIT),
+  before(/\b(?:one of )?(?:your units|a unit you control) becomes$/i, FRIENDLY_UNIT),
+  before(/\ban enemy gear\. if it['\u2019]s$/i, ENEMY_GEAR),
+  before(/\bcontrol something that['\u2019]s$/i, ANY_CARD),
+  before(/\bgives? (?:it|them|him|her|those|these)$/i, ANY_UNIT),
+  before(/\bit (?:gains?|gets?)$/i, ANY_UNIT),
+  before(
+    /\bgives? (?:one of )?(?:your|their|his|her)(?: [\w'\u2019-]+)* units?(?: here| there)?$/i,
+    FRIENDLY_UNIT,
+  ),
+  before(/\bgives? an? friendly unit$/i, FRIENDLY_UNIT),
+  before(/\bgives? an? unit(?: at a battlefield)?$/i, ANY_UNIT),
+  before(/\ban? gear$/i, ANY_GEAR),
+  before(/\bgives? (?:the|your) next spell(?: you play)?(?: this turn)?$/i, FRIENDLY_SPELL),
+  before(/\bgives? an? spell in your trash$/i, FRIENDLY_SPELL),
+  before(/\bplay a card from$/i, ANY_CARD),
+  before(/\bI['\u2019]m played from$/i, ANY_CARD),
+  before(/\b(?:a|an|the|each|every|any|another) units? that['\u2019]s$/i, ANY_UNIT),
+  before(/\bif (?:it|that|they|he|she)(?:['\u2019]s|['\u2019]re| is| are| was| were)?$/i, ANY_UNIT),
+  before(/\bif at least one of them has$/i, ANY_UNIT),
 ];
 
-const SELF_TRAILING_TARGETS: readonly RegExp[] = [
-  /^[ \t]+(?:me|my|myself)\b/i,
+const SELF_TRAILING_TARGETS: readonly TargetPhrase[] = [after(/^[ \t]+(?:me|my|myself)\b/i, SELF)];
+
+const TARGET_TRAILING_TARGETS: readonly TargetPhrase[] = [
+  after(
+    /^[ \t]+(?:an?|the|one|each|every|any|all)?[ \t]*(?:attacking |defending |stunned )?enemy units?\b/i,
+    ENEMY_UNIT,
+  ),
+  after(/^[ \t]+(?:an?|the|one|each|every|any|all)?[ \t]*friendly units?\b/i, FRIENDLY_UNIT),
+  after(/^[ \t]+(?:an?|the|one|each|every|any|all)?[ \t]*units?\b/i, ANY_UNIT),
+  after(/^[ \t]+(?:an?|the|one|each|every|any|all)?[ \t]*(?:gears?|equipment)\b/i, ANY_GEAR),
+  after(/^[ \t]+(?:it|them|him|her|those|these|they)\b/i, ANY_UNIT),
+  after(/^[ \t]+(?:an?|the|all|each|every|any|another)\b/i, ANY_UNIT),
 ];
 
-const OTHER_TRAILING_TARGETS: readonly RegExp[] = [
-  /^[ \t]+(?:it|them|him|her|those|these|they)\b/i,
-  /^[ \t]+(?:an?|the|all|each|every|any|another)\b/i,
+const CLASSIFIED_PHRASES: readonly TargetPhrase[] = [
+  ...SELF_LEAD_INS,
+  ...TARGET_LEAD_INS,
+  ...SELF_TRAILING_TARGETS,
+  ...TARGET_TRAILING_TARGETS,
+];
+
+const GRANTED_BEARERS: readonly (readonly [RegExp, KeywordTarget])[] = [
+  [/\bunit tokens?\b/gi, FRIENDLY_UNIT_TOKEN],
+  [/\bgear tokens?\b/gi, FRIENDLY_GEAR_TOKEN],
 ];
 
 function leadingTokens(text: string): readonly string[] {
@@ -156,14 +281,30 @@ function parseKeyword(token: string, following: string): OwnedKeyword {
   };
 }
 
-function reminderSpans(text: string): readonly (readonly [number, number])[] {
+type Span = readonly [number, number];
+
+function reminderSpans(text: string): readonly Span[] {
   return [...text.matchAll(REMINDER)].map(
     (reminder) => [reminder.index, reminder.index + reminder[0].length] as const,
   );
 }
 
-function isDefining(spans: readonly (readonly [number, number])[], position: number): boolean {
-  return spans.some(([start, end]) => position > start && position < end);
+function quotedSpans(text: string): readonly Span[] {
+  const marks = [...text.matchAll(QUOTE)];
+  const spans: Span[] = [];
+
+  for (let index = 0; index + 1 < marks.length; index += 2) {
+    const opening = marks[index];
+    const closing = marks[index + 1];
+    if (opening === undefined || closing === undefined) continue;
+    spans.push([opening.index, closing.index + closing[0].length] as const);
+  }
+
+  return spans;
+}
+
+function spanAt(spans: readonly Span[], position: number): Span | null {
+  return spans.find(([start, end]) => position > start && position < end) ?? null;
 }
 
 function costFollowing(text: string, position: number): string {
@@ -181,27 +322,68 @@ function leadIn(text: string, position: number): string {
   return head;
 }
 
+function phraseTargets(
+  phrases: readonly TargetPhrase[],
+  lead: string,
+  trailing: string,
+): readonly KeywordTarget[] | null {
+  const matched = phrases.find((phrase) =>
+    match(phrase)
+      .with({ type: "leadIn" }, (rule) => rule.leadIn.test(lead))
+      .with({ type: "trailing" }, (rule) => rule.trailing.test(trailing))
+      .with(
+        { type: "surrounding" },
+        (rule) => rule.leadIn.test(lead) && rule.trailing.test(trailing),
+      )
+      .exhaustive(),
+  );
+
+  return matched?.targets ?? null;
+}
+
+function grantedTargeting(
+  text: string,
+  quoted: Span,
+  lead: string,
+  trailing: string,
+): KeywordTargeting {
+  const preceding = text.slice(0, quoted[0]);
+  let bearer: { readonly at: number; readonly target: KeywordTarget } | null = null;
+
+  for (const [phrase, target] of GRANTED_BEARERS) {
+    for (const named of preceding.matchAll(phrase)) {
+      if (bearer === null || named.index > bearer.at) bearer = { at: named.index, target };
+    }
+  }
+
+  return bearer === null
+    ? { type: "unclassified", leadIn: lead, trailing }
+    : { type: "targeted", targets: [bearer.target] };
+}
+
 function targetingOf(text: string, position: number, end: number, id: string): KeywordTargeting {
   const lead = leadIn(text, position);
   const trailing = text.slice(end, end + TRAILING_WINDOW);
-  if (OTHER_ACTOR_LEAD_INS.some((phrase) => phrase.test(lead)))
-    return { type: "targeted", scope: "other" };
-  if (CONTROLLER_KEYWORDS.has(id)) return { type: "targeted", scope: "self" };
-  if (SELF_LEAD_INS.some((phrase) => phrase.test(lead))) return { type: "targeted", scope: "self" };
-  if (OTHER_LEAD_INS.some((phrase) => phrase.test(lead)))
-    return { type: "targeted", scope: "other" };
-  if (SELF_TRAILING_TARGETS.some((phrase) => phrase.test(trailing)))
-    return { type: "targeted", scope: "self" };
-  if (OTHER_TRAILING_TARGETS.some((phrase) => phrase.test(trailing)))
-    return { type: "targeted", scope: "other" };
-  if (ABILITY_OPENER.test(lead)) return { type: "targeted", scope: "self" };
+  const actor = phraseTargets(ACTOR_LEAD_INS, lead, trailing);
+  if (actor) return { type: "targeted", targets: actor };
+  if (CONTROLLER_KEYWORDS.has(id)) return { type: "targeted", targets: [OWN_PLAYER] };
+  const targets = phraseTargets(CLASSIFIED_PHRASES, lead, trailing);
+  if (targets) return { type: "targeted", targets };
+  if (ABILITY_OPENER.test(lead)) return { type: "targeted", targets: [SELF] };
 
   return { type: "unclassified", leadIn: lead, trailing };
 }
 
+function targetKey(target: KeywordTarget): string {
+  return `${target.kind}:${target.isToken}:${target.allegiance}`;
+}
+
 function occurrenceKey(occurrence: KeywordOccurrence): string {
   return match(occurrence.targeting)
-    .with({ type: "targeted" }, ({ scope }) => `${occurrence.id}\u0000${scope}`)
+    .with(
+      { type: "targeted" },
+      ({ targets }) => `${occurrence.id}\u0000${targets.map(targetKey).join("|")}`,
+    )
     .with(
       { type: "unclassified" },
       ({ leadIn, trailing }) => `${occurrence.id}\u0000?${leadIn}\u0000${trailing}`,
@@ -210,18 +392,30 @@ function occurrenceKey(occurrence: KeywordOccurrence): string {
 }
 
 function keywordOccurrences(text: string): readonly KeywordOccurrence[] {
-  const spans = reminderSpans(text);
+  const reminders = reminderSpans(text);
+  const granted = quotedSpans(text);
   const byKey = new Map<string, KeywordOccurrence>();
 
   for (const token of text.matchAll(BRACKET_TOKEN)) {
     const inner = (token[1] ?? "").trim();
-    if (!isKeywordToken(inner) || isDefining(spans, token.index)) continue;
+    if (!isKeywordToken(inner)) continue;
+
+    const quoted = spanAt(granted, token.index);
+    if (quoted === null && spanAt(reminders, token.index) !== null) continue;
 
     const end = token.index + token[0].length;
     const keyword = parseKeyword(inner, costFollowing(text, end));
     const occurrence = {
       ...keyword,
-      targeting: targetingOf(text, token.index, end, keyword.id),
+      targeting:
+        quoted === null
+          ? targetingOf(text, token.index, end, keyword.id)
+          : grantedTargeting(
+              text,
+              quoted,
+              leadIn(text, token.index),
+              text.slice(end, end + TRAILING_WINDOW),
+            ),
     };
     const key = occurrenceKey(occurrence);
     const held = byKey.get(key);
@@ -338,11 +532,11 @@ function printingIdentity(riftboundId: string): PrintingIdentity {
 }
 
 export {
-  OTHER_ACTOR_LEAD_INS,
-  OTHER_LEAD_INS,
-  OTHER_TRAILING_TARGETS,
+  ACTOR_LEAD_INS,
   SELF_LEAD_INS,
   SELF_TRAILING_TARGETS,
+  TARGET_LEAD_INS,
+  TARGET_TRAILING_TARGETS,
   cardSpeeds,
   championName,
   identityName,
@@ -357,8 +551,10 @@ export {
 export type {
   CardSpeed,
   ChampionCandidate,
+  KeywordAllegiance,
   KeywordOccurrence,
-  KeywordScope,
+  KeywordTarget,
+  KeywordTargetKind,
   KeywordTargeting,
   OwnedKeyword,
   PrintingIdentity,

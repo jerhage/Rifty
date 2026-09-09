@@ -15,7 +15,7 @@ import {
   cardTags,
   catalogCards,
 } from "./catalog-schema/cards";
-import { cardKeywords, keywords } from "./catalog-schema/keywords";
+import { cardKeywordTargets, cardKeywords, keywords } from "./catalog-schema/keywords";
 import { catalogSeedStates } from "./catalog-schema/seed-state";
 import { cardSets, setMarketplaceReferences } from "./catalog-schema/sets";
 import { cardSupertypes, cardTypes, domains, rarities, tags } from "./catalog-schema/taxonomy";
@@ -59,6 +59,7 @@ async function clearCatalog(db: ReturnType<typeof drizzle>): Promise<void> {
   await db.delete(cardMedia);
   await db.delete(cardImageSources);
   await db.delete(cardClassifications);
+  await db.delete(cardKeywordTargets);
   await db.delete(cardKeywords);
   await db.delete(cardSpeeds);
   await db.delete(catalogCards);
@@ -100,6 +101,8 @@ async function insertCatalog(db: ReturnType<typeof drizzle>): Promise<void> {
   }
   for (const rows of batches(catalogSeed.cardKeywords))
     await db.insert(cardKeywords).values([...rows]);
+  for (const rows of batches(catalogSeed.cardKeywordTargets))
+    await db.insert(cardKeywordTargets).values([...rows]);
   for (const rows of batches(catalogSeed.cardSpeeds)) await db.insert(cardSpeeds).values([...rows]);
 }
 

@@ -89,7 +89,9 @@ interface KeywordMix {
 
 function countedKeywords(card: Card): readonly CardKeyword[] {
   return card.keywords.filter(
-    (keyword) => keyword.scope === "self" && !EXCLUDED_KEYWORD_IDS.includes(keyword.id),
+    (keyword) =>
+      keyword.targets.some((target) => target.kind === "self") &&
+      !EXCLUDED_KEYWORD_IDS.includes(keyword.id),
   );
 }
 

@@ -28,11 +28,15 @@ const ambessa =
 const aurokGeneral =
   "[Empower] [3]:rb_rune_order: ([3]:rb_rune_order: Empower me. Use only if not Empowered.)\n[Empowered][>] Your units that are [Empowered] have +2 :rb_might: (including me).";
 
-function scoped(text: string): readonly string[] {
+function targeted(text: string): readonly string[] {
   return keywordOccurrences(text).map(
     (keyword) =>
       `${label(keyword)}=${match(keyword.targeting)
-        .with({ type: "targeted" }, (targeting) => targeting.scope)
+        .with({ type: "targeted" }, ({ targets }) =>
+          targets
+            .map((target) => `${target.kind}${target.isToken ? " token" : ""}:${target.allegiance}`)
+            .join("+"),
+        )
         .with({ type: "unclassified" }, () => "unclassified")
         .exhaustive()}`,
   );
@@ -56,51 +60,106 @@ describe("card derivation", () => {
   });
 
   it("captures every keyword the text prints, not only the run that opens it", () => {
-    expect(scoped(ambessa)).toEqual(["empower=self", "empowered=self", "assault 2=self"]);
-    expect(scoped(blastCone)).toEqual(["stun=other"]);
-    expect(scoped("Other friendly units here have [Assault].")).toEqual(["assault=other"]);
+    expect(targeted(ambessa)).toEqual([
+      "empower=self:own",
+      "empowered=self:own",
+      "assault 2=self:own",
+    ]);
+    expect(targeted(blastCone)).toEqual(["stun=unit:enemy"]);
+    expect(targeted("Other friendly units here have [Assault].")).toEqual([
+      "assault=unit:friendly",
+    ]);
   });
 
-  it("scopes a keyword to the card that ends up with it", () => {
-    expect(scoped(block)).toEqual(["hidden=self", "action=self", "shield 3=other", "tank=other"]);
-    expect(scoped("While I'm [Mighty], I have [Deflect], [Ganking], and [Shield].")).toEqual([
-      "mighty=self",
-      "deflect=self",
-      "ganking=self",
-      "shield=self",
+  it("names what a keyword lands on, not only whether it is the card itself", () => {
+    expect(targeted(block)).toEqual([
+      "hidden=self:own",
+      "action=self:own",
+      "shield 3=unit:unspecified",
+      "tank=unit:unspecified",
     ]);
-    expect(scoped("Spells with [Flow] you play from your trash cost [2] less.")).toEqual([
-      "flow=other",
+    expect(targeted("While I'm [Mighty], I have [Deflect], [Ganking], and [Shield].")).toEqual([
+      "mighty=self:own",
+      "deflect=self:own",
+      "ganking=self:own",
+      "shield=self:own",
     ]);
-    expect(scoped(aurokGeneral)).toEqual(["empower=self", "empowered=self", "empowered=other"]);
+    expect(targeted("Spells with [Flow] you play from your trash cost [2] less.")).toEqual([
+      "flow=spell:unspecified",
+    ]);
+    expect(targeted(aurokGeneral)).toEqual([
+      "empower=self:own",
+      "empowered=self:own",
+      "empowered=unit:friendly",
+    ]);
+  });
+
+  it("keeps a gear's own condition apart from a condition on a thing it chose", () => {
+    expect(
+      targeted("Opponents' spells cost [1] more. If this is [Empowered], they cost [2] more."),
+    ).toEqual(["empowered=self:own"]);
+    expect(targeted("Give a unit +2 :rb_might:. If it's [Empowered], give it +4 instead.")).toEqual(
+      ["empowered=unit:unspecified"],
+    );
+  });
+
+  it("gives a quoted granted ability to the token that carries it, not to the printing", () => {
+    expect(
+      targeted(
+        'Play a 0 :rb_might: Shadow Clone unit token. (It has "When I attack, give me [Assault 4] this turn.")',
+      ),
+    ).toEqual(["assault 4=unit token:friendly"]);
+    expect(
+      targeted(
+        "Play a Gold gear token exhausted. (It has &quot;[Reaction][&gt;] Kill this, :rb_exhaust:: [Add] :rb_rune_rainbow:.&quot;)",
+      ),
+    ).toEqual(["reaction=gear token:friendly", "add=gear token:friendly"]);
+  });
+
+  it("records both players when the text says each of them does it", () => {
+    expect(targeted("When combat starts here, the attacker and defender each [Add] [1].")).toEqual([
+      "add=player:own+player:enemy",
+    ]);
+  });
+
+  it("reads a keyword named as a rule, an effect, or a cost rather than as a bearer", () => {
+    expect(targeted("You ignore [Tank] while assigning combat damage here.")).toEqual([
+      "tank=rule:unspecified",
+    ]);
+    expect(targeted("Your [Deathknell] effects trigger an additional time.")).toEqual([
+      "deathknell=effect:friendly",
+    ]);
+    expect(
+      targeted("While you control this battlefield, friendly [Repeat] costs cost [1] less."),
+    ).toEqual(["repeat=cost:friendly"]);
   });
 
   it("reads a keyword a reminder defines as part of the definition, not as an occurrence", () => {
-    expect(scoped("[Weaponmaster] (When you play me, you may [Equip] an Equipment.)")).toEqual([
-      "weaponmaster=self",
+    expect(targeted("[Weaponmaster] (When you play me, you may [Equip] an Equipment.)")).toEqual([
+      "weaponmaster=self:own",
     ]);
-    expect(
-      scoped('When I conquer, play a token. (It has "When I attack, give me [Assault 4]."))'),
-    ).toEqual([]);
+    expect(targeted("[Shield] (+1 :rb_might: while I'm a defender.)")).toEqual(["shield=self:own"]);
   });
 
   it("reads the target that follows the bracket when the lead-in names none", () => {
-    expect(scoped("When I attack, [Stun] an enemy unit.")).toEqual(["stun=other"]);
-    expect(scoped("You may exhaust this to [Stun] it.")).toEqual(["stun=other"]);
-    expect(scoped("Spend 2 XP: [Buff] me.")).toEqual(["buff=self"]);
+    expect(targeted("When I attack, [Stun] an enemy unit.")).toEqual(["stun=unit:enemy"]);
+    expect(targeted("You may exhaust this to [Stun] it.")).toEqual(["stun=unit:unspecified"]);
+    expect(targeted("Spend 2 XP: [Buff] me.")).toEqual(["buff=self:own"]);
   });
 
   it("keeps a keyword that fills your own pool with you, unless the text names another actor", () => {
-    expect(scoped("When I move, [Add] :rb_energy_1:.")).toEqual(["add=self"]);
-    expect(scoped("While your score is behind, your Gold [Add] an extra :rb_energy_1:.")).toEqual([
-      "add=self",
+    expect(targeted("When I move, [Add] :rb_energy_1:.")).toEqual(["add=player:own"]);
+    expect(targeted("While your score is behind, your Gold [Add] an extra :rb_energy_1:.")).toEqual(
+      ["add=player:own"],
+    );
+    expect(targeted("If you do, [Predict], then reveal the top card.")).toEqual([
+      "predict=player:own",
     ]);
-    expect(scoped("If you do, [Predict], then reveal the top card.")).toEqual(["predict=self"]);
-    expect(scoped("When you play me, [Burn 2].")).toEqual(["burn 2=self"]);
-    expect(scoped("Choose a player. They [Burn 1].")).toEqual(["burn 1=other"]);
+    expect(targeted("When you play me, [Burn 2].")).toEqual(["burn 2=player:own"]);
+    expect(targeted("Choose a player. They [Burn 1].")).toEqual(["burn 1=player:any_player"]);
   });
 
-  it("reports a lead-in and a trailing phrase it has none of rather than guessing a scope", () => {
+  it("reports a lead-in and a trailing phrase it has none of rather than guessing a target", () => {
     expect(keywordOccurrences("When you hold here, [Vision] twice.")).toEqual([
       {
         id: "vision",
@@ -129,7 +188,10 @@ describe("card derivation", () => {
     expect(ownedKeywords("[Equip] :rb_rune_calm: (Pay to equip.)")).toEqual([
       { id: "equip", name: "Equip", value: null, cost: ":rb_rune_calm:" },
     ]);
-    expect(scoped("[Reaction] — [Add] :rb_rune_fury:.")).toEqual(["reaction=self", "add=self"]);
+    expect(targeted("[Reaction] — [Add] :rb_rune_fury:.")).toEqual([
+      "reaction=self:own",
+      "add=player:own",
+    ]);
     expect(keywordOccurrences("[Reaction] — [Add] :rb_rune_fury:.")[1]?.cost).toBeNull();
     expect(ownedKeywords("[Equip :rb_rune_calm:] (Pay to equip.)")).toEqual([
       { id: "equip", name: "Equip", value: null, cost: ":rb_rune_calm:" },

@@ -11,6 +11,8 @@
 
 - [ ] Consider an `AnalyzedCard` interface in the analysis feature. Analysis imports the whole `Card` aggregate but reads about six fields of it, so it is coupled to churn in fields it never touches. Declaring the narrow shape it needs would decouple them for free: TypeScript is structurally typed, so `Card` satisfies it with no mapping code and no second model to keep in sync. Not worth doing while the catalog is the only source of cards. The trigger is a second one, such as meta or tournament decklists arriving from an API with their own card shape, at which point this becomes the anticorruption layer between them.
 
+- [ ] Widen keyword scope beyond `self` / `other`. The derivation already distinguishes finer targets and flattens them: `[Stun] an enemy unit`, `[Buff] a friendly unit`, `Other friendly units here have [Shield]`, `choose an opponent. They [Burn 3]`, and `[Add]` into your own pool are at least four targets collapsed into two values. Widening means re-deriving every row and revisiting anything that branches on scope, so it wants its own pass. The phrase lists in `.local/keyword-targeting.md` already separate these cases — they just map several onto one value.
+
 - [ ] Make Metro pick up migration SQL changes. Right now, `babel-plugin-inline-import` embeds `.sql` files into `migrations.js`, but Metro doesn't know those files are dependencies. This means migration changes can stay stale until running `npm run start:clear`. Add the files under `drizzle/**/*.sql` to Metro's cache key so changes are picked up automatically.
 
 - [x] Convert the remaining card art to WebP.

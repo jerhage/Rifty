@@ -1,6 +1,8 @@
 import type { Card } from "@/features/catalog/card/card";
 import type { CardSet } from "@/features/catalog/set/card-set";
 
+import { identityName } from "../../scripts/card-derivation";
+
 function cardSet(code: string, publishedOn: string, name = code): CardSet {
   return {
     code,
@@ -28,18 +30,21 @@ function card(
       | "speeds"
       | "keywords"
       | "championName"
+      | "identityName"
       | "orientation"
       | "tagIds"
       | "marketplaceReferences"
     >
   > = {},
 ): Card {
+  const name = options.name ?? `Card ${id}`;
+
   return {
     id,
     riftboundId: `${setCode.toLowerCase()}-${id}-100`,
     setCode,
     collectorNumber: options.collectorNumber ?? 1,
-    name: options.name ?? `Card ${id}`,
+    name,
     cleanName: options.cleanName ?? `Card ${id}`,
     attributes: options.attributes ?? { energy: 3, might: 2, power: null },
     rulesText: options.rulesText ?? {
@@ -61,6 +66,7 @@ function card(
     speeds: options.speeds ?? ["normal"],
     keywords: options.keywords ?? [],
     championName: options.championName ?? null,
+    identityName: options.identityName ?? identityName(name),
     tagIds: options.tagIds ?? [],
     imageUrl: `http://localhost:8787/${setCode.toLowerCase()}-${id}-100.webp`,
     marketplaceReferences: options.marketplaceReferences ?? [

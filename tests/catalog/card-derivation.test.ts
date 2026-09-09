@@ -2,6 +2,7 @@ import { downloadTargetFor, imageFileNames } from "../../scripts/card-image-file
 import {
   cardSpeeds,
   championName,
+  identityName,
   keywordsWithMagnitude,
   leadingTokens,
   ownedKeywords,
@@ -151,6 +152,25 @@ describe("card derivation", () => {
   it("downloads under the source's own format, then converts to the webp it is named for", () => {
     expect(downloadTargetFor("opp-247-298.webp", "https://x/a.png")).toBe("opp-247-298.png");
     expect(downloadTargetFor("opp-247-298.webp", "https://x/a.webp")).toBe("opp-247-298.webp");
+  });
+
+  it("strips the printing qualifier from a card's identity", () => {
+    expect(identityName("Yasuo (Alternate Art)")).toBe("Yasuo");
+    expect(identityName("Jinx, Loose Cannon (Signature)")).toBe("Jinx - Loose Cannon");
+    expect(identityName("Sett (Overnumbered)")).toBe("Sett");
+  });
+
+  it("canonicalizes the separator so one card keeps one identity", () => {
+    expect(identityName("Sett - Brawler")).toBe("Sett - Brawler");
+    expect(identityName("Sett, Brawler")).toBe("Sett - Brawler");
+    expect(identityName("Mel - Newly Awakened (Alternate Art)")).toBe("Mel - Newly Awakened");
+    expect(identityName("Riven - Shattered")).toBe(identityName("Riven, Shattered"));
+  });
+
+  it("leaves a name with no separator and no qualifier alone", () => {
+    expect(identityName("Blazing Scorcher")).toBe("Blazing Scorcher");
+    expect(identityName("Anti-Mage")).toBe("Anti-Mage");
+    expect(identityName("Yordle Sniper")).toBe("Yordle Sniper");
   });
 
   it("reads the pool, the collector number, and both printing marks from the id", () => {

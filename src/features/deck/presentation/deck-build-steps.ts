@@ -1,5 +1,4 @@
 import type { Card } from "@/features/catalog/card/card";
-import { cardIdentityName } from "@/features/catalog/card/card-identity";
 import type { Deck, DeckEntry, DeckSection } from "@/features/deck/deck/deck";
 
 type DeckBuildStepId = "legend" | "chosenChampion" | "zones";
@@ -173,7 +172,7 @@ function copiesOfName(
   let total = 0;
 
   for (const [key, placed] of Object.entries(draft.zoneCards)) {
-    if (cardIdentityName(placed.card) !== identityName || placed.quantity <= 0) continue;
+    if (placed.card.identityName !== identityName || placed.quantity <= 0) continue;
 
     const separatorIndex = key.indexOf(KEY_SEPARATOR);
     const section = key.slice(0, separatorIndex) as DeckSection;

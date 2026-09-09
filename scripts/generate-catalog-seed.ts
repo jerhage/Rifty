@@ -7,6 +7,7 @@ import { cardTypeSchema } from "../src/features/catalog/value-objects/card-type"
 import {
   cardSpeeds,
   championName,
+  identityName,
   keywordsWithMagnitude,
   ownedKeywords,
   printingIdentity,
@@ -192,6 +193,7 @@ type NormalizedCard = {
   isSignature: boolean;
   poolCode: string | null;
   championName: string | null;
+  identityName: string;
   sourceUpdatedAt: string;
   typeId: string;
   supertypeId: string | null;
@@ -209,6 +211,7 @@ type CardCore = Omit<
   | "championName"
   | "collectorNumber"
   | "id"
+  | "identityName"
   | "imageSources"
   | "isOvernumbered"
   | "isSignature"
@@ -357,9 +360,10 @@ function imageCardOf(card: ApiCard): SourcedCard {
 function normalize({ card, fetchedAt }: FetchedCard): NormalizedCard {
   const raw = rawCardSchema.safeParse(card.raw);
   const identity = printingIdentity(card.riftboundId);
+  const core = raw.success ? fromRaw(raw.data) : fromFlat(card, fetchedAt);
 
   return {
-    ...(raw.success ? fromRaw(raw.data) : fromFlat(card, fetchedAt)),
+    ...core,
     id: card.id,
     riftboundId: card.riftboundId,
     isOvernumbered: identity.isOvernumbered,
@@ -371,6 +375,7 @@ function normalize({ card, fetchedAt }: FetchedCard): NormalizedCard {
       supertypeId: card.supertype ?? null,
       typeId: card.cardType,
     }),
+    identityName: identityName(core.name),
     regions: card.regions,
     imageSources: imageSourcesOf(imageCardOf(card)),
     collectorNumber: raw.success
@@ -505,6 +510,7 @@ function buildSeed(
       isSignature: card.isSignature,
       poolCode: card.poolCode,
       championName: card.championName,
+      identityName: card.identityName,
       isCanonical: canonicalIds.has(card.id),
       sourceUpdatedAt: card.sourceUpdatedAt,
     });

@@ -130,6 +130,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         isSignature: card.isSignature,
         poolCode: null,
         championName: card.championName,
+        identityName: card.identityName,
         isCanonical: true,
         sourceUpdatedAt: card.sourceUpdatedAt,
       })

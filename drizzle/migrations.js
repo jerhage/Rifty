@@ -11,6 +11,7 @@ import m0007 from './20260908192826_add_deck_chosen_champion/migration.sql';
 import m0008 from './20260908194829_move_champion_into_main_deck/migration.sql';
 import m0009 from './20260908234101_add_card_keywords_speeds_and_tag_kinds/migration.sql';
 import m0010 from './20260908234505_replace_card_media_assets_with_owned_images/migration.sql';
+import m0011 from './20260909193131_fair_hedge_knight/migration.sql';
 
   export default {
     migrations: {
@@ -24,7 +25,8 @@ import m0010 from './20260908234505_replace_card_media_assets_with_owned_images/
 "20260908192826_add_deck_chosen_champion": m0007,
 "20260908194829_move_champion_into_main_deck": m0008,
 "20260908234101_add_card_keywords_speeds_and_tag_kinds": m0009,
-"20260908234505_replace_card_media_assets_with_owned_images": m0010
+"20260908234505_replace_card_media_assets_with_owned_images": m0010,
+"20260909193131_fair_hedge_knight": m0011
 }
   }
   

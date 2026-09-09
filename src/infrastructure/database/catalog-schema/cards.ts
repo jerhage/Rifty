@@ -34,6 +34,7 @@ const catalogCards = sqliteTable(
     isSignature: integer("is_signature", { mode: "boolean" }).notNull(),
     poolCode: text("pool_code"),
     championName: text("champion_name"),
+    identityName: text("identity_name").notNull().default(""),
     isCanonical: integer("is_canonical", { mode: "boolean" }).notNull().default(true),
     sourceUpdatedAt: text("source_updated_at").notNull(),
   },

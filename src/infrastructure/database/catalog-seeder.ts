@@ -21,7 +21,7 @@ import { cardSets, setMarketplaceReferences } from "./catalog-schema/sets";
 import { cardSupertypes, cardTypes, domains, rarities, tags } from "./catalog-schema/taxonomy";
 
 const CATALOG_SEED_STATE_ID = "catalog";
-// catalog_card is the widest insert (20 columns); 40 rows stays below SQLite's 999-variable limit.
+// catalog_card is the widest insert (21 columns); 40 rows stays below SQLite's 999-variable limit.
 const INSERT_BATCH_SIZE = 40;
 
 /** Imports bundled reference data only when its content version changes. */

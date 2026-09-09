@@ -1,5 +1,4 @@
 import type { Card } from "@/features/catalog/card/card";
-import { cardIdentityName } from "@/features/catalog/card/card-identity";
 import type { DeckSection } from "@/features/deck/deck/deck";
 import { copyAllowance, ZONE_RULES } from "@/features/deck/deck/deck-legality";
 
@@ -22,7 +21,7 @@ function sectionsSharingWith(section: DeckSection): readonly DeckSection[] {
  * other shared zone, or another printing of the same card.
  */
 function lockedCopies(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
-  return copiesOfName(draft, cardIdentityName(card), sectionsSharingWith(section), {
+  return copiesOfName(draft, card.identityName, sectionsSharingWith(section), {
     section,
     cardRiftboundId: card.riftboundId,
   });

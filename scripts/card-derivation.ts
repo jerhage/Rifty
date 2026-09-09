@@ -24,6 +24,8 @@ const LEVEL = /^level\s+\d+$/i;
 const PLACEHOLDER = new Set(["no text"]);
 const SPEED_ORDER: readonly CardSpeed[] = ["normal", "action", "reaction"];
 const NAME_SEPARATOR = /\s+-\s+|,\s+/;
+const NAME_QUALIFIER = /\s*\([^)]*\)\s*$/;
+const CANONICAL_SEPARATOR = " - ";
 const LINE_BREAK = /\r?\n/;
 
 function leadingTokens(text: string): readonly string[] {
@@ -160,6 +162,16 @@ function championName({ name, champion, supertypeId, typeId }: ChampionCandidate
   return trimmed.length > 0 && trimmed !== name.trim() ? trimmed : null;
 }
 
+function identityName(name: string): string {
+  return name
+    .replace(NAME_QUALIFIER, "")
+    .trim()
+    .split(NAME_SEPARATOR)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+    .join(CANONICAL_SEPARATOR);
+}
+
 function printingIdentity(riftboundId: string): PrintingIdentity {
   const segments = riftboundId.split("-");
   const poolCode = segments.length >= 3 ? (segments.at(-1) ?? null) : null;
@@ -181,6 +193,7 @@ function printingIdentity(riftboundId: string): PrintingIdentity {
 export {
   cardSpeeds,
   championName,
+  identityName,
   keywordsWithMagnitude,
   leadingTokens,
   ownedKeywords,

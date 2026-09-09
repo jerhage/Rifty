@@ -23,11 +23,9 @@
 Each of these works off data we already store. Take them one at a time.
 
 - [ ] Draw simulation. Hypergeometric odds of opening a given card or count from the 40.
-- [ ] Proactive vs reactive split, from `card_speed`.
-- [ ] Keyword density, from `card_keyword` including the numeric values.
+- [x] Proactive vs reactive split, from `card_speed`.
+- [x] Keyword density, from `card_keyword` including the numeric values.
 - [ ] Might curve and total power, alongside the energy curve.
-- [ ] Off-domain count. Cards outside the legend's domain identity.
 - [ ] Trait density, using `tag.kind = 'trait'` so Poro no longer counts as Piltover.
-- [ ] Champion card count, from `champion_name`.
 - [ ] Copy distribution. How much of the deck is 1-of, 2-of, 3-of.
 - [ ] Rarity mix.

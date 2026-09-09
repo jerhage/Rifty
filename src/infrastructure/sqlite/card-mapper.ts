@@ -3,7 +3,7 @@ import { parseCardSummary, type CardSummary } from "@/features/catalog/card/card
 import {
   cardClassificationSelectSchema,
   cardDomainSelectSchema,
-  cardImageSourceSelectSchema,
+  cardMediaSelectSchema,
   cardMarketplaceReferenceSelectSchema,
   cardTagSelectSchema,
   catalogCardSelectSchema,
@@ -12,7 +12,8 @@ import {
 interface CardPersistenceShape {
   readonly card: unknown;
   readonly classification: unknown;
-  readonly source: unknown;
+  readonly media: unknown;
+  readonly imageBaseUrl: string;
   readonly domains: readonly unknown[];
   readonly tags: readonly unknown[];
   readonly marketplaceReferences: readonly unknown[];
@@ -21,7 +22,8 @@ interface CardPersistenceShape {
 function toDomainCard({
   card,
   classification,
-  source,
+  media,
+  imageBaseUrl,
   domains,
   tags,
   marketplaceReferences,
@@ -58,7 +60,7 @@ function toDomainCard({
     },
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     tagIds: tags.map((tag) => cardTagSelectSchema.parse(tag).tagId),
-    imageUrl: cardImageSourceSelectSchema.pick({ url: true }).parse(source).url,
+    imageUrl: cardImageUrl(imageBaseUrl, media),
     marketplaceReferences: marketplaceReferences.map((reference) => {
       const persistedReference = cardMarketplaceReferenceSelectSchema.parse(reference);
       return {
@@ -72,11 +74,13 @@ function toDomainCard({
 function toDomainCardSummary({
   card,
   domains,
-  source,
+  media,
+  imageBaseUrl,
 }: {
   readonly card: unknown;
   readonly domains: readonly unknown[];
-  readonly source: unknown;
+  readonly media: unknown;
+  readonly imageBaseUrl: string;
 }): CardSummary {
   const persistedCard = catalogCardSelectSchema
     .pick({ id: true, riftboundId: true, name: true, orientation: true })
@@ -87,8 +91,14 @@ function toDomainCardSummary({
     name: persistedCard.name,
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     orientation: persistedCard.orientation,
-    imageUrl: cardImageSourceSelectSchema.pick({ url: true }).parse(source).url,
+    imageUrl: cardImageUrl(imageBaseUrl, media),
   });
+}
+
+function cardImageUrl(imageBaseUrl: string, media: unknown): string {
+  const { imageFile } = cardMediaSelectSchema.pick({ imageFile: true }).parse(media);
+
+  return `${imageBaseUrl}/${imageFile}`;
 }
 
 export { toDomainCard, toDomainCardSummary };

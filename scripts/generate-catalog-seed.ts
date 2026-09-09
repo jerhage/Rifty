@@ -67,6 +67,8 @@ import type {
 } from "../src/infrastructure/database/catalog-schema/taxonomy";
 
 const dataDirectory = process.env.CATALOG_DATA_DIRECTORY ?? "data";
+const imageDirectory = process.env.CARD_IMAGE_DIRECTORY ?? join(dataDirectory, "images");
+const missingImagesPath = join(dataDirectory, "missing-images.json");
 const apiDirectory = join(dataDirectory, "api");
 const outputPath =
   process.env.CATALOG_SEED_OUTPUT_PATH ?? "src/infrastructure/database/generated/catalog-seed.ts";
@@ -282,6 +284,20 @@ if (seed.cardMedia.length !== seed.catalogCards.length) {
   console.warn(
     `${seed.catalogCards.length - seed.cardMedia.length} cards carry no image source and have no media row.`,
   );
+}
+
+const onDisk = new Set<string>(await readdir(imageDirectory).catch(() => []));
+const missingImages = seed.cardMedia
+  .filter((row) => row.imageFile !== undefined && !onDisk.has(row.imageFile))
+  .map((row) => ({ cardId: row.cardId, imageFile: row.imageFile }));
+
+await writeFile(missingImagesPath, `${JSON.stringify(missingImages, null, 2)}\n`, "utf8");
+
+if (missingImages.length > 0) {
+  console.warn(
+    `${missingImages.length} cards have no image on disk, listed in ${missingImagesPath}:`,
+  );
+  for (const row of missingImages) console.warn(`  ${row.imageFile}`);
 }
 
 async function readCardFile(file: string): Promise<FetchedCard[]> {

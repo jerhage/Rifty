@@ -14,10 +14,14 @@ interface CatalogDataStore {
 }
 
 /** Supplies catalog repository capabilities backed by the app database. */
-function createCatalogDataStore(database: SQLite.SQLiteDatabase, logger: Logger): CatalogDataStore {
+function createCatalogDataStore(
+  database: SQLite.SQLiteDatabase,
+  logger: Logger,
+  imageBaseUrl: string,
+): CatalogDataStore {
   const db = drizzle(database, { logger: new DrizzleLoggerAdapter(logger) });
   return {
-    cards: new SqliteCardRepository(db),
+    cards: new SqliteCardRepository(db, imageBaseUrl),
     sets: new SqliteSetRepository(db),
   };
 }

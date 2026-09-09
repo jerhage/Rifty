@@ -39,6 +39,8 @@ interface SqliteScenarioStore extends CatalogDataStore {
   seedSet(cardSet: CardSet): void;
 }
 
+const TEST_IMAGE_BASE_URL = "http://localhost:8787";
+
 function createSqliteScenarioStore(): SqliteScenarioStore {
   const client = new DatabaseSync(":memory:");
   client.exec("PRAGMA foreign_keys = ON;");
@@ -207,7 +209,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
   }
 
   return {
-    cards: new SqliteCardRepository(database),
+    cards: new SqliteCardRepository(database, TEST_IMAGE_BASE_URL),
     sets: new SqliteSetRepository(database),
     deckStore: { repository: new SqliteDeckRepository(database) },
     seedCard,

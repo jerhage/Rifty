@@ -16,7 +16,7 @@ import {
   cardClassifications,
   cardDomains,
   cardMarketplaceReferences,
-  cardImageSources,
+  cardMedia,
   cardTags,
   catalogCards,
 } from "@/infrastructure/database/catalog-schema/cards";
@@ -25,7 +25,10 @@ import { toDomainCard, toDomainCardSummary } from "./card-mapper";
 import type { SqliteDatabase } from "./sqlite-database";
 
 class SqliteCardRepository implements CardRepository {
-  constructor(private readonly db: SqliteDatabase) {}
+  constructor(
+    private readonly db: SqliteDatabase,
+    private readonly imageBaseUrl: string,
+  ) {}
 
   async get(id: CardId, { signal }: ReadOptions = {}): Promise<Card | null> {
     throwIfAborted(signal);
@@ -85,13 +88,10 @@ class SqliteCardRepository implements CardRepository {
           name: catalogCards.name,
           orientation: catalogCards.orientation,
         },
-        source: { url: cardImageSources.url },
+        media: { imageFile: cardMedia.imageFile },
       })
       .from(catalogCards)
-      .innerJoin(
-        cardImageSources,
-        and(eq(cardImageSources.cardId, catalogCards.id), eq(cardImageSources.priority, 0)),
-      )
+      .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
       .where(and(...this.#conditionsFor(criteria)))
       .orderBy(...this.#orderBy(criteria))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
@@ -106,7 +106,11 @@ class SqliteCardRepository implements CardRepository {
 
     return Page.create(
       pageRows.map((row) =>
-        toDomainCardSummary({ ...row, domains: domainsByCardId.get(row.card.id) ?? [] }),
+        toDomainCardSummary({
+          ...row,
+          domains: domainsByCardId.get(row.card.id) ?? [],
+          imageBaseUrl: this.imageBaseUrl,
+        }),
       ),
       rows.length > limit,
     );
@@ -300,16 +304,13 @@ class SqliteCardRepository implements CardRepository {
     const cardIds = rows.map((row) => row.id);
     // Batch each relation for this page. Otherwise 2 domains * 3 tags * 2 references would produce 12 rows per card in one join
     // and require additional processing for deduping. This is fine for now since we arent' performance limited.
-    const [classifications, imageSources, domainsByCardId, tags, marketplaceReferences] =
+    const [classifications, media, domainsByCardId, tags, marketplaceReferences] =
       await Promise.all([
         this.db
           .select()
           .from(cardClassifications)
           .where(inArray(cardClassifications.cardId, cardIds)),
-        this.db
-          .select()
-          .from(cardImageSources)
-          .where(and(inArray(cardImageSources.cardId, cardIds), eq(cardImageSources.priority, 0))),
+        this.db.select().from(cardMedia).where(inArray(cardMedia.cardId, cardIds)),
         this.#domainRowsFor(cardIds, signal),
         this.db
           .select()
@@ -327,21 +328,22 @@ class SqliteCardRepository implements CardRepository {
       ]);
     throwIfAborted(signal);
     const classificationsByCardId = new Map(classifications.map((row) => [row.cardId, row]));
-    const imageSourcesByCardId = new Map(imageSources.map((row) => [row.cardId, row]));
+    const mediaByCardId = new Map(media.map((row) => [row.cardId, row]));
     const tagsByCardId = groupByCardId(tags);
     const marketplaceReferencesByCardId = groupByCardId(marketplaceReferences);
 
     return rows.map((card) => {
       const classification = classificationsByCardId.get(card.id);
-      const sourceRow = imageSourcesByCardId.get(card.id);
-      if (!classification || !sourceRow) {
+      const mediaRow = mediaByCardId.get(card.id);
+      if (!classification || !mediaRow) {
         throw new Error(`Catalog card ${card.id} is missing required related data.`);
       }
 
       return toDomainCard({
         card,
         classification,
-        source: sourceRow,
+        media: mediaRow,
+        imageBaseUrl: this.imageBaseUrl,
         domains: domainsByCardId.get(card.id) ?? [],
         tags: tagsByCardId.get(card.id) ?? [],
         marketplaceReferences: marketplaceReferencesByCardId.get(card.id) ?? [],

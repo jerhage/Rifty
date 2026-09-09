@@ -56,7 +56,7 @@ function card(
     },
     domainIds: options.domainIds ?? ["Chaos"],
     tagIds: options.tagIds ?? [],
-    imageUrl: `https://images.riftbound-db.com/cards/ogn/${id}.webp`,
+    imageUrl: `http://localhost:8787/${setCode.toLowerCase()}-${id}-100.webp`,
     marketplaceReferences: options.marketplaceReferences ?? [
       { marketplace: "tcgplayer", externalId: `tcgplayer-${id}` },
     ],

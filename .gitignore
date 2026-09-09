@@ -45,3 +45,6 @@ example
 .local/
 coverage/
 /data/
+
+# Generated from data/ by npm run generate:catalog-seed
+/src/infrastructure/database/generated/

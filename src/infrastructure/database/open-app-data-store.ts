@@ -5,6 +5,7 @@ import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import migrations from "../../../drizzle/migrations";
 
 import type { Logger } from "@/application/ports/logger";
+import { cardImageBaseUrl } from "@/composition/card-image-host";
 import { DrizzleLoggerAdapter } from "@/infrastructure/drizzle/drizzle-logger-adapter";
 import { createCatalogDataStore, type CatalogDataStore } from "./catalog-data-store";
 import { createDeckDataStore, type DeckDataStore } from "./deck-data-store";
@@ -39,7 +40,7 @@ async function openAppDataStore(logger: Logger): Promise<AppDataStore> {
   }
 
   return {
-    catalog: createCatalogDataStore(database, logger),
+    catalog: createCatalogDataStore(database, logger, cardImageBaseUrl()),
     decks: createDeckDataStore(database, logger),
   };
 }

@@ -16,6 +16,7 @@ function RootLayout() {
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="cards/[id]" options={{ title: "Card" }} />
+          <Stack.Screen name="decks/[id]/draw" options={{ headerShown: false }} />
           <Stack.Screen
             name="decks/build"
             options={{ headerShown: false, presentation: "modal" }}

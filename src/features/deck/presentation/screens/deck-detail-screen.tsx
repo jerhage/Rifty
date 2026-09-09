@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
+import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
@@ -26,6 +27,7 @@ interface DeckDetailScreenProps {
   readonly cards: readonly Card[];
   readonly deck: Deck;
   readonly now: string;
+  readonly onDrawSimulation: () => void;
   readonly onEdit: () => void;
   readonly onOpenCard: (card: Card) => void;
   readonly verification: DeckVerification;
@@ -35,6 +37,7 @@ function DeckDetailScreen({
   cards,
   deck,
   now,
+  onDrawSimulation,
   onEdit,
   onOpenCard,
   verification,
@@ -81,6 +84,10 @@ function DeckDetailScreen({
             {deck.notes}
           </ThemedText>
         ) : null}
+
+        <View style={styles.drawSimulation}>
+          <Button label="Draw sim" onPress={onDrawSimulation} variant="secondary" />
+        </View>
 
         <View style={styles.panels}>
           <AttributeCurve buckets={energyCurve(mainDeckCopies)} title="Energy curve" />
@@ -157,6 +164,10 @@ const styles = StyleSheet.create({
   },
   notes: {
     marginTop: Spacing.two + 1,
+  },
+  drawSimulation: {
+    alignItems: "flex-start",
+    marginTop: Spacing.three,
   },
   panels: {
     gap: Spacing.two + 2,

@@ -1,27 +1,31 @@
 import { StyleSheet, View } from "react-native";
 
-import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
+import type { CardKeyword } from "@/features/catalog/card/card";
+import { cardSpeedSchema } from "@/features/catalog/value-objects/card-speed";
+import { useKeywordColors, useTheme } from "@/hooks/use-theme";
 
-import { formatTaxonomyId } from "../../card-taxonomy-format";
+import { DetailPill } from "./detail-pill";
 
-function CardKeywordRow({
-  accent,
-  tagIds,
-}: {
-  readonly accent: string;
-  readonly tagIds: readonly string[];
-}) {
-  if (tagIds.length === 0) return null;
+const SPEED_KEYWORD_IDS: ReadonlySet<string> = new Set<string>(cardSpeedSchema.options);
+
+function CardKeywordRow({ keywords }: { readonly keywords: readonly CardKeyword[] }) {
+  const theme = useTheme();
+  const keywordColors = useKeywordColors();
+  const colorFor = (id: string): string =>
+    (keywordColors as Record<string, string | undefined>)[id] ?? theme.textSecondary;
+  const shown = keywords.filter((keyword) => !SPEED_KEYWORD_IDS.has(keyword.id));
+
+  if (shown.length === 0) return null;
 
   return (
     <View style={styles.row}>
-      {tagIds.map((tagId) => (
-        <View key={tagId} style={[styles.keyword, { borderColor: accent }]}>
-          <ThemedText style={{ color: accent }} type="small">
-            {formatTaxonomyId(tagId)}
-          </ThemedText>
-        </View>
+      {shown.map((keyword) => (
+        <DetailPill
+          key={keyword.id}
+          color={colorFor(keyword.id)}
+          label={keyword.value === null ? keyword.name : `${keyword.name} ${keyword.value}`}
+        />
       ))}
     </View>
   );
@@ -35,11 +39,5 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: Spacing.two - 1,
     marginTop: Spacing.three - 5,
-  },
-  keyword: {
-    borderRadius: Radius.medium,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: Spacing.two + 2,
-    paddingVertical: Spacing.one + 1,
   },
 });

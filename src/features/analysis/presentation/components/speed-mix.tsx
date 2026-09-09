@@ -1,20 +1,13 @@
 import { StyleSheet, View } from "react-native";
 import { match } from "ts-pattern";
 
+import { ColorDot } from "@/components/ui/atoms/color-dot";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
-import type { CardSpeed } from "@/features/catalog/value-objects/card-speed";
+import { cardSpeedName, type CardSpeed } from "@/features/catalog/value-objects/card-speed";
 import { useSpeedColors, useTheme } from "@/hooks/use-theme";
 
 import type { SpeedShare } from "../../card-metrics";
-
-function speedName(speed: CardSpeed): string {
-  return match(speed)
-    .with("normal", () => "Normal")
-    .with("action", () => "Action")
-    .with("reaction", () => "Reaction")
-    .exhaustive();
-}
 
 function speedNote(speed: CardSpeed): string {
   return match(speed)
@@ -68,10 +61,10 @@ function SpeedMix({
       <View style={styles.rows}>
         {speeds.map((entry) => (
           <View key={entry.speed} style={styles.row}>
-            <View style={[styles.marker, { backgroundColor: speedColors[entry.speed] }]} />
+            <ColorDot color={speedColors[entry.speed]} shape="diamond" size={9} />
             <View style={styles.label}>
               <ThemedText type="body" style={styles.name}>
-                {speedName(entry.speed)}
+                {cardSpeedName(entry.speed)}
               </ThemedText>
               <ThemedText
                 numberOfLines={1}
@@ -131,12 +124,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: Spacing.two + 2,
-  },
-  marker: {
-    borderRadius: 2,
-    height: 9,
-    transform: [{ rotate: "45deg" }],
-    width: 9,
   },
   label: {
     flex: 1,

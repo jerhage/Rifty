@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 
 import { parseCard, type Card } from "@/features/catalog/card/card";
 import { parseCardSummary, type CardSummary } from "@/features/catalog/card/card-summary";
+import { keywordScopeSchema } from "@/features/catalog/value-objects/keyword-scope";
 import {
   cardClassificationSelectSchema,
   cardDomainSelectSchema,
@@ -15,6 +16,7 @@ import {
 const cardKeywordRowSchema = z.object({
   id: z.string(),
   name: z.string(),
+  scope: keywordScopeSchema,
   value: z.number().int().nullable(),
 });
 

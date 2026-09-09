@@ -6,13 +6,13 @@ import { deck } from "./fixtures";
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",
   speeds: ["reaction"],
-  keywords: [{ id: "vision", name: "Vision", value: null }],
+  keywords: [{ id: "vision", name: "Vision", scope: "self", value: null }],
   attributes: { energy: null, might: null, power: null },
   classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
 });
 const cheap = card("cheap", "OGN", {
   name: "Cheap Unit",
-  keywords: [{ id: "shield", name: "Shield", value: 2 }],
+  keywords: [{ id: "shield", name: "Shield", scope: "self", value: 2 }],
   attributes: { energy: 1, might: 1, power: 1 },
   tagIds: ["Volibear", "Freljord"],
 });
@@ -20,9 +20,9 @@ const mid = card("mid", "OGN", {
   name: "Mid Spell",
   speeds: ["action", "reaction"],
   keywords: [
-    { id: "tank", name: "Tank", value: null },
-    { id: "reaction", name: "Reaction", value: null },
-    { id: "equip", name: "Equip", value: null },
+    { id: "tank", name: "Tank", scope: "self", value: null },
+    { id: "reaction", name: "Reaction", scope: "self", value: null },
+    { id: "equip", name: "Equip", scope: "self", value: null },
   ],
   attributes: { energy: 3, might: null, power: null },
   classification: { typeId: "Spell", supertypeId: null, rarityId: "common" },

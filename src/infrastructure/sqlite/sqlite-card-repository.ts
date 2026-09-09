@@ -357,12 +357,13 @@ class SqliteCardRepository implements CardRepository {
           cardId: cardKeywords.cardId,
           id: cardKeywords.keywordId,
           name: keywords.name,
+          scope: cardKeywords.scope,
           value: cardKeywords.value,
         })
         .from(cardKeywords)
         .innerJoin(keywords, eq(keywords.id, cardKeywords.keywordId))
         .where(inArray(cardKeywords.cardId, cardIds))
-        .orderBy(asc(keywords.name)),
+        .orderBy(asc(keywords.name), asc(cardKeywords.scope)),
       this.#domainRowsFor(cardIds, signal),
       this.db
         .select()

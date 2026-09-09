@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import { z } from "zod/v4";
 import { cardDomainSchema } from "../src/features/catalog/value-objects/card-domain";
 import { cardTypeSchema } from "../src/features/catalog/value-objects/card-type";
@@ -5,11 +6,13 @@ import {
   cardSpeeds,
   championName,
   identityName,
+  keywordOccurrences,
   keywordsWithMagnitude,
   ownedKeywords,
   printingIdentity,
   withMagnitudeDefaults,
 } from "./card-derivation";
+import type { KeywordOccurrence, KeywordScope } from "./card-derivation";
 import { imageSourcesOf } from "./card-image-file";
 import type { SourcedCard } from "./card-image-file";
 
@@ -385,7 +388,7 @@ function buildSeed(
   const cardKeywords: Seed["cardKeywords"] = [];
   const cardSpeedRows: Seed["cardSpeeds"] = [];
   for (const card of ordered) {
-    for (const keyword of ownedKeywords(card.rulesTextPlain))
+    for (const keyword of keywordOccurrences(card.rulesTextPlain))
       keywordNames.set(keyword.id, keyword.name);
   }
   const reminderTexts = chosenReminders(keywordNames, remindersByCard);
@@ -445,11 +448,15 @@ function buildSeed(
       cardTags.push({ cardId: card.id, tagId });
     }
     const reminders = remindersByCard.get(card.id) ?? new Map<string, string>();
-    for (const keyword of withMagnitudeDefaults(ownedKeywords(card.rulesTextPlain), magnitudeIds)) {
+    for (const keyword of withMagnitudeDefaults(
+      keywordOccurrences(card.rulesTextPlain),
+      magnitudeIds,
+    )) {
       const reminder = reminders.get(keyword.id) ?? null;
       cardKeywords.push({
         cardId: card.id,
         keywordId: keyword.id,
+        scope: keywordScope(card.id, keyword),
         value: keyword.value,
         cost: keyword.cost,
         reminder: reminder === reminderTexts.get(keyword.id) ? null : reminder,
@@ -499,6 +506,19 @@ function buildSeed(
     },
     skipped,
   };
+}
+
+function keywordScope(cardId: string, occurrence: KeywordOccurrence): KeywordScope {
+  return match(occurrence.targeting)
+    .with({ type: "targeted" }, ({ scope }) => scope)
+    .with({ type: "unclassified" }, ({ leadIn, trailing }): KeywordScope => {
+      throw new Error(
+        `Unclassified keyword [${occurrence.name}] on ${cardId}: lead-in ${JSON.stringify(
+          leadIn,
+        )}, trailing ${JSON.stringify(trailing)}.`,
+      );
+    })
+    .exhaustive();
 }
 
 function remindersIn(text: string): Map<string, string> {

@@ -4,6 +4,7 @@ import { marketplaceReferenceSchema } from "../value-objects/marketplace-referen
 import { cardDomainSchema } from "../value-objects/card-domain";
 import { cardSpeedSchema } from "../value-objects/card-speed";
 import { cardTypeSchema } from "../value-objects/card-type";
+import { keywordScopeSchema } from "../value-objects/keyword-scope";
 import { setCodeSchema } from "../value-objects/set-code";
 import { taxonomyIdSchema } from "../value-objects/taxonomy-id";
 
@@ -11,6 +12,7 @@ const cardIdSchema = z.string().trim().min(1);
 const cardKeywordSchema = z.object({
   id: z.string().trim().min(1),
   name: z.string().trim().min(1),
+  scope: keywordScopeSchema,
   value: z.number().int().positive().nullable(),
 });
 const cardOrientationSchema = z.enum(["landscape", "portrait"]);

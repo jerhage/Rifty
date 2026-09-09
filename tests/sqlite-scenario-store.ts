@@ -165,7 +165,12 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         .run();
       database
         .insert(cardKeywords)
-        .values({ cardId: card.id, keywordId: keyword.id, value: keyword.value })
+        .values({
+          cardId: card.id,
+          keywordId: keyword.id,
+          scope: keyword.scope,
+          value: keyword.value,
+        })
         .run();
     }
     if (card.speeds.length > 0) {

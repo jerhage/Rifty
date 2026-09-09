@@ -79,6 +79,33 @@ describe("catalog seed", () => {
     expect(() => assertValid(seed)).not.toThrow();
   });
 
+  it("records a keyword at each scope the card prints it at", () => {
+    const cards: readonly NormalizedCard[] = [
+      card("a", { rulesTextPlain: "[Empowered]\nOther friendly units here have [Empowered]." }),
+    ];
+
+    const { seed } = buildSeed(cards, [set("OGN")], imagesFor(cards));
+
+    expect(seed.cardKeywords).toEqual([
+      {
+        cardId: "a",
+        keywordId: "empowered",
+        scope: "self",
+        value: null,
+        cost: null,
+        reminder: null,
+      },
+      {
+        cardId: "a",
+        keywordId: "empowered",
+        scope: "other",
+        value: null,
+        cost: null,
+        reminder: null,
+      },
+    ]);
+  });
+
   it("skips a card whose set is absent rather than dropping it silently", () => {
     const cards: readonly NormalizedCard[] = [card("a"), card("b", { setCode: "MISSING" })];
 

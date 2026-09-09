@@ -14,7 +14,11 @@ function CardKeywordRow({ keywords }: { readonly keywords: readonly CardKeyword[
   const keywordColors = useKeywordColors();
   const colorFor = (id: string): string =>
     (keywordColors as Record<string, string | undefined>)[id] ?? theme.textSecondary;
-  const shown = keywords.filter((keyword) => !SPEED_KEYWORD_IDS.has(keyword.id));
+  const shown = keywords.filter(
+    (keyword, index) =>
+      !SPEED_KEYWORD_IDS.has(keyword.id) &&
+      keywords.findIndex((other) => other.id === keyword.id) === index,
+  );
 
   if (shown.length === 0) return null;
 

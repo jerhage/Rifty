@@ -12,13 +12,13 @@ import { card } from "../catalog/fixtures";
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",
   speeds: ["reaction"],
-  keywords: [{ id: "vision", name: "Vision", value: null }],
+  keywords: [{ id: "vision", name: "Vision", scope: "self", value: null }],
   attributes: { energy: null, might: null, power: null },
   classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
 });
 const cheap = card("cheap", "OGN", {
   name: "Cheap Unit",
-  keywords: [{ id: "shield", name: "Shield", value: 2 }],
+  keywords: [{ id: "shield", name: "Shield", scope: "self", value: 2 }],
   attributes: { energy: 1, might: 1, power: 1 },
   tagIds: ["Volibear", "Freljord"],
 });
@@ -26,9 +26,9 @@ const mid = card("mid", "OGN", {
   name: "Mid Spell",
   speeds: ["action", "reaction"],
   keywords: [
-    { id: "tank", name: "Tank", value: null },
-    { id: "reaction", name: "Reaction", value: null },
-    { id: "equip", name: "Equip", value: null },
+    { id: "tank", name: "Tank", scope: "self", value: null },
+    { id: "reaction", name: "Reaction", scope: "self", value: null },
+    { id: "equip", name: "Equip", scope: "self", value: null },
   ],
   attributes: { energy: 3, might: null, power: null },
   classification: { typeId: "Spell", supertypeId: null, rarityId: "common" },
@@ -100,6 +100,19 @@ describe("card metrics", () => {
     expect(shown).not.toContain("reaction");
     expect(shown).not.toContain("equip");
     expect(shown).toContain("tank");
+  });
+
+  it("leaves out keywords a card only grants to other units", () => {
+    const granter = card("granter", "OGN", {
+      keywords: [
+        { id: "shield", name: "Shield", scope: "other", value: 2 },
+        { id: "tank", name: "Tank", scope: "self", value: null },
+      ],
+    });
+    const mix = keywordMix([{ card: granter, quantity: 1 }]);
+
+    expect(mix.keywords.map((entry) => entry.id)).toEqual(["tank"]);
+    expect(mix.carrying).toBe(1);
   });
 
   it("counts no keyword when it is handed no copies", () => {

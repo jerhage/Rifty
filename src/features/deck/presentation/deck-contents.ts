@@ -1,4 +1,4 @@
-import type { Card } from "@/features/catalog/card/card";
+import type { Card, CardKeyword } from "@/features/catalog/card/card";
 import type { CardSpeed } from "@/features/catalog/value-objects/card-speed";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
 import type { Deck, DeckSection } from "@/features/deck/deck/deck";
@@ -33,6 +33,7 @@ const GROUP_DEFINITIONS: readonly GroupDefinition[] = [
 
 const CURVE_SECTIONS: readonly DeckSection[] = ["mainDeck"];
 const SPEED_ORDER: readonly CardSpeed[] = ["normal", "action", "reaction"];
+const EXCLUDED_KEYWORD_IDS: readonly string[] = ["action", "reaction", "equip"];
 
 function deckCards(
   deck: Deck,
@@ -122,22 +123,52 @@ function speedMix(deck: Deck, cards: readonly Card[]): readonly SpeedShare[] {
   });
 }
 
-function keywordTally(
-  deck: Deck,
-  cards: readonly Card[],
-): readonly { name: string; count: number }[] {
-  const tally = new Map<string, number>();
+interface KeywordShare {
+  readonly id: string;
+  readonly name: string;
+  readonly count: number;
+  readonly totalValue: number | null;
+}
 
-  for (const held of deckCards(deck, cards)) {
-    for (const tagId of held.card.tagIds) {
-      tally.set(tagId, (tally.get(tagId) ?? 0) + held.quantity);
+interface KeywordMix {
+  readonly carrying: number;
+  readonly keywords: readonly KeywordShare[];
+}
+
+function countedKeywords(card: Card): readonly CardKeyword[] {
+  return card.keywords.filter((keyword) => !EXCLUDED_KEYWORD_IDS.includes(keyword.id));
+}
+
+function keywordMix(deck: Deck, cards: readonly Card[]): KeywordMix {
+  const held = deckCards(deck, cards, CURVE_SECTIONS);
+  const tally = new Map<string, KeywordShare>();
+
+  for (const entry of held) {
+    for (const keyword of countedKeywords(entry.card)) {
+      const running = tally.get(keyword.id);
+      const value =
+        keyword.value === null
+          ? (running?.totalValue ?? null)
+          : (running?.totalValue ?? 0) + keyword.value * entry.quantity;
+
+      tally.set(keyword.id, {
+        id: keyword.id,
+        name: keyword.name,
+        count: (running?.count ?? 0) + entry.quantity,
+        totalValue: value,
+      });
     }
   }
 
-  return [...tally]
-    .map(([name, count]) => ({ name, count }))
-    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name));
+  return {
+    carrying: held
+      .filter((entry) => countedKeywords(entry.card).length > 0)
+      .reduce((total, entry) => total + entry.quantity, 0),
+    keywords: [...tally.values()].sort(
+      (left, right) => right.count - left.count || left.name.localeCompare(right.name),
+    ),
+  };
 }
 
-export { deckCards, deckGroups, energyCurve, keywordTally, speedMix };
-export type { DeckCard, DeckGroup, SpeedShare };
+export { deckCards, deckGroups, energyCurve, keywordMix, speedMix };
+export type { DeckCard, DeckGroup, KeywordMix, KeywordShare, SpeedShare };

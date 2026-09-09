@@ -8,6 +8,11 @@ import { setCodeSchema } from "../value-objects/set-code";
 import { taxonomyIdSchema } from "../value-objects/taxonomy-id";
 
 const cardIdSchema = z.string().trim().min(1);
+const cardKeywordSchema = z.object({
+  id: z.string().trim().min(1),
+  name: z.string().trim().min(1),
+  value: z.number().int().positive().nullable(),
+});
 const cardOrientationSchema = z.enum(["landscape", "portrait"]);
 const cardAttributesSchema = z.object({
   energy: z.number().int().nonnegative().nullable(),
@@ -40,6 +45,7 @@ const cardSchema = z.object({
   classification: cardClassificationSchema,
   domainIds: z.array(cardDomainSchema),
   speeds: z.array(cardSpeedSchema),
+  keywords: z.array(cardKeywordSchema),
   tagIds: z.array(taxonomyIdSchema),
   imageUrl: z.url(),
   marketplaceReferences: z.array(marketplaceReferenceSchema),
@@ -52,6 +58,7 @@ function parseCard(value: unknown): Card {
 type CardId = z.output<typeof cardIdSchema>;
 type CardAttributes = z.output<typeof cardAttributesSchema>;
 type CardClassification = z.output<typeof cardClassificationSchema>;
+type CardKeyword = z.output<typeof cardKeywordSchema>;
 type Card = z.output<typeof cardSchema>;
 
 export {
@@ -62,4 +69,4 @@ export {
   cardSchema,
   parseCard,
 };
-export type { Card, CardAttributes, CardClassification, CardId };
+export type { Card, CardAttributes, CardClassification, CardId, CardKeyword };

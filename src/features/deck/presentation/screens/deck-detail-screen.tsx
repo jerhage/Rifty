@@ -12,8 +12,9 @@ import { useTheme } from "@/hooks/use-theme";
 
 import { DeckCardRow } from "../components/detail/deck-card-row";
 import { EnergyCurve } from "../components/detail/energy-curve";
+import { KeywordTally } from "../components/detail/keyword-tally";
 import { SpeedMix } from "../components/detail/speed-mix";
-import { deckCards, deckGroups, energyCurve, speedMix } from "../deck-contents";
+import { deckCards, deckGroups, energyCurve, keywordMix, speedMix } from "../deck-contents";
 import { deckCountLabel, editedLabel } from "../deck-summary-format";
 
 interface DeckDetailScreenProps {
@@ -80,6 +81,7 @@ function DeckDetailScreen({
         <View style={styles.panels}>
           <EnergyCurve buckets={energyCurve(deck, cards)} />
           <SpeedMix cardCount={mainDeckCards} speeds={speedMix(deck, cards)} />
+          <KeywordTally cardCount={mainDeckCards} mix={keywordMix(deck, cards)} />
         </View>
 
         {groups.map((group) => (

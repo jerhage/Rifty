@@ -26,6 +26,7 @@ function card(
       | "classification"
       | "domainIds"
       | "speeds"
+      | "keywords"
       | "orientation"
       | "tagIds"
       | "marketplaceReferences"
@@ -57,6 +58,7 @@ function card(
     },
     domainIds: options.domainIds ?? ["Chaos"],
     speeds: options.speeds ?? ["normal"],
+    keywords: options.keywords ?? [],
     tagIds: options.tagIds ?? [],
     imageUrl: `http://localhost:8787/${setCode.toLowerCase()}-${id}-100.webp`,
     marketplaceReferences: options.marketplaceReferences ?? [

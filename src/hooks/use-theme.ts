@@ -3,7 +3,7 @@
  * https://docs.expo.dev/guides/color-schemes/
  */
 
-import { Colors, DomainColors, SpeedColors } from "@/constants/theme";
+import { Colors, DomainColors, KeywordColors, SpeedColors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 function useTheme() {
@@ -15,6 +15,10 @@ function useDomainColors() {
   return DomainColors[resolvedScheme(useColorScheme())];
 }
 
+function useKeywordColors() {
+  return KeywordColors[resolvedScheme(useColorScheme())];
+}
+
 function useSpeedColors() {
   return SpeedColors[resolvedScheme(useColorScheme())];
 }
@@ -23,4 +27,4 @@ function resolvedScheme(scheme: ReturnType<typeof useColorScheme>) {
   return scheme === "dark" ? "dark" : "light";
 }
 
-export { useDomainColors, useSpeedColors, useTheme };
+export { useDomainColors, useKeywordColors, useSpeedColors, useTheme };

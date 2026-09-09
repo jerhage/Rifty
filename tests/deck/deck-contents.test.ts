@@ -1,7 +1,7 @@
 import {
   deckGroups,
   energyCurve,
-  keywordTally,
+  keywordMix,
   speedMix,
 } from "@/features/deck/presentation/deck-contents";
 
@@ -15,12 +15,18 @@ const legend = card("legend", "OGN", {
 });
 const cheap = card("cheap", "OGN", {
   name: "Cheap Unit",
+  keywords: [{ id: "shield", name: "Shield", value: 2 }],
   attributes: { energy: 1, might: 1, power: null },
   tagIds: ["Volibear", "Freljord"],
 });
 const mid = card("mid", "OGN", {
   name: "Mid Spell",
   speeds: ["action", "reaction"],
+  keywords: [
+    { id: "tank", name: "Tank", value: null },
+    { id: "reaction", name: "Reaction", value: null },
+    { id: "equip", name: "Equip", value: null },
+  ],
   attributes: { energy: 3, might: null, power: null },
   classification: { typeId: "Spell", supertypeId: null, rarityId: "common" },
   tagIds: ["Freljord"],
@@ -80,10 +86,28 @@ describe("deck contents", () => {
     ]);
   });
 
-  it("tallies keywords by copies held, most common first", () => {
-    expect(keywordTally(built, cards)).toEqual([
-      { name: "Freljord", count: 5 },
-      { name: "Volibear", count: 3 },
-    ]);
+  it("tallies keywords by copies held, most common first, and sums their values", () => {
+    expect(keywordMix(built, cards)).toEqual({
+      carrying: 5,
+      keywords: [
+        { id: "shield", name: "Shield", count: 3, totalValue: 6 },
+        { id: "tank", name: "Tank", count: 2, totalValue: null },
+      ],
+    });
+  });
+
+  it("leaves out the keywords excluded from this analysis", () => {
+    const shown = keywordMix(built, cards).keywords.map((keyword) => keyword.id);
+
+    expect(shown).not.toContain("reaction");
+    expect(shown).not.toContain("equip");
+    expect(shown).toContain("tank");
+  });
+
+  it("counts a keyword only where the deck actually plays the card", () => {
+    expect(keywordMix(deck("empty", { entries: [] }), cards)).toEqual({
+      carrying: 0,
+      keywords: [],
+    });
   });
 });

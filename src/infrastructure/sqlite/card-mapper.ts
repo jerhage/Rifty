@@ -1,3 +1,5 @@
+import { z } from "zod/v4";
+
 import { parseCard, type Card } from "@/features/catalog/card/card";
 import { parseCardSummary, type CardSummary } from "@/features/catalog/card/card-summary";
 import {
@@ -10,12 +12,19 @@ import {
   catalogCardSelectSchema,
 } from "@/infrastructure/database/catalog-schema/cards";
 
+const cardKeywordRowSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  value: z.number().int().nullable(),
+});
+
 interface CardPersistenceShape {
   readonly card: unknown;
   readonly classification: unknown;
   readonly media: unknown;
   readonly imageBaseUrl: string;
   readonly speeds: readonly unknown[];
+  readonly keywords: readonly unknown[];
   readonly domains: readonly unknown[];
   readonly tags: readonly unknown[];
   readonly marketplaceReferences: readonly unknown[];
@@ -27,6 +36,7 @@ function toDomainCard({
   media,
   imageBaseUrl,
   speeds,
+  keywords,
   domains,
   tags,
   marketplaceReferences,
@@ -63,6 +73,7 @@ function toDomainCard({
     },
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     speeds: speeds.map((speed) => cardSpeedSelectSchema.parse(speed).speed),
+    keywords: keywords.map((keyword) => cardKeywordRowSchema.parse(keyword)),
     tagIds: tags.map((tag) => cardTagSelectSchema.parse(tag).tagId),
     imageUrl: cardImageUrl(imageBaseUrl, media),
     marketplaceReferences: marketplaceReferences.map((reference) => {

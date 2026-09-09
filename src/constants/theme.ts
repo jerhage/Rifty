@@ -135,7 +135,70 @@ const SpeedColors = {
   },
 } as const;
 
+/** A hue per keyword, grouped by what it does. Placeholder values, tuned later. */
+const KeywordColors = {
+  light: {
+    shield: "#006EA0",
+    tank: "#1666AA",
+    deflect: "#007780",
+    backline: "#007491",
+    assault: "#A04034",
+    ganking: "#9F3D4F",
+    hunt: "#9D4616",
+    ambush: "#973F6E",
+    burn: "#A03F3C",
+    weaponmaster: "#9D3D59",
+    accelerate: "#7A6100",
+    "quick-draw": "#696800",
+    repeat: "#855B00",
+    temporary: "#915200",
+    vision: "#6F4FA1",
+    predict: "#5D55A9",
+    empower: "#834791",
+    empowered: "#8B4486",
+    legion: "#475CAD",
+    stun: "#007974",
+    hidden: "#3860AC",
+    deathknell: "#27762F",
+    unique: "#007948",
+  },
+  dark: {
+    shield: "#57CCFF",
+    tank: "#7AC3FF",
+    deflect: "#28D6DF",
+    backline: "#37D2F2",
+    assault: "#FF9C8B",
+    ganking: "#FF99A7",
+    hunt: "#FFA275",
+    ambush: "#FC9AC9",
+    burn: "#FF9B93",
+    weaponmaster: "#FF99B2",
+    accelerate: "#D7BD51",
+    "quick-draw": "#C3C55A",
+    repeat: "#E4B750",
+    temporary: "#F3AE58",
+    vision: "#CBAAFF",
+    predict: "#B5B1FF",
+    empower: "#E3A2F2",
+    empowered: "#ED9EE5",
+    legion: "#9DB9FF",
+    stun: "#2FD8D0",
+    hidden: "#8FBDFF",
+    deathknell: "#86D489",
+    unique: "#68D7A1",
+  },
+} as const;
+
 const MaxContentWidth = 800;
 
-export { Colors, DomainColors, Fonts, MaxContentWidth, Radius, Spacing, SpeedColors };
+export {
+  Colors,
+  DomainColors,
+  Fonts,
+  KeywordColors,
+  MaxContentWidth,
+  Radius,
+  Spacing,
+  SpeedColors,
+};
 export type { ThemeColor };

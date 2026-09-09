@@ -21,6 +21,7 @@ import {
   cardTags,
   catalogCards,
 } from "@/infrastructure/database/catalog-schema/cards";
+import { cardKeywords, keywords } from "@/infrastructure/database/catalog-schema/keywords";
 
 import { toDomainCard, toDomainCardSummary } from "./card-mapper";
 import type { SqliteDatabase } from "./sqlite-database";
@@ -305,37 +306,56 @@ class SqliteCardRepository implements CardRepository {
     const cardIds = rows.map((row) => row.id);
     // Batch each relation for this page. Otherwise 2 domains * 3 tags * 2 references would produce 12 rows per card in one join
     // and require additional processing for deduping. This is fine for now since we arent' performance limited.
-    const [classifications, media, speeds, domainsByCardId, tags, marketplaceReferences] =
-      await Promise.all([
-        this.db
-          .select()
-          .from(cardClassifications)
-          .where(inArray(cardClassifications.cardId, cardIds)),
-        this.db.select().from(cardMedia).where(inArray(cardMedia.cardId, cardIds)),
-        this.db
-          .select()
-          .from(cardSpeeds)
-          .where(inArray(cardSpeeds.cardId, cardIds))
-          .orderBy(asc(cardSpeeds.speed)),
-        this.#domainRowsFor(cardIds, signal),
-        this.db
-          .select()
-          .from(cardTags)
-          .where(inArray(cardTags.cardId, cardIds))
-          .orderBy(asc(cardTags.tagId)),
-        this.db
-          .select()
-          .from(cardMarketplaceReferences)
-          .where(inArray(cardMarketplaceReferences.cardId, cardIds))
-          .orderBy(
-            asc(cardMarketplaceReferences.marketplace),
-            asc(cardMarketplaceReferences.externalId),
-          ),
-      ]);
+    const [
+      classifications,
+      media,
+      speeds,
+      cardKeywordRows,
+      domainsByCardId,
+      tags,
+      marketplaceReferences,
+    ] = await Promise.all([
+      this.db
+        .select()
+        .from(cardClassifications)
+        .where(inArray(cardClassifications.cardId, cardIds)),
+      this.db.select().from(cardMedia).where(inArray(cardMedia.cardId, cardIds)),
+      this.db
+        .select()
+        .from(cardSpeeds)
+        .where(inArray(cardSpeeds.cardId, cardIds))
+        .orderBy(asc(cardSpeeds.speed)),
+      this.db
+        .select({
+          cardId: cardKeywords.cardId,
+          id: cardKeywords.keywordId,
+          name: keywords.name,
+          value: cardKeywords.value,
+        })
+        .from(cardKeywords)
+        .innerJoin(keywords, eq(keywords.id, cardKeywords.keywordId))
+        .where(inArray(cardKeywords.cardId, cardIds))
+        .orderBy(asc(keywords.name)),
+      this.#domainRowsFor(cardIds, signal),
+      this.db
+        .select()
+        .from(cardTags)
+        .where(inArray(cardTags.cardId, cardIds))
+        .orderBy(asc(cardTags.tagId)),
+      this.db
+        .select()
+        .from(cardMarketplaceReferences)
+        .where(inArray(cardMarketplaceReferences.cardId, cardIds))
+        .orderBy(
+          asc(cardMarketplaceReferences.marketplace),
+          asc(cardMarketplaceReferences.externalId),
+        ),
+    ]);
     throwIfAborted(signal);
     const classificationsByCardId = new Map(classifications.map((row) => [row.cardId, row]));
     const mediaByCardId = new Map(media.map((row) => [row.cardId, row]));
     const speedsByCardId = groupByCardId(speeds);
+    const keywordsByCardId = groupByCardId(cardKeywordRows);
     const tagsByCardId = groupByCardId(tags);
     const marketplaceReferencesByCardId = groupByCardId(marketplaceReferences);
 
@@ -352,6 +372,7 @@ class SqliteCardRepository implements CardRepository {
         media: mediaRow,
         imageBaseUrl: this.imageBaseUrl,
         speeds: speedsByCardId.get(card.id) ?? [],
+        keywords: keywordsByCardId.get(card.id) ?? [],
         domains: domainsByCardId.get(card.id) ?? [],
         tags: tagsByCardId.get(card.id) ?? [],
         marketplaceReferences: marketplaceReferencesByCardId.get(card.id) ?? [],

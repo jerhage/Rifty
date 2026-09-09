@@ -2,14 +2,22 @@ import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
-import { useTheme } from "@/hooks/use-theme";
+import { useKeywordColors, useTheme } from "@/hooks/use-theme";
+
+import type { KeywordMix } from "../../deck-contents";
 
 function KeywordTally({
-  keywords,
+  cardCount,
+  mix,
 }: {
-  readonly keywords: readonly { name: string; count: number }[];
+  readonly cardCount: number;
+  readonly mix: KeywordMix;
 }) {
   const theme = useTheme();
+  const keywordColors = useKeywordColors();
+  const { carrying, keywords } = mix;
+  const colorFor = (id: string): string =>
+    (keywordColors as Record<string, string | undefined>)[id] ?? theme.textSecondary;
   const highest = Math.max(1, ...keywords.map((keyword) => keyword.count));
 
   if (keywords.length === 0) return null;
@@ -21,19 +29,31 @@ function KeywordTally({
         { backgroundColor: theme.backgroundElement, borderColor: theme.border },
       ]}
     >
-      <ThemedText themeColor="textTertiary" type="mono">
-        Keywords
-      </ThemedText>
+      <View style={styles.header}>
+        <ThemedText themeColor="textTertiary" type="mono">
+          Keywords
+        </ThemedText>
+        <ThemedText themeColor="textTertiary" type="mono">
+          {`${carrying} of ${cardCount} carry a keyword`}
+        </ThemedText>
+      </View>
       {keywords.map((keyword) => (
-        <View key={keyword.name} style={styles.row}>
-          <ThemedText numberOfLines={1} style={styles.name} type="body">
+        <View key={keyword.id} style={styles.row}>
+          <ThemedText
+            numberOfLines={1}
+            style={[styles.name, { color: colorFor(keyword.id) }]}
+            type="body"
+          >
             {keyword.name}
           </ThemedText>
           <View style={[styles.track, { backgroundColor: theme.fill }]}>
             <View
               style={[
                 styles.bar,
-                { backgroundColor: theme.accent, width: `${(keyword.count / highest) * 100}%` },
+                {
+                  backgroundColor: colorFor(keyword.id),
+                  width: `${(keyword.count / highest) * 100}%`,
+                },
               ]}
             />
           </View>
@@ -54,6 +74,12 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     gap: Spacing.two + 1,
     padding: Spacing.three - 2,
+  },
+  header: {
+    alignItems: "baseline",
+    flexDirection: "row",
+    gap: Spacing.two,
+    justifyContent: "space-between",
   },
   row: {
     alignItems: "center",

@@ -1,14 +1,17 @@
+import { match } from "ts-pattern";
 import { downloadTargetFor, imageFileNames } from "../../scripts/card-image-file";
 import {
   cardSpeeds,
   championName,
   identityName,
+  keywordOccurrences,
   keywordsWithMagnitude,
   leadingTokens,
   ownedKeywords,
   printingIdentity,
   withMagnitudeDefaults,
 } from "../../scripts/card-derivation";
+import type { KeywordOccurrence } from "../../scripts/card-derivation";
 
 const standUnited =
   "[Hidden] (Hide now for :rb_rune_rainbow: to react with later for :rb_energy_0:.)[Action] (Play on your turn or in showdowns.)Buff a friendly unit.";
@@ -20,6 +23,24 @@ const akaliRogueAssassin =
   "[Empower] [3]:rb_rune_rainbow: ([3]:rb_rune_rainbow: Empower this. Use only if not Empowered.)\n[Action][>] :rb_exhaust: If it's your turn, move a friendly unit in a showdown to base and if I'm [Empowered], ready it.";
 const sunlitGuardian =
   "[Shield] (+1 :rb_might: while I'm a defender.)[Tank] (I must be assigned combat damage first.)";
+const ambessa =
+  "[Empower] [1]:rb_rune_order::rb_rune_order: ([1]:rb_rune_order::rb_rune_order: Empower me. Use only if not Empowered.)\n[Empowered][>] I have [Assault 2]. (+2 :rb_might: while I'm an attacker.)\n[Empowered][>] When I attack, kill an enemy unit here with less Might than me.";
+const aurokGeneral =
+  "[Empower] [3]:rb_rune_order: ([3]:rb_rune_order: Empower me. Use only if not Empowered.)\n[Empowered][>] Your units that are [Empowered] have +2 :rb_might: (including me).";
+
+function scoped(text: string): readonly string[] {
+  return keywordOccurrences(text).map(
+    (keyword) =>
+      `${label(keyword)}=${match(keyword.targeting)
+        .with({ type: "targeted" }, (targeting) => targeting.scope)
+        .with({ type: "unclassified" }, () => "unclassified")
+        .exhaustive()}`,
+  );
+}
+
+function label(keyword: KeywordOccurrence): string {
+  return keyword.value === null ? keyword.id : `${keyword.id} ${keyword.value}`;
+}
 
 describe("card derivation", () => {
   it("reads only the bracket run that opens the text", () => {
@@ -34,6 +55,67 @@ describe("card derivation", () => {
     expect(ownedKeywords(akaliRogueAssassin).map((keyword) => keyword.name)).toEqual(["Empower"]);
   });
 
+  it("captures every keyword the text prints, not only the run that opens it", () => {
+    expect(scoped(ambessa)).toEqual(["empower=self", "empowered=self", "assault 2=self"]);
+    expect(scoped(blastCone)).toEqual(["stun=other"]);
+    expect(scoped("Other friendly units here have [Assault].")).toEqual(["assault=other"]);
+  });
+
+  it("scopes a keyword to the card that ends up with it", () => {
+    expect(scoped(block)).toEqual(["hidden=self", "action=self", "shield 3=other", "tank=other"]);
+    expect(scoped("While I'm [Mighty], I have [Deflect], [Ganking], and [Shield].")).toEqual([
+      "mighty=self",
+      "deflect=self",
+      "ganking=self",
+      "shield=self",
+    ]);
+    expect(scoped("Spells with [Flow] you play from your trash cost [2] less.")).toEqual([
+      "flow=other",
+    ]);
+    expect(scoped(aurokGeneral)).toEqual(["empower=self", "empowered=self", "empowered=other"]);
+  });
+
+  it("reads a keyword a reminder defines as part of the definition, not as an occurrence", () => {
+    expect(scoped("[Weaponmaster] (When you play me, you may [Equip] an Equipment.)")).toEqual([
+      "weaponmaster=self",
+    ]);
+    expect(
+      scoped('When I conquer, play a token. (It has "When I attack, give me [Assault 4]."))'),
+    ).toEqual([]);
+  });
+
+  it("reads the target that follows the bracket when the lead-in names none", () => {
+    expect(scoped("When I attack, [Stun] an enemy unit.")).toEqual(["stun=other"]);
+    expect(scoped("You may exhaust this to [Stun] it.")).toEqual(["stun=other"]);
+    expect(scoped("Spend 2 XP: [Buff] me.")).toEqual(["buff=self"]);
+  });
+
+  it("keeps a keyword that fills your own pool with you, unless the text names another actor", () => {
+    expect(scoped("When I move, [Add] :rb_energy_1:.")).toEqual(["add=self"]);
+    expect(scoped("While your score is behind, your Gold [Add] an extra :rb_energy_1:.")).toEqual([
+      "add=self",
+    ]);
+    expect(scoped("If you do, [Predict], then reveal the top card.")).toEqual(["predict=self"]);
+    expect(scoped("When you play me, [Burn 2].")).toEqual(["burn 2=self"]);
+    expect(scoped("Choose a player. They [Burn 1].")).toEqual(["burn 1=other"]);
+  });
+
+  it("reports a lead-in and a trailing phrase it has none of rather than guessing a scope", () => {
+    expect(keywordOccurrences("When you hold here, [Vision] twice.")).toEqual([
+      {
+        id: "vision",
+        name: "Vision",
+        value: null,
+        cost: null,
+        targeting: {
+          type: "unclassified",
+          leadIn: "When you hold here,",
+          trailing: " twice.",
+        },
+      },
+    ]);
+  });
+
   it("splits a keyword's magnitude out of its name", () => {
     expect(ownedKeywords("[Shield 3] (+3 while defending.)")).toEqual([
       { id: "shield", name: "Shield", value: 3, cost: null },
@@ -44,6 +126,11 @@ describe("card derivation", () => {
   });
 
   it("keeps the rune cost a keyword is paid with", () => {
+    expect(ownedKeywords("[Equip] :rb_rune_calm: (Pay to equip.)")).toEqual([
+      { id: "equip", name: "Equip", value: null, cost: ":rb_rune_calm:" },
+    ]);
+    expect(scoped("[Reaction] — [Add] :rb_rune_fury:.")).toEqual(["reaction=self", "add=self"]);
+    expect(keywordOccurrences("[Reaction] — [Add] :rb_rune_fury:.")[1]?.cost).toBeNull();
     expect(ownedKeywords("[Equip :rb_rune_calm:] (Pay to equip.)")).toEqual([
       { id: "equip", name: "Equip", value: null, cost: ":rb_rune_calm:" },
     ]);
@@ -77,6 +164,7 @@ describe("card derivation", () => {
 
   it("ignores the tokens that are not keywords", () => {
     expect(ownedKeywords("[&gt;] [NO TEXT] [Level 6]")).toEqual([]);
+    expect(keywordOccurrences("[&gt;] [NO TEXT] [Level 6] [2]")).toEqual([]);
   });
 
   it("gives a hidden card both the speed it is played at and the speed it returns at", () => {

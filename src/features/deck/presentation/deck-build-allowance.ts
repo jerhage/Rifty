@@ -1,5 +1,5 @@
 import type { Card } from "@/features/catalog/card/card";
-import { cardIdentityName } from "@/features/catalog/presentation/card-identity";
+import { cardIdentityName } from "@/features/catalog/card/card-identity";
 import type { DeckSection } from "@/features/deck/deck/deck";
 import { copyAllowance, ZONE_RULES } from "@/features/deck/deck/deck-legality";
 

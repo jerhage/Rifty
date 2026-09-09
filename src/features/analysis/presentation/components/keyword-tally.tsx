@@ -4,7 +4,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useKeywordColors, useTheme } from "@/hooks/use-theme";
 
-import type { KeywordMix } from "../../deck-contents";
+import type { KeywordMix } from "../../card-metrics";
 
 function KeywordTally({
   cardCount,

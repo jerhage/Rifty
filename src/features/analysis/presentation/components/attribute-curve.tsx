@@ -4,7 +4,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-import type { CurveBucket } from "../../deck-contents";
+import type { CurveBucket } from "../../card-metrics";
 
 function AttributeCurve({
   buckets,

@@ -6,7 +6,7 @@ import { Radius, Spacing } from "@/constants/theme";
 import type { CardSpeed } from "@/features/catalog/value-objects/card-speed";
 import { useSpeedColors, useTheme } from "@/hooks/use-theme";
 
-import type { SpeedShare } from "../../deck-contents";
+import type { SpeedShare } from "../../card-metrics";
 
 function speedName(speed: CardSpeed): string {
   return match(speed)

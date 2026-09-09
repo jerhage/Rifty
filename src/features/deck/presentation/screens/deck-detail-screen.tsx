@@ -2,19 +2,24 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
-import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
+import {
+  abilityCardCount,
+  energyCurve,
+  keywordMix,
+  speedMix,
+} from "@/features/analysis/card-metrics";
+import { AttributeCurve } from "@/features/analysis/presentation/components/attribute-curve";
+import { KeywordTally } from "@/features/analysis/presentation/components/keyword-tally";
+import { SpeedMix } from "@/features/analysis/presentation/components/speed-mix";
 import type { Card } from "@/features/catalog/card/card";
 import type { Deck, DeckVerification } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 
 import { DeckCardRow } from "../components/detail/deck-card-row";
-import { AttributeCurve } from "../components/detail/attribute-curve";
-import { KeywordTally } from "../components/detail/keyword-tally";
-import { SpeedMix } from "../components/detail/speed-mix";
-import { abilityCardCount, deckGroups, energyCurve, keywordMix, speedMix } from "../deck-contents";
+import { MAIN_DECK_SECTIONS, MAIN_DECK_WITH_LEGEND, deckCards, deckGroups } from "../deck-contents";
 import { deckCountLabel, editedLabel } from "../deck-summary-format";
 
 interface DeckDetailScreenProps {
@@ -37,7 +42,9 @@ function DeckDetailScreen({
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const groups = deckGroups(deck, cards);
-  const abilityCards = abilityCardCount(deck, cards);
+  const mainDeckCopies = deckCards(deck, cards, MAIN_DECK_SECTIONS);
+  const abilityCopies = deckCards(deck, cards, MAIN_DECK_WITH_LEGEND);
+  const abilityCards = abilityCardCount(abilityCopies);
 
   return (
     <ThemedView style={styles.screen}>
@@ -76,9 +83,9 @@ function DeckDetailScreen({
         ) : null}
 
         <View style={styles.panels}>
-          <AttributeCurve buckets={energyCurve(deck, cards)} title="Energy curve" />
-          <SpeedMix cardCount={abilityCards} speeds={speedMix(deck, cards)} />
-          <KeywordTally cardCount={abilityCards} mix={keywordMix(deck, cards)} />
+          <AttributeCurve buckets={energyCurve(mainDeckCopies)} title="Energy curve" />
+          <SpeedMix cardCount={abilityCards} speeds={speedMix(abilityCopies)} />
+          <KeywordTally cardCount={abilityCards} mix={keywordMix(abilityCopies)} />
         </View>
 
         {groups.map((group) => (

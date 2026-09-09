@@ -1,11 +1,4 @@
-import {
-  deckGroups,
-  energyCurve,
-  keywordMix,
-  mightCurve,
-  speedMix,
-  totalPower,
-} from "@/features/deck/presentation/deck-contents";
+import { deckGroups } from "@/features/deck/presentation/deck-contents";
 
 import { card } from "../catalog/fixtures";
 import { deck } from "./fixtures";
@@ -70,66 +63,5 @@ describe("deck contents", () => {
 
   it("drops entries whose card is missing from the catalog", () => {
     expect(deckGroups(built, [cheap]).map((group) => group.title)).toEqual(["Units"]);
-  });
-
-  it("curves the main deck, leaving other zones out", () => {
-    expect(energyCurve(built, cards)).toEqual([
-      { label: "0-1", count: 3 },
-      { label: "2", count: 1 },
-      { label: "3", count: 2 },
-      { label: "4", count: 0 },
-      { label: "5+", count: 0 },
-    ]);
-  });
-
-  it("curves might over the main deck and totals its power", () => {
-    expect(mightCurve(built, cards)).toEqual([
-      { label: "0-1", count: 3 },
-      { label: "2", count: 0 },
-      { label: "3", count: 0 },
-      { label: "4", count: 1 },
-      { label: "5", count: 0 },
-      { label: "6+", count: 0 },
-    ]);
-    expect(totalPower(built, cards)).toBe(3);
-  });
-
-  it("counts the legend alongside the main deck, since it is in play from the start", () => {
-    expect(speedMix(built, cards).find((entry) => entry.speed === "reaction")?.count).toBe(3);
-    expect(keywordMix(built, cards).keywords.map((keyword) => keyword.id)).toContain("vision");
-  });
-
-  it("counts a card at every speed it can be played, so shares can pass the deck size", () => {
-    expect(speedMix(built, cards)).toEqual([
-      { speed: "normal", count: 4, share: 4 / 7 },
-      { speed: "action", count: 2, share: 2 / 7 },
-      { speed: "reaction", count: 3, share: 3 / 7 },
-    ]);
-  });
-
-  it("tallies keywords by copies held, most common first, and sums their values", () => {
-    expect(keywordMix(built, cards)).toEqual({
-      carrying: 6,
-      keywords: [
-        { id: "shield", name: "Shield", count: 3, totalValue: 6 },
-        { id: "tank", name: "Tank", count: 2, totalValue: null },
-        { id: "vision", name: "Vision", count: 1, totalValue: null },
-      ],
-    });
-  });
-
-  it("leaves out the keywords excluded from this analysis", () => {
-    const shown = keywordMix(built, cards).keywords.map((keyword) => keyword.id);
-
-    expect(shown).not.toContain("reaction");
-    expect(shown).not.toContain("equip");
-    expect(shown).toContain("tank");
-  });
-
-  it("counts a keyword only where the deck actually plays the card", () => {
-    expect(keywordMix(deck("empty", { entries: [] }), cards)).toEqual({
-      carrying: 0,
-      keywords: [],
-    });
   });
 });

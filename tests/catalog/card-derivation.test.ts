@@ -15,6 +15,8 @@ const block =
   "[Hidden] (Hide now for :rb_rune_rainbow: to react with later for :rb_energy_0:.)[Action] (Play on your turn or in showdowns.)Give a unit [Shield 3] and [Tank] this turn.";
 const boneSkewer = "[Hidden] (Hide now.)Deal 3 damage to a unit and [Stun] it.";
 const blastCone = "When you play this, [Stun] an enemy unit.";
+const akaliRogueAssassin =
+  "[Empower] [3]:rb_rune_rainbow: ([3]:rb_rune_rainbow: Empower this. Use only if not Empowered.)\n[Action][>] :rb_exhaust: If it's your turn, move a friendly unit in a showdown to base and if I'm [Empowered], ready it.";
 const sunlitGuardian =
   "[Shield] (+1 :rb_might: while I'm a defender.)[Tank] (I must be assigned combat damage first.)";
 
@@ -28,6 +30,7 @@ describe("card derivation", () => {
     expect(ownedKeywords(block).map((keyword) => keyword.name)).toEqual(["Hidden", "Action"]);
     expect(ownedKeywords(boneSkewer).map((keyword) => keyword.name)).toEqual(["Hidden"]);
     expect(ownedKeywords(blastCone)).toEqual([]);
+    expect(ownedKeywords(akaliRogueAssassin).map((keyword) => keyword.name)).toEqual(["Empower"]);
   });
 
   it("splits a keyword's magnitude out of its name", () => {
@@ -80,11 +83,27 @@ describe("card derivation", () => {
     expect(cardSpeeds("[Hidden] (Hide now.)Draw 1.")).toEqual(["action", "reaction"]);
   });
 
-  it("reads speed from the opening run, not from an ability further down", () => {
+  it("reads speed from the run that opens a line, not from a mention inside a sentence", () => {
     expect(cardSpeeds("[Reaction] (Play any time.)Counter a spell.")).toEqual(["reaction"]);
     expect(cardSpeeds("[Action] (Play on your turn.)Stun a unit.")).toEqual(["action"]);
     expect(cardSpeeds("Exhaust me: play a [Reaction] spell.")).toEqual(["normal"]);
+    expect(cardSpeeds("You may play me as a [Reaction] to a battlefield.")).toEqual(["normal"]);
     expect(cardSpeeds(sunlitGuardian)).toEqual(["normal"]);
+  });
+
+  it("adds the speed an ability on a later line is activated at", () => {
+    expect(cardSpeeds(akaliRogueAssassin)).toEqual(["normal", "action"]);
+    expect(cardSpeeds("Draw 1.\n[Reaction][>] :rb_exhaust: Deal 1 to a unit.")).toEqual([
+      "normal",
+      "reaction",
+    ]);
+  });
+
+  it("leaves a card that opens at its own speed off the normal speed", () => {
+    expect(cardSpeeds("[Reaction] (Play any time.)Counter a spell.\n[Action][>] Draw 1.")).toEqual([
+      "action",
+      "reaction",
+    ]);
   });
 
   it("prefers the champion the source names, and falls back to the name prefix", () => {

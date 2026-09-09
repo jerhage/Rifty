@@ -24,6 +24,7 @@ const LEVEL = /^level\s+\d+$/i;
 const PLACEHOLDER = new Set(["no text"]);
 const SPEED_ORDER: readonly CardSpeed[] = ["normal", "action", "reaction"];
 const NAME_SEPARATOR = /\s+-\s+|,\s+/;
+const LINE_BREAK = /\r?\n/;
 
 function leadingTokens(text: string): readonly string[] {
   const run = LEADING_RUN.exec(text);
@@ -118,17 +119,22 @@ function withMagnitudeDefaults(
   );
 }
 
-function cardSpeeds(text: string): readonly CardSpeed[] {
-  const held = new Set(ownedKeywords(text).map((keyword) => keyword.id));
-  const speeds = new Set<CardSpeed>();
+function declaredSpeeds(line: string): readonly CardSpeed[] {
+  const held = new Set(ownedKeywords(line).map((keyword) => keyword.id));
+  const speeds: CardSpeed[] = [];
 
-  if (held.has("action")) speeds.add("action");
-  if (held.has("reaction")) speeds.add("reaction");
-  if (held.has("hidden")) {
-    speeds.add("action");
-    speeds.add("reaction");
-  }
+  if (held.has("action") || held.has("hidden")) speeds.push("action");
+  if (held.has("reaction") || held.has("hidden")) speeds.push("reaction");
+
+  return speeds;
+}
+
+function cardSpeeds(text: string): readonly CardSpeed[] {
+  const [firstLine = "", ...laterLines] = text.split(LINE_BREAK);
+  const speeds = new Set<CardSpeed>(declaredSpeeds(firstLine));
+
   if (speeds.size === 0) speeds.add("normal");
+  for (const line of laterLines) for (const speed of declaredSpeeds(line)) speeds.add(speed);
 
   return SPEED_ORDER.filter((speed) => speeds.has(speed));
 }

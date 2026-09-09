@@ -1,81 +1,107 @@
-import { spawnSync } from "node:child_process";
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { assertValid, buildSeed } from "../../scripts/catalog-seed";
+import type { NormalizedCard, RawSet } from "../../scripts/catalog-seed";
 
-const projectRoot = process.cwd();
-const generator = join(projectRoot, "scripts/generate-catalog-seed.ts");
-
-function runGenerator(environment: Partial<NodeJS.ProcessEnv> = {}): string {
-  const result = spawnSync(
-    "deno",
-    ["run", "--sloppy-imports", "--allow-read", "--allow-write", "--allow-env", generator],
-    {
-      cwd: projectRoot,
-      encoding: "utf8",
-      env: { ...process.env, ...environment },
-    },
-  );
-
-  if (result.error) throw result.error;
-  // Capture expected generator failures so their stderr does not pollute Jest output.
-  if (result.status !== 0) throw new Error(result.stderr.toString());
-
-  return `${result.stdout.toString()}${result.stderr.toString()}`;
+function set(code: string): RawSet {
+  return {
+    id: `source-${code}`,
+    name: `Set ${code}`,
+    set_id: code,
+    card_count: 10,
+    tcgplayer_id: null,
+    cardmarket_id: null,
+    published_on: "2025-06-26",
+  };
 }
 
-async function generatedSeed(): Promise<string> {
-  return readFile(
-    join(projectRoot, "src/infrastructure/database/generated/catalog-seed.ts"),
-    "utf8",
-  );
+function card(id: string, overrides: Partial<NormalizedCard> = {}): NormalizedCard {
+  return {
+    id,
+    riftboundId: `OGN-${id}`,
+    setCode: "OGN",
+    collectorNumber: 1,
+    name: `Card ${id}`,
+    cleanName: `Card ${id}`,
+    energy: 3,
+    might: 2,
+    power: null,
+    rulesTextRich: "<p>Play effect.</p>",
+    rulesTextPlain: "Play effect.",
+    flavourText: null,
+    orientation: "portrait",
+    isAlternateArt: false,
+    isOvernumbered: false,
+    isSignature: false,
+    poolCode: null,
+    championName: null,
+    identityName: `Card ${id}`,
+    sourceUpdatedAt: "2026-07-10T22:45:08.861364+00:00",
+    typeId: "Unit",
+    supertypeId: null,
+    rarityId: "Common",
+    domainIds: ["Chaos"],
+    tagIds: [],
+    regions: [],
+    imageSources: [`https://cards.example/${id}.webp`],
+    artist: null,
+    accessibilityText: null,
+    marketplaceReferences: [],
+    ...overrides,
+  };
 }
 
-describe("catalog seed generator", () => {
-  it("keeps every printing and names one of them for each Riftbound ID", async () => {
-    expect(runGenerator()).toMatch(/Generated .* with \d+ cards/);
+function imagesFor(cards: readonly NormalizedCard[]): ReadonlyMap<string, string> {
+  return new Map(cards.map((entry) => [entry.id, `${entry.id}.webp`]));
+}
 
-    const seed = await generatedSeed();
-    const cards = [
-      ...seed.matchAll(/"riftboundId": "([^"]+)"[\s\S]*?"isCanonical": (true|false)/g),
+describe("catalog seed", () => {
+  it("keeps every printing and names one of them for each Riftbound ID", () => {
+    const cards: readonly NormalizedCard[] = [
+      card("a", { riftboundId: "OGN-001" }),
+      card("b", { riftboundId: "OGN-001", isAlternateArt: true }),
+      card("c", { riftboundId: "OGN-002" }),
     ];
-    const riftboundIds = cards.map((match) => match[1]!);
-    const canonicalIds = cards.filter((match) => match[2] === "true").map((match) => match[1]!);
 
-    expect(riftboundIds.length).toBeGreaterThan(new Set(riftboundIds).size);
-    expect(new Set(canonicalIds).size).toBe(canonicalIds.length);
-    expect(new Set(canonicalIds)).toEqual(new Set(riftboundIds));
+    const { seed } = buildSeed(cards, [set("OGN")], imagesFor(cards));
+
+    expect(seed.catalogCards.map((row) => row.id)).toEqual(["a", "b", "c"]);
+    expect(seed.catalogCards.filter((row) => row.isCanonical).map((row) => row.id)).toEqual([
+      "a",
+      "c",
+    ]);
   });
 
-  it("gives every card a media row so none drops out of the catalog", async () => {
-    const seed = await generatedSeed();
-    const cardIds = [...seed.matchAll(/"riftboundId": "[^"]+"/g)].length;
-    const mediaRows = [...seed.matchAll(/"imageFile": "[^"]+"/g)].length;
+  it("gives every card a media row so none drops out of the catalog", () => {
+    const cards: readonly NormalizedCard[] = [card("a"), card("b"), card("c")];
 
-    expect(mediaRows).toBe(cardIds);
+    const { seed } = buildSeed(cards, [set("OGN")], imagesFor(cards));
+
+    expect(seed.cardMedia.map((row) => row.cardId)).toEqual(["a", "b", "c"]);
+    expect(() => assertValid(seed)).not.toThrow();
   });
 
-  it("skips a card whose set is absent rather than dropping it silently", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "riftcards-seed-"));
-    const dataDirectory = join(directory, "data");
-    const outputPath = join(directory, "catalog-seed.ts");
-    await cp(join(projectRoot, "data"), dataDirectory, { recursive: true });
+  it("skips a card whose set is absent rather than dropping it silently", () => {
+    const cards: readonly NormalizedCard[] = [card("a"), card("b", { setCode: "MISSING" })];
 
-    const cardFilePath = join(dataDirectory, "api", "cards-JDG.json");
-    const file = JSON.parse(await readFile(cardFilePath, "utf8")) as {
-      cards: Array<{ setCode: string; raw?: { set?: { set_id?: string } } }>;
-    };
-    const [first] = file.cards;
-    first!.setCode = "MISSING";
-    if (first?.raw?.set) first.raw.set.set_id = "MISSING";
-    await writeFile(cardFilePath, JSON.stringify(file));
+    const { seed, skipped } = buildSeed(cards, [set("OGN")], imagesFor(cards));
 
-    const output = runGenerator({
-      CATALOG_DATA_DIRECTORY: dataDirectory,
-      CATALOG_SEED_OUTPUT_PATH: outputPath,
-    });
+    expect(skipped.map((row) => row.id)).toEqual(["b"]);
+    expect(seed.catalogCards.map((row) => row.id)).toEqual(["a"]);
+  });
 
-    expect(output).toMatch(/Skipped \d+ cards? belonging to sets missing/);
-    await rm(directory, { force: true, recursive: true });
+  it("fails generation when a card has no media row", () => {
+    const cards: readonly NormalizedCard[] = [card("a"), card("b")];
+
+    const { seed } = buildSeed(cards, [set("OGN")], imagesFor([card("a")]));
+
+    expect(() => assertValid(seed)).toThrow(/no media row: b/);
+  });
+
+  it("fails generation when a Riftbound ID has no canonical printing", () => {
+    const cards: readonly NormalizedCard[] = [card("a"), card("b")];
+
+    const { seed } = buildSeed(cards, [set("OGN")], imagesFor(cards));
+    for (const row of seed.catalogCards) row.isCanonical = false;
+
+    expect(() => assertValid(seed)).toThrow(/no canonical printing: OGN-a, OGN-b/);
   });
 });

@@ -9,10 +9,12 @@ import { useTheme } from "@/hooks/use-theme";
 type ButtonVariant = "primary" | "secondary" | "link";
 
 function Button({
+  disabled = false,
   label,
   onPress,
   variant,
 }: {
+  readonly disabled?: boolean;
   readonly label: string;
   readonly onPress: () => void;
   readonly variant: ButtonVariant;
@@ -22,13 +24,15 @@ function Button({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => pressed && styles.pressed}
+      style={({ pressed }) => pressed && !disabled && styles.pressed}
     >
       {match(variant)
         .with("primary", () => (
-          <View style={[styles.primary, { backgroundColor: theme.accent }]}>
-            <ThemedText themeColor="onAccent" type="smallBold">
+          <View style={[styles.primary, { backgroundColor: disabled ? theme.fill : theme.accent }]}>
+            <ThemedText themeColor={disabled ? "textTertiary" : "onAccent"} type="smallBold">
               {label}
             </ThemedText>
           </View>

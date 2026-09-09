@@ -190,6 +190,47 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
+  it("finds a legend's champions by name without touching another character's", async () => {
+    const store = createSqliteScenarioStore();
+    const origins = cardSet("OGN", "2026-01-01T00:00:00");
+    store.seedSet(origins);
+    const akaliFury = card("akali-fury", origins.code, {
+      name: "Akali, Deadly Weapon",
+      championName: "Akali",
+      domainIds: ["Fury"],
+      classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+    });
+    const akaliCalm = card("akali-calm", origins.code, {
+      name: "Akali, Silent",
+      championName: "Akali",
+      domainIds: ["Calm"],
+      classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+    });
+    const akaliOffIdentity = card("akali-chaos", origins.code, {
+      name: "Akali, Elsewhere",
+      championName: "Akali",
+      domainIds: ["Chaos"],
+      classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+    });
+    const otherCharacter = card("sett", origins.code, {
+      name: "Sett, Brawler",
+      championName: "Sett",
+      domainIds: ["Fury"],
+      classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+    });
+    for (const each of [akaliFury, akaliCalm, akaliOffIdentity, otherCharacter])
+      store.seedCard(each);
+
+    const page = await store.cards.getPage({
+      supertypeIds: ["Champion"],
+      championNames: ["Akali"],
+      withinDomainIds: ["Fury", "Calm"],
+    });
+
+    expect(page.items.map((item) => item.id).sort()).toEqual(["akali-calm", "akali-fury"]);
+    store.close();
+  });
+
   it("counts every match, not just the page asked for", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");

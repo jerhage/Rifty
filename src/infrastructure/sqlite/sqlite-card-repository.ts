@@ -1,4 +1,17 @@
-import { and, asc, count, desc, eq, gte, inArray, lte, or, sql, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  lte,
+  notInArray,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import { match } from "ts-pattern";
 
 import type { Card, CardId } from "@/features/catalog/card/card";
@@ -205,6 +218,20 @@ class SqliteCardRepository implements CardRepository {
             .where(inArray(cardDomains.domainId, [...new Set(criteria.anyDomainIds)])),
         ),
       );
+    }
+    if (criteria.withinDomainIds?.length) {
+      conditions.push(
+        notInArray(
+          catalogCards.id,
+          this.db
+            .select({ cardId: cardDomains.cardId })
+            .from(cardDomains)
+            .where(notInArray(cardDomains.domainId, [...new Set(criteria.withinDomainIds)])),
+        ),
+      );
+    }
+    if (criteria.championNames?.length) {
+      conditions.push(inArray(catalogCards.championName, [...new Set(criteria.championNames)]));
     }
     if (criteria.tagIds?.length) {
       const tagIds = [...new Set(criteria.tagIds)];

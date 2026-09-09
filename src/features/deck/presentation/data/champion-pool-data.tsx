@@ -3,14 +3,21 @@ import type { ReactNode } from "react";
 import type { Card } from "@/features/catalog/card/card";
 import type { CardCounter } from "@/features/catalog/card/card-counter";
 import type { CardLister } from "@/features/catalog/card/card-lister";
+import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
 import { CardsData, type CardsDataContent } from "@/features/catalog/presentation/data/cards-data";
 
-import { eligibleChampions } from "../champion-eligibility";
+const EVERY_CHAMPION: CardListCriteria = { supertypeIds: ["Champion"] };
 
-/**
- * Eligibility is settled here rather than in the query because the catalog does not record which
- * legend a champion answers to. See the TODO about storing that tag.
- */
+function championCriteria(legend: Card | null): CardListCriteria {
+  if (legend === null || legend.championName === null) return EVERY_CHAMPION;
+
+  return {
+    supertypeIds: ["Champion"],
+    championNames: [legend.championName],
+    withinDomainIds: [...legend.domainIds],
+  };
+}
+
 function ChampionPoolData({
   cardCounter,
   cardLister,
@@ -26,11 +33,11 @@ function ChampionPoolData({
     <CardsData
       cardCounter={cardCounter}
       cardLister={cardLister}
-      criteria={{ supertypeIds: ["Champion"] }}
+      criteria={championCriteria(legend)}
     >
-      {(pool) => children({ ...pool, cards: eligibleChampions(pool.cards, legend) })}
+      {children}
     </CardsData>
   );
 }
 
-export { ChampionPoolData };
+export { championCriteria, ChampionPoolData };

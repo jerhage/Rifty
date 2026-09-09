@@ -74,6 +74,7 @@ function toDomainCard({
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     speeds: speeds.map((speed) => cardSpeedSelectSchema.parse(speed).speed),
     keywords: keywords.map((keyword) => cardKeywordRowSchema.parse(keyword)),
+    championName: persistedCard.championName,
     tagIds: tags.map((tag) => cardTagSelectSchema.parse(tag).tagId),
     imageUrl: cardImageUrl(imageBaseUrl, media),
     marketplaceReferences: marketplaceReferences.map((reference) => {

@@ -129,7 +129,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         isOvernumbered: card.isOvernumbered,
         isSignature: card.isSignature,
         poolCode: null,
-        championName: null,
+        championName: card.championName,
         isCanonical: true,
         sourceUpdatedAt: card.sourceUpdatedAt,
       })

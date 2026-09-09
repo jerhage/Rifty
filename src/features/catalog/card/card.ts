@@ -46,6 +46,7 @@ const cardSchema = z.object({
   domainIds: z.array(cardDomainSchema),
   speeds: z.array(cardSpeedSchema),
   keywords: z.array(cardKeywordSchema),
+  championName: z.string().trim().min(1).nullable(),
   tagIds: z.array(taxonomyIdSchema),
   imageUrl: z.url(),
   marketplaceReferences: z.array(marketplaceReferenceSchema),

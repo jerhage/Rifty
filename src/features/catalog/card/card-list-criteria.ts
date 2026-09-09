@@ -47,7 +47,9 @@ const cardListCriteriaSchema = z.object({
   domainIds: z.array(cardDomainSchema).optional(),
   /** Use for an 'OR' query (e.g. show me cards that have either calm OR mind domains) */
   anyDomainIds: z.array(cardDomainSchema).optional(),
+  withinDomainIds: z.array(cardDomainSchema).optional(),
   tagIds: z.array(taxonomyIdSchema).optional(),
+  championNames: z.array(z.string().trim().min(1)).optional(),
   energy: cardNumericFilterSchema.optional(),
   might: cardNumericFilterSchema.optional(),
   power: cardNumericFilterSchema.optional(),

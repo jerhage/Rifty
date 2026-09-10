@@ -29,6 +29,12 @@ function deckCountLabel(deck: Deck): string {
   return sideboard === 0 ? cardsLabel : `${cardsLabel} · ${sideboard} side`;
 }
 
+function deckListLabel(count: number): string {
+  if (count === 0) return "No decks yet. Build your first list.";
+
+  return count === 1 ? "1 list" : `${count} lists`;
+}
+
 /** Deliberately coarse while the app still formats instants with `Date` rather than Temporal. */
 function editedLabel(updatedAt: string, now: string): string {
   const elapsedMs = Date.parse(now) - Date.parse(updatedAt);
@@ -46,4 +52,4 @@ function editedLabel(updatedAt: string, now: string): string {
   return days === 1 ? "edited yesterday" : `edited ${days}d ago`;
 }
 
-export { deckCardCount, deckCountLabel, editedLabel, sideboardCount };
+export { deckCardCount, deckCountLabel, deckListLabel, editedLabel, sideboardCount };

@@ -1,13 +1,14 @@
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { MaxContentWidth, Radius, Spacing } from "@/constants/theme";
+import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { Deck } from "@/features/deck/deck/deck";
-import { useTheme } from "@/hooks/use-theme";
 
 import { DeckRow } from "../components/deck-row";
+import { NewDeckButton } from "../components/new-deck-button";
+import { deckListLabel } from "../deck-summary-format";
 
 interface DeckListScreenProps {
   readonly decks: readonly Deck[];
@@ -34,7 +35,7 @@ function DeckListScreen({ decks, now, onNewDeck, onOpenDeck }: DeckListScreenPro
       >
         <ThemedText type="display">Decks</ThemedText>
         <ThemedText themeColor="textSecondary" type="body" style={styles.subtitle}>
-          {summaryLabel(decks.length)}
+          {deckListLabel(decks.length)}
         </ThemedText>
 
         {decks.map((deck) => (
@@ -45,34 +46,6 @@ function DeckListScreen({ decks, now, onNewDeck, onOpenDeck }: DeckListScreenPro
       </ScrollView>
     </ThemedView>
   );
-}
-
-/** The dashed row doubles as the empty state, so an empty list still offers the one useful action. */
-function NewDeckButton({ onPress }: { readonly onPress: () => void }) {
-  const theme = useTheme();
-
-  return (
-    <Pressable
-      accessibilityLabel="Create a new deck"
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.newDeck,
-        { borderColor: theme.borderStrong },
-        pressed && styles.pressed,
-      ]}
-    >
-      <ThemedText themeColor="textSecondary" type="body">
-        + New deck
-      </ThemedText>
-    </Pressable>
-  );
-}
-
-function summaryLabel(count: number): string {
-  if (count === 0) return "No decks yet. Build your first list.";
-
-  return count === 1 ? "1 list" : `${count} lists`;
 }
 
 export { DeckListScreen };
@@ -91,15 +64,5 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginBottom: Spacing.three - 3,
-  },
-  newDeck: {
-    alignItems: "center",
-    borderRadius: Radius.large,
-    borderStyle: "dashed",
-    borderWidth: 1,
-    padding: Spacing.three,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

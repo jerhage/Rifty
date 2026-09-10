@@ -59,7 +59,7 @@ function minimumValue(filter: CardNumericFilter | undefined): string {
  * they live in the chips above the grid, where their state is already visible.
  */
 function activeFilterCount(criteria: CatalogQueryCriteria): number {
-  const facets = [
+  const selections = [
     criteria.setCodes?.length ?? 0,
     criteria.rarityIds?.length ?? 0,
     criteria.supertypeIds?.length ?? 0,
@@ -70,7 +70,7 @@ function activeFilterCount(criteria: CatalogQueryCriteria): number {
     criteria.power === undefined ? 0 : 1,
   ];
 
-  return facets.filter((count) => count > 0).length;
+  return selections.reduce((total, count) => total + count, 0);
 }
 
 export { activeFilterCount, minimumValue, setMinimum, toggleKeyword, toggleSet };

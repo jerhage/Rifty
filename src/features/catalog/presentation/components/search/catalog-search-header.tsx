@@ -1,6 +1,8 @@
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Chip } from "@/components/ui/atoms/chip";
+import { ColorDot } from "@/components/ui/atoms/color-dot";
 import { HorizontalScroller } from "@/components/ui/atoms/horizontal-scroller";
 import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
@@ -10,8 +12,6 @@ import { ORDERED_CARD_TYPES, type CardType } from "@/features/card/value-objects
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import type { CatalogQueryCriteria } from "../../catalog-query-criteria";
-import { DomainChip } from "./domain-chip";
-import { TypeChip } from "./type-chip";
 
 /**
  * The search field and quick chips stay pinned above the grid so filtering never requires scrolling
@@ -61,29 +61,39 @@ function CatalogSearchHeader({
         />
 
         <HorizontalScroller style={styles.domainRow}>
-          <DomainChip
-            dotColor={theme.textSecondary}
+          <Chip
+            adornment={<ColorDot color={theme.textSecondary} />}
             label="All"
+            labelType="body"
             onPress={onClearDomains}
             selected={selectedDomains.length === 0}
+            tone="neutral"
           />
           {ORDERED_DOMAINS.map((domainId) => (
-            <DomainChip
-              dotColor={domainColors[domainId]}
+            <Chip
+              adornment={<ColorDot color={domainColors[domainId]} />}
               key={domainId}
               label={domainId}
+              labelType="body"
               onPress={() => onToggleDomain(domainId)}
               selected={selectedDomains.includes(domainId)}
+              tone="neutral"
             />
           ))}
         </HorizontalScroller>
 
         <HorizontalScroller gap={Spacing.two - 2} style={styles.typeRow}>
-          <TypeChip label="All" onPress={onClearTypes} selected={selectedTypes.length === 0} />
+          <Chip
+            label="All"
+            labelType="mono"
+            onPress={onClearTypes}
+            selected={selectedTypes.length === 0}
+          />
           {ORDERED_CARD_TYPES.map((typeId) => (
-            <TypeChip
+            <Chip
               key={typeId}
               label={typeId}
+              labelType="mono"
               onPress={() => onToggleType(typeId)}
               selected={selectedTypes.includes(typeId)}
             />

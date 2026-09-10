@@ -12,6 +12,7 @@ type DeckBuildStepId = "legend" | "chosenChampion" | "zones";
 
 interface DeckBuildStep {
   readonly id: DeckBuildStepId;
+  readonly ordinal: number;
   readonly label: string;
   readonly title: string;
   readonly blurb: string;
@@ -20,6 +21,7 @@ interface DeckBuildStep {
 const DECK_BUILD_STEPS_BY_ID: Readonly<Record<DeckBuildStepId, DeckBuildStep>> = {
   legend: {
     id: "legend",
+    ordinal: 1,
     label: "Legend",
     title: "Pick your Legend",
     blurb:
@@ -27,6 +29,7 @@ const DECK_BUILD_STEPS_BY_ID: Readonly<Record<DeckBuildStepId, DeckBuildStep>> =
   },
   chosenChampion: {
     id: "chosenChampion",
+    ordinal: 2,
     label: "Chosen Champion",
     title: "Name your Champion",
     blurb:
@@ -34,6 +37,7 @@ const DECK_BUILD_STEPS_BY_ID: Readonly<Record<DeckBuildStepId, DeckBuildStep>> =
   },
   zones: {
     id: "zones",
+    ordinal: 3,
     label: "Zones",
     title: "Build zones",
     blurb: "Fill each zone, then check the deck before you save it.",

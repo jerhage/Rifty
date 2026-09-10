@@ -20,7 +20,6 @@ function BuildProgressHeader({
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const stepIndex = DECK_BUILD_STEPS.findIndex((candidate) => candidate.id === step.id);
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
@@ -38,16 +37,19 @@ function BuildProgressHeader({
           <ThemedText type="small">←</ThemedText>
         </Pressable>
         <ThemedText themeColor="textSecondary" type="mono">
-          {`${modeLabel(mode)} · step ${stepIndex + 1} of ${DECK_BUILD_STEPS.length} · ${step.label}`}
+          {`${modeLabel(mode)} · step ${step.ordinal} of ${DECK_BUILD_STEPS.length} · ${step.label}`}
         </ThemedText>
       </View>
       <View style={styles.track}>
-        {DECK_BUILD_STEPS.map((candidate, index) => (
+        {DECK_BUILD_STEPS.map((candidate) => (
           <View
             key={candidate.id}
             style={[
               styles.segment,
-              { backgroundColor: index <= stepIndex ? theme.accent : theme.borderStrong },
+              {
+                backgroundColor:
+                  candidate.ordinal <= step.ordinal ? theme.accent : theme.borderStrong,
+              },
             ]}
           />
         ))}

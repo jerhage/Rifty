@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { FlatList, StyleSheet, type LayoutChangeEvent } from "react-native";
+import { FlatList, StyleSheet, View, type LayoutChangeEvent } from "react-native";
 
 import { match } from "ts-pattern";
 
-import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import type { ZoneSection } from "@/features/deck/deck/deck-legality";
@@ -13,7 +13,6 @@ import { placedCards, quantityOf, type DeckBuildDraft } from "../../deck-build-s
 import type { ZonePoolLayout, ZonePoolView } from "../../deck-zone-pool";
 import { BuildCardRow } from "./build-card-row";
 import { BuildCardTile } from "./build-card-tile";
-import { PoolViewPlaceholder } from "./pool-view-placeholder";
 
 function ZonePoolList({
   draft,
@@ -47,7 +46,11 @@ function ZonePoolList({
   const listed = isPool ? zonePool : placed.map((entry) => entry.card);
 
   return match(poolView)
-    .with("roles", () => <PoolViewPlaceholder message="Role breakdowns are on the way." />)
+    .with("roles", () => (
+      <View style={styles.placeholder}>
+        <EmptyState message="Role breakdowns are on the way." />
+      </View>
+    ))
     .with("pool", "inDeck", () => (
       <FlatList
         columnWrapperStyle={poolLayout === "grid" ? styles.tileRow : undefined}
@@ -56,9 +59,11 @@ function ZonePoolList({
         key={poolLayout}
         keyExtractor={(card) => card.printingId}
         ListEmptyComponent={
-          <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
-            {isPool ? "No cards available for this zone yet." : "Nothing added to this zone yet."}
-          </ThemedText>
+          <EmptyState
+            message={
+              isPool ? "No cards available for this zone yet." : "Nothing added to this zone yet."
+            }
+          />
         }
         numColumns={poolLayout === "grid" ? 2 : 1}
         onEndReached={isPool ? onLoadMorePool : undefined}
@@ -105,8 +110,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: Spacing.three,
   },
-  empty: {
-    paddingVertical: Spacing.six,
-    textAlign: "center",
+  placeholder: {
+    flex: 1,
+    justifyContent: "center",
   },
 });

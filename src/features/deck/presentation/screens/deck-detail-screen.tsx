@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/atoms/button";
+import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
@@ -111,11 +112,7 @@ function DeckDetailScreen({
           </View>
         ))}
 
-        {groups.length === 0 ? (
-          <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
-            This deck has no cards yet.
-          </ThemedText>
-        ) : null}
+        {groups.length === 0 ? <EmptyState message="This deck has no cards yet." /> : null}
       </ScrollView>
     </ThemedView>
   );
@@ -171,9 +168,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: Spacing.one,
-  },
-  empty: {
-    paddingVertical: Spacing.six,
-    textAlign: "center",
   },
 });

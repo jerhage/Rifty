@@ -1,5 +1,6 @@
 import { FlatList, StyleSheet } from "react-native";
 
+import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
@@ -39,11 +40,13 @@ function ChampionStep({
         onEndReached={onLoadMore}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
-          <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
-            {legend
-              ? `No champions match ${legend.name}'s character tag and domains.`
-              : "Pick a Legend first to see which champions it allows."}
-          </ThemedText>
+          <EmptyState
+            message={
+              legend
+                ? `No champions match ${legend.name}'s character tag and domains.`
+                : "Pick a Legend first to see which champions it allows."
+            }
+          />
         }
         ListHeaderComponent={<StepIntro step={step} />}
         renderItem={({ item }) => (
@@ -79,9 +82,5 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.four,
     paddingHorizontal: Spacing.three,
     width: "100%",
-  },
-  empty: {
-    paddingVertical: Spacing.six,
-    textAlign: "center",
   },
 });

@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 import { FlatList, RefreshControl, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
@@ -58,11 +58,7 @@ function CardSummaryGrid({
       ]}
       data={cards}
       keyExtractor={(card) => card.printingId}
-      ListEmptyComponent={
-        <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
-          {emptyMessage}
-        </ThemedText>
-      }
+      ListEmptyComponent={<EmptyState message={emptyMessage} />}
       ListFooterComponent={footer}
       ListHeaderComponent={header}
       numColumns={2}
@@ -94,9 +90,5 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     justifyContent: "center",
     marginBottom: Spacing.three,
-  },
-  empty: {
-    paddingVertical: Spacing.six,
-    textAlign: "center",
   },
 });

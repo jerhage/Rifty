@@ -26,6 +26,7 @@ interface DeckBuildScreenProps {
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
   readonly draft: DeckBuildDraft;
+  readonly draftPoolFilters: ZonePoolFilters;
   readonly error: string | null;
   readonly isSaving: boolean;
   readonly keywords: readonly Keyword[];
@@ -35,6 +36,7 @@ interface DeckBuildScreenProps {
   readonly legendQuery: string;
   readonly legendSearchQuery: string;
   readonly mode: DeckBuildMode;
+  readonly onApplyPoolFilters: () => void;
   readonly onBack: () => void;
   readonly onChangeLegendQuery: (query: string) => void;
   readonly onChangeName: (name: string) => void;
@@ -58,7 +60,8 @@ interface DeckBuildScreenProps {
   readonly onTogglePoolType: (typeId: CardType) => void;
   readonly poolFilters: ZonePoolFilters;
   readonly poolLayout: ZonePoolLayout;
-  readonly poolSearchFilters: ZonePoolFilters;
+  readonly poolQuery: string;
+  readonly poolSearchQuery: string;
   readonly poolView: ZonePoolView;
   readonly step: DeckBuildStep;
   readonly stepIndex: number;
@@ -74,6 +77,7 @@ function DeckBuildScreen({
   cardCounter,
   cardLister,
   draft,
+  draftPoolFilters,
   error,
   isSaving,
   isPoolFilterOpen,
@@ -82,6 +86,7 @@ function DeckBuildScreen({
   legendQuery,
   legendSearchQuery,
   mode,
+  onApplyPoolFilters,
   onBack,
   onChangeLegendQuery,
   onChangeName,
@@ -105,7 +110,8 @@ function DeckBuildScreen({
   onTogglePoolType,
   poolFilters,
   poolLayout,
-  poolSearchFilters,
+  poolQuery,
+  poolSearchQuery,
   poolView,
   step,
   stepIndex,
@@ -160,7 +166,8 @@ function DeckBuildScreen({
           <ZonePoolData
             cardCounter={cardCounter}
             cardLister={cardLister}
-            filters={poolSearchFilters}
+            filters={poolFilters}
+            query={poolSearchQuery}
             zone={zone}
           >
             {(pool) => (
@@ -182,21 +189,22 @@ function DeckBuildScreen({
                   onSetQuantity={onSetQuantity}
                   poolFilters={poolFilters}
                   poolLayout={poolLayout}
+                  poolQuery={poolQuery}
                   poolView={poolView}
                   verification={verification}
                   zone={zone}
                   zonePool={pool.cards}
                 />
                 <PoolFilterSheet
-                  filters={poolFilters}
+                  filters={draftPoolFilters}
                   isPresented={isPoolFilterOpen}
                   keywords={keywords}
+                  onApply={onApplyPoolFilters}
                   onDismiss={onDismissPoolFilters}
                   onReset={onResetPoolFilters}
                   onToggleDomain={onTogglePoolDomain}
                   onToggleKeyword={onTogglePoolKeyword}
                   onToggleType={onTogglePoolType}
-                  resultLabel={pool.total === 1 ? "1 card" : `${pool.total} cards`}
                   zone={zone}
                 />
               </>

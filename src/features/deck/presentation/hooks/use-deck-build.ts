@@ -59,6 +59,10 @@ function useDeckBuild(
   const [poolFilters, setPoolFilters] = useState<ZonePoolFilters>(() =>
     defaultPoolFilters(openingDraft(start).legend),
   );
+  const [draftPoolFilters, setDraftPoolFilters] = useState<ZonePoolFilters>(() =>
+    defaultPoolFilters(openingDraft(start).legend),
+  );
+  const [poolQuery, setPoolQuery] = useState("");
   const [poolLayout, setPoolLayout] = useState<ZonePoolLayout>("list");
   const [poolView, setPoolView] = useState<ZonePoolView>("pool");
   const [legendQuery, setLegendQuery] = useState("");
@@ -78,15 +82,20 @@ function useDeckBuild(
     setStepIndex(stepIndex - 1);
   }, [onExit, stepIndex]);
 
+  const settlePoolFilters = useCallback((filters: ZonePoolFilters) => {
+    setPoolFilters(filters);
+    setDraftPoolFilters(filters);
+  }, []);
+
   /** The zones step opens on the legend's own domains rather than the whole catalog. */
   const goToStep = useCallback(
     (index: number) => {
       setStepIndex(index);
       if (DECK_BUILD_STEPS[index]?.id === "zones") {
-        setPoolFilters(defaultPoolFilters(draft.legend));
+        settlePoolFilters(defaultPoolFilters(draft.legend));
       }
     },
-    [draft.legend],
+    [draft.legend, settlePoolFilters],
   );
   const next = useCallback(
     () => goToStep(Math.min(DECK_BUILD_STEPS.length - 1, stepIndex + 1)),
@@ -97,36 +106,43 @@ function useDeckBuild(
   const setZone = useCallback(
     (section: DeckSection) => {
       setZoneState(section);
-      setPoolFilters(defaultPoolFilters(draft.legend));
+      settlePoolFilters(defaultPoolFilters(draft.legend));
     },
-    [draft.legend],
+    [draft.legend, settlePoolFilters],
   );
 
-  const setPoolQuery = useCallback((query: string) => {
-    setPoolFilters((current) => ({ ...current, query }));
-  }, []);
   const togglePoolDomain = useCallback((domainId: CardDomain) => {
-    setPoolFilters((current) => ({
+    setDraftPoolFilters((current) => ({
       ...current,
       domainIds: toggle(current.domainIds, domainId),
     }));
   }, []);
   const togglePoolKeyword = useCallback((keywordId: string) => {
-    setPoolFilters((current) => ({
+    setDraftPoolFilters((current) => ({
       ...current,
       keywordIds: toggle(current.keywordIds, keywordId),
     }));
   }, []);
   const togglePoolType = useCallback((typeId: CardType) => {
-    setPoolFilters((current) => ({ ...current, typeIds: toggle(current.typeIds, typeId) }));
+    setDraftPoolFilters((current) => ({ ...current, typeIds: toggle(current.typeIds, typeId) }));
   }, []);
   const toggleLegendDomain = useCallback((domainId: CardDomain) => {
     setLegendDomainIds((current) => toggle(current, domainId));
   }, []);
-  const openPoolFilters = useCallback(() => setIsPoolFilterOpen(true), []);
-  const dismissPoolFilters = useCallback(() => setIsPoolFilterOpen(false), []);
+  const openPoolFilters = useCallback(() => {
+    setDraftPoolFilters(poolFilters);
+    setIsPoolFilterOpen(true);
+  }, [poolFilters]);
+  const dismissPoolFilters = useCallback(() => {
+    setDraftPoolFilters(poolFilters);
+    setIsPoolFilterOpen(false);
+  }, [poolFilters]);
+  const applyPoolFilters = useCallback(() => {
+    setPoolFilters(draftPoolFilters);
+    setIsPoolFilterOpen(false);
+  }, [draftPoolFilters]);
   const resetPoolFilters = useCallback(() => {
-    setPoolFilters((current) => ({ ...defaultPoolFilters(draft.legend), query: current.query }));
+    setDraftPoolFilters(defaultPoolFilters(draft.legend));
   }, [draft.legend]);
 
   /** Changing the legend clears the champion, whose tag and domains have to match it. */
@@ -165,12 +181,8 @@ function useDeckBuild(
   }, []);
 
   /** The field updates on every keystroke; the pool query waits for a pause in typing. */
-  const debouncedQuery = useDebouncedValue(poolFilters.query, SEARCH_DEBOUNCE_MS);
+  const debouncedPoolQuery = useDebouncedValue(poolQuery, SEARCH_DEBOUNCE_MS);
   const debouncedLegendQuery = useDebouncedValue(legendQuery, SEARCH_DEBOUNCE_MS);
-  const poolQueryFilters = useMemo(
-    () => ({ ...poolFilters, query: debouncedQuery }),
-    [debouncedQuery, poolFilters],
-  );
 
   const entries = useMemo(() => draftEntries(draft), [draft]);
 
@@ -225,9 +237,11 @@ function useDeckBuild(
   }, [capabilities, draft.chosenChampion, draft.name, entries, onSaved, start]);
 
   return {
+    applyPoolFilters,
     back,
     changeName,
     draft,
+    draftPoolFilters,
     error,
     goToStep,
     mode: start.type,
@@ -238,12 +252,13 @@ function useDeckBuild(
     pickChampion,
     pickLegend,
     debouncedLegendQuery,
+    debouncedPoolQuery,
     dismissPoolFilters,
     legendDomainIds,
     legendQuery,
     poolFilters,
     poolLayout,
-    poolQueryFilters,
+    poolQuery,
     poolView,
     setLegendQuery,
     resetPoolFilters,

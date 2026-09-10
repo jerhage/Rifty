@@ -12,19 +12,21 @@ function ZonePoolData({
   cardLister,
   children,
   filters,
+  query,
   zone,
 }: {
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
   readonly children: (pool: CardsDataContent) => ReactNode;
   readonly filters: ZonePoolFilters;
+  readonly query: string;
   readonly zone: DeckSection;
 }) {
   return (
     <CardsData
       cardCounter={cardCounter}
       cardLister={cardLister}
-      criteria={poolCriteria(zone, filters)}
+      criteria={poolCriteria(zone, filters, query)}
     >
       {children}
     </CardsData>

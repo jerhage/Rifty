@@ -10,7 +10,6 @@ function SheetFace({
   action,
   body,
   confirmLabel,
-  footerNote,
   onConfirm,
   title,
 }: {
@@ -18,8 +17,6 @@ function SheetFace({
   readonly action?: ReactNode;
   readonly body: ReactNode;
   readonly confirmLabel: string;
-  /** Optional content above the confirm button. */
-  readonly footerNote?: ReactNode;
   readonly onConfirm: () => void;
   readonly title: string;
 }) {
@@ -37,7 +34,6 @@ function SheetFace({
         {body}
       </ScrollView>
       <View style={[styles.footer, { borderTopColor: theme.border }]}>
-        {footerNote}
         <Button label={confirmLabel} onPress={onConfirm} variant="primary" />
       </View>
     </View>

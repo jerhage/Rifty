@@ -6,14 +6,12 @@ import type { DeckSection } from "@/features/deck/deck/deck";
 import { ZONE_RULES } from "@/features/deck/deck/deck-legality";
 
 interface ZonePoolFilters {
-  readonly query: string;
   readonly domainIds: readonly CardDomain[];
   readonly keywordIds: readonly string[];
   readonly typeIds: readonly CardType[];
 }
 
 const EMPTY_POOL_FILTERS: ZonePoolFilters = {
-  query: "",
   domainIds: [],
   keywordIds: [],
   typeIds: [],
@@ -73,8 +71,9 @@ function searchHint(section: DeckSection): string {
 function poolCriteria(
   section: DeckSection,
   filters: ZonePoolFilters,
+  query: string,
 ): Omit<CardListCriteria, "limit" | "offset"> {
-  const query = filters.query.trim();
+  const text = query.trim();
   const chosenTypes = filters.typeIds.filter((type) => zoneCardTypes(section).includes(type));
 
   return {
@@ -82,7 +81,7 @@ function poolCriteria(
     // A deck plays anything inside its legend's domains, so several domains mean any of them.
     anyDomainIds: filters.domainIds.length > 0 ? [...filters.domainIds] : undefined,
     keywordIds: filters.keywordIds.length > 0 ? [...filters.keywordIds] : undefined,
-    search: query ? { type: "nameOrRulesText", text: query } : undefined,
+    search: text ? { type: "nameOrRulesText", text } : undefined,
   };
 }
 

@@ -15,13 +15,8 @@ describe("deck zone pool", () => {
   });
 
   it("asks the query for any of the chosen domains, never all of them", () => {
-    const one = poolCriteria("mainDeck", {
-      query: "",
-      domainIds: ["Fury"],
-      keywordIds: [],
-      typeIds: [],
-    });
-    const two = poolCriteria("mainDeck", defaultPoolFilters(legend));
+    const one = poolCriteria("mainDeck", { domainIds: ["Fury"], keywordIds: [], typeIds: [] }, "");
+    const two = poolCriteria("mainDeck", defaultPoolFilters(legend), "");
 
     expect(one.anyDomainIds).toEqual(["Fury"]);
     expect(two.anyDomainIds).toEqual(["Fury", "Order"]);
@@ -50,14 +45,26 @@ describe("deck zone pool", () => {
   it("asks the query for any of the chosen keywords", () => {
     const filters = { ...defaultPoolFilters(legend), keywordIds: ["shield", "tank"] };
 
-    expect(poolCriteria("mainDeck", filters).keywordIds).toEqual(["shield", "tank"]);
-    expect(poolCriteria("mainDeck", defaultPoolFilters(legend)).keywordIds).toBeUndefined();
+    expect(poolCriteria("mainDeck", filters, "").keywordIds).toEqual(["shield", "tank"]);
+    expect(poolCriteria("mainDeck", defaultPoolFilters(legend), "").keywordIds).toBeUndefined();
+  });
+
+  it("searches the pool by name or rules text, apart from the filters", () => {
+    const filters = defaultPoolFilters(legend);
+
+    expect(poolCriteria("mainDeck", filters, "  volibear  ").search).toEqual({
+      type: "nameOrRulesText",
+      text: "volibear",
+    });
+    expect(poolCriteria("mainDeck", filters, "   ").search).toBeUndefined();
   });
 
   it("limits each zone to the card types it accepts", () => {
-    expect(poolCriteria("runeDeck", defaultPoolFilters(null)).typeIds).toEqual(["Rune"]);
-    expect(poolCriteria("battlefield", defaultPoolFilters(null)).typeIds).toEqual(["Battlefield"]);
-    expect(poolCriteria("mainDeck", defaultPoolFilters(null)).typeIds).toEqual([
+    expect(poolCriteria("runeDeck", defaultPoolFilters(null), "").typeIds).toEqual(["Rune"]);
+    expect(poolCriteria("battlefield", defaultPoolFilters(null), "").typeIds).toEqual([
+      "Battlefield",
+    ]);
+    expect(poolCriteria("mainDeck", defaultPoolFilters(null), "").typeIds).toEqual([
       "Unit",
       "Spell",
       "Gear",

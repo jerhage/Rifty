@@ -52,6 +52,7 @@ interface ZonesStepProps {
   readonly onSetQuantity: (section: DeckSection, card: Card, quantity: number) => void;
   readonly poolFilters: ZonePoolFilters;
   readonly poolLayout: ZonePoolLayout;
+  readonly poolQuery: string;
   readonly poolView: ZonePoolView;
   readonly verification: DeckVerification;
   readonly zone: DeckSection;
@@ -75,6 +76,7 @@ function ZonesStep({
   onSetQuantity,
   poolFilters,
   poolLayout,
+  poolQuery,
   poolView,
   verification,
   zone,
@@ -148,7 +150,7 @@ function ZonesStep({
             hint={searchHint(zone)}
             onChangeQuery={onChangePoolQuery}
             onOpenFilters={onOpenPoolFilters}
-            query={poolFilters.query}
+            query={poolQuery}
           />
         ) : null}
       </View>

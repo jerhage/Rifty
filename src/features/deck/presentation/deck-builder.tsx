@@ -36,6 +36,7 @@ function DeckBuilder({
       cardCounter={cardCounter}
       cardLister={cardLister}
       draft={build.draft}
+      draftPoolFilters={build.draftPoolFilters}
       error={build.error}
       isPoolFilterOpen={build.isPoolFilterOpen}
       isSaving={build.isSaving}
@@ -43,6 +44,7 @@ function DeckBuilder({
       legendDomainIds={build.legendDomainIds}
       legendQuery={build.legendQuery}
       legendSearchQuery={build.debouncedLegendQuery}
+      onApplyPoolFilters={build.applyPoolFilters}
       onBack={build.back}
       onChangeLegendQuery={build.setLegendQuery}
       onChangeName={build.changeName}
@@ -67,7 +69,8 @@ function DeckBuilder({
       mode={build.mode}
       poolFilters={build.poolFilters}
       poolLayout={build.poolLayout}
-      poolSearchFilters={build.poolQueryFilters}
+      poolQuery={build.poolQuery}
+      poolSearchQuery={build.debouncedPoolQuery}
       poolView={build.poolView}
       step={build.step}
       stepIndex={build.stepIndex}

@@ -26,23 +26,23 @@ function PoolFilterSheet({
   filters,
   isPresented,
   keywords,
+  onApply,
   onDismiss,
   onReset,
   onToggleDomain,
   onToggleKeyword,
   onToggleType,
-  resultLabel,
   zone,
 }: {
   readonly filters: ZonePoolFilters;
   readonly isPresented: boolean;
   readonly keywords: readonly Keyword[];
+  readonly onApply: () => void;
   readonly onDismiss: () => void;
   readonly onReset: () => void;
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleKeyword: (keywordId: string) => void;
   readonly onToggleType: (typeId: CardType) => void;
-  readonly resultLabel: string;
   readonly zone: DeckSection;
 }) {
   const theme = useTheme();
@@ -114,12 +114,7 @@ function PoolFilterSheet({
             </>
           }
           confirmLabel="Show results"
-          footerNote={
-            <ThemedText themeColor="textSecondary" type="mono" style={styles.result}>
-              {resultLabel}
-            </ThemedText>
-          }
-          onConfirm={onDismiss}
+          onConfirm={onApply}
           title="Narrow the pool"
         />
       </RNHostView>
@@ -134,9 +129,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.two - 1,
-  },
-  result: {
-    textAlign: "center",
   },
   pressed: {
     opacity: 0.7,

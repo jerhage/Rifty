@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
@@ -11,6 +11,8 @@ import type { CardLister } from "@/features/card/card-lister";
 import type { Deck, DeckId } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
 import { findDeck } from "@/features/deck/deck/use-cases/find-deck";
+import { useAsyncResult } from "@/hooks/use-async-result";
+import { type ReadOptions, throwIfAborted } from "@/shared/read-options";
 
 const CARD_LOOKUP_LIMIT = 100;
 
@@ -20,8 +22,7 @@ interface DeckDetailContent {
   reload(): void;
 }
 
-type DeckDetailDataState =
-  | { readonly type: "loading" }
+type DeckDetailOutcome =
   | { readonly type: "notFound" }
   | { readonly type: "loadFailed" }
   | { readonly type: "success"; readonly deck: Deck; readonly cards: readonly Card[] };
@@ -37,46 +38,34 @@ function DeckDetailData({
   readonly deckFinder: DeckFinder;
   readonly deckId: DeckId;
 }) {
-  const [state, setState] = useState<DeckDetailDataState>({ type: "loading" });
-  const [reloadCount, setReloadCount] = useState(0);
-  const reload = useCallback(() => setReloadCount((count) => count + 1), []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function load(): Promise<DeckDetailDataState> {
-      const found = await findDeck(deckId, { deckFinder });
+  const { reload, result } = useAsyncResult<DeckDetailOutcome>(
+    async (options: ReadOptions) => {
+      const found = await findDeck(deckId, { deckFinder }, options);
 
       return match(found)
         .with({ type: "notFound" }, () => ({ type: "notFound" }) as const)
         .with({ type: "loadFailed" }, () => ({ type: "loadFailed" }) as const)
         .with({ type: "success" }, async ({ deck }) => {
           const printingIds = [...new Set(deck.entries.map((entry) => entry.printingId))];
-          const page = printingIds.length
-            ? await cardLister.getPage(
-                { printingIds, limit: CARD_LOOKUP_LIMIT },
-                { signal: controller.signal },
-              )
-            : null;
+          if (!printingIds.length) return { type: "success", deck, cards: [] } as const;
 
-          return { type: "success", deck, cards: page?.items ?? [] } as const;
+          try {
+            const page = await cardLister.getPage(
+              { printingIds, limit: CARD_LOOKUP_LIMIT },
+              options,
+            );
+            return { type: "success", deck, cards: page.items } as const;
+          } catch {
+            throwIfAborted(options.signal);
+            return { type: "loadFailed" } as const;
+          }
         })
         .exhaustive();
-    }
+    },
+    [cardLister, deckFinder, deckId],
+  );
 
-    setState({ type: "loading" });
-    void load()
-      .then((next) => {
-        if (!controller.signal.aborted) setState(next);
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setState({ type: "loadFailed" });
-      });
-
-    return () => controller.abort();
-  }, [cardLister, deckFinder, deckId, reloadCount]);
-
-  return match(state)
+  return match(result)
     .with({ type: "loading" }, () => (
       <ThemedView style={styles.centered}>
         <ActivityIndicator />

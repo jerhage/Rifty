@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
@@ -6,13 +6,12 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import type { Card } from "@/features/card/card";
 import type { CardFinder } from "@/features/card/card-finder";
+import { findCard, type FindCardResult } from "@/features/card/use-cases/find-card";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
+import { type AsyncResult, useAsyncResult } from "@/hooks/use-async-result";
+import type { ReadOptions } from "@/shared/read-options";
 
-type CardDetailDataContent =
-  | { readonly type: "loading" }
-  | { readonly type: "notFound" }
-  | { readonly type: "loadFailed" }
-  | { readonly type: "success"; readonly card: Card };
+type CardDetailDataContent = AsyncResult<FindCardResult>;
 
 interface CardDetailDataProps {
   readonly cardFinder: CardFinder;
@@ -21,27 +20,12 @@ interface CardDetailDataProps {
 }
 
 function CardDetailData({ cardFinder, cardId, children }: CardDetailDataProps) {
-  const [state, setState] = useState<CardDetailDataContent>({ type: "loading" });
+  const { result } = useAsyncResult<FindCardResult>(
+    (options: ReadOptions) => findCard(cardId, { cardFinder }, options),
+    [cardFinder, cardId],
+  );
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setState({ type: "loading" });
-    void cardFinder
-      .get(cardId, { signal: controller.signal })
-      .then((result) => {
-        if (controller.signal.aborted) return;
-        setState(result ? { type: "success", card: result } : { type: "notFound" });
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setState({ type: "loadFailed" });
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, [cardFinder, cardId]);
-
-  return match(state)
+  return match(result)
     .with({ type: "loading" }, () => (
       <ThemedView style={styles.centered}>
         <ActivityIndicator />

@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
@@ -8,6 +8,9 @@ import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
+import { listDecks, type ListDecksResult } from "@/features/deck/deck/use-cases/list-decks";
+import { useAsyncResult } from "@/hooks/use-async-result";
+import type { ReadOptions } from "@/shared/read-options";
 
 interface DecksDataContent {
   readonly decks: readonly Deck[];
@@ -19,37 +22,19 @@ interface DecksDataProps {
   readonly deckLister: DeckLister;
 }
 
-type DecksDataState =
-  | { readonly type: "loading" }
-  | { readonly type: "loadFailed" }
-  | { readonly type: "success"; readonly decks: readonly Deck[] };
-
 function DecksData({ children, deckLister }: DecksDataProps) {
-  const [state, setState] = useState<DecksDataState>({ type: "loading" });
-  const [reloadCount, setReloadCount] = useState(0);
-  const reload = useCallback(() => setReloadCount((count) => count + 1), []);
+  const { reload, result } = useAsyncResult<ListDecksResult>(
+    (options: ReadOptions) => listDecks({ deckLister }, options),
+    [deckLister],
+  );
 
-  useEffect(() => {
-    const controller = new AbortController();
-    void deckLister
-      .getAll({ signal: controller.signal })
-      .then((decks) => {
-        if (!controller.signal.aborted) setState({ type: "success", decks });
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setState({ type: "loadFailed" });
-      });
-
-    return () => controller.abort();
-  }, [deckLister, reloadCount]);
-
-  return match(state)
+  return match(result)
     .with({ type: "loading" }, () => (
       <ThemedView style={styles.centered}>
         <ActivityIndicator />
       </ThemedView>
     ))
-    .with({ type: "loadFailed" }, () => (
+    .with({ type: "listFailed" }, () => (
       <ThemedView style={styles.centered}>
         <ThemedText type="body">Could not load your decks.</ThemedText>
         <Button label="Try again" onPress={reload} variant="secondary" />

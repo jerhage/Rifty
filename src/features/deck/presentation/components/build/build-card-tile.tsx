@@ -1,15 +1,12 @@
 import { useImage } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
 
+import { CARD_ASPECT_RATIO, CardArt } from "@/components/ui/atoms/card-art";
 import { DomainBar } from "@/components/ui/atoms/domain-bar";
 import { Skeleton } from "@/components/ui/atoms/skeleton";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
-import {
-  CARD_ASPECT_RATIO,
-  CardArt,
-} from "@/features/catalog/presentation/components/grid/card-art";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import { poolCardSubtitle } from "../../deck-zone-pool";

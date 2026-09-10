@@ -1,14 +1,13 @@
 import { useImage } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { CARD_ASPECT_RATIO, CardArt } from "@/components/ui/atoms/card-art";
+import { DomainBar } from "@/components/ui/atoms/domain-bar";
 import { Skeleton } from "@/components/ui/atoms/skeleton";
+import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/catalog/card/card-summary";
 import { useTheme } from "@/hooks/use-theme";
-
-import { CARD_ASPECT_RATIO, CardArt } from "./card-art";
-import { DomainBar } from "@/components/ui/atoms/domain-bar";
 
 /** One card in the catalog grid: its face in a fixed frame, with the name beneath. */
 function CardGridItem({

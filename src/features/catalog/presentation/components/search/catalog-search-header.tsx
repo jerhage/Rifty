@@ -1,11 +1,10 @@
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HorizontalScroller } from "@/components/ui/atoms/horizontal-scroller";
-import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { SearchGlyph } from "@/components/ui/icons/search-glyph";
-import { MaxContentWidth, Radius, Spacing } from "@/constants/theme";
+import { MaxContentWidth, Spacing } from "@/constants/theme";
 import { ORDERED_DOMAINS, type CardDomain } from "@/features/card/value-objects/card-domain";
 import { ORDERED_CARD_TYPES, type CardType } from "@/features/card/value-objects/card-type";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
@@ -54,33 +53,12 @@ function CatalogSearchHeader({
       ]}
     >
       <View style={styles.content}>
-        <View
-          style={[styles.searchField, { backgroundColor: theme.fill, borderColor: theme.border }]}
-        >
-          <SearchGlyph color={theme.textSecondary} />
-          <TextInput
-            accessibilityLabel="Search cards by name or rules text"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={onChangeName}
-            placeholder="Search cards"
-            placeholderTextColor={theme.textTertiary}
-            style={[styles.searchInput, { color: theme.text }]}
-            value={name}
-          />
-          {name.length > 0 ? (
-            <Pressable
-              accessibilityLabel="Clear search"
-              accessibilityRole="button"
-              onPress={() => onChangeName("")}
-              style={({ pressed }) => pressed && styles.pressed}
-            >
-              <ThemedText themeColor="textSecondary" type="mono">
-                Clr
-              </ThemedText>
-            </Pressable>
-          ) : null}
-        </View>
+        <SearchField
+          accessibilityLabel="Search cards by name or rules text"
+          hint="Search cards"
+          onChangeQuery={onChangeName}
+          query={name}
+        />
 
         <HorizontalScroller style={styles.domainRow}>
           <DomainChip
@@ -129,28 +107,10 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     width: "100%",
   },
-  searchField: {
-    alignItems: "center",
-    borderRadius: Radius.medium,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: Spacing.two + 2,
-    height: 40,
-    paddingHorizontal: Spacing.three - 4,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    minWidth: 0,
-    padding: 0,
-  },
   domainRow: {
     marginTop: Spacing.three - 5,
   },
   typeRow: {
     marginTop: Spacing.two + 1,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

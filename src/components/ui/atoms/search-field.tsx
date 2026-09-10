@@ -13,11 +13,13 @@ import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 function SearchField({
+  accessibilityLabel,
   hint,
   onChangeQuery,
   query,
   style,
 }: {
+  readonly accessibilityLabel?: string;
   readonly hint: string;
   readonly onChangeQuery: (query: string) => void;
   readonly query: string;
@@ -29,7 +31,7 @@ function SearchField({
     <View style={[styles.field, { backgroundColor: theme.fill, borderColor: theme.border }, style]}>
       <SearchGlyph color={theme.textSecondary} />
       <TextInput
-        accessibilityLabel={hint}
+        accessibilityLabel={accessibilityLabel ?? hint}
         autoCapitalize="none"
         autoCorrect={false}
         onChangeText={onChangeQuery}

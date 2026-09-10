@@ -7,7 +7,7 @@ import { SheetFace } from "@/components/ui/atoms/sheet-face";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/card/keyword/keyword";
-import type { CardSet } from "@/features/catalog/set/card-set";
+import type { CardSet } from "@/features/set/card-set";
 import { useKeywordColor } from "@/hooks/use-theme";
 
 import { toggleKeyword, toggleSet, type CatalogQueryCriteria } from "../../catalog-query-criteria";

@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { setCodeSchema } from "@/features/card/value-objects/set-code";
+import { setCodeSchema } from "@/features/set/value-objects/set-code";
 import { cardDomainSchema } from "@/features/card/value-objects/card-domain";
 import { cardTypeSchema } from "@/features/card/value-objects/card-type";
 import { taxonomyIdSchema } from "@/features/card/value-objects/taxonomy-id";

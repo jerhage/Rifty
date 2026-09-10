@@ -1,5 +1,5 @@
-import { findSet } from "@/features/catalog/set/use-cases/find-set";
-import { listSets } from "@/features/catalog/set/use-cases/list-sets";
+import { findSet } from "@/features/set/use-cases/find-set";
+import { listSets } from "@/features/set/use-cases/list-sets";
 
 import { cardSet } from "../card/fixtures";
 import { createSqliteScenarioStore } from "../sqlite-scenario-store";

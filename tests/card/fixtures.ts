@@ -1,5 +1,5 @@
 import type { Card, CardKeyword } from "@/features/card/card";
-import type { CardSet } from "@/features/catalog/set/card-set";
+import type { CardSet } from "@/features/set/card-set";
 
 import { identityName } from "../../scripts/card-derivation";
 

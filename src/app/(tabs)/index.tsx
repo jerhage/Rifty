@@ -4,12 +4,12 @@ import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import { CardSummariesData } from "@/features/card/presentation/data/card-summaries-data";
 import { KeywordsData } from "@/features/card/presentation/data/keywords-data";
 import { CardCatalogFilterSheet } from "@/features/catalog/presentation/components/sheet/card-catalog-filter-sheet";
-import { CardSetsData } from "@/features/catalog/presentation/data/card-sets-data";
 import { useCatalogQuery } from "@/features/catalog/presentation/hooks/use-catalog-query";
 import { CardNameSearchScreen } from "@/features/catalog/presentation/screens/card-name-search-screen";
+import { CardSetsData } from "@/features/set/presentation/data/card-sets-data";
 
 function HomeScreen() {
-  const { cards, catalog } = useAppDependencies();
+  const { cards, sets } = useAppDependencies();
   const router = useRouter();
   const catalogQuery = useCatalogQuery(cards.cardRepository);
 
@@ -36,7 +36,7 @@ function HomeScreen() {
           />
         )}
       </CardSummariesData>
-      <CardSetsData setLister={catalog.setRepository}>
+      <CardSetsData setLister={sets.setRepository}>
         {(cardSets) => (
           <KeywordsData keywordLister={cards.keywordLister}>
             {(keywords) => (

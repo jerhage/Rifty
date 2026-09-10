@@ -1,12 +1,12 @@
 import { z } from "zod/v4";
 
-import { marketplaceReferenceSchema } from "@/features/card/value-objects/marketplace-reference";
+import { marketplaceReferenceSchema } from "@/features/set/value-objects/marketplace-reference";
 import { cardDomainSchema } from "@/features/card/value-objects/card-domain";
 import { cardSpeedSchema } from "@/features/card/value-objects/card-speed";
 import { cardTypeSchema } from "@/features/card/value-objects/card-type";
 import { keywordAllegianceSchema } from "@/features/card/value-objects/keyword-allegiance";
 import { keywordTargetKindSchema } from "@/features/card/value-objects/keyword-target-kind";
-import { setCodeSchema } from "@/features/card/value-objects/set-code";
+import { setCodeSchema } from "@/features/set/value-objects/set-code";
 import { taxonomyIdSchema } from "@/features/card/value-objects/taxonomy-id";
 
 const cardIdSchema = z.string().trim().min(1);

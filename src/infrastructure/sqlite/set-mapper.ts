@@ -1,4 +1,4 @@
-import { parseCardSet, type CardSet } from "@/features/catalog/set/card-set";
+import { parseCardSet, type CardSet } from "@/features/set/card-set";
 import {
   cardSetSelectSchema,
   setMarketplaceReferenceSelectSchema,

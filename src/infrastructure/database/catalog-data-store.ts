@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/expo-sqlite";
 import type { Logger } from "@/application/ports/logger";
 import type { CardRepository } from "@/features/card/card-repository";
 import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
-import type { SetRepository } from "@/features/catalog/set/set-repository";
+import type { SetRepository } from "@/features/set/set-repository";
 import { DrizzleLoggerAdapter } from "@/infrastructure/drizzle/drizzle-logger-adapter";
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
 import { SqliteKeywordRepository } from "@/infrastructure/sqlite/sqlite-keyword-repository";

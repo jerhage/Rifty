@@ -1,6 +1,6 @@
 import { parseCard } from "@/features/card/card";
 import { parseCardListCriteria } from "@/features/card/card-list-criteria";
-import { parseCardSet } from "@/features/catalog/set/card-set";
+import { parseCardSet } from "@/features/set/card-set";
 
 import { card, cardSet } from "./fixtures";
 

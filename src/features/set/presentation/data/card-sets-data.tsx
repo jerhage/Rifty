@@ -5,8 +5,8 @@ import { match } from "ts-pattern";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
-import type { CardSet } from "@/features/catalog/set/card-set";
-import type { SetLister } from "@/features/catalog/set/set-lister";
+import type { CardSet } from "@/features/set/card-set";
+import type { SetLister } from "@/features/set/set-lister";
 
 interface CardSetsDataProps {
   readonly children: (cardSets: readonly CardSet[]) => ReactNode;

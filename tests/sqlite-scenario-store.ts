@@ -4,7 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import { drizzle } from "drizzle-orm/node-sqlite";
 
 import type { Card } from "@/features/card/card";
-import type { CardSet } from "@/features/catalog/set/card-set";
+import type { CardSet } from "@/features/set/card-set";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { CatalogDataStore } from "@/infrastructure/database/catalog-data-store";
 import type { DeckDataStore } from "@/infrastructure/database/deck-data-store";

@@ -273,6 +273,17 @@ describe("card derivation", () => {
     expect(championName({ name: "Mageseeker Warden", champion: null, ...champion })).toBeNull();
   });
 
+  it("folds the champion's name to one spelling as well", () => {
+    const legend = { supertypeId: null, typeId: "Legend" };
+
+    expect(
+      championName({ name: "Daughter of the Void (Metal)", champion: "Kai\u2019Sa", ...legend }),
+    ).toBe("Kai'Sa");
+    expect(
+      championName({ name: "K\u2019Sante \u2013 Courageous", champion: null, ...legend }),
+    ).toBe("K'Sante");
+  });
+
   it("ignores the champion the source names on a card that is not one", () => {
     const plainUnit = { supertypeId: null, typeId: "Unit" };
 
@@ -315,6 +326,13 @@ describe("card derivation", () => {
     expect(identityName("Sett, Brawler")).toBe("Sett - Brawler");
     expect(identityName("Mel - Newly Awakened (Alternate Art)")).toBe("Mel - Newly Awakened");
     expect(identityName("Riven - Shattered")).toBe(identityName("Riven, Shattered"));
+  });
+
+  it("folds every apostrophe and dash variant so one card keeps one identity", () => {
+    expect(identityName("Doran\u2019s Shield")).toBe("Doran's Shield");
+    expect(identityName("Aspirant\u2019s Climb")).toBe(identityName("Aspirant's Climb"));
+    expect(identityName("K\u2019Sante \u2013 Courageous")).toBe("K'Sante - Courageous");
+    expect(identityName("Kai\u2019Sa,  Survivor  ")).toBe(identityName("Kai'Sa - Survivor"));
   });
 
   it("leaves a name with no separator and no qualifier alone", () => {

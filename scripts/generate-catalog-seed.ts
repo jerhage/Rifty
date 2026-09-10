@@ -60,7 +60,11 @@ assertComplete(setPages, "set");
 const sets = setPages.flatMap((page) => page.items);
 assertUnique(sets, (cardSet) => cardSet.set_id, "set code");
 const imageFiles = imageFileNames(fetchedCards.map((entry) => imageCardOf(entry.card)));
-const { seed, skipped } = buildSeed(fetchedCards.map(normalize), sets, imageFiles);
+const { seed, skipped, identityConflicts } = buildSeed(
+  fetchedCards.map(normalize),
+  sets,
+  imageFiles,
+);
 assertValid(seed);
 const version = createHash("sha256").update(JSON.stringify(seed)).digest("hex");
 await mkdir(dirname(outputPath), { recursive: true });
@@ -75,6 +79,11 @@ if (skipped.length > 0) {
   console.warn(
     `Skipped ${skipped.length} cards belonging to sets missing from data/sets-page-*.json.`,
   );
+}
+if (identityConflicts.length > 0) {
+  console.warn(`${identityConflicts.length} identities look truncated but were left unmerged:`);
+  for (const conflict of identityConflicts)
+    console.warn(`  ${conflict.identityName} vs ${conflict.hosts.join(", ")} - ${conflict.reason}`);
 }
 
 const onDisk = new Set<string>(await readdir(imageDirectory).catch(() => []));

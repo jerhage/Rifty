@@ -8,6 +8,7 @@ import {
   identityName,
   keywordOccurrences,
   keywordsWithMagnitude,
+  normalizedPunctuation,
   ownedKeywords,
   printingIdentity,
   withMagnitudeDefaults,
@@ -151,6 +152,7 @@ const KEYWORD_REMINDER = /\[([^\]]+)\]\s*_?\(([^)]*)\)/g;
 const DERIVED_SOURCE = "derived";
 const LEADING_DIGITS = /(\d+)/;
 const REPORTED_SAMPLE = 5;
+const IDENTITY_SEPARATOR = " - ";
 type RawCard = z.output<typeof rawCardSchema>;
 type RawSet = z.output<typeof rawSetSchema>;
 type ApiCard = z.output<typeof apiCardSchema>;
@@ -223,9 +225,19 @@ type Seed = {
   cardKeywordTargets: (typeof cardKeywordTargets.$inferInsert)[];
   cardSpeeds: (typeof cardSpeedTable.$inferInsert)[];
 };
+type IdentityConflict = {
+  readonly identityName: string;
+  readonly hosts: readonly string[];
+  readonly reason: string;
+};
+type ReconciledIdentities = {
+  readonly repaired: ReadonlyMap<string, string>;
+  readonly conflicts: readonly IdentityConflict[];
+};
 type BuiltSeed = {
   readonly seed: Seed;
   readonly skipped: readonly NormalizedCard[];
+  readonly identityConflicts: readonly IdentityConflict[];
 };
 
 function assertUnique<Item>(
@@ -293,7 +305,7 @@ function normalize({ card, fetchedAt }: FetchedCard): NormalizedCard {
 function fromRaw(card: RawCard): CardCore {
   return {
     setCode: card.set.set_id,
-    name: card.name,
+    name: normalizedPunctuation(card.name),
     cleanName: card.metadata.clean_name ?? normalizedName(card.name),
     energy: card.attributes.energy,
     might: card.attributes.might,
@@ -321,7 +333,7 @@ function fromRaw(card: RawCard): CardCore {
 function fromFlat(card: ApiCard, fetchedAt: string): CardCore {
   return {
     setCode: card.setCode,
-    name: card.name,
+    name: normalizedPunctuation(card.name),
     cleanName: normalizedName(card.name),
     energy: card.cost ?? null,
     might: card.might ?? null,
@@ -355,7 +367,7 @@ function buildSeed(
   imageFiles: ReadonlyMap<string, string>,
 ): BuiltSeed {
   const setCodes = new Set(sets.map((value) => value.set_id));
-  const regionNames = new Set(everyCard.flatMap((card) => card.regions));
+  const regionNames = new Set(everyCard.flatMap((card) => card.regions).map(normalizedPunctuation));
   const cards = everyCard.filter((card) => setCodes.has(card.setCode));
   const skipped = everyCard.filter((card) => !setCodes.has(card.setCode));
   const cardSets = sets
@@ -374,6 +386,7 @@ function buildSeed(
   );
   const keywordNames = new Map<string, string>();
   const canonicalIds = canonicalCardIds(ordered);
+  const identities = reconciledIdentities(ordered);
   const championNames = new Set(
     ordered.map((card) => card.championName).filter((name) => name !== null),
   );
@@ -420,7 +433,7 @@ function buildSeed(
       isSignature: card.isSignature,
       poolCode: card.poolCode,
       championName: card.championName,
-      identityName: card.identityName,
+      identityName: identities.repaired.get(card.identityName) ?? card.identityName,
       isCanonical: canonicalIds.has(card.id),
       sourceUpdatedAt: card.sourceUpdatedAt,
     });
@@ -521,7 +534,77 @@ function buildSeed(
       cardSpeeds: cardSpeedRows,
     },
     skipped,
+    identityConflicts: identities.conflicts,
   };
+}
+
+function printingsByIdentity(
+  cards: readonly NormalizedCard[],
+): ReadonlyMap<string, readonly NormalizedCard[]> {
+  const grouped = new Map<string, NormalizedCard[]>();
+
+  for (const card of cards) {
+    const held = grouped.get(card.identityName);
+    if (held === undefined) grouped.set(card.identityName, [card]);
+    else held.push(card);
+  }
+
+  return grouped;
+}
+
+function hostIdentities(identities: readonly string[], tail: string): readonly string[] {
+  return identities.filter(
+    (identity) => identity !== tail && identity.endsWith(IDENTITY_SEPARATOR + tail),
+  );
+}
+
+function droppedPrefix(host: string, tail: string): string {
+  return host.slice(0, host.length - tail.length - IDENTITY_SEPARATOR.length);
+}
+
+function gameplayShape(card: NormalizedCard): string {
+  return `${card.typeId}/${card.energy}/${card.might}/${card.power}`;
+}
+
+function reconciledIdentities(cards: readonly NormalizedCard[]): ReconciledIdentities {
+  const grouped = printingsByIdentity(cards);
+  const identities = [...grouped.keys()];
+  const repaired = new Map<string, string>();
+  const conflicts: IdentityConflict[] = [];
+
+  for (const [tail, printings] of grouped) {
+    const hosts = hostIdentities(identities, tail);
+    if (hosts.length === 0) continue;
+    const champions = new Set(
+      printings
+        .map((card) => card.championName)
+        .filter((name) => name !== null)
+        .map((name) => name.toLowerCase()),
+    );
+    const named = hosts.filter((host) => champions.has(droppedPrefix(host, tail).toLowerCase()));
+    if (named.length === 0) continue;
+    const [host] = named;
+    if (host === undefined || named.length > 1) {
+      conflicts.push({
+        identityName: tail,
+        hosts: named,
+        reason: `${named.length} cards name its champion, so the prefix it dropped is ambiguous`,
+      });
+      continue;
+    }
+    const shapes = new Set([...printings, ...(grouped.get(host) ?? [])].map(gameplayShape));
+    if (shapes.size > 1) {
+      conflicts.push({
+        identityName: tail,
+        hosts: [host],
+        reason: `type, energy, might or power disagree: ${[...shapes].join(" and ")}`,
+      });
+      continue;
+    }
+    repaired.set(tail, host);
+  }
+
+  return { repaired, conflicts };
 }
 
 function keywordTargets(cardId: string, occurrence: KeywordOccurrence): readonly KeywordTarget[] {
@@ -599,8 +682,9 @@ function tagKind(
   regionNames: ReadonlySet<string>,
   championNames: ReadonlySet<string>,
 ): "character" | "region" | "trait" {
-  if (regionNames.has(tagId)) return "region";
-  if (championNames.has(tagId)) return "character";
+  const tag = normalizedPunctuation(tagId);
+  if (regionNames.has(tag)) return "region";
+  if (championNames.has(tag)) return "character";
 
   return "trait";
 }
@@ -712,4 +796,4 @@ export {
   normalize,
   rawSetSchema,
 };
-export type { ApiCard, BuiltSeed, FetchedCard, NormalizedCard, RawSet, Seed };
+export type { ApiCard, BuiltSeed, FetchedCard, IdentityConflict, NormalizedCard, RawSet, Seed };

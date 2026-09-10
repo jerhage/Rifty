@@ -75,6 +75,10 @@ const SPEED_ORDER: readonly CardSpeed[] = ["normal", "action", "reaction"];
 const NAME_SEPARATOR = /\s+-\s+|,\s+/;
 const NAME_QUALIFIER = /\s*\([^)]*\)\s*$/;
 const CANONICAL_SEPARATOR = " - ";
+const APOSTROPHE_VARIANT = /[\u2018\u2019\u02bc\u2032]/g;
+const QUOTE_VARIANT = /[\u201c\u201d\u2033]/g;
+const DASH_VARIANT = /[\u2010-\u2015\u2212]/g;
+const WHITESPACE_RUN = /\s+/g;
 const LINE_BREAK = /\r?\n/;
 const TRAILING_WINDOW = 40;
 
@@ -491,20 +495,31 @@ interface ChampionCandidate {
   readonly typeId: string;
 }
 
+function normalizedPunctuation(text: string): string {
+  return text
+    .normalize("NFC")
+    .replace(APOSTROPHE_VARIANT, "'")
+    .replace(QUOTE_VARIANT, '"')
+    .replace(DASH_VARIANT, "-")
+    .replace(WHITESPACE_RUN, " ")
+    .trim();
+}
+
 function championName({ name, champion, supertypeId, typeId }: ChampionCandidate): string | null {
   if (typeId !== "Legend" && !CHAMPION_SUPERTYPES.has(supertypeId ?? "")) return null;
-  if (champion !== null && champion.trim().length > 0) return champion.trim();
 
-  const [prefix] = name.split(NAME_SEPARATOR);
-  if (prefix === undefined) return null;
+  const named = normalizedPunctuation(champion ?? "");
+  if (named.length > 0) return named;
 
+  const printed = normalizedPunctuation(name);
+  const [prefix = ""] = printed.split(NAME_SEPARATOR);
   const trimmed = prefix.trim();
 
-  return trimmed.length > 0 && trimmed !== name.trim() ? trimmed : null;
+  return trimmed.length > 0 && trimmed !== printed ? trimmed : null;
 }
 
 function identityName(name: string): string {
-  return name
+  return normalizedPunctuation(name)
     .replace(NAME_QUALIFIER, "")
     .trim()
     .split(NAME_SEPARATOR)
@@ -544,6 +559,7 @@ export {
   keywordsWithMagnitude,
   leadIn,
   leadingTokens,
+  normalizedPunctuation,
   ownedKeywords,
   printingIdentity,
   withMagnitudeDefaults,

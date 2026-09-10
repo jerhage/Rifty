@@ -145,6 +145,77 @@ describe("catalog seed", () => {
     expect(seed.catalogCards.map((row) => row.id)).toEqual(["a"]);
   });
 
+  it("reunites a promo that dropped its champion prefix with the card it reprints", () => {
+    const legend = { typeId: "Legend", energy: null, might: null, power: null } as const;
+    const cards: readonly NormalizedCard[] = [
+      card("a", {
+        ...legend,
+        name: "Kai'Sa - Daughter of the Void",
+        identityName: "Kai'Sa - Daughter of the Void",
+        championName: "Kai'Sa",
+      }),
+      card("b", {
+        ...legend,
+        name: "Daughter of the Void",
+        identityName: "Daughter of the Void",
+        championName: "Kai'Sa",
+      }),
+    ];
+
+    const { seed, identityConflicts } = buildSeed(cards, [set("OGN")], imagesFor(cards));
+
+    expect(seed.catalogCards.map((row) => row.identityName)).toEqual([
+      "Kai'Sa - Daughter of the Void",
+      "Kai'Sa - Daughter of the Void",
+    ]);
+    expect(identityConflicts).toEqual([]);
+  });
+
+  it("leaves a card that merely shares a suffix with another under its own identity", () => {
+    const cards: readonly NormalizedCard[] = [
+      card("a", {
+        name: "Sett - The Boss",
+        identityName: "Sett - The Boss",
+        championName: "Sett",
+      }),
+      card("b", { name: "The Boss", identityName: "The Boss" }),
+    ];
+
+    const { seed, identityConflicts } = buildSeed(cards, [set("OGN")], imagesFor(cards));
+
+    expect(seed.catalogCards.map((row) => row.identityName)).toEqual([
+      "Sett - The Boss",
+      "The Boss",
+    ]);
+    expect(identityConflicts).toEqual([]);
+  });
+
+  it("reports rather than merges a truncated identity whose gameplay attributes disagree", () => {
+    const cards: readonly NormalizedCard[] = [
+      card("a", {
+        name: "Jinx - Loose Cannon",
+        identityName: "Jinx - Loose Cannon",
+        championName: "Jinx",
+        might: 4,
+      }),
+      card("b", { name: "Loose Cannon", identityName: "Loose Cannon", championName: "Jinx" }),
+    ];
+
+    const { seed, identityConflicts } = buildSeed(cards, [set("OGN")], imagesFor(cards));
+
+    expect(seed.catalogCards.map((row) => row.identityName)).toEqual([
+      "Jinx - Loose Cannon",
+      "Loose Cannon",
+    ]);
+    expect(identityConflicts).toEqual([
+      {
+        identityName: "Loose Cannon",
+        hosts: ["Jinx - Loose Cannon"],
+        reason: "type, energy, might or power disagree: Unit/3/2/null and Unit/3/4/null",
+      },
+    ]);
+  });
+
   it("fails generation when a card has no media row", () => {
     const cards: readonly NormalizedCard[] = [card("a"), card("b")];
 

@@ -2,18 +2,15 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { Chip } from "@/components/ui/atoms/chip";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
+import { SelectableChipRow } from "@/components/ui/atoms/selectable-chip-row";
 import { SheetFace } from "@/components/ui/atoms/sheet-face";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/catalog/keyword/keyword";
 import type { CardSet } from "@/features/catalog/set/card-set";
+import { useKeywordColor } from "@/hooks/use-theme";
 
-import {
-  toggleKeyword,
-  toggleSet,
-  type CatalogQueryCriteria,
-} from "../../catalog-query-criteria";
-import { KeywordFilterChips } from "./keyword-filter-chips";
+import { toggleKeyword, toggleSet, type CatalogQueryCriteria } from "../../catalog-query-criteria";
 import { MinimumAttributeInput } from "./minimum-attribute-input";
 
 /**
@@ -35,6 +32,8 @@ function CatalogFilterFace({
   readonly onChangeCriteria: (criteria: CatalogQueryCriteria) => void;
   readonly onClear: () => void;
 }) {
+  const keywordColor = useKeywordColor();
+
   return (
     <SheetFace
       action={
@@ -64,8 +63,8 @@ function CatalogFilterFace({
           </LabelledSection>
 
           <LabelledSection label="Keywords">
-            <KeywordFilterChips
-              keywords={keywords}
+            <SelectableChipRow
+              items={keywords.map((keyword) => ({ ...keyword, color: keywordColor(keyword.id) }))}
               onToggle={(keywordId) => onChangeCriteria(toggleKeyword(criteria, keywordId))}
               selectedIds={criteria.keywordIds ?? []}
             />

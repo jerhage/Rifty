@@ -4,7 +4,7 @@ import type { CardSort } from "@/features/card/card-list-criteria";
 
 /** Derived from the domain union so presentation never redeclares the direction vocabulary. */
 type CardSortDirection = Extract<CardSort, { direction: unknown }>["direction"];
-type CatalogSortId = "catalogOrder" | "name" | "energy" | "might" | "power";
+type CatalogSortId = CardSort["type"];
 
 interface CatalogSortOption {
   readonly id: CatalogSortId;

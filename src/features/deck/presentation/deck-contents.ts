@@ -34,33 +34,38 @@ function deckCards(
   cards: readonly Card[],
   sections?: readonly DeckSection[],
 ): readonly CardCopy[] {
-  const byRiftboundId = new Map(cards.map((card) => [card.riftboundId, card]));
+  const byPrintingId = new Map(cards.map((card) => [card.id, card]));
 
   return deck.entries.flatMap((entry) => {
     if (sections && !sections.includes(entry.section)) return [];
 
-    const card = byRiftboundId.get(entry.cardRiftboundId);
+    const card = byPrintingId.get(entry.printingId);
 
     return card ? [{ card, quantity: entry.quantity }] : [];
   });
 }
 
 function chosenChampionCard(deck: Deck, cards: readonly Card[]): Card | null {
-  const riftboundId = deck.chosenChampionRiftboundId;
+  const cardId = deck.chosenChampionCardId;
 
-  if (riftboundId === null) return null;
+  if (cardId === null) return null;
 
-  return cards.find((card) => card.riftboundId === riftboundId) ?? null;
+  const seated = deck.entries.find(
+    (entry) => entry.section === "mainDeck" && entry.cardId === cardId,
+  );
+  const printed = seated ? cards.find((card) => card.id === seated.printingId) : undefined;
+
+  return printed ?? cards.find((card) => card.cardId === cardId) ?? null;
 }
 
 function deckGroups(deck: Deck, cards: readonly Card[]): readonly DeckGroup[] {
-  const byRiftboundId = new Map(cards.map((card) => [card.riftboundId, card]));
+  const byPrintingId = new Map(cards.map((card) => [card.id, card]));
 
   return GROUP_DEFINITIONS.flatMap((definition) => {
     const resolved = deck.entries.flatMap((entry) => {
       if (!definition.sections.includes(entry.section)) return [];
 
-      const card = byRiftboundId.get(entry.cardRiftboundId);
+      const card = byPrintingId.get(entry.printingId);
       if (!card) return [];
       if (definition.typeIds && !definition.typeIds.includes(card.classification.typeId)) return [];
 

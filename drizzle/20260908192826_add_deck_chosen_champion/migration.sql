@@ -1,1 +1,0 @@
-ALTER TABLE `deck` ADD `chosen_champion_riftbound_id` text;

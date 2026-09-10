@@ -182,7 +182,7 @@ function ZonesStep({
                 minQuantity: minimumForCard(draft, zone, item),
                 onChange: (quantity: number) => onSetQuantity(zone, item, quantity),
                 onOpenCard,
-                quantity: quantityOf(draft, zone, item.riftboundId),
+                quantity: quantityOf(draft, zone, item.id),
               };
 
               return poolLayout === "grid" ? (

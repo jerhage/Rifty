@@ -1,1 +1,0 @@
-ALTER TABLE `catalog_card` ADD `identity_name` text DEFAULT '' NOT NULL;

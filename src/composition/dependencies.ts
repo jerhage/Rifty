@@ -40,8 +40,8 @@ async function createAppDependencies(): Promise<AppDependencies> {
   const store = await openAppDataStore(logger, cardImageBaseUrl());
   return {
     cards: {
-      cardRepository: withQueryLogging(store.catalog.cards, logger, "CardRepository"),
-      keywordLister: withQueryLogging(store.catalog.keywords, logger, "KeywordLister"),
+      cardRepository: withQueryLogging(store.reference.cards, logger, "CardRepository"),
+      keywordLister: withQueryLogging(store.reference.keywords, logger, "KeywordLister"),
     },
     clock: new SystemClock(),
     decks: {
@@ -50,7 +50,7 @@ async function createAppDependencies(): Promise<AppDependencies> {
     idGenerator: new CryptoIdGenerator(),
     randomSource: new MathRandomSource(),
     sets: {
-      setRepository: withQueryLogging(store.catalog.sets, logger, "SetRepository"),
+      setRepository: withQueryLogging(store.reference.sets, logger, "SetRepository"),
     },
   };
 }

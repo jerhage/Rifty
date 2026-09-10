@@ -46,7 +46,7 @@ function card(
       | "speeds"
       | "keywords"
       | "championName"
-      | "identityName"
+      | "cardId"
       | "orientation"
       | "tagIds"
       | "marketplaceReferences"
@@ -57,6 +57,7 @@ function card(
 
   return {
     id,
+    cardId: options.cardId ?? identityName(name),
     riftboundId: `${setCode.toLowerCase()}-${id}-100`,
     setCode,
     collectorNumber: options.collectorNumber ?? 1,
@@ -82,7 +83,6 @@ function card(
     speeds: options.speeds ?? ["normal"],
     keywords: options.keywords ?? [],
     championName: options.championName ?? null,
-    identityName: options.identityName ?? identityName(name),
     tagIds: options.tagIds ?? [],
     imageUrl: `http://localhost:8787/${setCode.toLowerCase()}-${id}-100.webp`,
     marketplaceReferences: options.marketplaceReferences ?? [

@@ -50,7 +50,7 @@ class SqliteDeckRepository implements DeckRepository {
           notes: deck.notes,
           createdAt: deck.createdAt,
           updatedAt: deck.updatedAt,
-          chosenChampionRiftboundId: deck.chosenChampionRiftboundId,
+          chosenChampionCardId: deck.chosenChampionCardId,
         })
         .onConflictDoUpdate({
           target: decks.id,
@@ -58,7 +58,7 @@ class SqliteDeckRepository implements DeckRepository {
             name: deck.name,
             notes: deck.notes,
             updatedAt: deck.updatedAt,
-            chosenChampionRiftboundId: deck.chosenChampionRiftboundId,
+            chosenChampionCardId: deck.chosenChampionCardId,
           },
         })
         .run();
@@ -70,7 +70,8 @@ class SqliteDeckRepository implements DeckRepository {
             deck.entries.map((entry) => ({
               deckId: deck.id,
               section: entry.section,
-              cardRiftboundId: entry.cardRiftboundId,
+              cardId: entry.cardId,
+              printingId: entry.printingId,
               quantity: entry.quantity,
             })),
           )
@@ -98,7 +99,7 @@ class SqliteDeckRepository implements DeckRepository {
       .select()
       .from(deckCards)
       .where(inArray(deckCards.deckId, [...deckIds]))
-      .orderBy(asc(deckCards.section), asc(deckCards.cardRiftboundId));
+      .orderBy(asc(deckCards.section), asc(deckCards.cardId), asc(deckCards.printingId));
     throwIfAborted(signal);
 
     return rows.reduce((grouped, row) => {

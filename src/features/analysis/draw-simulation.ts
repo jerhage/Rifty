@@ -71,7 +71,7 @@ function copiesByIdentity(copies: readonly CardCopy[]): ReadonlyMap<string, numb
   const held = new Map<string, number>();
 
   for (const entry of copies) {
-    const identity = entry.card.identityName;
+    const identity = entry.card.cardId;
 
     held.set(identity, (held.get(identity) ?? 0) + entry.quantity);
   }
@@ -86,11 +86,11 @@ function pinnedOdds(
 ): PinnedOdds | null {
   if (pinned === null) return null;
 
-  const quantity = held.get(pinned.identityName) ?? 0;
+  const quantity = held.get(pinned.cardId) ?? 0;
   if (quantity <= 0) return null;
 
   return {
-    name: pinned.identityName,
+    name: pinned.cardId,
     copies: quantity,
     opening: atLeastOneChance(poolSize, quantity, OPENING_HAND_SIZE),
     byTurnThree: atLeastOneChance(poolSize, quantity, TURN_THREE_CARDS_SEEN),

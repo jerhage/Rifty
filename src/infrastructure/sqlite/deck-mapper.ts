@@ -18,12 +18,13 @@ function toDomainDeck({ deck, cards }: DeckPersistenceShape): Deck {
     notes: persistedDeck.notes,
     createdAt: persistedDeck.createdAt,
     updatedAt: persistedDeck.updatedAt,
-    chosenChampionRiftboundId: persistedDeck.chosenChampionRiftboundId,
+    chosenChampionCardId: persistedDeck.chosenChampionCardId,
     entries: cards.map((card) => {
       const persistedCard = deckCardSelectSchema.parse(card);
       return {
         section: persistedCard.section,
-        cardRiftboundId: persistedCard.cardRiftboundId,
+        cardId: persistedCard.cardId,
+        printingId: persistedCard.printingId,
         quantity: persistedCard.quantity,
       };
     }),

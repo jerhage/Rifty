@@ -3,7 +3,7 @@ import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 import { keywordAllegianceSchema } from "../../../features/card/value-objects/keyword-allegiance";
 import { keywordTargetKindSchema } from "../../../features/card/value-objects/keyword-target-kind";
-import { catalogCards } from "./cards";
+import { cards } from "./cards";
 
 const keywords = sqliteTable("keyword", {
   id: text().primaryKey(),
@@ -15,7 +15,7 @@ const cardKeywords = sqliteTable("card_keyword", {
   id: integer().primaryKey(),
   cardId: text("card_id")
     .notNull()
-    .references(() => catalogCards.id),
+    .references(() => cards.id),
   keywordId: text("keyword_id")
     .notNull()
     .references(() => keywords.id),

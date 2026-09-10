@@ -2,16 +2,16 @@ import { z } from "zod/v4";
 
 import { parseCard, type Card, type CardKeyword } from "@/features/card/card";
 import { parseCardSummary, type CardSummary } from "@/features/card/card-summary";
-import { cardKeywordTargetSelectSchema } from "@/infrastructure/database/catalog-schema/keywords";
+import { cardKeywordTargetSelectSchema } from "@/infrastructure/database/reference-schema/keywords";
 import {
-  cardClassificationSelectSchema,
   cardDomainSelectSchema,
   cardMediaSelectSchema,
+  cardPrintingSelectSchema,
+  cardSelectSchema,
   cardSpeedSelectSchema,
   cardMarketplaceReferenceSelectSchema,
   cardTagSelectSchema,
-  catalogCardSelectSchema,
-} from "@/infrastructure/database/catalog-schema/cards";
+} from "@/infrastructure/database/reference-schema/cards";
 
 const cardKeywordRowSchema = z.object({
   id: z.string(),
@@ -28,7 +28,7 @@ const cardKeywordRowSchema = z.object({
 
 interface CardPersistenceShape {
   readonly card: unknown;
-  readonly classification: unknown;
+  readonly printing: unknown;
   readonly media: unknown;
   readonly imageBaseUrl: string;
   readonly speeds: readonly unknown[];
@@ -40,7 +40,7 @@ interface CardPersistenceShape {
 
 function toDomainCard({
   card,
-  classification,
+  printing,
   media,
   imageBaseUrl,
   speeds,
@@ -49,15 +49,16 @@ function toDomainCard({
   tags,
   marketplaceReferences,
 }: CardPersistenceShape): Card {
-  const persistedCard = catalogCardSelectSchema.parse(card);
-  const persistedClassification = cardClassificationSelectSchema.parse(classification);
+  const persistedCard = cardSelectSchema.parse(card);
+  const persistedPrinting = cardPrintingSelectSchema.parse(printing);
 
   return parseCard({
-    id: persistedCard.id,
-    riftboundId: persistedCard.riftboundId,
-    setCode: persistedCard.setCode,
-    collectorNumber: persistedCard.collectorNumber,
-    name: persistedCard.name,
+    id: persistedPrinting.id,
+    cardId: persistedCard.id,
+    riftboundId: persistedPrinting.riftboundId,
+    setCode: persistedPrinting.setCode,
+    collectorNumber: persistedPrinting.collectorNumber,
+    name: persistedPrinting.printedName,
     cleanName: persistedCard.cleanName,
     attributes: {
       energy: persistedCard.energy,
@@ -67,23 +68,22 @@ function toDomainCard({
     rulesText: {
       rich: persistedCard.rulesTextRich,
       plain: persistedCard.rulesTextPlain,
-      flavour: persistedCard.flavourText,
+      flavour: persistedPrinting.flavourText,
     },
     orientation: persistedCard.orientation,
-    isAlternateArt: persistedCard.isAlternateArt,
-    isOvernumbered: persistedCard.isOvernumbered,
-    isSignature: persistedCard.isSignature,
-    sourceUpdatedAt: persistedCard.sourceUpdatedAt,
+    isAlternateArt: persistedPrinting.isAlternateArt,
+    isOvernumbered: persistedPrinting.isOvernumbered,
+    isSignature: persistedPrinting.isSignature,
+    sourceUpdatedAt: persistedPrinting.sourceUpdatedAt,
     classification: {
-      typeId: persistedClassification.typeId,
-      supertypeId: persistedClassification.supertypeId,
-      rarityId: persistedClassification.rarityId,
+      typeId: persistedCard.typeId,
+      supertypeId: persistedCard.supertypeId,
+      rarityId: persistedPrinting.rarityId,
     },
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     speeds: speeds.map((speed) => cardSpeedSelectSchema.parse(speed).speed),
     keywords: keywords.map((keyword) => toDomainKeyword(keyword)),
     championName: persistedCard.championName,
-    identityName: persistedCard.identityName,
     tagIds: tags.map((tag) => cardTagSelectSchema.parse(tag).tagId),
     imageUrl: cardImageUrl(imageBaseUrl, media),
     marketplaceReferences: marketplaceReferences.map((reference) => {
@@ -98,22 +98,26 @@ function toDomainCard({
 
 function toDomainCardSummary({
   card,
+  printing,
   domains,
   media,
   imageBaseUrl,
 }: {
   readonly card: unknown;
+  readonly printing: unknown;
   readonly domains: readonly unknown[];
   readonly media: unknown;
   readonly imageBaseUrl: string;
 }): CardSummary {
-  const persistedCard = catalogCardSelectSchema
-    .pick({ id: true, riftboundId: true, name: true, orientation: true })
-    .parse(card);
+  const persistedCard = cardSelectSchema.pick({ orientation: true }).parse(card);
+  const persistedPrinting = cardPrintingSelectSchema
+    .pick({ id: true, riftboundId: true, printedName: true })
+    .parse(printing);
+
   return parseCardSummary({
-    id: persistedCard.id,
-    riftboundId: persistedCard.riftboundId,
-    name: persistedCard.name,
+    id: persistedPrinting.id,
+    riftboundId: persistedPrinting.riftboundId,
+    name: persistedPrinting.printedName,
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     orientation: persistedCard.orientation,
     imageUrl: cardImageUrl(imageBaseUrl, media),

@@ -15,62 +15,62 @@ import {
   printingIdentity,
   withMagnitudeDefaults,
 } from "./card-derivation";
-import type { KeywordOccurrence, KeywordTarget } from "./card-derivation";
+import type { CardSpeed, KeywordOccurrence, KeywordTarget } from "./card-derivation";
 import { imageSourcesOf } from "./card-image-file";
 import type { SourcedCard } from "./card-image-file";
 
 import {
-  cardClassificationInsertSchema,
   cardDomainInsertSchema,
   cardImageSourceInsertSchema,
+  cardInsertSchema,
   cardMarketplaceReferenceInsertSchema,
   cardMediaInsertSchema,
+  cardPrintingInsertSchema,
   cardSpeedInsertSchema,
   cardTagInsertSchema,
-  catalogCardInsertSchema,
-} from "../src/infrastructure/database/catalog-schema/cards";
+} from "../src/infrastructure/database/reference-schema/cards";
 import {
   cardKeywordInsertSchema,
   cardKeywordTargetInsertSchema,
   keywordInsertSchema,
-} from "../src/infrastructure/database/catalog-schema/keywords";
+} from "../src/infrastructure/database/reference-schema/keywords";
 import {
   cardSetInsertSchema,
   setMarketplaceReferenceInsertSchema,
-} from "../src/infrastructure/database/catalog-schema/sets";
+} from "../src/infrastructure/database/reference-schema/sets";
 import {
   cardSupertypeInsertSchema,
   cardTypeInsertSchema,
   domainInsertSchema,
   rarityInsertSchema,
   tagInsertSchema,
-} from "../src/infrastructure/database/catalog-schema/taxonomy";
+} from "../src/infrastructure/database/reference-schema/taxonomy";
 import type {
-  cardClassifications,
   cardDomains,
   cardImageSources,
   cardMarketplaceReferences,
   cardMedia,
+  cardPrintings,
   cardSpeeds as cardSpeedTable,
   cardTags,
-  catalogCards,
-} from "../src/infrastructure/database/catalog-schema/cards";
+  cards as cardTable,
+} from "../src/infrastructure/database/reference-schema/cards";
 import type {
   cardKeywordTargets,
   cardKeywords,
   keywords,
-} from "../src/infrastructure/database/catalog-schema/keywords";
+} from "../src/infrastructure/database/reference-schema/keywords";
 import type {
   cardSets,
   setMarketplaceReferences,
-} from "../src/infrastructure/database/catalog-schema/sets";
+} from "../src/infrastructure/database/reference-schema/sets";
 import type {
   cardSupertypes,
   cardTypes,
   domains,
   rarities,
   tags,
-} from "../src/infrastructure/database/catalog-schema/taxonomy";
+} from "../src/infrastructure/database/reference-schema/taxonomy";
 
 const nullableString = z.string().nullish();
 const nullableInteger = z.number().int().nullish();
@@ -153,6 +153,8 @@ const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Showcase", "Promo"]
 const KEYWORD_REMINDER = /\[([^\]]+)\]\s*_?\(([^)]*)\)/g;
 const DERIVED_SOURCE = "derived";
 const LEADING_DIGITS = /(\d+)/;
+const MARKUP = /<[^>]*>/g;
+const PLACEHOLDER_TEXT = /^\[\s*no\s+text\s*\]$/i;
 const REPORTED_SAMPLE = 5;
 type RawCard = z.output<typeof rawCardSchema>;
 type RawSet = z.output<typeof rawSetSchema>;
@@ -163,6 +165,7 @@ type Marketplace = "cardmarket" | "tcgplayer";
 type MarketplaceReference = { marketplace: Marketplace; externalId: string };
 type NormalizedCard = {
   id: string;
+  isPrimaryFeed: boolean;
   riftboundId: string;
   setCode: string;
   collectorNumber: number;
@@ -202,6 +205,7 @@ type CardCore = Omit<
   | "identityName"
   | "imageSources"
   | "isOvernumbered"
+  | "isPrimaryFeed"
   | "isSignature"
   | "poolCode"
   | "regions"
@@ -216,16 +220,28 @@ type Seed = {
   domains: (typeof domains.$inferInsert)[];
   tags: (typeof tags.$inferInsert)[];
   keywords: (typeof keywords.$inferInsert)[];
-  catalogCards: (typeof catalogCards.$inferInsert)[];
+  cards: (typeof cardTable.$inferInsert)[];
+  cardPrintings: (typeof cardPrintings.$inferInsert)[];
   cardMarketplaceReferences: (typeof cardMarketplaceReferences.$inferInsert)[];
   cardMedia: (typeof cardMedia.$inferInsert)[];
   cardImageSources: (typeof cardImageSources.$inferInsert)[];
-  cardClassifications: (typeof cardClassifications.$inferInsert)[];
   cardDomains: (typeof cardDomains.$inferInsert)[];
   cardTags: (typeof cardTags.$inferInsert)[];
   cardKeywords: (typeof cardKeywords.$inferInsert)[];
   cardKeywordTargets: (typeof cardKeywordTargets.$inferInsert)[];
   cardSpeeds: (typeof cardSpeedTable.$inferInsert)[];
+};
+type CardGroup = {
+  readonly id: string;
+  readonly printings: readonly NormalizedCard[];
+  readonly trusted: readonly NormalizedCard[];
+};
+type GroupKeyword = {
+  readonly id: string;
+  readonly value: number | null;
+  readonly cost: string | null;
+  readonly reminder: string | null;
+  readonly targets: readonly KeywordTarget[];
 };
 type IdentityConflict = {
   readonly identityName: string;
@@ -285,6 +301,7 @@ function normalize({ card, fetchedAt }: FetchedCard): NormalizedCard {
   return {
     ...core,
     id: card.id,
+    isPrimaryFeed: raw.success,
     riftboundId: card.riftboundId,
     isOvernumbered: identity.isOvernumbered,
     isSignature: identity.isSignature,
@@ -369,7 +386,7 @@ function buildSeed(
 ): BuiltSeed {
   const setCodes = new Set(sets.map((value) => value.set_id));
   const regionNames = new Set(everyCard.flatMap((card) => card.regions).map(normalizedPunctuation));
-  const cards = everyCard.filter((card) => setCodes.has(card.setCode));
+  const kept = everyCard.filter((card) => setCodes.has(card.setCode));
   const skipped = everyCard.filter((card) => !setCodes.has(card.setCode));
   const cardSets = sets
     .map((value) => ({
@@ -380,14 +397,17 @@ function buildSeed(
       publishedOn: value.published_on,
     }))
     .sort((left, right) => left.code.localeCompare(right.code));
-  const ordered = [...cards].sort((left, right) => left.id.localeCompare(right.id));
-  const magnitudeIds = keywordsWithMagnitude(ordered.map((card) => card.rulesTextPlain));
-  const remindersByCard = new Map(
-    ordered.map((card) => [card.id, remindersIn(card.rulesTextPlain)] as const),
-  );
-  const keywordNames = new Map<string, string>();
+  const publishedOn = new Map(sets.map((value) => [value.set_id, value.published_on] as const));
+  const ordered = [...kept].sort((left, right) => left.id.localeCompare(right.id));
   const canonicalIds = canonicalCardIds(ordered);
   const identities = reconciledIdentities(ordered);
+  const groups = cardGroups(ordered, identities.repaired, publishedOn, canonicalIds);
+  const derived = groups.flatMap((group) => printedPrintings(group.trusted));
+  const magnitudeIds = keywordsWithMagnitude(derived.map((printing) => printing.rulesTextPlain));
+  const remindersByPrinting = new Map(
+    derived.map((printing) => [printing.id, remindersIn(printing.rulesTextPlain)] as const),
+  );
+  const keywordNames = new Map<string, string>();
   const championNames = new Set(
     ordered.map((card) => card.championName).filter((name) => name !== null),
   );
@@ -396,93 +416,84 @@ function buildSeed(
   const rarities = new Map<string, Taxonomy>();
   const domains = new Map<string, Taxonomy>();
   const tags = new Map<string, Taxonomy>();
-  const catalogCards: Seed["catalogCards"] = [];
+  const cardRows: Seed["cards"] = [];
+  const cardPrintingRows: Seed["cardPrintings"] = [];
   const cardMarketplaceReferences: Seed["cardMarketplaceReferences"] = [];
   const cardMedia: Seed["cardMedia"] = [];
   const cardImageSources: Seed["cardImageSources"] = [];
-  const cardClassifications: Seed["cardClassifications"] = [];
   const cardDomains: Seed["cardDomains"] = [];
   const cardTags: Seed["cardTags"] = [];
   const cardKeywords: Seed["cardKeywords"] = [];
   const cardKeywordTargets: Seed["cardKeywordTargets"] = [];
   const cardSpeedRows: Seed["cardSpeeds"] = [];
-  for (const card of ordered) {
-    for (const keyword of keywordOccurrences(card.rulesTextPlain))
+  for (const printing of derived) {
+    for (const keyword of keywordOccurrences(printing.rulesTextPlain))
       keywordNames.set(keyword.id, keyword.name);
   }
-  const reminderTexts = chosenReminders(keywordNames, remindersByCard);
-  for (const card of ordered) {
+  const reminderTexts = chosenReminders(keywordNames, remindersByPrinting);
+  for (const group of groups) {
+    const card = resolvedCard(group);
     add(types, card.typeId);
-    add(rarities, card.rarityId);
     if (card.supertypeId) add(supertypes, card.supertypeId);
-    catalogCards.push({
-      id: card.id,
-      riftboundId: card.riftboundId,
-      setCode: card.setCode,
-      collectorNumber: card.collectorNumber,
-      name: card.name,
-      cleanName: card.cleanName,
-      energy: card.energy,
-      might: card.might,
-      power: card.power,
-      rulesTextRich: card.rulesTextRich,
-      rulesTextPlain: card.rulesTextPlain,
-      flavourText: card.flavourText,
-      orientation: card.orientation,
-      isAlternateArt: card.isAlternateArt,
-      isOvernumbered: card.isOvernumbered,
-      isSignature: card.isSignature,
-      poolCode: card.poolCode,
-      championName: card.championName,
-      identityName: identities.repaired.get(card.identityName) ?? card.identityName,
-      isCanonical: canonicalIds.has(card.id),
-      sourceUpdatedAt: card.sourceUpdatedAt,
-    });
-    cardClassifications.push({
-      cardId: card.id,
-      typeId: card.typeId,
-      supertypeId: card.supertypeId,
-      rarityId: card.rarityId,
-    });
-    const imageFile = imageFiles.get(card.id);
-    if (imageFile !== undefined) {
-      cardMedia.push({
-        cardId: card.id,
-        imageFile,
-        artist: card.artist,
-        accessibilityText: card.accessibilityText,
+    cardRows.push(card);
+    for (const printing of group.printings) {
+      add(rarities, printing.rarityId);
+      cardPrintingRows.push({
+        id: printing.id,
+        cardId: group.id,
+        riftboundId: printing.riftboundId,
+        setCode: printing.setCode,
+        collectorNumber: printing.collectorNumber,
+        poolCode: printing.poolCode,
+        rarityId: printing.rarityId,
+        printedName: printing.name,
+        isAlternateArt: printing.isAlternateArt,
+        isOvernumbered: printing.isOvernumbered,
+        isSignature: printing.isSignature,
+        flavourText: printing.flavourText,
+        sourceUpdatedAt: printing.sourceUpdatedAt,
+        isCanonical: canonicalIds.has(printing.id),
       });
+      const imageFile = imageFiles.get(printing.id);
+      if (imageFile !== undefined) {
+        cardMedia.push({
+          printingId: printing.id,
+          imageFile,
+          artist: printing.artist,
+          accessibilityText: printing.accessibilityText,
+        });
+      }
+      for (const [priority, url] of printing.imageSources.entries())
+        cardImageSources.push({ printingId: printing.id, url, priority });
+      cardMarketplaceReferences.push(
+        ...printing.marketplaceReferences.map((reference) => ({
+          printingId: printing.id,
+          ...reference,
+        })),
+      );
     }
-    for (const [priority, url] of card.imageSources.entries())
-      cardImageSources.push({ cardId: card.id, url, priority });
-    cardMarketplaceReferences.push(
-      ...card.marketplaceReferences.map((reference) => ({ cardId: card.id, ...reference })),
-    );
-    for (const domainId of card.domainIds) {
-      add(domains, domainId);
-      cardDomains.push({ cardId: card.id, domainId });
+    for (const printing of group.trusted) {
+      for (const domainId of printing.domainIds) {
+        add(domains, domainId);
+        cardDomains.push({ cardId: group.id, domainId });
+      }
+      for (const tagId of printing.tagIds) {
+        add(tags, tagId);
+        cardTags.push({ cardId: group.id, tagId });
+      }
     }
-    for (const tagId of card.tagIds) {
-      add(tags, tagId);
-      cardTags.push({ cardId: card.id, tagId });
-    }
-    const reminders = remindersByCard.get(card.id) ?? new Map<string, string>();
-    for (const keyword of withMagnitudeDefaults(
-      keywordOccurrences(card.rulesTextPlain),
-      magnitudeIds,
-    )) {
-      const reminder = reminders.get(keyword.id) ?? null;
+    for (const keyword of groupKeywords(group, magnitudeIds, remindersByPrinting, reminderTexts)) {
       const id = cardKeywords.length + 1;
       cardKeywords.push({
         id,
-        cardId: card.id,
+        cardId: group.id,
         keywordId: keyword.id,
         value: keyword.value,
         cost: keyword.cost,
-        reminder: reminder === reminderTexts.get(keyword.id) ? null : reminder,
+        reminder: keyword.reminder,
         source: DERIVED_SOURCE,
       });
-      for (const target of keywordTargets(card.id, keyword)) {
+      for (const target of keyword.targets) {
         cardKeywordTargets.push({
           cardKeywordId: id,
           targetKind: target.kind,
@@ -491,8 +502,7 @@ function buildSeed(
         });
       }
     }
-    for (const speed of cardSpeeds(card.rulesTextPlain))
-      cardSpeedRows.push({ cardId: card.id, speed });
+    for (const speed of groupSpeeds(group)) cardSpeedRows.push({ cardId: group.id, speed });
   }
   return {
     seed: {
@@ -519,15 +529,15 @@ function buildSeed(
       keywords: [...keywordNames]
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([id, name]) => ({ id, name, reminderText: reminderTexts.get(id) ?? null })),
-      catalogCards,
+      cards: cardRows,
+      cardPrintings: cardPrintingRows,
       cardMarketplaceReferences: uniqueBy(cardMarketplaceReferences, (row) => [
-        row.cardId,
+        row.printingId,
         row.marketplace,
         row.externalId,
       ]),
       cardMedia,
-      cardImageSources: uniqueBy(cardImageSources, (row) => [row.cardId, row.url]),
-      cardClassifications,
+      cardImageSources: uniqueBy(cardImageSources, (row) => [row.printingId, row.url]),
       cardDomains: uniqueBy(cardDomains, (row) => [row.cardId, row.domainId]),
       cardTags: uniqueBy(cardTags, (row) => [row.cardId, row.tagId]),
       cardKeywords,
@@ -537,6 +547,151 @@ function buildSeed(
     skipped,
     identityConflicts: identities.conflicts,
   };
+}
+
+function cardGroups(
+  printings: readonly NormalizedCard[],
+  repaired: ReadonlyMap<string, string>,
+  publishedOn: ReadonlyMap<string, string>,
+  canonicalIds: ReadonlySet<string>,
+): readonly CardGroup[] {
+  const grouped = new Map<string, NormalizedCard[]>();
+
+  for (const printing of printings) {
+    const id = repaired.get(printing.identityName) ?? printing.identityName;
+    const held = grouped.get(id);
+    if (held === undefined) grouped.set(id, [printing]);
+    else held.push(printing);
+  }
+
+  return [...grouped]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([id, members]) => {
+      const ranked = [...members].sort((left, right) =>
+        printingOrder(left, right, publishedOn, canonicalIds),
+      );
+      const primary = ranked.filter((printing) => printing.isPrimaryFeed);
+
+      return { id, printings: ranked, trusted: primary.length > 0 ? primary : ranked };
+    });
+}
+
+function printingOrder(
+  left: NormalizedCard,
+  right: NormalizedCard,
+  publishedOn: ReadonlyMap<string, string>,
+  canonicalIds: ReadonlySet<string>,
+): number {
+  return (
+    ahead(left.isPrimaryFeed) - ahead(right.isPrimaryFeed) ||
+    (publishedOn.get(right.setCode) ?? "").localeCompare(publishedOn.get(left.setCode) ?? "") ||
+    ahead(canonicalIds.has(left.id)) - ahead(canonicalIds.has(right.id)) ||
+    ahead(!left.isAlternateArt) - ahead(!right.isAlternateArt) ||
+    ahead(!left.isSignature) - ahead(!right.isSignature) ||
+    ahead(!left.isOvernumbered) - ahead(!right.isOvernumbered) ||
+    left.collectorNumber - right.collectorNumber ||
+    left.id.localeCompare(right.id)
+  );
+}
+
+function ahead(preferred: boolean): number {
+  return preferred ? 0 : 1;
+}
+
+function resolvedCard(group: CardGroup): Seed["cards"][number] {
+  const [best] = group.trusted;
+  if (best === undefined) throw new Error(`No printing resolves the card ${group.id}.`);
+
+  return {
+    id: group.id,
+    cleanName: cleanName(group.id),
+    energy: firstPrinted(group.trusted, (printing) => printing.energy),
+    might: firstPrinted(group.trusted, (printing) => printing.might),
+    power: firstPrinted(group.trusted, (printing) => printing.power),
+    rulesTextRich:
+      firstPrinted(group.trusted, (printing) => printedText(printing.rulesTextRich)) ?? "",
+    rulesTextPlain:
+      firstPrinted(group.trusted, (printing) => printedText(printing.rulesTextPlain)) ?? "",
+    orientation: best.orientation,
+    typeId: best.typeId,
+    supertypeId: firstPrinted(group.trusted, (printing) => printing.supertypeId),
+    championName: firstPrinted(group.trusted, (printing) => printing.championName),
+  };
+}
+
+function firstPrinted<Value>(
+  printings: readonly NormalizedCard[],
+  valueOf: (printing: NormalizedCard) => Value | null,
+): Value | null {
+  for (const printing of printings) {
+    const value = valueOf(printing);
+    if (value !== null) return value;
+  }
+
+  return null;
+}
+
+function printedText(text: string): string | null {
+  const bare = text.replace(MARKUP, "").trim();
+
+  return bare.length === 0 || PLACEHOLDER_TEXT.test(bare) ? null : text;
+}
+
+function printedPrintings(printings: readonly NormalizedCard[]): readonly NormalizedCard[] {
+  return printings.filter((printing) => printedText(printing.rulesTextPlain) !== null);
+}
+
+function groupKeywords(
+  group: CardGroup,
+  magnitudeIds: ReadonlySet<string>,
+  remindersByPrinting: ReadonlyMap<string, ReadonlyMap<string, string>>,
+  reminderTexts: ReadonlyMap<string, string>,
+): readonly GroupKeyword[] {
+  const held = new Map<string, GroupKeyword>();
+
+  for (const printing of printedPrintings(group.trusted)) {
+    const reminders = remindersByPrinting.get(printing.id) ?? new Map<string, string>();
+    for (const occurrence of withMagnitudeDefaults(
+      keywordOccurrences(printing.rulesTextPlain),
+      magnitudeIds,
+    )) {
+      const targets = keywordTargets(printing.id, occurrence);
+      const printed = reminders.get(occurrence.id) ?? null;
+      const reminder = printed === reminderTexts.get(occurrence.id) ? null : printed;
+      const key = [
+        occurrence.id,
+        String(occurrence.value),
+        occurrence.cost ?? "",
+        ...targets.map(targetKey),
+      ].join("\u0000");
+      const kept = held.get(key);
+      if (kept === undefined) {
+        held.set(key, {
+          id: occurrence.id,
+          value: occurrence.value,
+          cost: occurrence.cost,
+          reminder,
+          targets,
+        });
+      } else if (kept.reminder === null && reminder !== null) held.set(key, { ...kept, reminder });
+    }
+  }
+
+  return [...held.values()];
+}
+
+function groupSpeeds(group: CardGroup): readonly CardSpeed[] {
+  const texts = printedPrintings(group.trusted).map((printing) => printing.rulesTextPlain);
+  const speeds = new Set<CardSpeed>();
+
+  for (const text of texts.length > 0 ? texts : [""])
+    for (const speed of cardSpeeds(text)) speeds.add(speed);
+
+  return [...speeds];
+}
+
+function targetKey(target: KeywordTarget): string {
+  return `${target.kind}:${target.isToken}:${target.allegiance}`;
 }
 
 function printingsByIdentity(
@@ -734,43 +889,105 @@ function assertValid(seed: Seed): void {
   seed.domains.forEach((row) => domainInsertSchema.parse(row));
   seed.tags.forEach((row) => tagInsertSchema.parse(row));
   seed.keywords.forEach((row) => keywordInsertSchema.parse(row));
-  seed.catalogCards.forEach((row) => catalogCardInsertSchema.parse(row));
+  seed.cards.forEach((row) => cardInsertSchema.parse(row));
+  seed.cardPrintings.forEach((row) => cardPrintingInsertSchema.parse(row));
   seed.cardMarketplaceReferences.forEach((row) => cardMarketplaceReferenceInsertSchema.parse(row));
   seed.cardMedia.forEach((row) => cardMediaInsertSchema.parse(row));
   seed.cardImageSources.forEach((row) => cardImageSourceInsertSchema.parse(row));
-  seed.cardClassifications.forEach((row) => cardClassificationInsertSchema.parse(row));
   seed.cardDomains.forEach((row) => cardDomainInsertSchema.parse(row));
   seed.cardTags.forEach((row) => cardTagInsertSchema.parse(row));
   seed.cardKeywords.forEach((row) => cardKeywordInsertSchema.parse(row));
   seed.cardKeywordTargets.forEach((row) => cardKeywordTargetInsertSchema.parse(row));
   seed.cardSpeeds.forEach((row) => cardSpeedInsertSchema.parse(row));
-  assertEveryCardHasMedia(seed);
-  assertOneCanonicalPrintingPerCard(seed);
+  assertUnique(seed.cards, (row) => row.id, "card ID");
+  assertUnique(seed.cardPrintings, (row) => row.id, "printing ID");
+  assertEveryPrintingHasMedia(seed);
+  assertOneCanonicalPrintingPerFace(seed);
+  assertEveryCardIsPrinted(seed);
+  assertNothingIsOrphaned(seed);
 }
 
-function assertEveryCardHasMedia(seed: Seed): void {
-  const withMedia = new Set(seed.cardMedia.map((row) => row.cardId));
-  const missing = seed.catalogCards.filter((row) => !withMedia.has(row.id));
+function assertEveryPrintingHasMedia(seed: Seed): void {
+  const withMedia = new Set(seed.cardMedia.map((row) => row.printingId));
+  const missing = seed.cardPrintings.filter((row) => !withMedia.has(row.id));
 
   if (missing.length > 0)
     throw new Error(
-      `${missing.length} cards carry no image source and have no media row: ${sample(
+      `${missing.length} printings carry no image source and have no media row: ${sample(
         missing.map((row) => row.id),
       )}.`,
     );
 }
 
-function assertOneCanonicalPrintingPerCard(seed: Seed): void {
-  const canonical = seed.catalogCards.filter((row) => row.isCanonical === true);
+function assertOneCanonicalPrintingPerFace(seed: Seed): void {
+  const canonical = seed.cardPrintings.filter((row) => row.isCanonical === true);
   assertUnique(canonical, (row) => row.riftboundId, "canonical Riftbound ID");
   const named = new Set(canonical.map((row) => row.riftboundId));
   const unnamed = [
-    ...new Set(seed.catalogCards.map((row) => row.riftboundId).filter((id) => !named.has(id))),
+    ...new Set(seed.cardPrintings.map((row) => row.riftboundId).filter((id) => !named.has(id))),
   ];
 
   if (unnamed.length > 0)
     throw new Error(
       `${unnamed.length} Riftbound IDs have no canonical printing: ${sample(unnamed)}.`,
+    );
+}
+
+function assertEveryCardIsPrinted(seed: Seed): void {
+  const printed = new Set(seed.cardPrintings.map((row) => row.cardId));
+  const unprinted = seed.cards.filter((row) => !printed.has(row.id));
+
+  if (unprinted.length > 0)
+    throw new Error(
+      `${unprinted.length} cards have no printing: ${sample(unprinted.map((row) => row.id))}.`,
+    );
+}
+
+function assertNothingIsOrphaned(seed: Seed): void {
+  const cardIds = new Set(seed.cards.map((row) => row.id));
+  const printingIds = new Set(seed.cardPrintings.map((row) => row.id));
+  const keywordIds = new Set(seed.keywords.map((row) => row.id));
+  const cardKeywordIds = new Set(seed.cardKeywords.map((row) => String(row.id)));
+  assertReferences(seed.cardPrintings, (row) => row.cardId, cardIds, "card_printing");
+  assertReferences(seed.cardDomains, (row) => row.cardId, cardIds, "card_domain");
+  assertReferences(seed.cardTags, (row) => row.cardId, cardIds, "card_tag");
+  assertReferences(seed.cardSpeeds, (row) => row.cardId, cardIds, "card_speed");
+  assertReferences(seed.cardKeywords, (row) => row.cardId, cardIds, "card_keyword");
+  assertReferences(seed.cardKeywords, (row) => row.keywordId, keywordIds, "card_keyword keyword");
+  assertReferences(seed.cardMedia, (row) => row.printingId, printingIds, "card_media");
+  assertReferences(
+    seed.cardImageSources,
+    (row) => row.printingId,
+    printingIds,
+    "card_image_source",
+  );
+  assertReferences(
+    seed.cardMarketplaceReferences,
+    (row) => row.printingId,
+    printingIds,
+    "card_marketplace_reference",
+  );
+  assertReferences(
+    seed.cardKeywordTargets,
+    (row) => String(row.cardKeywordId),
+    cardKeywordIds,
+    "card_keyword_target",
+  );
+}
+
+function assertReferences<Row>(
+  rows: readonly Row[],
+  keyOf: (row: Row) => string,
+  owners: ReadonlySet<string>,
+  label: string,
+): void {
+  const orphaned = [...new Set(rows.map(keyOf).filter((key) => !owners.has(key)))];
+
+  if (orphaned.length > 0)
+    throw new Error(
+      `${orphaned.length} ${label} rows name an owner the seed has no row for: ${sample(
+        orphaned,
+      )}.`,
     );
 }
 

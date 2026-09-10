@@ -2,7 +2,7 @@ import { parseCardSet, type CardSet } from "@/features/set/card-set";
 import {
   cardSetSelectSchema,
   setMarketplaceReferenceSelectSchema,
-} from "@/infrastructure/database/catalog-schema/sets";
+} from "@/infrastructure/database/reference-schema/sets";
 
 interface SetPersistenceShape {
   readonly cardSet: unknown;

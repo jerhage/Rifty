@@ -1,5 +1,5 @@
 import { parseKeyword, type Keyword } from "@/features/card/keyword/keyword";
-import { keywordSelectSchema } from "@/infrastructure/database/catalog-schema/keywords";
+import { keywordSelectSchema } from "@/infrastructure/database/reference-schema/keywords";
 
 function toDomainKeyword(keyword: unknown): Keyword {
   const persistedKeyword = keywordSelectSchema.parse(keyword);

@@ -11,7 +11,11 @@ describe("active filter count", () => {
 
   it("adds selections across facets", () => {
     expect(
-      activeFilterCount({ keywordIds: ["shield", "tank"], setCodes: ["OGN"], energy: { type: "atLeast", value: 3 } }),
+      activeFilterCount({
+        keywordIds: ["shield", "tank"],
+        setCodes: ["OGN"],
+        energy: { type: "atLeast", value: 3 },
+      }),
     ).toBe(4);
   });
 

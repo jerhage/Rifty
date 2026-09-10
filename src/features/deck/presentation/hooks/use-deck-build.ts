@@ -174,7 +174,7 @@ function useDeckBuild(
       ...current,
       zoneCards: {
         ...current.zoneCards,
-        [quantityKey(section, card.riftboundId)]: {
+        [quantityKey(section, card.id)]: {
           card,
           quantity: Math.max(minimumForCard(current, section, card), quantity),
         },
@@ -198,7 +198,7 @@ function useDeckBuild(
           notes: "",
           createdAt: "1970-01-01T00:00:00.000Z",
           updatedAt: "1970-01-01T00:00:00.000Z",
-          chosenChampionRiftboundId: draft.chosenChampion?.riftboundId ?? null,
+          chosenChampionCardId: draft.chosenChampion?.cardId ?? null,
           entries,
         },
         RIFTBOUND_STANDARD,
@@ -218,7 +218,7 @@ function useDeckBuild(
       {
         ...deckIdentity(start, capabilities),
         name,
-        chosenChampionRiftboundId: draft.chosenChampion?.riftboundId ?? null,
+        chosenChampionCardId: draft.chosenChampion?.cardId ?? null,
         entries,
       },
       capabilities,

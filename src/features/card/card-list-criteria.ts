@@ -38,6 +38,7 @@ const cardNumericFilterSchema = z
   );
 
 const cardListCriteriaSchema = z.object({
+  printingIds: z.array(z.string().trim().min(1)).optional(),
   riftboundIds: z.array(z.string().trim().min(1)).optional(),
   setCodes: z.array(setCodeSchema).optional(),
   typeIds: z.array(cardTypeSchema).optional(),

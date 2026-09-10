@@ -51,10 +51,10 @@ function DeckDetailData({
         .with({ type: "notFound" }, () => ({ type: "notFound" }) as const)
         .with({ type: "loadFailed" }, () => ({ type: "loadFailed" }) as const)
         .with({ type: "success" }, async ({ deck }) => {
-          const riftboundIds = [...new Set(deck.entries.map((entry) => entry.cardRiftboundId))];
-          const page = riftboundIds.length
+          const printingIds = [...new Set(deck.entries.map((entry) => entry.printingId))];
+          const page = printingIds.length
             ? await cardLister.getPage(
-                { riftboundIds, limit: CARD_LOOKUP_LIMIT },
+                { printingIds, limit: CARD_LOOKUP_LIMIT },
                 { signal: controller.signal },
               )
             : null;

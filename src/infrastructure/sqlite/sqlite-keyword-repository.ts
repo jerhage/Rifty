@@ -2,7 +2,7 @@ import { asc } from "drizzle-orm";
 
 import type { Keyword } from "@/features/card/keyword/keyword";
 import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
-import { keywords } from "@/infrastructure/database/catalog-schema/keywords";
+import { keywords } from "@/infrastructure/database/reference-schema/keywords";
 import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
 
 import { toDomainKeyword } from "./keyword-mapper";

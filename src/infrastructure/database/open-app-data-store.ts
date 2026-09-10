@@ -6,9 +6,9 @@ import migrations from "../../../drizzle/migrations";
 
 import type { Logger } from "@/application/ports/logger";
 import { DrizzleLoggerAdapter } from "@/infrastructure/drizzle/drizzle-logger-adapter";
-import { createCatalogDataStore, type CatalogDataStore } from "./catalog-data-store";
+import { createReferenceDataStore, type ReferenceDataStore } from "./reference-data-store";
 import { createDeckDataStore, type DeckDataStore } from "./deck-data-store";
-import { ensureCatalogSeeded } from "./catalog-seeder";
+import { ensureReferenceDataSeeded } from "./reference-seeder";
 
 /**
  * The database file is still named for the catalog it was created to hold; renaming it would
@@ -17,7 +17,7 @@ import { ensureCatalogSeeded } from "./catalog-seeder";
 const CATALOG_DATABASE_NAME = "catalog.db";
 
 interface AppDataStore {
-  readonly catalog: CatalogDataStore;
+  readonly reference: ReferenceDataStore;
   readonly decks: DeckDataStore;
 }
 
@@ -31,7 +31,7 @@ async function openAppDataStore(logger: Logger, imageBaseUrl: string): Promise<A
     throw new Error(`Could not migrate the app database: ${errorMessage(error)}`, { cause: error });
   }
   try {
-    await ensureCatalogSeeded(database, logger);
+    await ensureReferenceDataSeeded(database, logger);
   } catch (error) {
     throw new Error(`Could not seed the card catalog database: ${errorMessage(error)}`, {
       cause: error,
@@ -39,7 +39,7 @@ async function openAppDataStore(logger: Logger, imageBaseUrl: string): Promise<A
   }
 
   return {
-    catalog: createCatalogDataStore(database, logger, imageBaseUrl),
+    reference: createReferenceDataStore(database, logger, imageBaseUrl),
     decks: createDeckDataStore(database, logger),
   };
 }

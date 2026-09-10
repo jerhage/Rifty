@@ -34,6 +34,7 @@ const cardClassificationSchema = z.object({
 });
 const cardSchema = z.object({
   id: cardIdSchema,
+  cardId: cardIdSchema,
   riftboundId: z.string().trim().min(1),
   setCode: setCodeSchema,
   collectorNumber: z.number().int().nonnegative(),
@@ -55,7 +56,6 @@ const cardSchema = z.object({
   speeds: z.array(cardSpeedSchema),
   keywords: z.array(cardKeywordSchema),
   championName: z.string().trim().min(1).nullable(),
-  identityName: z.string().trim().min(1),
   tagIds: z.array(taxonomyIdSchema),
   imageUrl: z.url(),
   marketplaceReferences: z.array(marketplaceReferenceSchema),

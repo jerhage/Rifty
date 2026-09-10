@@ -1,6 +1,13 @@
 import type { Clock } from "@/application/ports/clock";
 
-import { parseDeck, type CardRiftboundId, type Deck, type DeckId, type DeckSection } from "../deck";
+import {
+  parseDeck,
+  type CardId,
+  type Deck,
+  type DeckId,
+  type DeckSection,
+  type PrintingId,
+} from "../deck";
 import type { DeckFinder } from "../deck-finder";
 import { remainingCopies } from "../deck-legality";
 import type { DeckSaver } from "../deck-saver";
@@ -13,7 +20,8 @@ type SetDeckCardQuantityResult =
 
 interface DeckCardQuantity {
   readonly section: DeckSection;
-  readonly cardRiftboundId: CardRiftboundId;
+  readonly cardId: CardId;
+  readonly printingId: PrintingId;
   /** Zero removes the card from that section; the schema stores positive quantities only. */
   readonly quantity: number;
 }
@@ -30,22 +38,23 @@ interface SetDeckCardQuantityCapabilities {
  */
 async function setDeckCardQuantity(
   id: DeckId,
-  { cardRiftboundId, quantity, section }: DeckCardQuantity,
+  { cardId, printingId, quantity, section }: DeckCardQuantity,
   { clock, deckFinder, deckSaver }: SetDeckCardQuantityCapabilities,
 ): Promise<SetDeckCardQuantityResult> {
   try {
     const current = await deckFinder.get(id);
     if (!current) return { type: "notFound" };
 
-    const allowed = remainingCopies(current, section, cardRiftboundId);
+    const allowed = remainingCopies(current, section, cardId, printingId);
     if (allowed !== null && quantity > allowed) return { type: "copyLimitReached", allowed };
 
     const others = current.entries.filter(
-      (entry) => entry.section !== section || entry.cardRiftboundId !== cardRiftboundId,
+      (entry) =>
+        entry.section !== section || entry.cardId !== cardId || entry.printingId !== printingId,
     );
     const deck = parseDeck({
       ...current,
-      entries: quantity > 0 ? [...others, { section, cardRiftboundId, quantity }] : others,
+      entries: quantity > 0 ? [...others, { section, cardId, printingId, quantity }] : others,
       updatedAt: clock.now(),
     });
     await deckSaver.save(deck);

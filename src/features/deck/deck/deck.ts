@@ -1,13 +1,15 @@
 import { z } from "zod/v4";
 
 /** Stable game-card identity retained by a deck even when catalog data is reseeded. */
-const cardRiftboundIdSchema = z.string().trim().min(1);
+const cardIdSchema = z.string().trim().min(1);
+const printingIdSchema = z.string().trim().min(1);
 const deckIdSchema = z.string().trim().min(1);
 const deckNameSchema = z.string().trim().min(1);
 const deckSectionSchema = z.enum(["legend", "mainDeck", "runeDeck", "battlefield", "sideboard"]);
 const deckEntrySchema = z.object({
   section: deckSectionSchema,
-  cardRiftboundId: cardRiftboundIdSchema,
+  cardId: cardIdSchema,
+  printingId: printingIdSchema,
   quantity: z.number().int().positive(),
 });
 
@@ -25,17 +27,17 @@ const deckSchema = z
     notes: z.string(),
     createdAt: z.string().trim().min(1),
     updatedAt: z.string().trim().min(1),
-    chosenChampionRiftboundId: cardRiftboundIdSchema.nullable(),
+    chosenChampionCardId: cardIdSchema.nullable(),
     entries: z.array(deckEntrySchema),
   })
   .superRefine((deck, context) => {
     const entryIndexesByKey = new Map<string, number>();
     deck.entries.forEach((entry, index) => {
-      const key = `${entry.section}\u0000${entry.cardRiftboundId}`;
+      const key = `${entry.section}\u0000${entry.cardId}\u0000${entry.printingId}`;
       if (entryIndexesByKey.has(key)) {
         context.addIssue({
           code: "custom",
-          message: "A deck may have only one quantity entry for a card in each section.",
+          message: "A deck may have only one quantity entry for a printing in each section.",
           path: ["entries", index],
         });
       }
@@ -53,7 +55,7 @@ const deckUnverifiedReasonSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("notChecked") }),
   z.object({
     type: z.literal("missingCards"),
-    cardRiftboundIds: z.array(cardRiftboundIdSchema).min(1),
+    cardIds: z.array(cardIdSchema).min(1),
   }),
   z.object({ type: z.literal("unknownRuleset") }),
 ]);
@@ -66,7 +68,8 @@ const deckLegalityViolationSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("cardConstraint"),
-    cardRiftboundId: cardRiftboundIdSchema,
+    cardId: cardIdSchema,
+    printingIds: z.array(printingIdSchema),
     rule: z.string().trim().min(1),
     message: z.string().trim().min(1),
   }),
@@ -100,7 +103,8 @@ function parseDeckVerification(value: unknown): DeckVerification {
   return deckVerificationSchema.parse(value);
 }
 
-type CardRiftboundId = z.output<typeof cardRiftboundIdSchema>;
+type CardId = z.output<typeof cardIdSchema>;
+type PrintingId = z.output<typeof printingIdSchema>;
 type DeckId = z.output<typeof deckIdSchema>;
 type DeckName = z.output<typeof deckNameSchema>;
 type DeckSection = z.output<typeof deckSectionSchema>;
@@ -115,7 +119,7 @@ type LegalDeck = Extract<DeckVerification, { type: "legal" }>;
 type IllegalDeck = Extract<DeckVerification, { type: "illegal" }>;
 
 export {
-  cardRiftboundIdSchema,
+  cardIdSchema,
   deckEntrySchema,
   deckIdSchema,
   deckLegalityViolationSchema,
@@ -126,10 +130,11 @@ export {
   deckVerificationSchema,
   parseDeck,
   parseDeckVerification,
+  printingIdSchema,
   tournamentRulesetSchema,
 };
 export type {
-  CardRiftboundId,
+  CardId,
   Deck,
   DeckEntry,
   DeckId,
@@ -140,6 +145,7 @@ export type {
   DeckVerification,
   IllegalDeck,
   LegalDeck,
+  PrintingId,
   TournamentRuleset,
   UnverifiedDeck,
 };

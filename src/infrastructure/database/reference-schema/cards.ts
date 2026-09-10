@@ -10,40 +10,61 @@ import { cardSupertypes, cardTypes, domains, rarities, tags } from "./taxonomy";
 const cardOrientationSchema = z.enum(["landscape", "portrait"]);
 
 /** Catalog tables persist individual card printings and their related data. */
-const catalogCards = sqliteTable(
-  "catalog_card",
+const cards = sqliteTable(
+  "card",
   {
     id: text().primaryKey(),
-    // A Riftbound ID identifies a card face; multiple printings can share it.
-    riftboundId: text("riftbound_id").notNull(),
-    setCode: text("set_code")
-      .notNull()
-      .references(() => cardSets.code),
-    collectorNumber: integer("collector_number").notNull(),
-    name: text().notNull(),
     cleanName: text("clean_name").notNull(),
     energy: integer(),
     might: integer(),
     power: integer(),
     rulesTextRich: text("rules_text_rich").notNull(),
     rulesTextPlain: text("rules_text_plain").notNull(),
-    flavourText: text("flavour_text"),
     orientation: text().notNull(),
+    typeId: text("type_id")
+      .notNull()
+      .references(() => cardTypes.id),
+    supertypeId: text("supertype_id").references(() => cardSupertypes.id),
+    championName: text("champion_name"),
+  },
+  (table) => [
+    index("card_clean_name").on(table.cleanName),
+    index("card_champion_name").on(table.championName),
+    index("card_type_id").on(table.typeId),
+  ],
+);
+
+const cardPrintings = sqliteTable(
+  "card_printing",
+  {
+    id: text().primaryKey(),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => cards.id),
+    // A Riftbound ID identifies a card face; multiple printings can share it.
+    riftboundId: text("riftbound_id").notNull(),
+    setCode: text("set_code")
+      .notNull()
+      .references(() => cardSets.code),
+    collectorNumber: integer("collector_number").notNull(),
+    poolCode: text("pool_code"),
+    rarityId: text("rarity_id")
+      .notNull()
+      .references(() => rarities.id),
+    printedName: text("printed_name").notNull(),
     isAlternateArt: integer("is_alternate_art", { mode: "boolean" }).notNull(),
     isOvernumbered: integer("is_overnumbered", { mode: "boolean" }).notNull(),
     isSignature: integer("is_signature", { mode: "boolean" }).notNull(),
-    poolCode: text("pool_code"),
-    championName: text("champion_name"),
-    identityName: text("identity_name").notNull().default(""),
-    isCanonical: integer("is_canonical", { mode: "boolean" }).notNull().default(true),
+    flavourText: text("flavour_text"),
     sourceUpdatedAt: text("source_updated_at").notNull(),
+    isCanonical: integer("is_canonical", { mode: "boolean" }).notNull().default(true),
   },
   (table) => [
-    index("card_set_collector_number").on(table.setCode, table.collectorNumber),
-    index("card_clean_name").on(table.cleanName),
-    index("catalog_card_riftbound_id").on(table.riftboundId),
-    index("catalog_card_champion_name").on(table.championName),
-    index("catalog_card_pool_code").on(table.poolCode),
+    index("card_printing_card_id").on(table.cardId),
+    index("card_printing_set_collector_number").on(table.setCode, table.collectorNumber),
+    index("card_printing_riftbound_id").on(table.riftboundId),
+    index("card_printing_pool_code").on(table.poolCode),
+    index("card_printing_rarity_id").on(table.rarityId),
   ],
 );
 
@@ -52,7 +73,7 @@ const cardSpeeds = sqliteTable(
   {
     cardId: text("card_id")
       .notNull()
-      .references(() => catalogCards.id),
+      .references(() => cards.id),
     speed: text().notNull(),
   },
   (table) => [primaryKey({ columns: [table.cardId, table.speed] })],
@@ -61,22 +82,22 @@ const cardSpeeds = sqliteTable(
 const cardMarketplaceReferences = sqliteTable(
   "card_marketplace_reference",
   {
-    cardId: text("card_id")
+    printingId: text("printing_id")
       .notNull()
-      .references(() => catalogCards.id),
+      .references(() => cardPrintings.id),
     marketplace: text().notNull(),
     externalId: text("external_id").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.cardId, table.marketplace, table.externalId] }),
+    primaryKey({ columns: [table.printingId, table.marketplace, table.externalId] }),
     index("card_marketplace_reference_lookup").on(table.marketplace, table.externalId),
   ],
 );
 
 const cardMedia = sqliteTable("card_media", {
-  cardId: text("card_id")
+  printingId: text("printing_id")
     .primaryKey()
-    .references(() => catalogCards.id),
+    .references(() => cardPrintings.id),
   imageFile: text("image_file").notNull().default(""),
   artist: text(),
   accessibilityText: text("accessibility_text"),
@@ -85,30 +106,13 @@ const cardMedia = sqliteTable("card_media", {
 const cardImageSources = sqliteTable(
   "card_image_source",
   {
-    cardId: text("card_id")
+    printingId: text("printing_id")
       .notNull()
-      .references(() => catalogCards.id),
+      .references(() => cardPrintings.id),
     url: text().notNull(),
     priority: integer().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.cardId, table.url] })],
-);
-
-const cardClassifications = sqliteTable(
-  "card_classification",
-  {
-    cardId: text("card_id")
-      .primaryKey()
-      .references(() => catalogCards.id),
-    typeId: text("type_id")
-      .notNull()
-      .references(() => cardTypes.id),
-    supertypeId: text("supertype_id").references(() => cardSupertypes.id),
-    rarityId: text("rarity_id")
-      .notNull()
-      .references(() => rarities.id),
-  },
-  (table) => [index("card_classification_type_rarity").on(table.typeId, table.rarityId)],
+  (table) => [primaryKey({ columns: [table.printingId, table.url] })],
 );
 
 const cardDomains = sqliteTable(
@@ -116,7 +120,7 @@ const cardDomains = sqliteTable(
   {
     cardId: text("card_id")
       .notNull()
-      .references(() => catalogCards.id),
+      .references(() => cards.id),
     domainId: text("domain_id")
       .notNull()
       .references(() => domains.id),
@@ -132,7 +136,7 @@ const cardTags = sqliteTable(
   {
     cardId: text("card_id")
       .notNull()
-      .references(() => catalogCards.id),
+      .references(() => cards.id),
     tagId: text("tag_id")
       .notNull()
       .references(() => tags.id),
@@ -143,18 +147,28 @@ const cardTags = sqliteTable(
   ],
 );
 
-const catalogCardSelectSchema = createSelectSchema(catalogCards, {
+const cardSelectSchema = createSelectSchema(cards, {
   orientation: cardOrientationSchema,
 });
-const catalogCardInsertSchema = createInsertSchema(catalogCards, {
+const cardInsertSchema = createInsertSchema(cards, {
   id: (schema) => schema.trim().min(1),
-  riftboundId: (schema) => schema.trim().min(1),
-  name: (schema) => schema.trim().min(1),
   cleanName: (schema) => schema.trim().min(1),
   orientation: cardOrientationSchema,
   energy: (schema) => schema.int().nonnegative().nullable(),
   might: (schema) => schema.int().nonnegative().nullable(),
   power: (schema) => schema.int().nonnegative().nullable(),
+  typeId: (schema) => schema.trim().min(1),
+  supertypeId: (schema) => schema.trim().min(1).nullable(),
+});
+
+const cardPrintingSelectSchema = createSelectSchema(cardPrintings);
+const cardPrintingInsertSchema = createInsertSchema(cardPrintings, {
+  id: (schema) => schema.trim().min(1),
+  cardId: (schema) => schema.trim().min(1),
+  riftboundId: (schema) => schema.trim().min(1),
+  rarityId: (schema) => schema.trim().min(1),
+  printedName: (schema) => schema.trim().min(1),
+  collectorNumber: (schema) => schema.int().nonnegative(),
 });
 
 const cardMarketplaceReferenceSelectSchema = createSelectSchema(cardMarketplaceReferences, {
@@ -169,15 +183,13 @@ const cardMediaInsertSchema = createInsertSchema(cardMedia, {
   imageFile: (schema) => schema.trim().min(1),
 });
 
-const cardClassificationSelectSchema = createSelectSchema(cardClassifications);
-const cardClassificationInsertSchema = createInsertSchema(cardClassifications);
 const cardDomainSelectSchema = createSelectSchema(cardDomains);
 const cardDomainInsertSchema = createInsertSchema(cardDomains);
 const cardTagSelectSchema = createSelectSchema(cardTags);
 const cardTagInsertSchema = createInsertSchema(cardTags);
 const cardImageSourceSelectSchema = createSelectSchema(cardImageSources);
 const cardImageSourceInsertSchema = createInsertSchema(cardImageSources, {
-  cardId: (schema) => schema.trim().min(1),
+  printingId: (schema) => schema.trim().min(1),
   url: (schema) => schema.trim().min(1),
   priority: (schema) => schema.int().nonnegative(),
 });
@@ -188,15 +200,13 @@ const cardSpeedInsertSchema = createInsertSchema(cardSpeeds, {
 });
 
 export {
-  cardClassificationInsertSchema,
-  cardClassificationSelectSchema,
-  cardClassifications,
   cardDomainInsertSchema,
   cardDomainSelectSchema,
   cardDomains,
   cardImageSourceInsertSchema,
   cardImageSourceSelectSchema,
   cardImageSources,
+  cardInsertSchema,
   cardMarketplaceReferenceInsertSchema,
   cardMarketplaceReferenceSelectSchema,
   cardMarketplaceReferences,
@@ -204,13 +214,15 @@ export {
   cardMediaInsertSchema,
   cardMediaSelectSchema,
   cardOrientationSchema,
+  cardPrintingInsertSchema,
+  cardPrintingSelectSchema,
+  cardPrintings,
+  cardSelectSchema,
   cardSpeedInsertSchema,
   cardSpeedSelectSchema,
   cardSpeeds,
   cardTagInsertSchema,
   cardTagSelectSchema,
   cardTags,
-  catalogCardInsertSchema,
-  catalogCardSelectSchema,
-  catalogCards,
+  cards,
 };

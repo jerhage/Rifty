@@ -13,14 +13,15 @@ const decks = sqliteTable(
     notes: text().notNull().default(""),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
-    chosenChampionRiftboundId: text("chosen_champion_riftbound_id"),
+    chosenChampionCardId: text("chosen_champion_card_id"),
   },
   (table) => [index("deck_updated_at").on(table.updatedAt)],
 );
 
 /**
- * Aggregates a card's quantity within one deck section. `cardRiftboundId` is intentionally not a
- * foreign key: catalog reseeds may replace catalog rows, but must never alter saved deck entries.
+ * Aggregates a printing's quantity within one deck section. `cardId` and `printingId` are
+ * intentionally not foreign keys: catalog reseeds may replace catalog rows, but must never alter
+ * saved deck entries.
  */
 const deckCards = sqliteTable(
   "deck_card",
@@ -29,13 +30,14 @@ const deckCards = sqliteTable(
       .notNull()
       .references(() => decks.id, { onDelete: "cascade" }),
     section: text().notNull(),
-    cardRiftboundId: text("card_riftbound_id").notNull(),
+    cardId: text("card_id").notNull(),
+    printingId: text("printing_id").notNull(),
     quantity: integer().notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.deckId, table.section, table.cardRiftboundId] }),
+    primaryKey({ columns: [table.deckId, table.section, table.cardId, table.printingId] }),
     check("deck_card_quantity_positive", sql`${table.quantity} > 0`),
-    index("deck_card_riftbound_id").on(table.cardRiftboundId),
+    index("deck_card_copy_limit").on(table.deckId, table.cardId),
   ],
 );
 
@@ -46,7 +48,7 @@ const deckInsertSchema = createInsertSchema(decks, {
   notes: (schema) => schema,
   createdAt: (schema) => schema.trim().min(1),
   updatedAt: (schema) => schema.trim().min(1),
-  chosenChampionRiftboundId: (schema) => schema.trim().min(1),
+  chosenChampionCardId: (schema) => schema.trim().min(1),
 });
 const deckCardSelectSchema = createSelectSchema(deckCards, {
   section: deckSectionSchema,
@@ -54,7 +56,8 @@ const deckCardSelectSchema = createSelectSchema(deckCards, {
 const deckCardInsertSchema = createInsertSchema(deckCards, {
   deckId: (schema) => schema.trim().min(1),
   section: deckSectionSchema,
-  cardRiftboundId: (schema) => schema.trim().min(1),
+  cardId: (schema) => schema.trim().min(1),
+  printingId: (schema) => schema.trim().min(1),
   quantity: (schema) => schema.int().positive(),
 });
 

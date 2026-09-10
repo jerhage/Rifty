@@ -474,6 +474,32 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
+  it("finds a printing by the name printed on it", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const kaisa = card("kaisa", unleashed.code, {
+      cleanName: "KaiSa Daughter of the Void",
+      collectorNumber: 1,
+      name: "Kai'Sa - Daughter of the Void",
+    });
+    const alternate = card("kaisa-alt", unleashed.code, {
+      cardId: kaisa.cardId,
+      cleanName: "KaiSa Daughter of the Void",
+      collectorNumber: 2,
+      name: "Kai'Sa - Daughter of the Void (Alternate Art)",
+    });
+    store.seedCard(kaisa);
+    store.seedCard(alternate);
+
+    const criteria = { search: { type: "name", text: "(Alternate Art)" } } as const;
+    const page = await store.cards.getSummaryPage(criteria);
+
+    expect(page.items.map((summary) => summary.id)).toEqual([alternate.id]);
+    await expect(store.cards.count(criteria)).resolves.toBe(page.items.length);
+    store.close();
+  });
+
   it("searches card summaries by name, plain rules text, or both", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");

@@ -1,12 +1,18 @@
 import {
   parseDeckVerification,
-  type CardRiftboundId,
+  type CardId,
   type Deck,
   type DeckLegalityViolation,
   type DeckSection,
   type DeckVerification,
+  type PrintingId,
   type TournamentRuleset,
 } from "./deck";
+
+interface HeldCopies {
+  readonly copies: number;
+  readonly printingIds: PrintingId[];
+}
 
 /** How many cards a zone must hold, and how many copies of one card it will take. */
 interface ZoneRule {
@@ -56,16 +62,17 @@ function copyAllowance(section: DeckSection): number | null {
 function copiesHeldElsewhere(
   deck: Deck,
   section: DeckSection,
-  cardRiftboundId: CardRiftboundId,
+  cardId: CardId,
+  printingId: PrintingId,
 ): number {
   const sharing = sectionsSharingAllowance(section);
 
   return deck.entries
     .filter(
       (entry) =>
-        entry.cardRiftboundId === cardRiftboundId &&
-        entry.section !== section &&
-        sharing.includes(entry.section),
+        entry.cardId === cardId &&
+        sharing.includes(entry.section) &&
+        !(entry.section === section && entry.printingId === printingId),
     )
     .reduce((total, entry) => total + entry.quantity, 0);
 }
@@ -74,13 +81,32 @@ function copiesHeldElsewhere(
 function remainingCopies(
   deck: Deck,
   section: DeckSection,
-  cardRiftboundId: CardRiftboundId,
+  cardId: CardId,
+  printingId: PrintingId,
 ): number | null {
   const allowance = copyAllowance(section);
 
   if (allowance === null) return null;
 
-  return Math.max(0, allowance - copiesHeldElsewhere(deck, section, cardRiftboundId));
+  return Math.max(0, allowance - copiesHeldElsewhere(deck, section, cardId, printingId));
+}
+
+function copiesByCard(deck: Deck, sections: readonly DeckSection[]): Map<CardId, HeldCopies> {
+  const held = new Map<CardId, HeldCopies>();
+
+  for (const entry of deck.entries) {
+    if (!sections.includes(entry.section)) continue;
+
+    const current = held.get(entry.cardId);
+    held.set(entry.cardId, {
+      copies: (current?.copies ?? 0) + entry.quantity,
+      printingIds: current?.printingIds.includes(entry.printingId)
+        ? current.printingIds
+        : [...(current?.printingIds ?? []), entry.printingId],
+    });
+  }
+
+  return held;
 }
 
 function verifyDeck(deck: Deck, ruleset: TournamentRuleset): DeckVerification {
@@ -119,9 +145,9 @@ function singletonViolations(
 
 /** The chosen champion is a main deck card, so the deck has to actually hold a copy of it. */
 function championViolations(deck: Deck): readonly DeckLegalityViolation[] {
-  const cardRiftboundId = deck.chosenChampionRiftboundId;
+  const cardId = deck.chosenChampionCardId;
 
-  if (cardRiftboundId === null) {
+  if (cardId === null) {
     return [
       {
         type: "deckConstraint",
@@ -132,7 +158,7 @@ function championViolations(deck: Deck): readonly DeckLegalityViolation[] {
   }
 
   const held = deck.entries.some(
-    (entry) => entry.section === "mainDeck" && entry.cardRiftboundId === cardRiftboundId,
+    (entry) => entry.section === "mainDeck" && entry.cardId === cardId,
   );
 
   return held
@@ -140,7 +166,8 @@ function championViolations(deck: Deck): readonly DeckLegalityViolation[] {
     : [
         {
           type: "cardConstraint",
-          cardRiftboundId,
+          cardId,
+          printingIds: [],
           rule: "chosenChampion-in-main-deck",
           message: "Your Chosen Champion has to be one of the main deck's cards.",
         },
@@ -160,14 +187,15 @@ function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolat
   }
 
   if (rule.copyLimit !== null && !SHARED_COPY_SECTIONS.includes(rule.section)) {
-    for (const entry of deck.entries) {
-      if (entry.section !== rule.section || entry.quantity <= rule.copyLimit) continue;
+    for (const [cardId, held] of copiesByCard(deck, [rule.section])) {
+      if (held.copies <= rule.copyLimit) continue;
 
       violations.push({
         type: "cardConstraint",
-        cardRiftboundId: entry.cardRiftboundId,
+        cardId,
+        printingIds: held.printingIds,
         rule: `${rule.section}-copy-limit`,
-        message: `${rule.label} allows ${copiesLabel(rule.copyLimit)} of a card. This one has ${entry.quantity}.`,
+        message: `${rule.label} allows ${copiesLabel(rule.copyLimit)} of a card. This one has ${held.copies}.`,
       });
     }
   }
@@ -176,24 +204,14 @@ function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolat
 }
 
 function sharedCopyViolations(deck: Deck): readonly DeckLegalityViolation[] {
-  const copiesByCard = new Map<CardRiftboundId, number>();
-
-  for (const entry of deck.entries) {
-    if (!SHARED_COPY_SECTIONS.includes(entry.section)) continue;
-
-    copiesByCard.set(
-      entry.cardRiftboundId,
-      (copiesByCard.get(entry.cardRiftboundId) ?? 0) + entry.quantity,
-    );
-  }
-
-  return [...copiesByCard]
-    .filter(([, copies]) => copies > SHARED_COPY_LIMIT)
-    .map(([cardRiftboundId, copies]) => ({
+  return [...copiesByCard(deck, SHARED_COPY_SECTIONS)]
+    .filter(([, held]) => held.copies > SHARED_COPY_LIMIT)
+    .map(([cardId, held]) => ({
       type: "cardConstraint" as const,
-      cardRiftboundId,
+      cardId,
+      printingIds: held.printingIds,
       rule: "shared-copy-limit",
-      message: `Main deck and sideboard share a limit of ${SHARED_COPY_LIMIT} copies. This card has ${copies}.`,
+      message: `Main deck and sideboard share a limit of ${SHARED_COPY_LIMIT} copies. This card has ${held.copies}.`,
     }));
 }
 

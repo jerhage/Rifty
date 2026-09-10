@@ -10,18 +10,18 @@ import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-reposi
 import { SqliteKeywordRepository } from "@/infrastructure/sqlite/sqlite-keyword-repository";
 import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
 
-interface CatalogDataStore {
+interface ReferenceDataStore {
   readonly cards: CardRepository;
   readonly keywords: KeywordLister;
   readonly sets: SetRepository;
 }
 
-/** Supplies catalog repository capabilities backed by the app database. */
-function createCatalogDataStore(
+/** Supplies card, keyword, and set repository capabilities backed by the app database. */
+function createReferenceDataStore(
   database: SQLite.SQLiteDatabase,
   logger: Logger,
   imageBaseUrl: string,
-): CatalogDataStore {
+): ReferenceDataStore {
   const db = drizzle(database, { logger: new DrizzleLoggerAdapter(logger) });
   return {
     cards: new SqliteCardRepository(db, imageBaseUrl),
@@ -30,5 +30,5 @@ function createCatalogDataStore(
   };
 }
 
-export { createCatalogDataStore };
-export type { CatalogDataStore };
+export { createReferenceDataStore };
+export type { ReferenceDataStore };

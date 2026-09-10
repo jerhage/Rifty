@@ -6,39 +6,42 @@ import { drizzle } from "drizzle-orm/node-sqlite";
 import type { Card } from "@/features/card/card";
 import type { CardSet } from "@/features/set/card-set";
 import type { Deck } from "@/features/deck/deck/deck";
-import type { CatalogDataStore } from "@/infrastructure/database/catalog-data-store";
+import type { ReferenceDataStore } from "@/infrastructure/database/reference-data-store";
 import type { DeckDataStore } from "@/infrastructure/database/deck-data-store";
 import {
   cardKeywordTargets,
   cardKeywords,
   keywords,
-} from "@/infrastructure/database/catalog-schema/keywords";
+} from "@/infrastructure/database/reference-schema/keywords";
 import { deckCards, decks } from "@/infrastructure/database/deck-schema/decks";
 import {
-  cardClassifications,
   cardDomains,
   cardMarketplaceReferences,
   cardImageSources,
   cardMedia,
+  cardPrintings,
   cardSpeeds,
   cardTags,
-  catalogCards,
-} from "@/infrastructure/database/catalog-schema/cards";
-import { cardSets, setMarketplaceReferences } from "@/infrastructure/database/catalog-schema/sets";
+  cards,
+} from "@/infrastructure/database/reference-schema/cards";
+import {
+  cardSets,
+  setMarketplaceReferences,
+} from "@/infrastructure/database/reference-schema/sets";
 import {
   cardSupertypes,
   cardTypes,
   domains,
   rarities,
   tags,
-} from "@/infrastructure/database/catalog-schema/taxonomy";
+} from "@/infrastructure/database/reference-schema/taxonomy";
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
 import { SqliteDeckRepository } from "@/infrastructure/sqlite/sqlite-deck-repository";
 import { SqliteKeywordRepository } from "@/infrastructure/sqlite/sqlite-keyword-repository";
 import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
 
 /** The real engine and committed migrations, holding both catalog and deck tables. */
-interface SqliteScenarioStore extends CatalogDataStore {
+interface SqliteScenarioStore extends ReferenceDataStore {
   readonly deckStore: DeckDataStore;
   close(): void;
   seedCard(card: Card): void;
@@ -54,6 +57,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
   applyMigrations(client);
 
   const database = drizzle({ client });
+  const seededCardIds = new Set<string>();
   let nextCardKeywordId = 1;
 
   function seedSet(cardSet: CardSet): void {
@@ -115,45 +119,34 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         .run();
     }
 
+    if (!seededCardIds.has(card.cardId)) {
+      seededCardIds.add(card.cardId);
+      seedCardIdentity(card);
+    }
+
     database
-      .insert(catalogCards)
+      .insert(cardPrintings)
       .values({
         id: card.id,
+        cardId: card.cardId,
         riftboundId: card.riftboundId,
         setCode: card.setCode,
         collectorNumber: card.collectorNumber,
-        name: card.name,
-        cleanName: card.cleanName,
-        energy: card.attributes.energy,
-        might: card.attributes.might,
-        power: card.attributes.power,
-        rulesTextRich: card.rulesText.rich,
-        rulesTextPlain: card.rulesText.plain,
-        flavourText: card.rulesText.flavour,
-        orientation: card.orientation,
+        poolCode: null,
+        rarityId: card.classification.rarityId,
+        printedName: card.name,
         isAlternateArt: card.isAlternateArt,
         isOvernumbered: card.isOvernumbered,
         isSignature: card.isSignature,
-        poolCode: null,
-        championName: card.championName,
-        identityName: card.identityName,
-        isCanonical: true,
+        flavourText: card.rulesText.flavour,
         sourceUpdatedAt: card.sourceUpdatedAt,
-      })
-      .run();
-    database
-      .insert(cardClassifications)
-      .values({
-        cardId: card.id,
-        typeId: card.classification.typeId,
-        supertypeId: card.classification.supertypeId,
-        rarityId: card.classification.rarityId,
+        isCanonical: true,
       })
       .run();
     database
       .insert(cardMedia)
       .values({
-        cardId: card.id,
+        printingId: card.id,
         imageFile: `${card.riftboundId}.webp`,
         artist: null,
         accessibilityText: null,
@@ -161,7 +154,38 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
       .run();
     database
       .insert(cardImageSources)
-      .values({ cardId: card.id, url: card.imageUrl, priority: 0 })
+      .values({ printingId: card.id, url: card.imageUrl, priority: 0 })
+      .run();
+    if (card.marketplaceReferences.length > 0) {
+      database
+        .insert(cardMarketplaceReferences)
+        .values(
+          card.marketplaceReferences.map((reference) => ({
+            printingId: card.id,
+            marketplace: reference.marketplace,
+            externalId: reference.externalId,
+          })),
+        )
+        .run();
+    }
+  }
+
+  function seedCardIdentity(card: Card): void {
+    database
+      .insert(cards)
+      .values({
+        id: card.cardId,
+        cleanName: card.cleanName,
+        energy: card.attributes.energy,
+        might: card.attributes.might,
+        power: card.attributes.power,
+        rulesTextRich: card.rulesText.rich,
+        rulesTextPlain: card.rulesText.plain,
+        orientation: card.orientation,
+        typeId: card.classification.typeId,
+        supertypeId: card.classification.supertypeId,
+        championName: card.championName,
+      })
       .run();
     for (const keyword of card.keywords) {
       database
@@ -175,7 +199,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         .insert(cardKeywords)
         .values({
           id: cardKeywordId,
-          cardId: card.id,
+          cardId: card.cardId,
           keywordId: keyword.id,
           value: keyword.value,
         })
@@ -197,32 +221,20 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
     if (card.speeds.length > 0) {
       database
         .insert(cardSpeeds)
-        .values(card.speeds.map((speed) => ({ cardId: card.id, speed })))
+        .values(card.speeds.map((speed) => ({ cardId: card.cardId, speed })))
         .run();
     }
 
     if (card.domainIds.length > 0) {
       database
         .insert(cardDomains)
-        .values(card.domainIds.map((domainId) => ({ cardId: card.id, domainId })))
+        .values(card.domainIds.map((domainId) => ({ cardId: card.cardId, domainId })))
         .run();
     }
     if (card.tagIds.length > 0) {
       database
         .insert(cardTags)
-        .values(card.tagIds.map((tagId) => ({ cardId: card.id, tagId })))
-        .run();
-    }
-    if (card.marketplaceReferences.length > 0) {
-      database
-        .insert(cardMarketplaceReferences)
-        .values(
-          card.marketplaceReferences.map((reference) => ({
-            cardId: card.id,
-            marketplace: reference.marketplace,
-            externalId: reference.externalId,
-          })),
-        )
+        .values(card.tagIds.map((tagId) => ({ cardId: card.cardId, tagId })))
         .run();
     }
   }
@@ -236,6 +248,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         notes: deck.notes,
         createdAt: deck.createdAt,
         updatedAt: deck.updatedAt,
+        chosenChampionCardId: deck.chosenChampionCardId,
       })
       .run();
 
@@ -246,7 +259,8 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
           deck.entries.map((entry) => ({
             deckId: deck.id,
             section: entry.section,
-            cardRiftboundId: entry.cardRiftboundId,
+            cardId: entry.cardId,
+            printingId: entry.printingId,
             quantity: entry.quantity,
           })),
         )

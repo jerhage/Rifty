@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   exists,
+  getTableColumns,
   gte,
   inArray,
   lte,
@@ -27,22 +28,32 @@ import { Page } from "@/shared/page";
 import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
 import type { CardRepository } from "@/features/card/card-repository";
 import {
-  cardClassifications,
   cardDomains,
   cardMarketplaceReferences,
   cardMedia,
+  cardPrintings,
   cardSpeeds,
   cardTags,
-  catalogCards,
-} from "@/infrastructure/database/catalog-schema/cards";
+  cards,
+} from "@/infrastructure/database/reference-schema/cards";
 import {
   cardKeywordTargets,
   cardKeywords,
   keywords,
-} from "@/infrastructure/database/catalog-schema/keywords";
+} from "@/infrastructure/database/reference-schema/keywords";
 
 import { toDomainCard, toDomainCardSummary } from "./card-mapper";
 import type { SqliteDatabase } from "./sqlite-database";
+
+const PRINTED_CARD_COLUMNS = {
+  card: getTableColumns(cards),
+  printing: getTableColumns(cardPrintings),
+};
+
+interface PrintedCardRow {
+  readonly card: typeof cards.$inferSelect;
+  readonly printing: typeof cardPrintings.$inferSelect;
+}
 
 class SqliteCardRepository implements CardRepository {
   constructor(
@@ -52,7 +63,12 @@ class SqliteCardRepository implements CardRepository {
 
   async get(id: CardId, { signal }: ReadOptions = {}): Promise<Card | null> {
     throwIfAborted(signal);
-    const [row] = await this.db.select().from(catalogCards).where(eq(catalogCards.id, id)).limit(1);
+    const [row] = await this.db
+      .select(PRINTED_CARD_COLUMNS)
+      .from(cardPrintings)
+      .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
+      .where(eq(cardPrintings.id, id))
+      .limit(1);
     throwIfAborted(signal);
     if (!row) return null;
 
@@ -63,7 +79,8 @@ class SqliteCardRepository implements CardRepository {
     throwIfAborted(signal);
     const [row] = await this.db
       .select({ total: count() })
-      .from(catalogCards)
+      .from(cardPrintings)
+      .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
       .where(and(...this.#conditionsFor(criteria)));
 
     return row?.total ?? 0;
@@ -80,8 +97,9 @@ class SqliteCardRepository implements CardRepository {
     throwIfAborted(signal);
     const { limit, offset } = pagination(criteria);
     const rows = await this.db
-      .select()
-      .from(catalogCards)
+      .select(PRINTED_CARD_COLUMNS)
+      .from(cardPrintings)
+      .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
       .where(and(...this.#conditionsFor(criteria)))
       .orderBy(...this.#orderBy(criteria))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
@@ -102,16 +120,17 @@ class SqliteCardRepository implements CardRepository {
 
     const rows = await this.db
       .select({
-        card: {
-          id: catalogCards.id,
-          riftboundId: catalogCards.riftboundId,
-          name: catalogCards.name,
-          orientation: catalogCards.orientation,
+        card: { id: cards.id, orientation: cards.orientation },
+        printing: {
+          id: cardPrintings.id,
+          riftboundId: cardPrintings.riftboundId,
+          printedName: cardPrintings.printedName,
         },
         media: { imageFile: cardMedia.imageFile },
       })
-      .from(catalogCards)
-      .innerJoin(cardMedia, eq(cardMedia.cardId, catalogCards.id))
+      .from(cardPrintings)
+      .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
+      .innerJoin(cardMedia, eq(cardMedia.printingId, cardPrintings.id))
       .where(and(...this.#conditionsFor(criteria)))
       .orderBy(...this.#orderBy(criteria))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
@@ -149,11 +168,11 @@ class SqliteCardRepository implements CardRepository {
     const rows = await this.db
       .select()
       .from(cardDomains)
-      .where(inArray(cardDomains.cardId, [...cardIds]))
+      .where(inArray(cardDomains.cardId, [...new Set(cardIds)]))
       .orderBy(asc(cardDomains.domainId));
     throwIfAborted(signal);
 
-    return groupByCardId(rows);
+    return groupBy(rows, (row) => row.cardId);
   }
 
   async #targetRowsFor(
@@ -174,12 +193,7 @@ class SqliteCardRepository implements CardRepository {
       .orderBy(asc(cardKeywordTargets.targetKind), asc(cardKeywordTargets.allegiance));
     throwIfAborted(signal);
 
-    return rows.reduce((grouped, row) => {
-      const group = grouped.get(row.cardKeywordId);
-      if (group) group.push(row);
-      else grouped.set(row.cardKeywordId, [row]);
-      return grouped;
-    }, new Map<number, (typeof cardKeywordTargets.$inferSelect)[]>());
+    return groupBy(rows, (row) => row.cardKeywordId);
   }
 
   #conditionsFor(criteria: CardListCriteria | undefined): SQL[] {
@@ -187,49 +201,28 @@ class SqliteCardRepository implements CardRepository {
 
     const conditions: SQL[] = [];
     if (criteria.setCodes?.length) {
-      conditions.push(inArray(catalogCards.setCode, criteria.setCodes));
+      conditions.push(inArray(cardPrintings.setCode, criteria.setCodes));
+    }
+    if (criteria.printingIds?.length) {
+      conditions.push(inArray(cardPrintings.id, [...new Set(criteria.printingIds)]));
     }
     if (criteria.riftboundIds?.length) {
-      conditions.push(inArray(catalogCards.riftboundId, [...new Set(criteria.riftboundIds)]));
+      conditions.push(inArray(cardPrintings.riftboundId, [...new Set(criteria.riftboundIds)]));
     }
     if (criteria.typeIds?.length) {
-      conditions.push(
-        inArray(
-          catalogCards.id,
-          this.db
-            .select({ cardId: cardClassifications.cardId })
-            .from(cardClassifications)
-            .where(inArray(cardClassifications.typeId, criteria.typeIds)),
-        ),
-      );
+      conditions.push(inArray(cards.typeId, criteria.typeIds));
     }
     if (criteria.supertypeIds?.length) {
-      conditions.push(
-        inArray(
-          catalogCards.id,
-          this.db
-            .select({ cardId: cardClassifications.cardId })
-            .from(cardClassifications)
-            .where(inArray(cardClassifications.supertypeId, criteria.supertypeIds)),
-        ),
-      );
+      conditions.push(inArray(cards.supertypeId, criteria.supertypeIds));
     }
     if (criteria.rarityIds?.length) {
-      conditions.push(
-        inArray(
-          catalogCards.id,
-          this.db
-            .select({ cardId: cardClassifications.cardId })
-            .from(cardClassifications)
-            .where(inArray(cardClassifications.rarityId, criteria.rarityIds)),
-        ),
-      );
+      conditions.push(inArray(cardPrintings.rarityId, criteria.rarityIds));
     }
     if (criteria.domainIds?.length) {
       const domainIds = [...new Set(criteria.domainIds)];
       conditions.push(
         inArray(
-          catalogCards.id,
+          cards.id,
           this.db
             .select({ cardId: cardDomains.cardId })
             .from(cardDomains)
@@ -242,7 +235,7 @@ class SqliteCardRepository implements CardRepository {
     if (criteria.anyDomainIds?.length) {
       conditions.push(
         inArray(
-          catalogCards.id,
+          cards.id,
           this.db
             .select({ cardId: cardDomains.cardId })
             .from(cardDomains)
@@ -253,7 +246,7 @@ class SqliteCardRepository implements CardRepository {
     if (criteria.withinDomainIds?.length) {
       conditions.push(
         notInArray(
-          catalogCards.id,
+          cards.id,
           this.db
             .select({ cardId: cardDomains.cardId })
             .from(cardDomains)
@@ -269,7 +262,7 @@ class SqliteCardRepository implements CardRepository {
             .from(cardKeywords)
             .where(
               and(
-                eq(cardKeywords.cardId, catalogCards.id),
+                eq(cardKeywords.cardId, cards.id),
                 inArray(cardKeywords.keywordId, [...new Set(criteria.keywordIds)]),
               ),
             ),
@@ -277,13 +270,13 @@ class SqliteCardRepository implements CardRepository {
       );
     }
     if (criteria.championNames?.length) {
-      conditions.push(inArray(catalogCards.championName, [...new Set(criteria.championNames)]));
+      conditions.push(inArray(cards.championName, [...new Set(criteria.championNames)]));
     }
     if (criteria.tagIds?.length) {
       const tagIds = [...new Set(criteria.tagIds)];
       conditions.push(
         inArray(
-          catalogCards.id,
+          cards.id,
           this.db
             .select({ cardId: cardTags.cardId })
             .from(cardTags)
@@ -294,11 +287,9 @@ class SqliteCardRepository implements CardRepository {
       );
     }
     if (criteria.energy)
-      conditions.push(this.#numericFilterCondition(catalogCards.energy, criteria.energy));
-    if (criteria.might)
-      conditions.push(this.#numericFilterCondition(catalogCards.might, criteria.might));
-    if (criteria.power)
-      conditions.push(this.#numericFilterCondition(catalogCards.power, criteria.power));
+      conditions.push(this.#numericFilterCondition(cards.energy, criteria.energy));
+    if (criteria.might) conditions.push(this.#numericFilterCondition(cards.might, criteria.might));
+    if (criteria.power) conditions.push(this.#numericFilterCondition(cards.power, criteria.power));
     if (criteria.search) {
       conditions.push(this.#searchCondition(criteria.search));
     }
@@ -312,11 +303,11 @@ class SqliteCardRepository implements CardRepository {
 
     const nameCondition = () =>
       or(
-        sql`instr(lower(${catalogCards.name}), lower(${text})) > 0`,
-        sql`instr(lower(${catalogCards.cleanName}), lower(${text})) > 0`,
+        sql`instr(lower(${cards.id}), lower(${text})) > 0`,
+        sql`instr(lower(${cards.cleanName}), lower(${text})) > 0`,
+        sql`instr(lower(${cardPrintings.printedName}), lower(${text})) > 0`,
       )!;
-    const rulesTextCondition = () =>
-      sql`instr(lower(${catalogCards.rulesTextPlain}), lower(${text})) > 0`;
+    const rulesTextCondition = () => sql`instr(lower(${cards.rulesTextPlain}), lower(${text})) > 0`;
 
     return match(search)
       .with({ type: "name" }, nameCondition)
@@ -326,7 +317,7 @@ class SqliteCardRepository implements CardRepository {
   }
 
   #numericFilterCondition(
-    column: typeof catalogCards.energy | typeof catalogCards.might | typeof catalogCards.power,
+    column: typeof cards.energy | typeof cards.might | typeof cards.power,
     filter: CardNumericFilter,
   ): SQL {
     return match(filter)
@@ -342,14 +333,14 @@ class SqliteCardRepository implements CardRepository {
 
   #orderBy(criteria: CardListCriteria | undefined): SQL[] {
     const catalogOrder = () => [
-      asc(catalogCards.setCode),
-      asc(catalogCards.collectorNumber),
-      asc(catalogCards.id),
+      asc(cardPrintings.setCode),
+      asc(cardPrintings.collectorNumber),
+      asc(cardPrintings.id),
     ];
     const directionFor = (direction: "ascending" | "descending") =>
       direction === "ascending" ? asc : desc;
     const nullableOrder = (
-      column: typeof catalogCards.energy | typeof catalogCards.might | typeof catalogCards.power,
+      column: typeof cards.energy | typeof cards.might | typeof cards.power,
       direction: "ascending" | "descending",
     ) => [asc(sql`case when ${column} is null then 1 else 0 end`), directionFor(direction)(column)];
 
@@ -357,12 +348,10 @@ class SqliteCardRepository implements CardRepository {
 
     return match<CardSort, SQL[]>(criteria.sort)
       .with({ type: "catalogOrder" }, catalogOrder)
-      .with({ type: "name" }, ({ direction }) => [
-        directionFor(direction)(sql`lower(${catalogCards.name})`),
-      ])
-      .with({ type: "energy" }, ({ direction }) => nullableOrder(catalogCards.energy, direction))
-      .with({ type: "might" }, ({ direction }) => nullableOrder(catalogCards.might, direction))
-      .with({ type: "power" }, ({ direction }) => nullableOrder(catalogCards.power, direction))
+      .with({ type: "name" }, ({ direction }) => [directionFor(direction)(sql`lower(${cards.id})`)])
+      .with({ type: "energy" }, ({ direction }) => nullableOrder(cards.energy, direction))
+      .with({ type: "might" }, ({ direction }) => nullableOrder(cards.might, direction))
+      .with({ type: "power" }, ({ direction }) => nullableOrder(cards.power, direction))
       .exhaustive()
       .concat(catalogOrder());
   }
@@ -371,103 +360,96 @@ class SqliteCardRepository implements CardRepository {
    * Loads card aggregates and maps to domain cards. Need to think of a better name
    * */
   async #toDomainCards(
-    rows: readonly (typeof catalogCards.$inferSelect)[],
+    rows: readonly PrintedCardRow[],
     signal: AbortSignal | undefined,
   ): Promise<Card[]> {
     if (rows.length === 0) return [];
 
-    const cardIds = rows.map((row) => row.id);
+    const printingIds = rows.map((row) => row.printing.id);
+    const cardIds = [...new Set(rows.map((row) => row.card.id))];
     // Batch each relation for this page. Otherwise 2 domains * 3 tags * 2 references would produce 12 rows per card in one join
     // and require additional processing for deduping. This is fine for now since we arent' performance limited.
-    const [
-      classifications,
-      media,
-      speeds,
-      cardKeywordRows,
-      domainsByCardId,
-      tags,
-      marketplaceReferences,
-    ] = await Promise.all([
-      this.db
-        .select()
-        .from(cardClassifications)
-        .where(inArray(cardClassifications.cardId, cardIds)),
-      this.db.select().from(cardMedia).where(inArray(cardMedia.cardId, cardIds)),
-      this.db
-        .select()
-        .from(cardSpeeds)
-        .where(inArray(cardSpeeds.cardId, cardIds))
-        .orderBy(asc(cardSpeeds.speed)),
-      this.db
-        .select({
-          cardKeywordId: cardKeywords.id,
-          cardId: cardKeywords.cardId,
-          id: cardKeywords.keywordId,
-          name: keywords.name,
-          value: cardKeywords.value,
-        })
-        .from(cardKeywords)
-        .innerJoin(keywords, eq(keywords.id, cardKeywords.keywordId))
-        .where(inArray(cardKeywords.cardId, cardIds))
-        .orderBy(asc(keywords.name), asc(cardKeywords.id)),
-      this.#domainRowsFor(cardIds, signal),
-      this.db
-        .select()
-        .from(cardTags)
-        .where(inArray(cardTags.cardId, cardIds))
-        .orderBy(asc(cardTags.tagId)),
-      this.db
-        .select()
-        .from(cardMarketplaceReferences)
-        .where(inArray(cardMarketplaceReferences.cardId, cardIds))
-        .orderBy(
-          asc(cardMarketplaceReferences.marketplace),
-          asc(cardMarketplaceReferences.externalId),
-        ),
-    ]);
+    const [media, speeds, cardKeywordRows, domainsByCardId, tags, marketplaceReferences] =
+      await Promise.all([
+        this.db.select().from(cardMedia).where(inArray(cardMedia.printingId, printingIds)),
+        this.db
+          .select()
+          .from(cardSpeeds)
+          .where(inArray(cardSpeeds.cardId, cardIds))
+          .orderBy(asc(cardSpeeds.speed)),
+        this.db
+          .select({
+            cardKeywordId: cardKeywords.id,
+            cardId: cardKeywords.cardId,
+            id: cardKeywords.keywordId,
+            name: keywords.name,
+            value: cardKeywords.value,
+          })
+          .from(cardKeywords)
+          .innerJoin(keywords, eq(keywords.id, cardKeywords.keywordId))
+          .where(inArray(cardKeywords.cardId, cardIds))
+          .orderBy(asc(keywords.name), asc(cardKeywords.id)),
+        this.#domainRowsFor(cardIds, signal),
+        this.db
+          .select()
+          .from(cardTags)
+          .where(inArray(cardTags.cardId, cardIds))
+          .orderBy(asc(cardTags.tagId)),
+        this.db
+          .select()
+          .from(cardMarketplaceReferences)
+          .where(inArray(cardMarketplaceReferences.printingId, printingIds))
+          .orderBy(
+            asc(cardMarketplaceReferences.marketplace),
+            asc(cardMarketplaceReferences.externalId),
+          ),
+      ]);
     throwIfAborted(signal);
     const targetsByCardKeywordId = await this.#targetRowsFor(cardKeywordRows, signal);
-    const classificationsByCardId = new Map(classifications.map((row) => [row.cardId, row]));
-    const mediaByCardId = new Map(media.map((row) => [row.cardId, row]));
-    const speedsByCardId = groupByCardId(speeds);
-    const keywordsByCardId = groupByCardId(
+    const mediaByPrintingId = new Map(media.map((row) => [row.printingId, row]));
+    const speedsByCardId = groupBy(speeds, (row) => row.cardId);
+    const keywordsByCardId = groupBy(
       cardKeywordRows.map((row) => ({
         ...row,
         targets: targetsByCardKeywordId.get(row.cardKeywordId) ?? [],
       })),
+      (row) => row.cardId,
     );
-    const tagsByCardId = groupByCardId(tags);
-    const marketplaceReferencesByCardId = groupByCardId(marketplaceReferences);
+    const tagsByCardId = groupBy(tags, (row) => row.cardId);
+    const marketplaceReferencesByPrintingId = groupBy(
+      marketplaceReferences,
+      (row) => row.printingId,
+    );
 
-    return rows.map((card) => {
-      const classification = classificationsByCardId.get(card.id);
-      const mediaRow = mediaByCardId.get(card.id);
-      if (!classification || !mediaRow) {
-        throw new Error(`Catalog card ${card.id} is missing required related data.`);
+    return rows.map(({ card, printing }) => {
+      const mediaRow = mediaByPrintingId.get(printing.id);
+      if (!mediaRow) {
+        throw new Error(`Catalog card ${printing.id} is missing required related data.`);
       }
 
       return toDomainCard({
         card,
-        classification,
+        printing,
         media: mediaRow,
         imageBaseUrl: this.imageBaseUrl,
         speeds: speedsByCardId.get(card.id) ?? [],
         keywords: keywordsByCardId.get(card.id) ?? [],
         domains: domainsByCardId.get(card.id) ?? [],
         tags: tagsByCardId.get(card.id) ?? [],
-        marketplaceReferences: marketplaceReferencesByCardId.get(card.id) ?? [],
+        marketplaceReferences: marketplaceReferencesByPrintingId.get(printing.id) ?? [],
       });
     });
   }
 }
 
-function groupByCardId<Row extends { cardId: string }>(rows: readonly Row[]): Map<string, Row[]> {
+function groupBy<Row, Key>(rows: readonly Row[], keyOf: (row: Row) => Key): Map<Key, Row[]> {
   return rows.reduce((grouped, row) => {
-    const group = grouped.get(row.cardId);
+    const key = keyOf(row);
+    const group = grouped.get(key);
     if (group) group.push(row);
-    else grouped.set(row.cardId, [row]);
+    else grouped.set(key, [row]);
     return grouped;
-  }, new Map<string, Row[]>());
+  }, new Map<Key, Row[]>());
 }
 
 function pagination(criteria: Pick<CardListCriteria, "limit" | "offset"> | undefined): {

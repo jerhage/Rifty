@@ -1,4 +1,4 @@
-import { deckGroups } from "@/features/deck/presentation/deck-contents";
+import { chosenChampionCard, deckGroups } from "@/features/deck/presentation/deck-contents";
 
 import { card, carriedKeyword } from "../card/fixtures";
 import { deck } from "./fixtures";
@@ -41,13 +41,13 @@ const big = card("big", "OGN", {
 
 const cards = [legend, champion, cheap, mid, big];
 const built = deck("d1", {
-  chosenChampionRiftboundId: champion.riftboundId,
+  chosenChampionCardId: champion.cardId,
   entries: [
-    { section: "legend", cardRiftboundId: legend.riftboundId, quantity: 1 },
-    { section: "mainDeck", cardRiftboundId: champion.riftboundId, quantity: 1 },
-    { section: "mainDeck", cardRiftboundId: cheap.riftboundId, quantity: 3 },
-    { section: "mainDeck", cardRiftboundId: mid.riftboundId, quantity: 2 },
-    { section: "sideboard", cardRiftboundId: big.riftboundId, quantity: 1 },
+    { section: "legend", cardId: legend.cardId, printingId: legend.id, quantity: 1 },
+    { section: "mainDeck", cardId: champion.cardId, printingId: champion.id, quantity: 1 },
+    { section: "mainDeck", cardId: cheap.cardId, printingId: cheap.id, quantity: 3 },
+    { section: "mainDeck", cardId: mid.cardId, printingId: mid.id, quantity: 2 },
+    { section: "sideboard", cardId: big.cardId, printingId: big.id, quantity: 1 },
   ],
 });
 
@@ -63,5 +63,28 @@ describe("deck contents", () => {
 
   it("drops entries whose card is missing from the catalog", () => {
     expect(deckGroups(built, [cheap]).map((group) => group.title)).toEqual(["Units"]);
+  });
+
+  it("resolves each entry against its own printing when two printings share a riftbound id", () => {
+    const alternate = { ...cheap, id: "cheap-alt", name: "Cheap Unit (Alternate Art)" };
+    const mixed = deck("d2", {
+      entries: [
+        { section: "mainDeck", cardId: cheap.cardId, printingId: cheap.id, quantity: 2 },
+        { section: "mainDeck", cardId: alternate.cardId, printingId: alternate.id, quantity: 1 },
+      ],
+    });
+
+    expect(
+      deckGroups(mixed, [cheap, alternate]).flatMap((group) =>
+        group.cards.map((held) => [held.card.id, held.quantity]),
+      ),
+    ).toEqual([
+      ["cheap", 2],
+      ["cheap-alt", 1],
+    ]);
+  });
+
+  it("names the chosen champion's own printing", () => {
+    expect(chosenChampionCard(built, cards)?.id).toBe(champion.id);
   });
 });

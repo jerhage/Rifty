@@ -11,10 +11,10 @@ describe("deck storage scenarios", () => {
       name: "Ember Tempo",
       notes: "Fast board pressure.",
       entries: [
-        { section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 3 },
-        { section: "legend", cardRiftboundId: "ogn-003", quantity: 1 },
-        { section: "battlefield", cardRiftboundId: "ogn-100", quantity: 2 },
-        { section: "sideboard", cardRiftboundId: "ogn-050", quantity: 1 },
+        { section: "mainDeck", cardId: "Ember Adept", printingId: "ogn-014", quantity: 3 },
+        { section: "legend", cardId: "Ember Legend", printingId: "ogn-003", quantity: 1 },
+        { section: "battlefield", cardId: "Ember Field", printingId: "ogn-100", quantity: 2 },
+        { section: "sideboard", cardId: "Ember Answer", printingId: "ogn-050", quantity: 1 },
       ],
     });
     store.seedDeck(tempo);
@@ -26,10 +26,10 @@ describe("deck storage scenarios", () => {
       deck: {
         ...tempo,
         entries: [
-          { section: "battlefield", cardRiftboundId: "ogn-100", quantity: 2 },
-          { section: "legend", cardRiftboundId: "ogn-003", quantity: 1 },
-          { section: "mainDeck", cardRiftboundId: "ogn-014", quantity: 3 },
-          { section: "sideboard", cardRiftboundId: "ogn-050", quantity: 1 },
+          { section: "battlefield", cardId: "Ember Field", printingId: "ogn-100", quantity: 2 },
+          { section: "legend", cardId: "Ember Legend", printingId: "ogn-003", quantity: 1 },
+          { section: "mainDeck", cardId: "Ember Adept", printingId: "ogn-014", quantity: 3 },
+          { section: "sideboard", cardId: "Ember Answer", printingId: "ogn-050", quantity: 1 },
         ],
       },
     });

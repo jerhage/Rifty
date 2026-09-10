@@ -1,6 +1,6 @@
 import type { CardCopy } from "@/features/analysis/card-copy";
 import type { Card } from "@/features/catalog/card/card";
-import type { CardType } from "@/features/catalog/value-objects/card-type";
+import type { CardType } from "@/features/card/value-objects/card-type";
 import type { Deck, DeckSection } from "@/features/deck/deck/deck";
 
 interface DeckGroup {

@@ -7,7 +7,7 @@ import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/catalog/card/card";
-import { ORDERED_DOMAINS, type CardDomain } from "@/features/catalog/value-objects/card-domain";
+import { ORDERED_DOMAINS, type CardDomain } from "@/features/card/value-objects/card-domain";
 import { useDomainColors } from "@/hooks/use-theme";
 
 import type { DeckBuildStep } from "../../../deck-build-steps";

@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 
-import { marketplaceReferenceSchema } from "../value-objects/marketplace-reference";
-import { setCodeSchema } from "../value-objects/set-code";
+import { marketplaceReferenceSchema } from "@/features/card/value-objects/marketplace-reference";
+import { setCodeSchema } from "@/features/card/value-objects/set-code";
 
 const cardSetSchema = z.object({
   code: setCodeSchema,

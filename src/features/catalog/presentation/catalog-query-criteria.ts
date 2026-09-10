@@ -4,7 +4,7 @@ import type {
   CardListCriteria,
   CardNumericFilter,
 } from "@/features/catalog/card/card-list-criteria";
-import type { SetCode } from "@/features/catalog/value-objects/set-code";
+import type { SetCode } from "@/features/card/value-objects/set-code";
 
 /** The catalog query as the UI holds it: everything except the paging the data component owns. */
 type CatalogQueryCriteria = Omit<CardListCriteria, "limit" | "offset">;

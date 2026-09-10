@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { cardDomainSchema } from "../value-objects/card-domain";
+import { cardDomainSchema } from "@/features/card/value-objects/card-domain";
 import { cardIdSchema, cardOrientationSchema } from "./card";
 
 const cardSummarySchema = z.object({

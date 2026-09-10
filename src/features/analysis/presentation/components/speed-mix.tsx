@@ -4,7 +4,7 @@ import { match } from "ts-pattern";
 import { ColorDot } from "@/components/ui/atoms/color-dot";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
-import { cardSpeedName, type CardSpeed } from "@/features/catalog/value-objects/card-speed";
+import { cardSpeedName, type CardSpeed } from "@/features/card/value-objects/card-speed";
 import { useSpeedColors, useTheme } from "@/hooks/use-theme";
 
 import type { SpeedShare } from "../../card-metrics";

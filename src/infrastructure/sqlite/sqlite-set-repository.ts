@@ -1,6 +1,6 @@
 import { asc, eq, inArray } from "drizzle-orm";
 
-import type { SetCode } from "@/features/catalog/value-objects/set-code";
+import type { SetCode } from "@/features/card/value-objects/set-code";
 import type { CardSet } from "@/features/catalog/set/card-set";
 import type { SetRepository } from "@/features/catalog/set/set-repository";
 import { cardSets, setMarketplaceReferences } from "@/infrastructure/database/catalog-schema/sets";

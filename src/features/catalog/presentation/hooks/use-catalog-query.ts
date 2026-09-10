@@ -2,8 +2,8 @@ import { useCallback, useMemo, useState } from "react";
 
 import type { CardCounter } from "@/features/catalog/card/card-counter";
 import type { CardSummaryLister } from "@/features/catalog/card/card-summary-lister";
-import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
-import type { CardType } from "@/features/catalog/value-objects/card-type";
+import type { CardDomain } from "@/features/card/value-objects/card-domain";
+import type { CardType } from "@/features/card/value-objects/card-type";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 import type { CatalogQueryCriteria } from "../catalog-query-criteria";

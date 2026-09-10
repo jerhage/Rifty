@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { CardCounter } from "@/features/catalog/card/card-counter";
 import type { CardLister } from "@/features/catalog/card/card-lister";
 import { CardsData, type CardsDataContent } from "@/features/catalog/presentation/data/cards-data";
-import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
+import type { CardDomain } from "@/features/card/value-objects/card-domain";
 
 import { legendCriteria } from "../deck-zone-pool";
 

@@ -1,7 +1,7 @@
 import { match } from "ts-pattern";
 import { z } from "zod/v4";
-import { cardDomainSchema } from "../src/features/catalog/value-objects/card-domain";
-import { cardTypeSchema } from "../src/features/catalog/value-objects/card-type";
+import { cardDomainSchema } from "../src/features/card/value-objects/card-domain";
+import { cardTypeSchema } from "../src/features/card/value-objects/card-type";
 import {
   cardSpeeds,
   championName,

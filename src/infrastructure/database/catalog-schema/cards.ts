@@ -2,7 +2,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { z } from "zod/v4";
 
-import { cardSpeedSchema } from "../../../features/catalog/value-objects/card-speed";
+import { cardSpeedSchema } from "../../../features/card/value-objects/card-speed";
 
 import { cardSets, marketplaceSchema } from "./sets";
 import { cardSupertypes, cardTypes, domains, rarities, tags } from "./taxonomy";

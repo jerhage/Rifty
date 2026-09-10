@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
+import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import { useDomainColors } from "@/hooks/use-theme";
 
 /**

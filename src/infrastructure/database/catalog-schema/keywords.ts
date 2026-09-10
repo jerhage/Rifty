@@ -1,8 +1,8 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-import { keywordAllegianceSchema } from "../../../features/catalog/value-objects/keyword-allegiance";
-import { keywordTargetKindSchema } from "../../../features/catalog/value-objects/keyword-target-kind";
+import { keywordAllegianceSchema } from "../../../features/card/value-objects/keyword-allegiance";
+import { keywordTargetKindSchema } from "../../../features/card/value-objects/keyword-target-kind";
 import { catalogCards } from "./cards";
 
 const keywords = sqliteTable("keyword", {

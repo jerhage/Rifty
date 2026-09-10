@@ -1,7 +1,7 @@
 import type { Card } from "@/features/catalog/card/card";
 import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
-import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
-import type { CardType } from "@/features/catalog/value-objects/card-type";
+import type { CardDomain } from "@/features/card/value-objects/card-domain";
+import type { CardType } from "@/features/card/value-objects/card-type";
 import type { DeckSection } from "@/features/deck/deck/deck";
 import { ZONE_RULES } from "@/features/deck/deck/deck-legality";
 

@@ -1,4 +1,4 @@
-import type { SetCode } from "../../value-objects/set-code";
+import type { SetCode } from "@/features/card/value-objects/set-code";
 import type { CardSet } from "../card-set";
 import type { SetFinder } from "../set-finder";
 

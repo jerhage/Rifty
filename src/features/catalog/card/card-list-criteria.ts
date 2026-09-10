@@ -1,9 +1,9 @@
 import { z } from "zod/v4";
 
-import { setCodeSchema } from "../value-objects/set-code";
-import { cardDomainSchema } from "../value-objects/card-domain";
-import { cardTypeSchema } from "../value-objects/card-type";
-import { taxonomyIdSchema } from "../value-objects/taxonomy-id";
+import { setCodeSchema } from "@/features/card/value-objects/set-code";
+import { cardDomainSchema } from "@/features/card/value-objects/card-domain";
+import { cardTypeSchema } from "@/features/card/value-objects/card-type";
+import { taxonomyIdSchema } from "@/features/card/value-objects/taxonomy-id";
 
 const cardSearchSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("name"), text: z.string().trim().min(1) }),

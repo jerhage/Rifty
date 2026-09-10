@@ -9,8 +9,8 @@ import { SheetFace } from "@/components/ui/atoms/sheet-face";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/catalog/keyword/keyword";
-import { ORDERED_DOMAINS, type CardDomain } from "@/features/catalog/value-objects/card-domain";
-import type { CardType } from "@/features/catalog/value-objects/card-type";
+import { ORDERED_DOMAINS, type CardDomain } from "@/features/card/value-objects/card-domain";
+import type { CardType } from "@/features/card/value-objects/card-type";
 import type { DeckSection } from "@/features/deck/deck/deck";
 import { useDomainColors, useKeywordColor, useTheme } from "@/hooks/use-theme";
 

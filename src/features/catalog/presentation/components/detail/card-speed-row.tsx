@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
 import { Spacing } from "@/constants/theme";
-import { cardSpeedName, type CardSpeed } from "@/features/catalog/value-objects/card-speed";
+import { cardSpeedName, type CardSpeed } from "@/features/card/value-objects/card-speed";
 import { useSpeedColors } from "@/hooks/use-theme";
 
 import { DetailPill } from "./detail-pill";

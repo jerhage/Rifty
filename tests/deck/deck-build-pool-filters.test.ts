@@ -156,7 +156,7 @@ describe("deck build pool filters", () => {
     expect(result.current.draftPoolFilters.keywordIds).toEqual([]);
   });
 
-  it("leaves the search text alone when the zone changes", async () => {
+  it("clears the search text when the zone changes", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.setPoolQuery("volibear"));
@@ -165,9 +165,12 @@ describe("deck build pool filters", () => {
     });
 
     await act(() => result.current.setZone("runeDeck"));
+    await act(() => {
+      jest.advanceTimersByTime(300);
+    });
 
-    expect(result.current.poolQuery).toBe("volibear");
-    expect(result.current.debouncedPoolQuery).toBe("volibear");
+    expect(result.current.poolQuery).toBe("");
+    expect(result.current.debouncedPoolQuery).toBe("");
   });
 
   it("keeps the search field live, debounced rather than deferred to the sheet", async () => {

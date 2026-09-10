@@ -93,6 +93,7 @@ function useDeckBuild(
       setStepIndex(index);
       if (DECK_BUILD_STEPS[index]?.id === "zones") {
         settlePoolFilters(defaultPoolFilters(draft.legend));
+        setPoolQuery("");
       }
     },
     [draft.legend, settlePoolFilters],
@@ -107,6 +108,7 @@ function useDeckBuild(
     (section: DeckSection) => {
       setZoneState(section);
       settlePoolFilters(defaultPoolFilters(draft.legend));
+      setPoolQuery("");
     },
     [draft.legend, settlePoolFilters],
   );

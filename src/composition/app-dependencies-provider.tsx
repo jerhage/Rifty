@@ -1,23 +1,28 @@
 import { createContext, type PropsWithChildren, useContext, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { createAppDependencies, type AppDependencies } from "./dependencies";
+
+type AppStartup =
+  | { readonly type: "opening" }
+  | { readonly type: "failed"; readonly error: Error }
+  | { readonly type: "ready"; readonly dependencies: AppDependencies };
 
 const AppDependenciesContext = createContext<AppDependencies | null>(null);
 
 function AppDependenciesProvider({ children }: PropsWithChildren) {
-  const [dependencies, setDependencies] = useState<AppDependencies | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+  const [startup, setStartup] = useState<AppStartup>({ type: "opening" });
 
   useEffect(() => {
     let isCurrent = true;
     void createAppDependencies()
-      .then((loadedDependencies) => {
-        if (isCurrent) setDependencies(loadedDependencies);
+      .then((dependencies) => {
+        if (isCurrent) setStartup({ dependencies, type: "ready" });
       })
       .catch((caughtError: unknown) => {
         console.error("Could not open the card catalog.", caughtError);
-        if (isCurrent) setError(asError(caughtError));
+        if (isCurrent) setStartup({ error: asError(caughtError), type: "failed" });
       });
 
     return () => {
@@ -25,27 +30,23 @@ function AppDependenciesProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  if (error) {
-    return (
-      <View style={styles.centered}>
-        <Text>Could not open your card catalog.</Text>
-      </View>
-    );
-  }
-
-  if (!dependencies) {
-    return (
+  return match(startup)
+    .with({ type: "opening" }, () => (
       <View style={styles.centered}>
         <ActivityIndicator />
       </View>
-    );
-  }
-
-  return (
-    <AppDependenciesContext.Provider value={dependencies}>
-      {children}
-    </AppDependenciesContext.Provider>
-  );
+    ))
+    .with({ type: "failed" }, () => (
+      <View style={styles.centered}>
+        <Text>Could not open your card catalog.</Text>
+      </View>
+    ))
+    .with({ type: "ready" }, ({ dependencies }) => (
+      <AppDependenciesContext.Provider value={dependencies}>
+        {children}
+      </AppDependenciesContext.Provider>
+    ))
+    .exhaustive();
 }
 
 function useAppDependencies(): AppDependencies {

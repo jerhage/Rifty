@@ -7,7 +7,7 @@ import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 import { DECK_BUILD_STEPS } from "../../deck-build-steps";
-import type { DeckBuildMode } from "../../hooks/use-deck-build";
+import type { DeckBuildMode } from "../../deck-build-start";
 
 function BuildProgressHeader({
   mode,

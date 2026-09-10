@@ -6,9 +6,6 @@ import type { Card } from "@/features/card/card";
 import type { CardCounter } from "@/features/card/card-counter";
 import type { CardLister } from "@/features/card/card-lister";
 import type { Keyword } from "@/features/card/keyword/keyword";
-import type { CardDomain } from "@/features/card/value-objects/card-domain";
-import type { CardType } from "@/features/card/value-objects/card-type";
-import type { DeckSection, DeckVerification } from "@/features/deck/deck/deck";
 
 import { BuildProgressHeader } from "../components/build/build-progress-header";
 import { ChampionStep } from "../components/build/steps/champion-step";
@@ -18,55 +15,24 @@ import { ZonesStep } from "../components/build/steps/zones-step";
 import { ChampionPoolData } from "../data/champion-pool-data";
 import { LegendPoolData } from "../data/legend-pool-data";
 import { ZonePoolData } from "../data/zone-pool-data";
-import type { DeckBuildDraft, DeckBuildStep } from "../deck-build-steps";
-import type { DeckBuildMode } from "../hooks/use-deck-build";
-import type { ZonePoolFilters, ZonePoolLayout, ZonePoolView } from "../deck-zone-pool";
+import type {
+  DeckBuildStepsState,
+  DeckDraftState,
+  DeckSaveState,
+  LegendSearchState,
+  ZonePoolState,
+} from "../hooks/use-deck-build";
 
 interface DeckBuildScreenProps {
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
-  readonly draft: DeckBuildDraft;
-  readonly draftPoolFilters: ZonePoolFilters;
-  readonly error: string | null;
-  readonly isSaving: boolean;
+  readonly draft: DeckDraftState;
   readonly keywords: readonly Keyword[];
-  readonly legendDomainIds: readonly CardDomain[];
-  readonly isPoolFilterOpen: boolean;
-  /** What the field shows; `legendSearchQuery` is the settled value the query uses. */
-  readonly legendQuery: string;
-  readonly legendSearchQuery: string;
-  readonly mode: DeckBuildMode;
-  readonly onApplyPoolFilters: () => void;
-  readonly onBack: () => void;
-  readonly onChangeLegendQuery: (query: string) => void;
-  readonly onChangeName: (name: string) => void;
-  readonly onChangePoolQuery: (query: string) => void;
-  readonly onDismissPoolFilters: () => void;
-  readonly onEditStep: (index: number) => void;
-  readonly onNext: () => void;
+  readonly legends: LegendSearchState;
   readonly onOpenCard: (card: Card) => void;
-  readonly onOpenPoolFilters: () => void;
-  readonly onResetPoolFilters: () => void;
-  readonly onPickChampion: (card: Card) => void;
-  readonly onPickLegend: (card: Card) => void;
-  readonly onSave: () => void;
-  readonly onSelectPoolLayout: (layout: ZonePoolLayout) => void;
-  readonly onSelectPoolView: (view: ZonePoolView) => void;
-  readonly onSelectZone: (section: DeckSection) => void;
-  readonly onSetQuantity: (section: DeckSection, card: Card, quantity: number) => void;
-  readonly onToggleLegendDomain: (domainId: CardDomain) => void;
-  readonly onTogglePoolDomain: (domainId: CardDomain) => void;
-  readonly onTogglePoolKeyword: (keywordId: string) => void;
-  readonly onTogglePoolType: (typeId: CardType) => void;
-  readonly poolFilters: ZonePoolFilters;
-  readonly poolLayout: ZonePoolLayout;
-  readonly poolQuery: string;
-  readonly poolSearchQuery: string;
-  readonly poolView: ZonePoolView;
-  readonly step: DeckBuildStep;
-  readonly stepIndex: number;
-  readonly verification: DeckVerification;
-  readonly zone: DeckSection;
+  readonly pool: ZonePoolState;
+  readonly saving: DeckSaveState;
+  readonly steps: DeckBuildStepsState;
 }
 
 /**
@@ -77,87 +43,57 @@ function DeckBuildScreen({
   cardCounter,
   cardLister,
   draft,
-  draftPoolFilters,
-  error,
-  isSaving,
-  isPoolFilterOpen,
   keywords,
-  legendDomainIds,
-  legendQuery,
-  legendSearchQuery,
-  mode,
-  onApplyPoolFilters,
-  onBack,
-  onChangeLegendQuery,
-  onChangeName,
-  onChangePoolQuery,
-  onDismissPoolFilters,
-  onEditStep,
-  onNext,
+  legends,
   onOpenCard,
-  onOpenPoolFilters,
-  onPickChampion,
-  onPickLegend,
-  onResetPoolFilters,
-  onSave,
-  onSelectPoolLayout,
-  onSelectPoolView,
-  onSelectZone,
-  onSetQuantity,
-  onToggleLegendDomain,
-  onTogglePoolDomain,
-  onTogglePoolKeyword,
-  onTogglePoolType,
-  poolFilters,
-  poolLayout,
-  poolQuery,
-  poolSearchQuery,
-  poolView,
-  step,
-  stepIndex,
-  verification,
-  zone,
+  pool,
+  saving,
+  steps,
 }: DeckBuildScreenProps) {
   return (
     <ThemedView style={styles.screen}>
-      <BuildProgressHeader mode={mode} onBack={onBack} stepIndex={stepIndex} />
-      {match(step.id)
+      <BuildProgressHeader mode={steps.mode} onBack={steps.back} stepIndex={steps.stepIndex} />
+      {match(steps.step.id)
         .with("legend", () => (
           <LegendPoolData
             cardCounter={cardCounter}
             cardLister={cardLister}
-            domainIds={legendDomainIds}
-            query={legendSearchQuery}
+            domainIds={legends.domainIds}
+            query={legends.searchQuery}
           >
-            {(pool) => (
+            {(legendPool) => (
               <LegendStep
-                legends={pool.cards}
-                onChangeQuery={onChangeLegendQuery}
-                onLoadMore={pool.loadMore}
-                onNext={onNext}
+                legends={legendPool.cards}
+                onChangeQuery={legends.setQuery}
+                onLoadMore={legendPool.loadMore}
+                onNext={steps.next}
                 onOpenCard={onOpenCard}
-                onPick={onPickLegend}
-                onToggleDomain={onToggleLegendDomain}
-                query={legendQuery}
-                selected={draft.legend}
-                selectedDomainIds={legendDomainIds}
-                step={step}
+                onPick={draft.pickLegend}
+                onToggleDomain={legends.toggleDomain}
+                query={legends.query}
+                selected={draft.draft.legend}
+                selectedDomainIds={legends.domainIds}
+                step={steps.step}
               />
             )}
           </LegendPoolData>
         ))
         .with("chosenChampion", () => (
-          <ChampionPoolData cardCounter={cardCounter} cardLister={cardLister} legend={draft.legend}>
-            {(pool) => (
+          <ChampionPoolData
+            cardCounter={cardCounter}
+            cardLister={cardLister}
+            legend={draft.draft.legend}
+          >
+            {(championPool) => (
               <ChampionStep
-                champions={pool.cards}
-                legend={draft.legend}
-                onLoadMore={pool.loadMore}
-                onNext={onNext}
+                champions={championPool.cards}
+                legend={draft.draft.legend}
+                onLoadMore={championPool.loadMore}
+                onNext={steps.next}
                 onOpenCard={onOpenCard}
-                onPick={onPickChampion}
-                selected={draft.chosenChampion}
-                step={step}
+                onPick={draft.pickChampion}
+                selected={draft.draft.chosenChampion}
+                step={steps.step}
               />
             )}
           </ChampionPoolData>
@@ -166,46 +102,46 @@ function DeckBuildScreen({
           <ZonePoolData
             cardCounter={cardCounter}
             cardLister={cardLister}
-            filters={poolFilters}
-            query={poolSearchQuery}
-            zone={zone}
+            filters={pool.filters}
+            query={pool.searchQuery}
+            zone={pool.zone}
           >
-            {(pool) => (
+            {(zonePool) => (
               <>
                 <ZonesStep
-                  draft={draft}
-                  error={error}
-                  isSaving={isSaving}
-                  onChangeName={onChangeName}
-                  onChangePoolQuery={onChangePoolQuery}
-                  onEditStep={onEditStep}
-                  onLoadMorePool={pool.loadMore}
+                  draft={draft.draft}
+                  error={saving.error}
+                  isSaving={saving.isSaving}
+                  onChangeName={draft.changeName}
+                  onChangePoolQuery={pool.setQuery}
+                  onEditStep={steps.goToStep}
+                  onLoadMorePool={zonePool.loadMore}
                   onOpenCard={onOpenCard}
-                  onOpenPoolFilters={onOpenPoolFilters}
-                  onSave={onSave}
-                  onSelectPoolLayout={onSelectPoolLayout}
-                  onSelectPoolView={onSelectPoolView}
-                  onSelectZone={onSelectZone}
-                  onSetQuantity={onSetQuantity}
-                  poolFilters={poolFilters}
-                  poolLayout={poolLayout}
-                  poolQuery={poolQuery}
-                  poolView={poolView}
-                  verification={verification}
-                  zone={zone}
-                  zonePool={pool.cards}
+                  onOpenPoolFilters={pool.openFilters}
+                  onSave={() => void saving.save()}
+                  onSelectPoolLayout={pool.setLayout}
+                  onSelectPoolView={pool.setView}
+                  onSelectZone={pool.setZone}
+                  onSetQuantity={draft.setQuantity}
+                  poolFilters={pool.filters}
+                  poolLayout={pool.layout}
+                  poolQuery={pool.query}
+                  poolView={pool.view}
+                  verification={draft.verification}
+                  zone={pool.zone}
+                  zonePool={zonePool.cards}
                 />
                 <PoolFilterSheet
-                  filters={draftPoolFilters}
-                  isPresented={isPoolFilterOpen}
+                  filters={pool.draftFilters}
+                  isPresented={pool.isFilterOpen}
                   keywords={keywords}
-                  onApply={onApplyPoolFilters}
-                  onDismiss={onDismissPoolFilters}
-                  onReset={onResetPoolFilters}
-                  onToggleDomain={onTogglePoolDomain}
-                  onToggleKeyword={onTogglePoolKeyword}
-                  onToggleType={onTogglePoolType}
-                  zone={zone}
+                  onApply={pool.applyFilters}
+                  onDismiss={pool.dismissFilters}
+                  onReset={pool.resetFilters}
+                  onToggleDomain={pool.toggleDomain}
+                  onToggleKeyword={pool.toggleKeyword}
+                  onToggleType={pool.toggleType}
+                  zone={pool.zone}
                 />
               </>
             )}

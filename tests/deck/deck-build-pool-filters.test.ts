@@ -1,11 +1,11 @@
 import { act, renderHook } from "@testing-library/react-native";
 
 import { activePoolFilterCount, poolCriteria } from "@/features/deck/presentation/deck-zone-pool";
-import {
-  useDeckBuild,
-  type DeckBuildCapabilities,
-  type DeckBuildStart,
-} from "@/features/deck/presentation/hooks/use-deck-build";
+import type {
+  DeckBuildCapabilities,
+  DeckBuildStart,
+} from "@/features/deck/presentation/deck-build-start";
+import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
 import { fixedClock, sequentialIds } from "./fixtures";
 
@@ -31,22 +31,22 @@ describe("deck build pool filters", () => {
   it("edits the draft without touching the applied filters or the pool query", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("shield"));
-    await act(() => result.current.togglePoolDomain("Fury"));
-    await act(() => result.current.togglePoolType("Spell"));
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("shield"));
+    await act(() => result.current.pool.toggleDomain("Fury"));
+    await act(() => result.current.pool.toggleType("Spell"));
 
-    expect(result.current.draftPoolFilters.keywordIds).toEqual(["shield"]);
-    expect(result.current.draftPoolFilters.domainIds).toEqual(["Fury"]);
-    expect(result.current.draftPoolFilters.typeIds).toEqual(["Spell"]);
-    expect(result.current.poolFilters.keywordIds).toEqual([]);
-    expect(result.current.poolFilters.domainIds).toEqual([]);
-    expect(result.current.poolFilters.typeIds).toEqual([]);
+    expect(result.current.pool.draftFilters.keywordIds).toEqual(["shield"]);
+    expect(result.current.pool.draftFilters.domainIds).toEqual(["Fury"]);
+    expect(result.current.pool.draftFilters.typeIds).toEqual(["Spell"]);
+    expect(result.current.pool.filters.keywordIds).toEqual([]);
+    expect(result.current.pool.filters.domainIds).toEqual([]);
+    expect(result.current.pool.filters.typeIds).toEqual([]);
 
     const criteria = poolCriteria(
-      result.current.zone,
-      result.current.poolFilters,
-      result.current.debouncedPoolQuery,
+      result.current.pool.zone,
+      result.current.pool.filters,
+      result.current.pool.searchQuery,
     );
     expect(criteria.keywordIds).toBeUndefined();
     expect(criteria.anyDomainIds).toBeUndefined();
@@ -56,17 +56,17 @@ describe("deck build pool filters", () => {
   it("commits the draft when the sheet is confirmed", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("shield"));
-    await act(() => result.current.applyPoolFilters());
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("shield"));
+    await act(() => result.current.pool.applyFilters());
 
-    expect(result.current.poolFilters.keywordIds).toEqual(["shield"]);
-    expect(result.current.isPoolFilterOpen).toBe(false);
+    expect(result.current.pool.filters.keywordIds).toEqual(["shield"]);
+    expect(result.current.pool.isFilterOpen).toBe(false);
     expect(
       poolCriteria(
-        result.current.zone,
-        result.current.poolFilters,
-        result.current.debouncedPoolQuery,
+        result.current.pool.zone,
+        result.current.pool.filters,
+        result.current.pool.searchQuery,
       ).keywordIds,
     ).toEqual(["shield"]);
   });
@@ -74,123 +74,123 @@ describe("deck build pool filters", () => {
   it("discards the draft when the sheet is dismissed without confirming", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("shield"));
-    await act(() => result.current.applyPoolFilters());
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("shield"));
+    await act(() => result.current.pool.applyFilters());
 
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("tank"));
-    await act(() => result.current.togglePoolDomain("Calm"));
-    await act(() => result.current.dismissPoolFilters());
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("tank"));
+    await act(() => result.current.pool.toggleDomain("Calm"));
+    await act(() => result.current.pool.dismissFilters());
 
-    expect(result.current.poolFilters.keywordIds).toEqual(["shield"]);
-    expect(result.current.poolFilters.domainIds).toEqual([]);
-    expect(result.current.draftPoolFilters.keywordIds).toEqual(["shield"]);
-    expect(result.current.draftPoolFilters.domainIds).toEqual([]);
+    expect(result.current.pool.filters.keywordIds).toEqual(["shield"]);
+    expect(result.current.pool.filters.domainIds).toEqual([]);
+    expect(result.current.pool.draftFilters.keywordIds).toEqual(["shield"]);
+    expect(result.current.pool.draftFilters.domainIds).toEqual([]);
   });
 
   it("reopens the sheet on the applied filters rather than an abandoned draft", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolType("Gear"));
-    await act(() => result.current.dismissPoolFilters());
-    await act(() => result.current.openPoolFilters());
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleType("Gear"));
+    await act(() => result.current.pool.dismissFilters());
+    await act(() => result.current.pool.openFilters());
 
-    expect(result.current.draftPoolFilters.typeIds).toEqual([]);
+    expect(result.current.pool.draftFilters.typeIds).toEqual([]);
   });
 
   it("resets only the draft, leaving the pool as it is until confirmed", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("shield"));
-    await act(() => result.current.applyPoolFilters());
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("shield"));
+    await act(() => result.current.pool.applyFilters());
 
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.resetPoolFilters());
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.resetFilters());
 
-    expect(result.current.draftPoolFilters.keywordIds).toEqual([]);
-    expect(result.current.poolFilters.keywordIds).toEqual(["shield"]);
+    expect(result.current.pool.draftFilters.keywordIds).toEqual([]);
+    expect(result.current.pool.filters.keywordIds).toEqual(["shield"]);
   });
 
   it("leaves the search text alone when the filters are reset", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.setPoolQuery("volibear"));
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("shield"));
-    await act(() => result.current.resetPoolFilters());
+    await act(() => result.current.pool.setQuery("volibear"));
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("shield"));
+    await act(() => result.current.pool.resetFilters());
 
-    expect(result.current.draftPoolFilters.keywordIds).toEqual([]);
-    expect(result.current.poolQuery).toBe("volibear");
+    expect(result.current.pool.draftFilters.keywordIds).toEqual([]);
+    expect(result.current.pool.query).toBe("volibear");
   });
 
   it("counts the applied filters on the badge, not the ones being chosen", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("shield"));
-    await act(() => result.current.togglePoolType("Spell"));
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("shield"));
+    await act(() => result.current.pool.toggleType("Spell"));
 
-    expect(activePoolFilterCount(result.current.poolFilters)).toBe(0);
-    expect(activePoolFilterCount(result.current.draftPoolFilters)).toBe(2);
+    expect(activePoolFilterCount(result.current.pool.filters)).toBe(0);
+    expect(activePoolFilterCount(result.current.pool.draftFilters)).toBe(2);
 
-    await act(() => result.current.applyPoolFilters());
+    await act(() => result.current.pool.applyFilters());
 
-    expect(activePoolFilterCount(result.current.poolFilters)).toBe(2);
+    expect(activePoolFilterCount(result.current.pool.filters)).toBe(2);
   });
 
   it("clears both the applied filters and the draft when the zone changes", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("shield"));
-    await act(() => result.current.applyPoolFilters());
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("tank"));
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("shield"));
+    await act(() => result.current.pool.applyFilters());
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("tank"));
 
-    await act(() => result.current.setZone("runeDeck"));
+    await act(() => result.current.pool.setZone("runeDeck"));
 
-    expect(result.current.poolFilters.keywordIds).toEqual([]);
-    expect(result.current.draftPoolFilters.keywordIds).toEqual([]);
+    expect(result.current.pool.filters.keywordIds).toEqual([]);
+    expect(result.current.pool.draftFilters.keywordIds).toEqual([]);
   });
 
   it("clears the search text when the zone changes", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.setPoolQuery("volibear"));
+    await act(() => result.current.pool.setQuery("volibear"));
     await act(() => {
       jest.advanceTimersByTime(300);
     });
 
-    await act(() => result.current.setZone("runeDeck"));
+    await act(() => result.current.pool.setZone("runeDeck"));
     await act(() => {
       jest.advanceTimersByTime(300);
     });
 
-    expect(result.current.poolQuery).toBe("");
-    expect(result.current.debouncedPoolQuery).toBe("");
+    expect(result.current.pool.query).toBe("");
+    expect(result.current.pool.searchQuery).toBe("");
   });
 
   it("keeps the search field live, debounced rather than deferred to the sheet", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.setPoolQuery("volibear"));
+    await act(() => result.current.pool.setQuery("volibear"));
 
-    expect(result.current.poolQuery).toBe("volibear");
-    expect(result.current.debouncedPoolQuery).toBe("");
+    expect(result.current.pool.query).toBe("volibear");
+    expect(result.current.pool.searchQuery).toBe("");
 
     await act(() => {
       jest.advanceTimersByTime(300);
     });
 
-    expect(result.current.debouncedPoolQuery).toBe("volibear");
+    expect(result.current.pool.searchQuery).toBe("volibear");
     expect(
       poolCriteria(
-        result.current.zone,
-        result.current.poolFilters,
-        result.current.debouncedPoolQuery,
+        result.current.pool.zone,
+        result.current.pool.filters,
+        result.current.pool.searchQuery,
       ).search,
     ).toEqual({
       type: "nameOrRulesText",
@@ -201,12 +201,12 @@ describe("deck build pool filters", () => {
   it("keeps the search text through a confirmed sheet", async () => {
     const { result } = await renderBuild();
 
-    await act(() => result.current.setPoolQuery("volibear"));
-    await act(() => result.current.openPoolFilters());
-    await act(() => result.current.togglePoolKeyword("shield"));
-    await act(() => result.current.applyPoolFilters());
+    await act(() => result.current.pool.setQuery("volibear"));
+    await act(() => result.current.pool.openFilters());
+    await act(() => result.current.pool.toggleKeyword("shield"));
+    await act(() => result.current.pool.applyFilters());
 
-    expect(result.current.poolQuery).toBe("volibear");
-    expect(result.current.poolFilters.keywordIds).toEqual(["shield"]);
+    expect(result.current.pool.query).toBe("volibear");
+    expect(result.current.pool.filters.keywordIds).toEqual(["shield"]);
   });
 });

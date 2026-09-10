@@ -20,8 +20,8 @@ interface CatalogSortOption {
   readonly ascendingLabel: string;
 }
 
-const SORT_OPTIONS: readonly CatalogSortOption[] = [
-  {
+const SORT_OPTIONS_BY_ID: Readonly<Record<CatalogSortId, CatalogSortOption>> = {
+  catalogOrder: {
     id: "catalogOrder",
     label: "Catalog order",
     note: "set and collector number",
@@ -29,7 +29,7 @@ const SORT_OPTIONS: readonly CatalogSortOption[] = [
     descendingLabel: "Last set first",
     ascendingLabel: "First set first",
   },
-  {
+  name: {
     id: "name",
     label: "Name",
     note: "alphabetical",
@@ -37,7 +37,7 @@ const SORT_OPTIONS: readonly CatalogSortOption[] = [
     descendingLabel: "Z → A",
     ascendingLabel: "A → Z",
   },
-  {
+  energy: {
     id: "energy",
     label: "Energy cost",
     note: "curve position",
@@ -45,7 +45,7 @@ const SORT_OPTIONS: readonly CatalogSortOption[] = [
     descendingLabel: "Most expensive",
     ascendingLabel: "Cheapest first",
   },
-  {
+  might: {
     id: "might",
     label: "Might",
     note: "body size",
@@ -53,7 +53,7 @@ const SORT_OPTIONS: readonly CatalogSortOption[] = [
     descendingLabel: "Biggest first",
     ascendingLabel: "Smallest first",
   },
-  {
+  power: {
     id: "power",
     label: "Power",
     note: "power value",
@@ -61,7 +61,19 @@ const SORT_OPTIONS: readonly CatalogSortOption[] = [
     descendingLabel: "Highest first",
     ascendingLabel: "Lowest first",
   },
+};
+
+const SORT_OPTIONS: readonly CatalogSortOption[] = [
+  SORT_OPTIONS_BY_ID.catalogOrder,
+  SORT_OPTIONS_BY_ID.name,
+  SORT_OPTIONS_BY_ID.energy,
+  SORT_OPTIONS_BY_ID.might,
+  SORT_OPTIONS_BY_ID.power,
 ];
+
+function sortOptionForId(id: CatalogSortId): CatalogSortOption {
+  return SORT_OPTIONS_BY_ID[id];
+}
 
 /**
  * Catalog order is carried as an absent sort rather than an explicit one, which is how the catalog
@@ -72,9 +84,7 @@ function sortIdOf(sort: CardSort | undefined): CatalogSortId {
 }
 
 function sortOptionFor(sort: CardSort | undefined): CatalogSortOption {
-  const id = sortIdOf(sort);
-
-  return SORT_OPTIONS.find((option) => option.id === id) ?? SORT_OPTIONS[0];
+  return sortOptionForId(sortIdOf(sort));
 }
 
 function sortDirectionOf(sort: CardSort | undefined): CardSortDirection | null {
@@ -103,11 +113,9 @@ function buildSort(id: CatalogSortId, direction: CardSortDirection): CardSort | 
 
 /** Choosing an attribute adopts its natural direction rather than keeping the previous one. */
 function sortForId(id: CatalogSortId): CardSort | undefined {
-  const option = SORT_OPTIONS.find((candidate) => candidate.id === id);
+  const { defaultDirection } = sortOptionForId(id);
 
-  return option?.defaultDirection === null || option === undefined
-    ? undefined
-    : buildSort(id, option.defaultDirection);
+  return defaultDirection === null ? undefined : buildSort(id, defaultDirection);
 }
 
 function sortWithDirection(

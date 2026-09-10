@@ -6,21 +6,13 @@ import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
-import {
-  abilityCardCount,
-  energyCurve,
-  keywordMix,
-  speedMix,
-} from "@/features/analysis/card-metrics";
-import { AttributeCurve } from "@/features/analysis/presentation/components/attribute-curve";
-import { KeywordTally } from "@/features/analysis/presentation/components/keyword-tally";
-import { SpeedMix } from "@/features/analysis/presentation/components/speed-mix";
 import type { Card } from "@/features/card/card";
 import type { Deck, DeckVerification } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 
-import { DeckCardRow } from "../components/detail/deck-card-row";
-import { MAIN_DECK_SECTIONS, MAIN_DECK_WITH_LEGEND, deckCards, deckGroups } from "../deck-contents";
+import { DeckAnalysisPanels } from "../components/detail/deck-analysis-panels";
+import { DeckSectionGroup } from "../components/detail/deck-section-group";
+import { deckGroups } from "../deck-contents";
 import { legalityColor, outstandingFixesLabel } from "../deck-legality-format";
 import { deckCountLabel, editedLabel } from "../deck-summary-format";
 
@@ -46,9 +38,6 @@ function DeckDetailScreen({
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const groups = deckGroups(deck, cards);
-  const mainDeckCopies = deckCards(deck, cards, MAIN_DECK_SECTIONS);
-  const abilityCopies = deckCards(deck, cards, MAIN_DECK_WITH_LEGEND);
-  const abilityCards = abilityCardCount(abilityCopies);
 
   return (
     <ThemedView style={styles.screen}>
@@ -87,29 +76,10 @@ function DeckDetailScreen({
           <Button label="Draw sim" onPress={onDrawSimulation} variant="secondary" />
         </View>
 
-        <View style={styles.panels}>
-          <AttributeCurve buckets={energyCurve(mainDeckCopies)} title="Energy curve" />
-          <SpeedMix cardCount={abilityCards} speeds={speedMix(abilityCopies)} />
-          <KeywordTally cardCount={abilityCards} mix={keywordMix(abilityCopies)} />
-        </View>
+        <DeckAnalysisPanels cards={cards} deck={deck} />
 
         {groups.map((group) => (
-          <View key={group.title} style={styles.group}>
-            <View style={styles.groupHeader}>
-              <ThemedText type="heading">{group.title}</ThemedText>
-              <ThemedText themeColor="textTertiary" type="mono">
-                {group.count}
-              </ThemedText>
-            </View>
-            {group.cards.map((held) => (
-              <DeckCardRow
-                card={held.card}
-                key={held.card.printingId}
-                onOpenCard={onOpenCard}
-                quantity={held.quantity}
-              />
-            ))}
-          </View>
+          <DeckSectionGroup group={group} key={group.title} onOpenCard={onOpenCard} />
         ))}
 
         {groups.length === 0 ? <EmptyState message="This deck has no cards yet." /> : null}
@@ -154,19 +124,5 @@ const styles = StyleSheet.create({
   drawSimulation: {
     alignItems: "flex-start",
     marginTop: Spacing.three,
-  },
-  panels: {
-    gap: Spacing.two + 2,
-    marginTop: Spacing.three,
-  },
-  group: {
-    gap: Spacing.two - 1,
-    marginTop: Spacing.four,
-  },
-  groupHeader: {
-    alignItems: "baseline",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: Spacing.one,
   },
 });

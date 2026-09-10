@@ -1,11 +1,9 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
-import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { Spacing } from "@/constants/theme";
+import { ErrorState } from "@/components/ui/atoms/error-state";
+import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Card } from "@/features/card/card";
 import type { CardListCriteria } from "@/features/card/card-list-criteria";
 import type { CardCounter } from "@/features/card/card-counter";
@@ -43,16 +41,12 @@ function CardsData({ cardCounter, cardLister, children, criteria }: CardsDataPro
   });
 
   return match(state)
-    .with({ type: "loading" }, () => (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator />
-      </ThemedView>
-    ))
+    .with({ type: "loading" }, () => <LoadingState />)
     .with({ type: "loadFailed" }, () => (
-      <ThemedView style={styles.centered}>
-        <ThemedText type="body">Could not load cards.</ThemedText>
-        <Button label="Try again" onPress={reload} variant="secondary" />
-      </ThemedView>
+      <ErrorState
+        action={<Button label="Try again" onPress={reload} variant="secondary" />}
+        message="Could not load cards."
+      />
     ))
     .with({ type: "success" }, (loaded) =>
       children({
@@ -70,12 +64,3 @@ function CardsData({ cardCounter, cardLister, children, criteria }: CardsDataPro
 
 export { CardsData };
 export type { CardsDataContent };
-
-const styles = StyleSheet.create({
-  centered: {
-    alignItems: "center",
-    flex: 1,
-    gap: Spacing.three,
-    justifyContent: "center",
-  },
-});

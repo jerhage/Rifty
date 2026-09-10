@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
-import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { Spacing } from "@/constants/theme";
+import { ErrorState } from "@/components/ui/atoms/error-state";
+import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
 import { listKeywords, type ListKeywordsResult } from "@/features/card/use-cases/list-keywords";
@@ -23,27 +21,10 @@ function KeywordsData({ children, keywordLister }: KeywordsDataProps) {
   );
 
   return match(result)
-    .with({ type: "loading" }, () => (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator />
-      </ThemedView>
-    ))
-    .with({ type: "listFailed" }, () => (
-      <ThemedView style={styles.centered}>
-        <ThemedText>Could not load keywords.</ThemedText>
-      </ThemedView>
-    ))
+    .with({ type: "loading" }, () => <LoadingState />)
+    .with({ type: "listFailed" }, () => <ErrorState message="Could not load keywords." />)
     .with({ type: "success" }, ({ keywords }) => children(keywords))
     .exhaustive();
 }
 
 export { KeywordsData };
-
-const styles = StyleSheet.create({
-  centered: {
-    alignItems: "center",
-    flex: 1,
-    gap: Spacing.two,
-    justifyContent: "center",
-  },
-});

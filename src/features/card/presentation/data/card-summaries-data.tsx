@@ -1,11 +1,9 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
-import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { Spacing } from "@/constants/theme";
+import { ErrorState } from "@/components/ui/atoms/error-state";
+import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { CardCounter } from "@/features/card/card-counter";
 import type { CardSummaryLister } from "@/features/card/card-summary-lister";
 import type { CardSummary } from "@/features/card/card-summary";
@@ -41,16 +39,12 @@ function CardSummariesData({ cardCounter, cardSummaryLister, children }: CardSum
   });
 
   return match(state)
-    .with({ type: "loading" }, () => (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator />
-      </ThemedView>
-    ))
+    .with({ type: "loading" }, () => <LoadingState />)
     .with({ type: "loadFailed" }, () => (
-      <ThemedView style={styles.centered}>
-        <ThemedText>Could not load cards.</ThemedText>
-        <Button label="Try again" onPress={reload} variant="link" />
-      </ThemedView>
+      <ErrorState
+        action={<Button label="Try again" onPress={reload} variant="link" />}
+        message="Could not load cards."
+      />
     ))
     .with({ type: "success" }, (loadedState) =>
       children({
@@ -69,12 +63,3 @@ function CardSummariesData({ cardCounter, cardSummaryLister, children }: CardSum
 
 export { CardSummariesData };
 export type { CardSummariesDataContent, CardSummariesDataProps };
-
-const styles = StyleSheet.create({
-  centered: {
-    alignItems: "center",
-    flex: 1,
-    gap: Spacing.two,
-    justifyContent: "center",
-  },
-});

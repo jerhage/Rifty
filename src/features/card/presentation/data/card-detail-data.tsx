@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
-import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { ThemedView } from "@/components/ui/atoms/themed-view";
+import { ErrorState } from "@/components/ui/atoms/error-state";
+import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Card } from "@/features/card/card";
 import type { CardFinder } from "@/features/card/card-finder";
 import { findCard, type FindCardResult } from "@/features/card/use-cases/find-card";
@@ -26,28 +25,12 @@ function CardDetailData({ cardFinder, cardId, children }: CardDetailDataProps) {
   );
 
   return match(result)
-    .with({ type: "loading" }, () => (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator />
-      </ThemedView>
-    ))
-    .with({ type: "notFound" }, () => (
-      <ThemedView style={styles.centered}>
-        <ThemedText>Card not found.</ThemedText>
-      </ThemedView>
-    ))
-    .with({ type: "loadFailed" }, () => (
-      <ThemedView style={styles.centered}>
-        <ThemedText>Could not load this card.</ThemedText>
-      </ThemedView>
-    ))
+    .with({ type: "loading" }, () => <LoadingState />)
+    .with({ type: "notFound" }, () => <ErrorState message="Card not found." />)
+    .with({ type: "loadFailed" }, () => <ErrorState message="Could not load this card." />)
     .with({ type: "success" }, ({ card }) => children(card))
     .exhaustive();
 }
 
 export { CardDetailData };
 export type { CardDetailDataContent, CardDetailDataProps };
-
-const styles = StyleSheet.create({
-  centered: { alignItems: "center", flex: 1, justifyContent: "center" },
-});

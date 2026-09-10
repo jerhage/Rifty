@@ -1,11 +1,9 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
-import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { Spacing } from "@/constants/theme";
+import { ErrorState } from "@/components/ui/atoms/error-state";
+import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
 import { listDecks, type ListDecksResult } from "@/features/deck/deck/use-cases/list-decks";
@@ -29,16 +27,12 @@ function DecksData({ children, deckLister }: DecksDataProps) {
   );
 
   return match(result)
-    .with({ type: "loading" }, () => (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator />
-      </ThemedView>
-    ))
+    .with({ type: "loading" }, () => <LoadingState />)
     .with({ type: "listFailed" }, () => (
-      <ThemedView style={styles.centered}>
-        <ThemedText type="body">Could not load your decks.</ThemedText>
-        <Button label="Try again" onPress={reload} variant="secondary" />
-      </ThemedView>
+      <ErrorState
+        action={<Button label="Try again" onPress={reload} variant="secondary" />}
+        message="Could not load your decks."
+      />
     ))
     .with({ type: "success" }, ({ decks }) => children({ decks, reload }))
     .exhaustive();
@@ -46,12 +40,3 @@ function DecksData({ children, deckLister }: DecksDataProps) {
 
 export { DecksData };
 export type { DecksDataContent };
-
-const styles = StyleSheet.create({
-  centered: {
-    alignItems: "center",
-    flex: 1,
-    gap: Spacing.three,
-    justifyContent: "center",
-  },
-});

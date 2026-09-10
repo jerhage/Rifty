@@ -10,11 +10,11 @@ import { DeckDetailScreen } from "@/features/deck/presentation/screens/deck-deta
 
 function DeckDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { catalog, decks } = useAppDependencies();
+  const { cards: cardDependencies, decks } = useAppDependencies();
 
   return (
     <DeckDetailData
-      cardLister={catalog.cardRepository}
+      cardLister={cardDependencies.cardRepository}
       deckFinder={decks.deckRepository}
       deckId={id}
     >

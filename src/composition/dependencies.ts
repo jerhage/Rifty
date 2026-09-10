@@ -12,9 +12,12 @@ import { MathRandomSource } from "@/infrastructure/random/math-random-source";
 import { SystemClock } from "@/infrastructure/time/system-clock";
 import { withQueryLogging } from "@/infrastructure/logging/with-query-logging";
 
-interface CatalogDependencies {
+interface CardDependencies {
   readonly cardRepository: CardRepository;
   readonly keywordLister: KeywordLister;
+}
+
+interface CatalogDependencies {
   readonly setRepository: SetRepository;
 }
 
@@ -23,6 +26,7 @@ interface DeckDependencies {
 }
 
 interface AppDependencies {
+  readonly cards: CardDependencies;
   readonly catalog: CatalogDependencies;
   readonly clock: Clock;
   readonly decks: DeckDependencies;
@@ -34,9 +38,11 @@ async function createAppDependencies(): Promise<AppDependencies> {
   const logger = new ConsoleLogger();
   const store = await openAppDataStore(logger);
   return {
-    catalog: {
+    cards: {
       cardRepository: withQueryLogging(store.catalog.cards, logger, "CardRepository"),
       keywordLister: withQueryLogging(store.catalog.keywords, logger, "KeywordLister"),
+    },
+    catalog: {
       setRepository: withQueryLogging(store.catalog.sets, logger, "SetRepository"),
     },
     clock: new SystemClock(),
@@ -49,4 +55,4 @@ async function createAppDependencies(): Promise<AppDependencies> {
 }
 
 export { createAppDependencies };
-export type { AppDependencies, CatalogDependencies, DeckDependencies };
+export type { AppDependencies, CardDependencies, CatalogDependencies, DeckDependencies };

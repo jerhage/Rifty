@@ -2,6 +2,7 @@ import { StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
+import type { CardSummariesDataContent } from "@/features/card/presentation/data/card-summaries-data";
 import type { CardType } from "@/features/card/value-objects/card-type";
 
 import type { CatalogQueryCriteria } from "../catalog-query-criteria";
@@ -9,7 +10,6 @@ import { CardSummaryGrid } from "../components/grid/card-summary-grid";
 import { CardSummaryPageFooter } from "../components/grid/card-summary-page-footer";
 import { CatalogResultBar } from "../components/search/catalog-result-bar";
 import { CatalogSearchHeader } from "../components/search/catalog-search-header";
-import type { CardSummariesDataContent } from "../data/card-summaries-data";
 
 interface CardNameSearchScreenProps extends CardSummariesDataContent {
   readonly criteria: CatalogQueryCriteria;

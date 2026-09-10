@@ -1,6 +1,6 @@
 import { deckGroups } from "@/features/deck/presentation/deck-contents";
 
-import { card, carriedKeyword } from "../catalog/fixtures";
+import { card, carriedKeyword } from "../card/fixtures";
 import { deck } from "./fixtures";
 
 const legend = card("legend", "OGN", {

@@ -6,10 +6,10 @@ import { CardDetailScreen } from "@/features/card/presentation/screens/card-deta
 
 function CardDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { catalog } = useAppDependencies();
+  const { cards } = useAppDependencies();
 
   return (
-    <CardDetailData cardFinder={catalog.cardRepository} cardId={id}>
+    <CardDetailData cardFinder={cards.cardRepository} cardId={id}>
       {(card) => <CardDetailScreen card={card} />}
     </CardDetailData>
   );

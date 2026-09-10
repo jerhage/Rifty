@@ -4,7 +4,7 @@ import {
   poolCriteria,
 } from "@/features/deck/presentation/deck-zone-pool";
 
-import { card } from "../catalog/fixtures";
+import { card } from "../card/fixtures";
 
 const legend = card("legend", "OGN", { domainIds: ["Fury", "Order"] });
 

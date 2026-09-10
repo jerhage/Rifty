@@ -10,7 +10,7 @@ import { DeckBuilder } from "@/features/deck/presentation/deck-builder";
 function DeckBuildRoute() {
   const { deckId } = useLocalSearchParams<{ deckId?: string }>();
   const router = useRouter();
-  const { catalog, clock, decks, idGenerator } = useAppDependencies();
+  const { cards: cardDependencies, clock, decks, idGenerator } = useAppDependencies();
 
   const capabilities = useMemo(
     () => ({
@@ -28,19 +28,19 @@ function DeckBuildRoute() {
   const goBack = useCallback(() => router.back(), [router]);
 
   return (
-    <KeywordsData keywordLister={catalog.keywordLister}>
+    <KeywordsData keywordLister={cardDependencies.keywordLister}>
       {(keywords) =>
         deckId ? (
           <DeckDetailData
-            cardLister={catalog.cardRepository}
+            cardLister={cardDependencies.cardRepository}
             deckFinder={decks.deckRepository}
             deckId={deckId}
           >
             {({ cards, deck }) => (
               <DeckBuilder
                 capabilities={capabilities}
-                cardCounter={catalog.cardRepository}
-                cardLister={catalog.cardRepository}
+                cardCounter={cardDependencies.cardRepository}
+                cardLister={cardDependencies.cardRepository}
                 keywords={keywords}
                 onExit={goBack}
                 onOpenCard={openCard}
@@ -52,8 +52,8 @@ function DeckBuildRoute() {
         ) : (
           <DeckBuilder
             capabilities={capabilities}
-            cardCounter={catalog.cardRepository}
-            cardLister={catalog.cardRepository}
+            cardCounter={cardDependencies.cardRepository}
+            cardLister={cardDependencies.cardRepository}
             keywords={keywords}
             onExit={goBack}
             onOpenCard={openCard}

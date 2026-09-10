@@ -4,8 +4,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Button } from "@/components/ui/atoms/button";
 import { Spacing } from "@/constants/theme";
-
-import type { CardSummariesDataContent } from "../../data/card-summaries-data";
+import type { CardSummariesDataContent } from "@/features/card/presentation/data/card-summaries-data";
 
 function CardSummaryPageFooter({
   isLoadingMore,

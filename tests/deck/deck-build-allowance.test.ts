@@ -12,7 +12,7 @@ import {
   type DeckBuildDraft,
 } from "@/features/deck/presentation/deck-build-steps";
 
-import { card } from "../catalog/fixtures";
+import { card } from "../card/fixtures";
 
 const survivor = card("survivor", "OGN", { name: "Kai'Sa - Survivor" });
 const survivorAlt = card("survivor-alt", "OGN", { name: "Kai'Sa - Survivor (Alternate Art)" });

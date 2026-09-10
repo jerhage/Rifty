@@ -8,7 +8,7 @@ import {
   toggleMulliganSelection,
 } from "@/features/analysis/draw-simulation";
 
-import { card } from "../catalog/fixtures";
+import { card } from "../card/fixtures";
 
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",

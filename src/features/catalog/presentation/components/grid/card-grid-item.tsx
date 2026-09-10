@@ -5,10 +5,9 @@ import { Skeleton } from "@/components/ui/atoms/skeleton";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
+import { CARD_ASPECT_RATIO, CardArt } from "@/features/card/presentation/components/card-art";
+import { DomainBar } from "@/features/card/presentation/components/domain-bar";
 import { useTheme } from "@/hooks/use-theme";
-
-import { CARD_ASPECT_RATIO, CardArt } from "../card-art";
-import { DomainBar } from "../domain-bar";
 
 /** One card in the catalog grid: its face in a fixed frame, with the name beneath. */
 function CardGridItem({

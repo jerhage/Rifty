@@ -7,7 +7,13 @@ import {
   totalPower,
 } from "@/features/analysis/card-metrics";
 
-import { card, carriedKeyword, controllerKeyword, grantedKeyword, tokenKeyword } from "../catalog/fixtures";
+import {
+  card,
+  carriedKeyword,
+  controllerKeyword,
+  grantedKeyword,
+  tokenKeyword,
+} from "../card/fixtures";
 
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",

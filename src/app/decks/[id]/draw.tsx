@@ -7,11 +7,11 @@ import { DrawSimulationScreen } from "@/features/deck/presentation/screens/draw-
 function DrawSimulationRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { catalog, decks, randomSource } = useAppDependencies();
+  const { cards: cardDependencies, decks, randomSource } = useAppDependencies();
 
   return (
     <DeckDetailData
-      cardLister={catalog.cardRepository}
+      cardLister={cardDependencies.cardRepository}
       deckFinder={decks.deckRepository}
       deckId={id}
     >

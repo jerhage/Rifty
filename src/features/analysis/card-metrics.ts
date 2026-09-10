@@ -1,5 +1,7 @@
+import { match, P } from "ts-pattern";
+
 import type { CardCopy } from "@/features/analysis/card-copy";
-import type { Card, CardKeyword } from "@/features/card/card";
+import type { Card, CardKeyword, CardKeywordTarget } from "@/features/card/card";
 import type { CardSpeed } from "@/features/card/value-objects/card-speed";
 
 const SPEED_ORDER: readonly CardSpeed[] = ["normal", "action", "reaction"];
@@ -87,8 +89,20 @@ interface KeywordMix {
   readonly keywords: readonly KeywordShare[];
 }
 
-function benefitsTheDeck(target: CardKeyword["targets"][number]): boolean {
-  return target.kind === "self" || (target.allegiance === "own" && !target.isToken);
+function benefitsTheDeck(target: CardKeywordTarget): boolean {
+  return match(target)
+    .with({ kind: "self" }, () => true)
+    .with(
+      {
+        kind: P.union("unit", "gear", "spell", "card", "player", "effect", "cost", "rule"),
+      },
+      ({ allegiance, isToken }) =>
+        match(allegiance)
+          .with("own", () => !isToken)
+          .with("friendly", "enemy", "any_player", "unspecified", () => false)
+          .exhaustive(),
+    )
+    .exhaustive();
 }
 
 function countedKeywords(card: Card): readonly CardKeyword[] {

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
+import { domainAccent, formatDomains } from "@/features/card/presentation/card-taxonomy-format";
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
@@ -18,8 +19,7 @@ function ChampionPickRow({
   readonly selected: boolean;
 }) {
   const theme = useTheme();
-  const domainColors = useDomainColors();
-  const accent = domainColors[card.domainIds[0] ?? "Colorless"];
+  const accent = domainAccent(card, useDomainColors());
 
   return (
     <Pressable
@@ -46,7 +46,7 @@ function ChampionPickRow({
             {card.name}
           </ThemedText>
           <ThemedText style={{ color: accent }} type="mono">
-            {card.domainIds.join(" / ") || "Colorless"}
+            {formatDomains(card)}
           </ThemedText>
         </View>
         <ThemedText themeColor="textTertiary" type="mono" style={styles.stats}>

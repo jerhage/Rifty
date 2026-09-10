@@ -4,6 +4,7 @@ import { CardImage } from "@/components/ui/atoms/card-image";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
+import { domainAccent } from "@/features/card/presentation/card-taxonomy-format";
 import { DomainBar } from "@/features/card/presentation/components/domain-bar";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
@@ -19,8 +20,7 @@ function LegendPickTile({
   readonly selected: boolean;
 }) {
   const theme = useTheme();
-  const domainColors = useDomainColors();
-  const accent = domainColors[card.domainIds[0] ?? "Colorless"];
+  const accent = domainAccent(card, useDomainColors());
 
   return (
     <Pressable

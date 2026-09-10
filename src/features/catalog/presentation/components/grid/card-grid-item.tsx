@@ -1,13 +1,11 @@
-import { useImage } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { Skeleton } from "@/components/ui/atoms/skeleton";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
-import { CARD_ASPECT_RATIO, CardArt } from "@/features/card/presentation/components/card-art";
-import { DomainBar } from "@/features/card/presentation/components/domain-bar";
+import { CARD_ASPECT_RATIO } from "@/features/card/presentation/components/card-art";
+import { CardFace } from "@/features/card/presentation/components/card-face";
 import { useTheme } from "@/hooks/use-theme";
 
 /** One card in the catalog grid: its face in a fixed frame, with the name beneath. */
@@ -21,12 +19,6 @@ function CardGridItem({
   readonly width: number | null;
 }) {
   const theme = useTheme();
-  const image = useImage(card.imageUrl, {
-    maxHeight: 720,
-    maxWidth: 512,
-    // TODO: send this to Sentry once error reporting is wired up.
-    onError: () => undefined,
-  });
 
   return (
     <Pressable
@@ -45,12 +37,12 @@ function CardGridItem({
           { backgroundColor: theme.backgroundElement, borderColor: theme.border },
         ]}
       >
-        {image ? (
-          <CardArt image={image} isLandscape={card.orientation === "landscape"} width={width} />
-        ) : (
-          <Skeleton style={StyleSheet.absoluteFill} />
-        )}
-        <DomainBar domainIds={card.domainIds} />
+        <CardFace
+          domainIds={card.domainIds}
+          imageUrl={card.imageUrl}
+          orientation={card.orientation}
+          width={width}
+        />
       </View>
       <ThemedText numberOfLines={2} type="body" style={styles.name}>
         {card.name}

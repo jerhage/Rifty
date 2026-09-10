@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
+import { domainAccent } from "@/features/card/presentation/card-taxonomy-format";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 function BuildPickChip({
@@ -17,7 +18,7 @@ function BuildPickChip({
   const theme = useTheme();
   const domainColors = useDomainColors();
   const domains = card?.domainIds ?? [];
-  const accent = card ? domainColors[domains[0] ?? "Colorless"] : theme.borderStrong;
+  const accent = card === null ? theme.borderStrong : domainAccent(card, domainColors);
 
   return (
     <Pressable

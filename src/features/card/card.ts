@@ -70,6 +70,7 @@ type CardAttributes = z.output<typeof cardAttributesSchema>;
 type CardClassification = z.output<typeof cardClassificationSchema>;
 type CardKeyword = z.output<typeof cardKeywordSchema>;
 type CardKeywordTarget = z.output<typeof cardKeywordTargetSchema>;
+type CardOrientation = z.output<typeof cardOrientationSchema>;
 type Card = z.output<typeof cardSchema>;
 
 export {
@@ -79,4 +80,11 @@ export {
   cardSchema,
   parseCard,
 };
-export type { Card, CardAttributes, CardClassification, CardKeyword, CardKeywordTarget };
+export type {
+  Card,
+  CardAttributes,
+  CardClassification,
+  CardKeyword,
+  CardKeywordTarget,
+  CardOrientation,
+};

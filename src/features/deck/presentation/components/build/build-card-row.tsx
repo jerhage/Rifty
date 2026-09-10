@@ -3,7 +3,10 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import { formatCardTypeAndAttributes } from "@/features/card/presentation/card-taxonomy-format";
+import {
+  domainAccent,
+  formatCardTypeAndAttributes,
+} from "@/features/card/presentation/card-taxonomy-format";
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
@@ -29,8 +32,7 @@ function BuildCardRow({
   readonly quantity: number;
 }) {
   const theme = useTheme();
-  const domainColors = useDomainColors();
-  const accent = domainColors[card.domainIds[0] ?? "Colorless"];
+  const accent = domainAccent(card, useDomainColors());
   const inDeck = quantity > 0;
 
   return (

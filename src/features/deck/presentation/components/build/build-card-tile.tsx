@@ -1,13 +1,14 @@
-import { useImage } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { Skeleton } from "@/components/ui/atoms/skeleton";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import { formatCardTypeAndAttributes } from "@/features/card/presentation/card-taxonomy-format";
-import { CARD_ASPECT_RATIO, CardArt } from "@/features/card/presentation/components/card-art";
-import { DomainBar } from "@/features/card/presentation/components/domain-bar";
+import {
+  domainAccent,
+  formatCardTypeAndAttributes,
+} from "@/features/card/presentation/card-taxonomy-format";
+import { CARD_ASPECT_RATIO } from "@/features/card/presentation/components/card-art";
+import { CardFace } from "@/features/card/presentation/components/card-face";
 import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
@@ -31,14 +32,7 @@ function BuildCardTile({
   readonly width: number | null;
 }) {
   const theme = useTheme();
-  const domainColors = useDomainColors();
-  const image = useImage(card.imageUrl, {
-    maxHeight: 720,
-    maxWidth: 512,
-    // TODO: send this to Sentry once error reporting is wired up.
-    onError: () => undefined,
-  });
-  const accent = domainColors[card.domainIds[0] ?? "Colorless"];
+  const accent = domainAccent(card, useDomainColors());
   const inDeck = quantity > 0;
 
   return (
@@ -57,12 +51,12 @@ function BuildCardTile({
           pressed && styles.pressed,
         ]}
       >
-        {image ? (
-          <CardArt image={image} isLandscape={card.orientation === "landscape"} width={width} />
-        ) : (
-          <Skeleton style={StyleSheet.absoluteFill} />
-        )}
-        <DomainBar domainIds={card.domainIds} />
+        <CardFace
+          domainIds={card.domainIds}
+          imageUrl={card.imageUrl}
+          orientation={card.orientation}
+          width={width}
+        />
 
         <View style={styles.stepper}>
           <CardStepper

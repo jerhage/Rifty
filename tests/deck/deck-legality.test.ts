@@ -118,8 +118,9 @@ describe("deck legality", () => {
     expect(rulesBroken(entries)).toEqual(["shared-copy-limit"]);
   });
 
-  it("allows the rune deck any number of copies", () => {
-    const entries = legalEntries();
+  it("should accept twelve copies of one rune in the rune deck", () => {
+    const entries = legalEntries().filter((held) => held.section !== "runeDeck");
+    entries.push(entry("runeDeck", "ogn-rune-solo", 12));
 
     expect(rulesBroken(entries)).toEqual([]);
   });

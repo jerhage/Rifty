@@ -210,6 +210,7 @@ describe("deck editing scenarios", () => {
         dependencies,
       ),
     ).resolves.toMatchObject({ type: "success" });
+    store.close();
   });
 
   it("refuses a fourth copy of a card added under a second printing", async () => {

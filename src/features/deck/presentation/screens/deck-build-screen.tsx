@@ -8,13 +8,9 @@ import type { CardLister } from "@/features/card/card-lister";
 import type { Keyword } from "@/features/card/keyword/keyword";
 
 import { BuildProgressHeader } from "../components/build/build-progress-header";
-import { ChampionStep } from "../components/build/steps/champion-step";
-import { LegendStep } from "../components/build/steps/legend-step";
-import { PoolFilterSheet } from "../components/build/pool-filter-sheet";
-import { ZonesStep } from "../components/build/steps/zones-step";
-import { ChampionPoolData } from "../data/champion-pool-data";
-import { LegendPoolData } from "../data/legend-pool-data";
-import { ZonePoolData } from "../data/zone-pool-data";
+import { ChampionPane } from "../components/build/panes/champion-pane";
+import { LegendPane } from "../components/build/panes/legend-pane";
+import { ZonesPane } from "../components/build/panes/zones-pane";
 import type {
   DeckBuildStepsState,
   DeckDraftState,
@@ -55,97 +51,35 @@ function DeckBuildScreen({
       <BuildProgressHeader mode={steps.mode} onBack={steps.back} stepIndex={steps.stepIndex} />
       {match(steps.step.id)
         .with("legend", () => (
-          <LegendPoolData
+          <LegendPane
             cardCounter={cardCounter}
             cardLister={cardLister}
-            domainIds={legends.domainIds}
-            query={legends.searchQuery}
-          >
-            {(legendPool) => (
-              <LegendStep
-                legends={legendPool.cards}
-                onChangeQuery={legends.setQuery}
-                onLoadMore={legendPool.loadMore}
-                onNext={steps.next}
-                onOpenCard={onOpenCard}
-                onPick={draft.pickLegend}
-                onToggleDomain={legends.toggleDomain}
-                query={legends.query}
-                selected={draft.draft.legend}
-                selectedDomainIds={legends.domainIds}
-                step={steps.step}
-              />
-            )}
-          </LegendPoolData>
+            draft={draft}
+            legends={legends}
+            onOpenCard={onOpenCard}
+            steps={steps}
+          />
         ))
         .with("chosenChampion", () => (
-          <ChampionPoolData
+          <ChampionPane
             cardCounter={cardCounter}
             cardLister={cardLister}
-            legend={draft.draft.legend}
-          >
-            {(championPool) => (
-              <ChampionStep
-                champions={championPool.cards}
-                legend={draft.draft.legend}
-                onLoadMore={championPool.loadMore}
-                onNext={steps.next}
-                onOpenCard={onOpenCard}
-                onPick={draft.pickChampion}
-                selected={draft.draft.chosenChampion}
-                step={steps.step}
-              />
-            )}
-          </ChampionPoolData>
+            draft={draft}
+            onOpenCard={onOpenCard}
+            steps={steps}
+          />
         ))
         .with("zones", () => (
-          <ZonePoolData
+          <ZonesPane
             cardCounter={cardCounter}
             cardLister={cardLister}
-            filters={pool.filters}
-            query={pool.searchQuery}
-            zone={pool.zone}
-          >
-            {(zonePool) => (
-              <>
-                <ZonesStep
-                  draft={draft.draft}
-                  error={saving.error}
-                  isSaving={saving.isSaving}
-                  onChangeName={draft.changeName}
-                  onChangePoolQuery={pool.setQuery}
-                  onEditStep={steps.goToStep}
-                  onLoadMorePool={zonePool.loadMore}
-                  onOpenCard={onOpenCard}
-                  onOpenPoolFilters={pool.openFilters}
-                  onSave={() => void saving.save()}
-                  onSelectPoolLayout={pool.setLayout}
-                  onSelectPoolView={pool.setView}
-                  onSelectZone={pool.setZone}
-                  onSetQuantity={draft.setQuantity}
-                  poolFilters={pool.filters}
-                  poolLayout={pool.layout}
-                  poolQuery={pool.query}
-                  poolView={pool.view}
-                  verification={draft.verification}
-                  zone={pool.zone}
-                  zonePool={zonePool.cards}
-                />
-                <PoolFilterSheet
-                  filters={pool.draftFilters}
-                  isPresented={pool.isFilterOpen}
-                  keywords={keywords}
-                  onApply={pool.applyFilters}
-                  onDismiss={pool.dismissFilters}
-                  onReset={pool.resetFilters}
-                  onToggleDomain={pool.toggleDomain}
-                  onToggleKeyword={pool.toggleKeyword}
-                  onToggleType={pool.toggleType}
-                  zone={pool.zone}
-                />
-              </>
-            )}
-          </ZonePoolData>
+            draft={draft}
+            keywords={keywords}
+            onOpenCard={onOpenCard}
+            pool={pool}
+            saving={saving}
+            steps={steps}
+          />
         ))
         .exhaustive()}
     </ThemedView>

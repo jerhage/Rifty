@@ -3,7 +3,7 @@ import { useCallback, useMemo } from "react";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import type { Card } from "@/features/card/card";
-import { KeywordsData } from "@/features/catalog/presentation/data/keywords-data";
+import { KeywordsData } from "@/features/card/presentation/data/keywords-data";
 import { DeckDetailData } from "@/features/deck/presentation/data/deck-detail-data";
 import { DeckBuilder } from "@/features/deck/presentation/deck-builder";
 

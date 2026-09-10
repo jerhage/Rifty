@@ -6,8 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
-
-import { CardGridItem } from "./card-grid-item";
+import { CardGridItem } from "@/features/card/presentation/components/grid/card-grid-item";
 
 interface CardSummaryGridProps {
   readonly cards: readonly CardSummary[];

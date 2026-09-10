@@ -11,13 +11,14 @@ import { CardSetsData } from "@/features/set/presentation/data/card-sets-data";
 function HomeScreen() {
   const { cards, sets } = useAppDependencies();
   const router = useRouter();
-  const catalogQuery = useCatalogQuery(cards.cardRepository);
+  const catalogQuery = useCatalogQuery();
 
   return (
     <>
       <CardSummariesData
-        cardCounter={catalogQuery.cardCounter}
-        cardSummaryLister={catalogQuery.cardSummaryLister}
+        cardCounter={cards.cardRepository}
+        cardSummaryLister={cards.cardRepository}
+        criteria={catalogQuery.queryCriteria}
       >
         {(content) => (
           <CardNameSearchScreen

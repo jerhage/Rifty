@@ -10,6 +10,7 @@ import type { CardCounter } from "@/features/card/card-counter";
 import type { CardLister } from "@/features/card/card-lister";
 import { listCards } from "@/features/card/use-cases/list-cards";
 import { useAsyncPagedResult, type PagingState } from "@/hooks/use-async-paged-result";
+import { useStableValue } from "@/hooks/use-stable-value";
 
 const PAGE_SIZE = 30;
 
@@ -31,13 +32,13 @@ interface CardsDataProps {
 }
 
 function CardsData({ cardCounter, cardLister, children, criteria }: CardsDataProps) {
-  const criteriaKey = JSON.stringify(criteria);
+  const stableCriteria = useStableValue(criteria);
   const { state, loadMore, refresh, reload } = useAsyncPagedResult<Card>({
-    deps: [cardCounter, cardLister, criteriaKey],
+    deps: [cardCounter, cardLister, stableCriteria],
     loadMoreErrorMessage: "Could not load more cards.",
     pageSize: PAGE_SIZE,
     run: ({ limit, offset }, options) =>
-      listCards({ ...criteria, limit, offset }, { cardCounter, cardLister }, options),
+      listCards({ ...stableCriteria, limit, offset }, { cardCounter, cardLister }, options),
   });
 
   return match(state)

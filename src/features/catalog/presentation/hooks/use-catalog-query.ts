@@ -1,7 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 
-import type { CardCounter } from "@/features/card/card-counter";
-import type { CardSummaryLister } from "@/features/card/card-summary-lister";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -14,41 +12,22 @@ const SEARCH_DEBOUNCE_MS = 300;
 /** The catalog opens alphabetically; browsing a card list by name is the common case. */
 const DEFAULT_CRITERIA: CatalogQueryCriteria = { sort: sortForId("name") };
 
-type CardSummaryBrowser = CardSummaryLister & CardCounter;
-
 /** Which face of the catalog bottom sheet is showing, if any. */
 type CatalogSheetState =
   | { readonly type: "hidden" }
   | { readonly type: "filter" }
   | { readonly type: "sort" };
 
-function useCatalogQuery(cards: CardSummaryBrowser) {
+function useCatalogQuery() {
   const [criteria, setCriteria] = useState<CatalogQueryCriteria>(DEFAULT_CRITERIA);
   const [draftCriteria, setDraftCriteria] = useState<CatalogQueryCriteria>(DEFAULT_CRITERIA);
   const [sheet, setSheet] = useState<CatalogSheetState>({ type: "hidden" });
   const [name, setName] = useState("");
   const debouncedName = useDebouncedValue(name, SEARCH_DEBOUNCE_MS);
-  const lister = useMemo<CardSummaryLister>(
-    () => ({
-      getSummaryPage: (pagination, options) =>
-        cards.getSummaryPage(
-          {
-            ...criteria,
-            ...pagination,
-            search: searchCriteriaFor(debouncedName),
-          },
-          options,
-        ),
-    }),
-    [cards, criteria, debouncedName],
-  );
-  const counter = useMemo<CardCounter>(
-    () => ({
-      count: (_criteria, options) =>
-        cards.count({ ...criteria, search: searchCriteriaFor(debouncedName) }, options),
-    }),
-    [cards, criteria, debouncedName],
-  );
+  const queryCriteria: CatalogQueryCriteria = {
+    ...criteria,
+    search: searchCriteriaFor(debouncedName),
+  };
 
   const openFilters = useCallback(() => {
     setDraftCriteria(criteria);
@@ -107,8 +86,6 @@ function useCatalogQuery(cards: CardSummaryBrowser) {
 
   return {
     applyFilters,
-    cardCounter: counter,
-    cardSummaryLister: lister,
     clearDomains,
     clearFilters,
     clearTypes,
@@ -118,6 +95,7 @@ function useCatalogQuery(cards: CardSummaryBrowser) {
     name,
     openFilters,
     openSort,
+    queryCriteria,
     setDraftCriteria,
     setName,
     sheet,
@@ -145,5 +123,4 @@ function searchCriteriaFor(name: string) {
 }
 
 export { useCatalogQuery };
-export type { CardSummaryBrowser };
 export type { CatalogSheetState };

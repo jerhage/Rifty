@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 
-import { parseCard, type Card, type CardKeyword } from "@/features/catalog/card/card";
-import { parseCardSummary, type CardSummary } from "@/features/catalog/card/card-summary";
+import { parseCard, type Card, type CardKeyword } from "@/features/card/card";
+import { parseCardSummary, type CardSummary } from "@/features/card/card-summary";
 import { cardKeywordTargetSelectSchema } from "@/infrastructure/database/catalog-schema/keywords";
 import {
   cardClassificationSelectSchema,

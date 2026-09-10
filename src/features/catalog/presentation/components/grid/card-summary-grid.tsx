@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
-import type { CardSummary } from "@/features/catalog/card/card-summary";
+import type { CardSummary } from "@/features/card/card-summary";
 
 import { CardGridItem } from "./card-grid-item";
 

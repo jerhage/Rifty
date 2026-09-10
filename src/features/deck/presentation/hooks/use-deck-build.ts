@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
 import type { Deck, DeckSection } from "@/features/deck/deck/deck";

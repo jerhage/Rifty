@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import { useDomainColors } from "@/hooks/use-theme";
 
 import { domainAccent } from "../card-taxonomy-format";

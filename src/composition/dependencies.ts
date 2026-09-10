@@ -1,8 +1,8 @@
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
 import type { RandomSource } from "@/application/ports/random-source";
-import type { CardRepository } from "@/features/catalog/card/card-repository";
-import type { KeywordLister } from "@/features/catalog/keyword/keyword-lister";
+import type { CardRepository } from "@/features/card/card-repository";
+import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
 import type { SetRepository } from "@/features/catalog/set/set-repository";
 import type { DeckRepository } from "@/features/deck/deck/deck-repository";
 import { openAppDataStore } from "@/infrastructure/database/open-app-data-store";

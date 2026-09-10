@@ -5,8 +5,8 @@ import { match } from "ts-pattern";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
-import type { Keyword } from "@/features/catalog/keyword/keyword";
-import type { KeywordLister } from "@/features/catalog/keyword/keyword-lister";
+import type { Keyword } from "@/features/card/keyword/keyword";
+import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
 
 interface KeywordsDataProps {
   readonly children: (keywords: readonly Keyword[]) => ReactNode;

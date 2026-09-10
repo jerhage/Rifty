@@ -15,17 +15,17 @@ import {
 } from "drizzle-orm";
 import { match } from "ts-pattern";
 
-import type { Card, CardId } from "@/features/catalog/card/card";
-import type { CardSummary } from "@/features/catalog/card/card-summary";
+import type { Card, CardId } from "@/features/card/card";
+import type { CardSummary } from "@/features/card/card-summary";
 import type {
   CardListCriteria,
   CardNumericFilter,
   CardSearch,
   CardSort,
-} from "@/features/catalog/card/card-list-criteria";
+} from "@/features/card/card-list-criteria";
 import { Page } from "@/shared/page";
 import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
-import type { CardRepository } from "@/features/catalog/card/card-repository";
+import type { CardRepository } from "@/features/card/card-repository";
 import {
   cardClassifications,
   cardDomains,

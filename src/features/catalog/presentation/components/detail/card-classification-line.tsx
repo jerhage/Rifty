@@ -2,7 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 
 import { formatDomains, formatTaxonomyId } from "../../card-taxonomy-format";
 

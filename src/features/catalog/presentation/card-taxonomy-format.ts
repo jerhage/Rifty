@@ -1,4 +1,4 @@
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import type { DomainColors } from "@/constants/theme";
 
 type DomainPalette = (typeof DomainColors)[keyof typeof DomainColors];

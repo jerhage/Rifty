@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
-import type { Card } from "@/features/catalog/card/card";
-import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
-import type { CardCounter } from "@/features/catalog/card/card-counter";
-import type { CardLister } from "@/features/catalog/card/card-lister";
+import type { Card } from "@/features/card/card";
+import type { CardListCriteria } from "@/features/card/card-list-criteria";
+import type { CardCounter } from "@/features/card/card-counter";
+import type { CardLister } from "@/features/card/card-lister";
 import { Page } from "@/shared/page";
 
 const PAGE_SIZE = 30;

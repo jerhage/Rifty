@@ -2,10 +2,10 @@ import { StyleSheet } from "react-native";
 import { match } from "ts-pattern";
 
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import type { Card } from "@/features/catalog/card/card";
-import type { CardCounter } from "@/features/catalog/card/card-counter";
-import type { CardLister } from "@/features/catalog/card/card-lister";
-import type { Keyword } from "@/features/catalog/keyword/keyword";
+import type { Card } from "@/features/card/card";
+import type { CardCounter } from "@/features/card/card-counter";
+import type { CardLister } from "@/features/card/card-lister";
+import type { Keyword } from "@/features/card/keyword/keyword";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
 import type { DeckSection, DeckVerification } from "@/features/deck/deck/deck";

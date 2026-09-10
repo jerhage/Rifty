@@ -2,8 +2,8 @@ import * as SQLite from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 
 import type { Logger } from "@/application/ports/logger";
-import type { CardRepository } from "@/features/catalog/card/card-repository";
-import type { KeywordLister } from "@/features/catalog/keyword/keyword-lister";
+import type { CardRepository } from "@/features/card/card-repository";
+import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
 import type { SetRepository } from "@/features/catalog/set/set-repository";
 import { DrizzleLoggerAdapter } from "@/infrastructure/drizzle/drizzle-logger-adapter";
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";

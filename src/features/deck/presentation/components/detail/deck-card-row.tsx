@@ -4,7 +4,7 @@ import { CardImage } from "@/components/ui/atoms/card-image";
 import { DomainBar } from "@/components/ui/atoms/domain-bar";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import { useTheme } from "@/hooks/use-theme";
 
 function DeckCardRow({

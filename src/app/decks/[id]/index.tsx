@@ -2,7 +2,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback } from "react";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import type { Deck } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 import { DeckDetailData } from "@/features/deck/presentation/data/deck-detail-data";

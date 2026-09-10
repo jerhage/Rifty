@@ -1,4 +1,4 @@
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import type { DeckSection } from "@/features/deck/deck/deck";
 import { copyAllowance, ZONE_RULES } from "@/features/deck/deck/deck-legality";
 

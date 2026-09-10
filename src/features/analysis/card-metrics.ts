@@ -1,5 +1,5 @@
 import type { CardCopy } from "@/features/analysis/card-copy";
-import type { Card, CardKeyword } from "@/features/catalog/card/card";
+import type { Card, CardKeyword } from "@/features/card/card";
 import type { CardSpeed } from "@/features/card/value-objects/card-speed";
 
 const SPEED_ORDER: readonly CardSpeed[] = ["normal", "action", "reaction"];

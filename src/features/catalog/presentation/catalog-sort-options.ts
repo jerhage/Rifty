@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 
-import type { CardSort } from "@/features/catalog/card/card-list-criteria";
+import type { CardSort } from "@/features/card/card-list-criteria";
 
 /** Derived from the domain union so presentation never redeclares the direction vocabulary. */
 type CardSortDirection = Extract<CardSort, { direction: unknown }>["direction"];

@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
-import type { CardCounter } from "@/features/catalog/card/card-counter";
-import type { CardSummaryLister } from "@/features/catalog/card/card-summary-lister";
-import type { CardSummary } from "@/features/catalog/card/card-summary";
+import type { CardCounter } from "@/features/card/card-counter";
+import type { CardSummaryLister } from "@/features/card/card-summary-lister";
+import type { CardSummary } from "@/features/card/card-summary";
 import { Page } from "@/shared/page";
 
 const PAGE_SIZE = 30;

@@ -4,8 +4,8 @@ import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import type { Card, CardId } from "@/features/catalog/card/card";
-import type { CardFinder } from "@/features/catalog/card/card-finder";
+import type { Card, CardId } from "@/features/card/card";
+import type { CardFinder } from "@/features/card/card-finder";
 
 type CardDetailDataContent =
   | { readonly type: "loading" }

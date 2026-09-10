@@ -5,7 +5,7 @@ import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import type { DeckSection, DeckVerification } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 

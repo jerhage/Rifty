@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
-import type { Card } from "@/features/catalog/card/card";
-import type { CardCounter } from "@/features/catalog/card/card-counter";
-import type { CardLister } from "@/features/catalog/card/card-lister";
-import type { CardListCriteria } from "@/features/catalog/card/card-list-criteria";
+import type { Card } from "@/features/card/card";
+import type { CardCounter } from "@/features/card/card-counter";
+import type { CardLister } from "@/features/card/card-lister";
+import type { CardListCriteria } from "@/features/card/card-list-criteria";
 import { CardsData, type CardsDataContent } from "@/features/catalog/presentation/data/cards-data";
 
 const EVERY_CHAMPION: CardListCriteria = { supertypeIds: ["Champion"] };

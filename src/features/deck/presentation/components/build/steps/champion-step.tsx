@@ -2,7 +2,7 @@ import { FlatList, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 
 import type { DeckBuildStep } from "../../../deck-build-steps";
 import { BuildFooter } from "../build-footer";

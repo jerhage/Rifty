@@ -11,7 +11,7 @@ import type { RandomSource } from "@/application/ports/random-source";
 import { MULLIGAN_LIMIT, drawOdds, handStats } from "@/features/analysis/draw-simulation";
 import { DrawOddsPanel } from "@/features/analysis/presentation/components/draw-odds";
 import { HandStatsPanel } from "@/features/analysis/presentation/components/hand-stats";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import type { Deck } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 import { shuffle } from "@/shared/shuffle";

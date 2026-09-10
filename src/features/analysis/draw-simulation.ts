@@ -1,5 +1,5 @@
 import type { CardCopy } from "@/features/analysis/card-copy";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 
 const OPENING_HAND_SIZE = 4;
 const MULLIGAN_LIMIT = 2;

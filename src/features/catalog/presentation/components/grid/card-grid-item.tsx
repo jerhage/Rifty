@@ -6,7 +6,7 @@ import { DomainBar } from "@/components/ui/atoms/domain-bar";
 import { Skeleton } from "@/components/ui/atoms/skeleton";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
-import type { CardSummary } from "@/features/catalog/card/card-summary";
+import type { CardSummary } from "@/features/card/card-summary";
 import { useTheme } from "@/hooks/use-theme";
 
 /** One card in the catalog grid: its face in a fixed frame, with the name beneath. */

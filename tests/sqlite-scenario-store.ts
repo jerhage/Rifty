@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { drizzle } from "drizzle-orm/node-sqlite";
 
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import type { CardSet } from "@/features/catalog/set/card-set";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { CatalogDataStore } from "@/infrastructure/database/catalog-data-store";

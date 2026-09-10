@@ -6,7 +6,7 @@ import { SelectableChipRow } from "@/components/ui/atoms/selectable-chip-row";
 import { SheetFace } from "@/components/ui/atoms/sheet-face";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
-import type { Keyword } from "@/features/catalog/keyword/keyword";
+import type { Keyword } from "@/features/card/keyword/keyword";
 import type { CardSet } from "@/features/catalog/set/card-set";
 import { useKeywordColor } from "@/hooks/use-theme";
 

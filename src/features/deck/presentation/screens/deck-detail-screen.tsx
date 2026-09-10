@@ -15,7 +15,7 @@ import {
 import { AttributeCurve } from "@/features/analysis/presentation/components/attribute-curve";
 import { KeywordTally } from "@/features/analysis/presentation/components/keyword-tally";
 import { SpeedMix } from "@/features/analysis/presentation/components/speed-mix";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 import type { Deck, DeckVerification } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 

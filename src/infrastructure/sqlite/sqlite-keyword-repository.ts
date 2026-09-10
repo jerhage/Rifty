@@ -1,7 +1,7 @@
 import { asc } from "drizzle-orm";
 
-import type { Keyword } from "@/features/catalog/keyword/keyword";
-import type { KeywordLister } from "@/features/catalog/keyword/keyword-lister";
+import type { Keyword } from "@/features/card/keyword/keyword";
+import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
 import { keywords } from "@/infrastructure/database/catalog-schema/keywords";
 import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
 

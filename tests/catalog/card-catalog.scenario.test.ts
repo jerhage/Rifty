@@ -1,5 +1,5 @@
-import { findCard } from "@/features/catalog/card/use-cases/find-card";
-import { listCards } from "@/features/catalog/card/use-cases/list-cards";
+import { findCard } from "@/features/card/use-cases/find-card";
+import { listCards } from "@/features/card/use-cases/list-cards";
 import { Page } from "@/shared/page";
 
 import { card, cardSet, carriedKeyword, grantedKeyword } from "./fixtures";
@@ -237,12 +237,7 @@ describe("card catalog scenarios", () => {
     }
 
     await expect(store.cards.getSummaryPage({ keywordIds: ["shield"] })).resolves.toMatchObject({
-      items: [
-        { id: carrier.id },
-        { id: granter.id },
-        { id: twice.id },
-        { id: manyTargets.id },
-      ],
+      items: [{ id: carrier.id }, { id: granter.id }, { id: twice.id }, { id: manyTargets.id }],
     });
     await expect(store.cards.count({ keywordIds: ["shield"] })).resolves.toBe(4);
     await expect(

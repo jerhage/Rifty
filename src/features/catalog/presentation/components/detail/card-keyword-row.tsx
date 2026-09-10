@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
 import { Spacing } from "@/constants/theme";
-import type { CardKeyword } from "@/features/catalog/card/card";
+import type { CardKeyword } from "@/features/card/card";
 import { cardSpeedSchema } from "@/features/card/value-objects/card-speed";
 import { useKeywordColors, useTheme } from "@/hooks/use-theme";
 

@@ -2,7 +2,7 @@ import { BottomSheet, RNHostView } from "@expo/ui";
 import { View } from "react-native";
 import { match } from "ts-pattern";
 
-import type { Keyword } from "@/features/catalog/keyword/keyword";
+import type { Keyword } from "@/features/card/keyword/keyword";
 import type { CardSet } from "@/features/catalog/set/card-set";
 import { useTheme } from "@/hooks/use-theme";
 

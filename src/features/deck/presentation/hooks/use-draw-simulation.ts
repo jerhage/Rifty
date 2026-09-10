@@ -8,7 +8,7 @@ import {
   mulliganHand,
   toggleMulliganSelection,
 } from "@/features/analysis/draw-simulation";
-import type { Card } from "@/features/catalog/card/card";
+import type { Card } from "@/features/card/card";
 
 type ShuffleCards = <Item>(items: readonly Item[]) => readonly Item[];
 

@@ -1,7 +1,7 @@
-import type { CardCounter } from "@/features/catalog/card/card-counter";
-import type { Card } from "@/features/catalog/card/card";
-import type { CardLister } from "@/features/catalog/card/card-lister";
-import type { Keyword } from "@/features/catalog/keyword/keyword";
+import type { CardCounter } from "@/features/card/card-counter";
+import type { Card } from "@/features/card/card";
+import type { CardLister } from "@/features/card/card-lister";
+import type { Keyword } from "@/features/card/keyword/keyword";
 
 import {
   useDeckBuild,

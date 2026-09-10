@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
+import { Panel } from "@/components/ui/atoms/panel";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
@@ -19,22 +20,16 @@ function AttributeCurve({
   const highest = Math.max(1, ...buckets.map((bucket) => bucket.count));
 
   return (
-    <View
-      style={[
-        styles.panel,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}
-    >
-      <View style={styles.header}>
-        <ThemedText themeColor="textTertiary" type="mono">
-          {title}
-        </ThemedText>
-        {note === undefined ? null : (
+    <Panel
+      note={
+        note === undefined ? undefined : (
           <ThemedText themeColor="textTertiary" type="mono">
             {note}
           </ThemedText>
-        )}
-      </View>
+        )
+      }
+      title={title}
+    >
       <View style={styles.bars}>
         {buckets.map((bucket) => (
           <View key={bucket.label} style={styles.column}>
@@ -58,29 +53,19 @@ function AttributeCurve({
           </View>
         ))}
       </View>
-    </View>
+    </Panel>
   );
 }
 
 export { AttributeCurve };
 
 const styles = StyleSheet.create({
-  panel: {
-    borderRadius: Radius.large,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: Spacing.three - 4,
-    padding: Spacing.three - 2,
-  },
-  header: {
-    alignItems: "baseline",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
   bars: {
     alignItems: "flex-end",
     flexDirection: "row",
     gap: Spacing.two + 1,
     height: 88,
+    marginTop: Spacing.three - 4,
   },
   column: {
     alignItems: "center",

@@ -1,7 +1,8 @@
 import { StyleSheet, View } from "react-native";
 
+import { Panel } from "@/components/ui/atoms/panel";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { useKeywordColors, useTheme } from "@/hooks/use-theme";
 
 import type { KeywordMix } from "../../card-metrics";
@@ -23,63 +24,51 @@ function KeywordTally({
   if (keywords.length === 0) return null;
 
   return (
-    <View
-      style={[
-        styles.panel,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}
-    >
-      <View style={styles.header}>
-        <ThemedText themeColor="textTertiary" type="mono">
-          Keywords
-        </ThemedText>
+    <Panel
+      note={
         <ThemedText themeColor="textTertiary" type="mono">
           {`${carrying} of ${cardCount} carry a keyword`}
         </ThemedText>
-      </View>
-      {keywords.map((keyword) => (
-        <View key={keyword.id} style={styles.row}>
-          <ThemedText
-            numberOfLines={1}
-            style={[styles.name, { color: colorFor(keyword.id) }]}
-            type="body"
-          >
-            {keyword.name}
-          </ThemedText>
-          <View style={[styles.track, { backgroundColor: theme.fill }]}>
-            <View
-              style={[
-                styles.bar,
-                {
-                  backgroundColor: colorFor(keyword.id),
-                  width: `${(keyword.count / highest) * 100}%`,
-                },
-              ]}
-            />
+      }
+      title="Keywords"
+    >
+      <View style={styles.rows}>
+        {keywords.map((keyword) => (
+          <View key={keyword.id} style={styles.row}>
+            <ThemedText
+              numberOfLines={1}
+              style={[styles.name, { color: colorFor(keyword.id) }]}
+              type="body"
+            >
+              {keyword.name}
+            </ThemedText>
+            <View style={[styles.track, { backgroundColor: theme.fill }]}>
+              <View
+                style={[
+                  styles.bar,
+                  {
+                    backgroundColor: colorFor(keyword.id),
+                    width: `${(keyword.count / highest) * 100}%`,
+                  },
+                ]}
+              />
+            </View>
+            <ThemedText themeColor="textSecondary" style={styles.count} type="mono">
+              {keyword.count}
+            </ThemedText>
           </View>
-          <ThemedText themeColor="textSecondary" style={styles.count} type="mono">
-            {keyword.count}
-          </ThemedText>
-        </View>
-      ))}
-    </View>
+        ))}
+      </View>
+    </Panel>
   );
 }
 
 export { KeywordTally };
 
 const styles = StyleSheet.create({
-  panel: {
-    borderRadius: Radius.large,
-    borderWidth: StyleSheet.hairlineWidth,
+  rows: {
     gap: Spacing.two + 1,
-    padding: Spacing.three - 2,
-  },
-  header: {
-    alignItems: "baseline",
-    flexDirection: "row",
-    gap: Spacing.two,
-    justifyContent: "space-between",
+    marginTop: Spacing.two + 1,
   },
   row: {
     alignItems: "center",

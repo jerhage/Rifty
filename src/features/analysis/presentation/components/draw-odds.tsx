@@ -1,7 +1,8 @@
 import { StyleSheet, View } from "react-native";
 
+import { Panel } from "@/components/ui/atoms/panel";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 import type { DrawOdds } from "../../draw-simulation";
@@ -44,21 +45,14 @@ function DrawOddsPanel({ odds }: { readonly odds: DrawOdds }) {
   const highest = Math.max(0.01, ...rows.map((row) => row.opening));
 
   return (
-    <View
-      style={[
-        styles.panel,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}
-    >
-      <View style={styles.header}>
-        <ThemedText themeColor="textTertiary" type="mono">
-          Draw odds
-        </ThemedText>
+    <Panel
+      note={
         <ThemedText themeColor="textSecondary" type="mono">
           {`hypergeometric · ${odds.poolSize} cards`}
         </ThemedText>
-      </View>
-
+      }
+      title="Draw odds"
+    >
       <View style={styles.rows}>
         {rows.map((row) => (
           <View key={row.key} style={styles.row}>
@@ -84,23 +78,13 @@ function DrawOddsPanel({ odds }: { readonly odds: DrawOdds }) {
           </View>
         ))}
       </View>
-    </View>
+    </Panel>
   );
 }
 
 export { DrawOddsPanel };
 
 const styles = StyleSheet.create({
-  panel: {
-    borderRadius: Radius.large,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: Spacing.three - 1,
-  },
-  header: {
-    alignItems: "baseline",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
   rows: {
     gap: Spacing.two + 2,
     marginTop: Spacing.three - 2,

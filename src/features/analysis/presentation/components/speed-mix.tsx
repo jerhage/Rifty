@@ -2,6 +2,7 @@ import { StyleSheet, View } from "react-native";
 import { match } from "ts-pattern";
 
 import { ColorDot } from "@/components/ui/atoms/color-dot";
+import { Panel } from "@/components/ui/atoms/panel";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { cardSpeedName, type CardSpeed } from "@/features/card/value-objects/card-speed";
@@ -30,21 +31,14 @@ function SpeedMix({
   const counted = present.reduce((total, entry) => total + entry.count, 0);
 
   return (
-    <View
-      style={[
-        styles.panel,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}
-    >
-      <View style={styles.header}>
-        <ThemedText themeColor="textTertiary" type="mono">
-          Speed mix
-        </ThemedText>
+    <Panel
+      note={
         <ThemedText themeColor="textSecondary" type="mono">
           {cardCount === 1 ? "1 card" : `${cardCount} cards`}
         </ThemedText>
-      </View>
-
+      }
+      title="Speed mix"
+    >
       <View style={[styles.bar, { backgroundColor: theme.fill }]}>
         {present.map((entry) => (
           <View
@@ -92,23 +86,13 @@ function SpeedMix({
           A card playable at two speeds counts in both, so the shares can add past 100%.
         </ThemedText>
       ) : null}
-    </View>
+    </Panel>
   );
 }
 
 export { SpeedMix };
 
 const styles = StyleSheet.create({
-  panel: {
-    borderRadius: Radius.large,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: Spacing.three - 1,
-  },
-  header: {
-    alignItems: "baseline",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
   bar: {
     borderRadius: Radius.small - 1,
     flexDirection: "row",

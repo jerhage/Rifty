@@ -94,9 +94,9 @@ describe("card catalog scenarios", () => {
           search: { type: "nameOrRulesText", text: "piltover" },
           limit: 10,
         },
-        { cardLister: store.cards },
+        { cardCounter: store.cards, cardLister: store.cards },
       ),
-    ).resolves.toEqual({ type: "success", page: Page.create([vi], false) });
+    ).resolves.toEqual({ type: "success", page: Page.create([vi], false), total: 1 });
     store.close();
   });
 

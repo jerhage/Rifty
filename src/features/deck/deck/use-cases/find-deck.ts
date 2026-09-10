@@ -1,3 +1,4 @@
+import type { ReadOptions } from "@/shared/read-options";
 import type { Deck, DeckId } from "../deck";
 import type { DeckFinder } from "../deck-finder";
 
@@ -10,9 +11,13 @@ interface FindDeckCapabilities {
   readonly deckFinder: DeckFinder;
 }
 
-async function findDeck(id: DeckId, { deckFinder }: FindDeckCapabilities): Promise<FindDeckResult> {
+async function findDeck(
+  id: DeckId,
+  { deckFinder }: FindDeckCapabilities,
+  options?: ReadOptions,
+): Promise<FindDeckResult> {
   try {
-    const deck = await deckFinder.get(id);
+    const deck = await deckFinder.get(id, options);
     return deck ? { type: "success", deck } : { type: "notFound" };
   } catch {
     return { type: "loadFailed" };

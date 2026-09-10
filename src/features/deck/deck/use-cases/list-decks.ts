@@ -1,3 +1,4 @@
+import type { ReadOptions } from "@/shared/read-options";
 import type { Deck } from "../deck";
 import type { DeckLister } from "../deck-lister";
 
@@ -9,9 +10,12 @@ interface ListDecksCapabilities {
   readonly deckLister: DeckLister;
 }
 
-async function listDecks({ deckLister }: ListDecksCapabilities): Promise<ListDecksResult> {
+async function listDecks(
+  { deckLister }: ListDecksCapabilities,
+  options?: ReadOptions,
+): Promise<ListDecksResult> {
   try {
-    return { type: "success", decks: await deckLister.getAll() };
+    return { type: "success", decks: await deckLister.getAll(options) };
   } catch {
     return { type: "listFailed" };
   }

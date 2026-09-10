@@ -1,4 +1,5 @@
 import type { SetCode } from "@/features/set/value-objects/set-code";
+import type { ReadOptions } from "@/shared/read-options";
 import type { CardSet } from "../card-set";
 import type { SetFinder } from "../set-finder";
 
@@ -11,9 +12,13 @@ interface FindSetCapabilities {
   readonly setFinder: SetFinder;
 }
 
-async function findSet(code: SetCode, { setFinder }: FindSetCapabilities): Promise<FindSetResult> {
+async function findSet(
+  code: SetCode,
+  { setFinder }: FindSetCapabilities,
+  options?: ReadOptions,
+): Promise<FindSetResult> {
   try {
-    const cardSet = await setFinder.get(code);
+    const cardSet = await setFinder.get(code, options);
     return cardSet ? { type: "success", cardSet } : { type: "notFound" };
   } catch {
     return { type: "loadFailed" };

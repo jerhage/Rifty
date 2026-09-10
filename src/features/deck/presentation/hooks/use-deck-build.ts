@@ -21,7 +21,7 @@ import {
   draftEntries,
   draftFromDeck,
   EMPTY_DRAFT,
-  quantityKey,
+  withZoneCard,
   type DeckBuildDraft,
 } from "../deck-build-steps";
 import {
@@ -170,16 +170,12 @@ function useDeckBuild(
   }, []);
 
   const setQuantity = useCallback((section: DeckSection, card: Card, quantity: number) => {
-    setDraft((current) => ({
-      ...current,
-      zoneCards: {
-        ...current.zoneCards,
-        [quantityKey(section, card.printingId)]: {
-          card,
-          quantity: Math.max(minimumForCard(current, section, card), quantity),
-        },
-      },
-    }));
+    setDraft((current) =>
+      withZoneCard(current, section, card.printingId, {
+        card,
+        quantity: Math.max(minimumForCard(current, section, card), quantity),
+      }),
+    );
   }, []);
 
   /** The field updates on every keystroke; the pool query waits for a pause in typing. */

@@ -274,7 +274,7 @@ describe("deck editing scenarios", () => {
           type: "cardConstraint",
           cardId: "Ember Hero",
           printingIds: ["ogn-hero", "ogn-hero-alt"],
-          rule: "shared-copy-limit",
+          rule: { kind: "sharedCopyLimit" },
         },
       ],
     });

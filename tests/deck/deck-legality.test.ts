@@ -1,4 +1,6 @@
-import type { Deck } from "@/features/deck/deck/deck";
+import { match } from "ts-pattern";
+
+import type { Deck, DeckLegalityRule } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 
 import { deck, type DeckEntryInput } from "./fixtures";
@@ -44,11 +46,22 @@ function withEntries(entries: DeckEntryInput[], champion: string | null = CHAMPI
   return deck("under-test", { entries, chosenChampionCardId: champion });
 }
 
+function ruleLabel(rule: DeckLegalityRule): string {
+  return match(rule)
+    .with({ kind: "sectionRequired" }, ({ section }) => `${section}-required`)
+    .with({ kind: "sectionSize" }, ({ section }) => `${section}-size`)
+    .with({ kind: "sectionCopyLimit" }, ({ section }) => `${section}-copy-limit`)
+    .with({ kind: "sharedCopyLimit" }, () => "shared-copy-limit")
+    .with({ kind: "championRequired" }, () => "chosenChampion-required")
+    .with({ kind: "championInMainDeck" }, () => "chosenChampion-in-main-deck")
+    .exhaustive();
+}
+
 function rulesBroken(entries: DeckEntryInput[], champion: string | null = CHAMPION): string[] {
   const verification = verifyDeck(withEntries(entries, champion), RIFTBOUND_STANDARD);
 
   return verification.type === "illegal"
-    ? verification.violations.map((violation) => violation.rule).sort()
+    ? verification.violations.map((violation) => ruleLabel(violation.rule)).sort()
     : [];
 }
 
@@ -159,7 +172,7 @@ describe("deck legality", () => {
           type: "cardConstraint",
           cardId: "ogn-main-0",
           printingIds: ["ogn-main-0", "ogn-main-0a"],
-          rule: "shared-copy-limit",
+          rule: { kind: "sharedCopyLimit" },
         },
       ],
     });

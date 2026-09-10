@@ -7,6 +7,7 @@ import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 const deckIdSchema = z.string().trim().min(1);
 const deckNameSchema = z.string().trim().min(1);
 const deckSectionSchema = z.enum(["legend", "mainDeck", "runeDeck", "battlefield", "sideboard"]);
+const DECK_SECTIONS = deckSectionSchema.options;
 const deckEntrySchema = z.object({
   section: deckSectionSchema,
   cardId: cardIdSchema,
@@ -61,17 +62,26 @@ const deckUnverifiedReasonSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("unknownRuleset") }),
 ]);
 
+const deckLegalityRuleSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("sectionRequired"), section: deckSectionSchema }),
+  z.object({ kind: z.literal("sectionSize"), section: deckSectionSchema }),
+  z.object({ kind: z.literal("sectionCopyLimit"), section: deckSectionSchema }),
+  z.object({ kind: z.literal("sharedCopyLimit") }),
+  z.object({ kind: z.literal("championRequired") }),
+  z.object({ kind: z.literal("championInMainDeck") }),
+]);
+
 const deckLegalityViolationSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("deckConstraint"),
-    rule: z.string().trim().min(1),
+    rule: deckLegalityRuleSchema,
     message: z.string().trim().min(1),
   }),
   z.object({
     type: z.literal("cardConstraint"),
     cardId: cardIdSchema,
     printingIds: z.array(printingIdSchema),
-    rule: z.string().trim().min(1),
+    rule: deckLegalityRuleSchema,
     message: z.string().trim().min(1),
   }),
 ]);
@@ -111,6 +121,7 @@ type DeckEntry = z.output<typeof deckEntrySchema>;
 type Deck = z.output<typeof deckSchema>;
 type TournamentRuleset = z.output<typeof tournamentRulesetSchema>;
 type DeckUnverifiedReason = z.output<typeof deckUnverifiedReasonSchema>;
+type DeckLegalityRule = z.output<typeof deckLegalityRuleSchema>;
 type DeckLegalityViolation = z.output<typeof deckLegalityViolationSchema>;
 type DeckVerification = z.output<typeof deckVerificationSchema>;
 type UnverifiedDeck = Extract<DeckVerification, { type: "unverified" }>;
@@ -118,8 +129,10 @@ type LegalDeck = Extract<DeckVerification, { type: "legal" }>;
 type IllegalDeck = Extract<DeckVerification, { type: "illegal" }>;
 
 export {
+  DECK_SECTIONS,
   deckEntrySchema,
   deckIdSchema,
+  deckLegalityRuleSchema,
   deckLegalityViolationSchema,
   deckNameSchema,
   deckSchema,
@@ -134,6 +147,7 @@ export type {
   Deck,
   DeckEntry,
   DeckId,
+  DeckLegalityRule,
   DeckLegalityViolation,
   DeckName,
   DeckSection,

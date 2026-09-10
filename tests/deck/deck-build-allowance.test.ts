@@ -1,3 +1,5 @@
+import type { Card } from "@/features/card/card";
+import type { DeckSection } from "@/features/deck/deck/deck";
 import {
   lockedCopies,
   minimumForCard,
@@ -6,8 +8,8 @@ import {
 import {
   chooseChampion,
   EMPTY_DRAFT,
-  quantityKey,
   quantityOf,
+  withZoneCard,
   zoneCounts,
   type DeckBuildDraft,
 } from "@/features/deck/presentation/deck-build-steps";
@@ -19,28 +21,26 @@ const survivorAlt = card("survivor-alt", "OGN", { name: "Kai'Sa - Survivor (Alte
 const evolutionary = card("evolutionary", "OGN", { name: "Kai'Sa - Evolutionary" });
 const rune = card("rune", "OGN", { name: "Fury Rune" });
 
-function draftWith(overrides: Partial<DeckBuildDraft>): DeckBuildDraft {
-  return { ...EMPTY_DRAFT, ...overrides };
+type Placement = readonly [DeckSection, Card, number];
+
+function draftWith(...placements: readonly Placement[]): DeckBuildDraft {
+  return placements.reduce<DeckBuildDraft>(
+    (draft, [section, placed, quantity]) =>
+      withZoneCard(draft, section, placed.printingId, { card: placed, quantity }),
+    EMPTY_DRAFT,
+  );
 }
 
 describe("deck build allowance", () => {
   it("counts printings of the same card against one allowance", () => {
-    const draft = draftWith({
-      zoneCards: {
-        [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 3 },
-      },
-    });
+    const draft = draftWith(["mainDeck", survivor, 3]);
 
     expect(lockedCopies(draft, "mainDeck", survivorAlt)).toBe(3);
     expect(remainingForCard(draft, "mainDeck", survivorAlt)).toBe(0);
   });
 
   it("keeps different cards apart even when they share a character", () => {
-    const draft = draftWith({
-      zoneCards: {
-        [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 3 },
-      },
-    });
+    const draft = draftWith(["mainDeck", survivor, 3]);
 
     expect(remainingForCard(draft, "mainDeck", evolutionary)).toBe(3);
   });
@@ -54,14 +54,7 @@ describe("deck build allowance", () => {
   });
 
   it("keeps the copies already held when a card becomes the champion", () => {
-    const draft = chooseChampion(
-      draftWith({
-        zoneCards: {
-          [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 3 },
-        },
-      }),
-      survivor,
-    );
+    const draft = chooseChampion(draftWith(["mainDeck", survivor, 3]), survivor);
 
     expect(quantityOf(draft, "mainDeck", survivor.printingId)).toBe(3);
   });
@@ -83,33 +76,20 @@ describe("deck build allowance", () => {
   });
 
   it("counts the sideboard against the main deck", () => {
-    const draft = draftWith({
-      zoneCards: {
-        [quantityKey("sideboard", survivorAlt.printingId)]: { card: survivorAlt, quantity: 2 },
-      },
-    });
+    const draft = draftWith(["sideboard", survivorAlt, 2]);
 
     expect(remainingForCard(draft, "mainDeck", survivor)).toBe(1);
   });
 
   it("ignores the zone's own copies, which the stepper already owns", () => {
-    const draft = draftWith({
-      zoneCards: {
-        [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 2 },
-      },
-    });
+    const draft = draftWith(["mainDeck", survivor, 2]);
 
     expect(lockedCopies(draft, "mainDeck", survivor)).toBe(0);
     expect(remainingForCard(draft, "mainDeck", survivor)).toBe(3);
   });
 
   it("allows a mix of printings up to the shared limit", () => {
-    const draft = draftWith({
-      zoneCards: {
-        [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 2 },
-        [quantityKey("mainDeck", survivorAlt.printingId)]: { card: survivorAlt, quantity: 1 },
-      },
-    });
+    const draft = draftWith(["mainDeck", survivor, 2], ["mainDeck", survivorAlt, 1]);
 
     // Two regular plus one alternate art is the full allowance, so neither row takes another.
     expect(remainingForCard(draft, "mainDeck", survivor)).toBe(2);
@@ -117,35 +97,29 @@ describe("deck build allowance", () => {
   });
 
   it("lets the main deck run past its target", () => {
-    const draft = draftWith({
-      zoneCards: Object.fromEntries(
-        Array.from({ length: 20 }, (_unused, index) => {
-          const filler = card(`filler-${index}`, "OGN", { name: `Filler ${index}` });
-          return [quantityKey("mainDeck", filler.printingId), { card: filler, quantity: 3 }];
-        }),
+    const draft = draftWith(
+      ...Array.from(
+        { length: 20 },
+        (_unused, index): Placement => [
+          "mainDeck",
+          card(`filler-${index}`, "OGN", { name: `Filler ${index}` }),
+          3,
+        ],
       ),
-    });
+    );
 
     expect(remainingForCard(draft, "mainDeck", evolutionary)).toBe(3);
   });
 
   it("stops the rune deck at twelve cards", () => {
     const other = card("other-rune", "OGN", { name: "Calm Rune" });
-    const draft = draftWith({
-      zoneCards: {
-        [quantityKey("runeDeck", other.printingId)]: { card: other, quantity: 10 },
-      },
-    });
+    const draft = draftWith(["runeDeck", other, 10]);
 
     expect(remainingForCard(draft, "runeDeck", rune)).toBe(2);
   });
 
   it("counts a rune's own copies against the twelve, not against itself twice", () => {
-    const draft = draftWith({
-      zoneCards: {
-        [quantityKey("runeDeck", rune.printingId)]: { card: rune, quantity: 12 },
-      },
-    });
+    const draft = draftWith(["runeDeck", rune, 12]);
 
     expect(remainingForCard(draft, "runeDeck", rune)).toBe(12);
   });

@@ -75,7 +75,7 @@ describe("deck schema", () => {
         violations: [
           {
             type: "deckConstraint",
-            rule: "mainDeckMinimum",
+            rule: { kind: "sectionSize", section: "mainDeck" },
             message: "A constructed deck needs at least 40 cards.",
           },
         ],

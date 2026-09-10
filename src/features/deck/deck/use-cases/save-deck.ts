@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import type { Clock } from "@/application/ports/clock";
 import type { CardId } from "@/features/card/value-objects/card-id";
 
@@ -6,6 +8,7 @@ import {
   type Deck,
   type DeckEntry,
   type DeckId,
+  type DeckLegalityRule,
   type DeckLegalityViolation,
   type DeckName,
 } from "../deck";
@@ -63,8 +66,21 @@ function copyLimitViolations(deck: Deck): readonly DeckLegalityViolation[] {
   const verification = verifyDeck(deck, RIFTBOUND_STANDARD);
 
   return verification.type === "illegal"
-    ? verification.violations.filter((violation) => violation.rule.endsWith("-copy-limit"))
+    ? verification.violations.filter((violation) => isCopyLimitRule(violation.rule))
     : [];
+}
+
+function isCopyLimitRule(rule: DeckLegalityRule): boolean {
+  return match(rule)
+    .with({ kind: "sectionCopyLimit" }, { kind: "sharedCopyLimit" }, () => true)
+    .with(
+      { kind: "sectionRequired" },
+      { kind: "sectionSize" },
+      { kind: "championRequired" },
+      { kind: "championInMainDeck" },
+      () => false,
+    )
+    .exhaustive();
 }
 
 export { saveDeck };

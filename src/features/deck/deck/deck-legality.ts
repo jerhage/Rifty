@@ -138,7 +138,7 @@ function singletonViolations(
   return [
     {
       type: "deckConstraint",
-      rule: `${section}-required`,
+      rule: { kind: "sectionRequired", section },
       message: total === 0 ? `Pick a ${label}.` : `A deck has one ${label}, not ${total}.`,
     },
   ];
@@ -152,7 +152,7 @@ function championViolations(deck: Deck): readonly DeckLegalityViolation[] {
     return [
       {
         type: "deckConstraint",
-        rule: "chosenChampion-required",
+        rule: { kind: "championRequired" },
         message: "Pick a Chosen Champion.",
       },
     ];
@@ -169,7 +169,7 @@ function championViolations(deck: Deck): readonly DeckLegalityViolation[] {
           type: "cardConstraint",
           cardId,
           printingIds: [],
-          rule: "chosenChampion-in-main-deck",
+          rule: { kind: "championInMainDeck" },
           message: "Your Chosen Champion has to be one of the main deck's cards.",
         },
       ];
@@ -182,7 +182,7 @@ function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolat
   if (total !== rule.requiredCount) {
     violations.push({
       type: "deckConstraint",
-      rule: `${rule.section}-size`,
+      rule: { kind: "sectionSize", section: rule.section },
       message: `${rule.label} needs exactly ${rule.requiredCount} cards. You have ${total}.`,
     });
   }
@@ -195,7 +195,7 @@ function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolat
         type: "cardConstraint",
         cardId,
         printingIds: held.printingIds,
-        rule: `${rule.section}-copy-limit`,
+        rule: { kind: "sectionCopyLimit", section: rule.section },
         message: `${rule.label} allows ${copiesLabel(rule.copyLimit)} of a card. This one has ${held.copies}.`,
       });
     }
@@ -211,7 +211,7 @@ function sharedCopyViolations(deck: Deck): readonly DeckLegalityViolation[] {
       type: "cardConstraint" as const,
       cardId,
       printingIds: held.printingIds,
-      rule: "shared-copy-limit",
+      rule: { kind: "sharedCopyLimit" },
       message: `Main deck and sideboard share a limit of ${SHARED_COPY_LIMIT} copies. This card has ${held.copies}.`,
     }));
 }

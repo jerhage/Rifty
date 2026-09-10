@@ -1,7 +1,12 @@
 import type { Card } from "@/features/card/card";
 import type { CardId } from "@/features/card/value-objects/card-id";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
-import type { Deck, DeckEntry, DeckSection } from "@/features/deck/deck/deck";
+import {
+  DECK_SECTIONS,
+  type Deck,
+  type DeckEntry,
+  type DeckSection,
+} from "@/features/deck/deck/deck";
 
 type DeckBuildStepId = "legend" | "chosenChampion" | "zones";
 
@@ -44,25 +49,38 @@ interface DeckBuildDraft {
   readonly name: string;
   readonly legend: Card | null;
   readonly chosenChampion: Card | null;
-  /** Cards placed in the four buildable zones, keyed by section and printing. */
-  readonly zoneCards: Readonly<Record<string, DraftZoneCard>>;
+  readonly zoneCards: Readonly<Record<DeckSection, Readonly<Record<PrintingId, DraftZoneCard>>>>;
 }
 
 const EMPTY_DRAFT: DeckBuildDraft = {
   name: "",
   legend: null,
   chosenChampion: null,
-  zoneCards: {},
+  zoneCards: {
+    legend: {},
+    mainDeck: {},
+    runeDeck: {},
+    battlefield: {},
+    sideboard: {},
+  },
 };
 
-const KEY_SEPARATOR = " ";
+function withZoneCard(
+  draft: DeckBuildDraft,
+  section: DeckSection,
+  printingId: PrintingId,
+  placed: DraftZoneCard,
+): DeckBuildDraft {
+  const zoneCards: Record<DeckSection, Readonly<Record<PrintingId, DraftZoneCard>>> = {
+    ...draft.zoneCards,
+  };
+  zoneCards[section] = { ...zoneCards[section], [printingId]: placed };
 
-function quantityKey(section: DeckSection, printingId: PrintingId): string {
-  return `${section}${KEY_SEPARATOR}${printingId}`;
+  return { ...draft, zoneCards };
 }
 
 function quantityOf(draft: DeckBuildDraft, section: DeckSection, printingId: PrintingId): number {
-  return draft.zoneCards[quantityKey(section, printingId)]?.quantity ?? 0;
+  return draft.zoneCards[section][printingId]?.quantity ?? 0;
 }
 
 function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
@@ -76,18 +94,17 @@ function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
       quantity: 1,
     });
   }
-  for (const [key, placed] of Object.entries(draft.zoneCards)) {
-    if (placed.quantity <= 0) continue;
+  for (const section of DECK_SECTIONS) {
+    for (const placed of Object.values(draft.zoneCards[section])) {
+      if (placed.quantity <= 0) continue;
 
-    const separatorIndex = key.indexOf(KEY_SEPARATOR);
-    if (separatorIndex < 0) continue;
-
-    entries.push({
-      section: key.slice(0, separatorIndex) as DeckSection,
-      cardId: placed.card.cardId,
-      printingId: placed.card.printingId,
-      quantity: placed.quantity,
-    });
+      entries.push({
+        section,
+        cardId: placed.card.cardId,
+        printingId: placed.card.printingId,
+        quantity: placed.quantity,
+      });
+    }
   }
 
   return entries;
@@ -101,26 +118,27 @@ function draftFromDeck(deck: Deck, cards: readonly Card[]): DeckBuildDraft {
     return entry ? (byPrintingId.get(entry.printingId) ?? null) : null;
   };
 
-  const zoneCards: Record<string, DraftZoneCard> = {};
+  let draft: DeckBuildDraft = {
+    ...EMPTY_DRAFT,
+    name: deck.name,
+    legend: cardFor("legend"),
+    chosenChampion:
+      deck.chosenChampionCardId === null ? null : (championPrinting(deck, byPrintingId) ?? null),
+  };
+
   for (const entry of deck.entries) {
     if (entry.section === "legend") continue;
 
     const card = byPrintingId.get(entry.printingId);
     if (!card) continue;
 
-    zoneCards[quantityKey(entry.section, entry.printingId)] = {
+    draft = withZoneCard(draft, entry.section, entry.printingId, {
       card,
       quantity: entry.quantity,
-    };
+    });
   }
 
-  return {
-    name: deck.name,
-    legend: cardFor("legend"),
-    chosenChampion:
-      deck.chosenChampionCardId === null ? null : (championPrinting(deck, byPrintingId) ?? null),
-    zoneCards,
-  };
+  return draft;
 }
 
 function championPrinting(
@@ -143,9 +161,13 @@ interface PlacedCard {
 }
 
 function placedCards(draft: DeckBuildDraft, section: DeckSection): readonly PlacedCard[] {
-  return Object.entries(draft.zoneCards)
-    .filter(([key, placed]) => placed.quantity > 0 && sectionOf(key) === section)
-    .map(([, placed]) => ({ card: placed.card, quantity: placed.quantity, section }))
+  return Object.values(draft.zoneCards[section])
+    .filter((placed) => placed.quantity > 0)
+    .map((placed) => ({
+      card: placed.card,
+      quantity: placed.quantity,
+      section,
+    }))
     .sort((one, other) => one.card.name.localeCompare(other.card.name));
 }
 
@@ -153,22 +175,15 @@ function placedCardTotal(placed: readonly PlacedCard[]): number {
   return placed.reduce((total, entry) => total + entry.quantity, 0);
 }
 
-function sectionOf(key: string): DeckSection {
-  return key.slice(0, key.indexOf(KEY_SEPARATOR)) as DeckSection;
-}
-
 /** The champion is a main deck card, so choosing one puts a copy there if none is held yet. */
 function chooseChampion(draft: DeckBuildDraft, champion: Card): DeckBuildDraft {
-  const key = quantityKey("mainDeck", champion.printingId);
+  const held = quantityOf(draft, "mainDeck", champion.printingId);
+  const seated = withZoneCard(draft, "mainDeck", champion.printingId, {
+    card: champion,
+    quantity: Math.max(1, held),
+  });
 
-  return {
-    ...draft,
-    chosenChampion: champion,
-    zoneCards: {
-      ...draft.zoneCards,
-      [key]: { card: champion, quantity: Math.max(1, draft.zoneCards[key]?.quantity ?? 0) },
-    },
-  };
+  return { ...seated, chosenChampion: champion };
 }
 
 function zoneCounts(draft: DeckBuildDraft): Record<string, number> {
@@ -190,19 +205,15 @@ function copiesOfName(
 ): number {
   let total = 0;
 
-  for (const [key, placed] of Object.entries(draft.zoneCards)) {
-    if (placed.card.cardId !== cardId || placed.quantity <= 0) continue;
+  for (const section of sections) {
+    for (const placed of Object.values(draft.zoneCards[section])) {
+      if (placed.card.cardId !== cardId || placed.quantity <= 0) continue;
+      if (exclude && exclude.section === section && exclude.printingId === placed.card.printingId) {
+        continue;
+      }
 
-    const separatorIndex = key.indexOf(KEY_SEPARATOR);
-    const section = key.slice(0, separatorIndex) as DeckSection;
-    const printingId = key.slice(separatorIndex + 1);
-
-    if (!sections.includes(section)) continue;
-    if (exclude && exclude.section === section && exclude.printingId === printingId) {
-      continue;
+      total += placed.quantity;
     }
-
-    total += placed.quantity;
   }
 
   return total;
@@ -217,8 +228,8 @@ export {
   EMPTY_DRAFT,
   placedCardTotal,
   placedCards,
-  quantityKey,
   quantityOf,
+  withZoneCard,
   zoneCounts,
 };
 export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId, DraftZoneCard, PlacedCard };

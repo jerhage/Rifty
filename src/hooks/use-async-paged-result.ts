@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { match } from "ts-pattern";
+import { P, match } from "ts-pattern";
 
 import type { Page } from "@/shared/page";
 import type { ReadOptions } from "@/shared/read-options";
@@ -13,6 +13,11 @@ type PagedRead<T> =
   | { readonly type: "success"; readonly page: Page<T>; readonly total: number }
   | { readonly type: "listFailed" };
 
+type PagingState =
+  | { readonly type: "idle" }
+  | { readonly type: "loadingMore" }
+  | { readonly type: "failed"; readonly message: string };
+
 type AsyncPagedResultState<T> =
   | { readonly type: "loading" }
   | { readonly type: "loadFailed" }
@@ -21,8 +26,7 @@ type AsyncPagedResultState<T> =
       readonly page: Page<T>;
       readonly total: number;
       readonly isRefreshing: boolean;
-      readonly isLoadingMore: boolean;
-      readonly loadMoreError: string | null;
+      readonly paging: PagingState;
     };
 
 interface AsyncPagedResultOptions<T> {
@@ -38,6 +42,8 @@ interface AsyncPagedResult<T> {
   refresh(): void;
   reload(): void;
 }
+
+const IDLE_PAGING: PagingState = { type: "idle" };
 
 function useAsyncPagedResult<T>({
   deps,
@@ -91,8 +97,7 @@ function useAsyncPagedResult<T>({
             page,
             total,
             isRefreshing: false,
-            isLoadingMore: false,
-            loadMoreError: null,
+            paging: IDLE_PAGING,
           }))
           .with({ type: "listFailed" }, () => ({ type: "loadFailed" }) as const)
           .exhaustive(),
@@ -120,7 +125,8 @@ function useAsyncPagedResult<T>({
     setState((current) =>
       match(current)
         .with({ type: "success" }, (successful) => ({ ...successful, isRefreshing: true }))
-        .otherwise(() => current),
+        .with({ type: "loading" }, { type: "loadFailed" }, () => current)
+        .exhaustive(),
     );
 
     void request.then((read) => {
@@ -132,15 +138,15 @@ function useAsyncPagedResult<T>({
             page,
             total,
             isRefreshing: false,
-            isLoadingMore: false,
-            loadMoreError: null,
+            paging: IDLE_PAGING,
           }),
         )
         .with({ type: "listFailed" }, () =>
           setState((current) =>
             match(current)
               .with({ type: "success" }, (successful) => ({ ...successful, isRefreshing: false }))
-              .otherwise(() => current),
+              .with({ type: "loading" }, { type: "loadFailed" }, () => current)
+              .exhaustive(),
           ),
         )
         .exhaustive();
@@ -151,46 +157,53 @@ function useAsyncPagedResult<T>({
     if (isLoadingMoreRef.current) return;
 
     match(stateRef.current)
-      .with({ type: "success", isLoadingMore: false, page: { hasMore: true } }, (loaded) => {
-        const offset = loaded.page.items.length;
-        loadMoreController.current?.abort();
-        const controller = new AbortController();
-        loadMoreController.current = controller;
-        isLoadingMoreRef.current = true;
-        setState({ ...loaded, isLoadingMore: true, loadMoreError: null });
+      .with(
+        {
+          type: "success",
+          paging: { type: P.union("idle", "failed") },
+          page: { hasMore: true },
+        },
+        (loaded) => {
+          const offset = loaded.page.items.length;
+          loadMoreController.current?.abort();
+          const controller = new AbortController();
+          loadMoreController.current = controller;
+          isLoadingMoreRef.current = true;
+          setState({ ...loaded, paging: { type: "loadingMore" } });
 
-        void runRef
-          .current({ limit: pageSizeRef.current, offset }, { signal: controller.signal })
-          .then((read) => {
-            if (controller.signal.aborted) return;
-            setState((current) =>
-              match(current)
-                .with({ type: "success" }, (successful) =>
-                  match(read)
-                    .with({ type: "success" }, ({ page, total }) => ({
-                      ...successful,
-                      page: successful.page.append(page),
-                      total,
-                      isLoadingMore: false,
-                      loadMoreError: null,
-                    }))
-                    .with({ type: "listFailed" }, () => ({
-                      ...successful,
-                      isLoadingMore: false,
-                      loadMoreError: loadMoreErrorRef.current,
-                    }))
-                    .exhaustive(),
-                )
-                .otherwise(() => current),
-            );
-            isLoadingMoreRef.current = false;
-          });
-      })
-      .otherwise(() => undefined);
+          void runRef
+            .current({ limit: pageSizeRef.current, offset }, { signal: controller.signal })
+            .then((read) => {
+              if (controller.signal.aborted) return;
+              setState((current) =>
+                match(current)
+                  .with({ type: "success" }, (successful) =>
+                    match(read)
+                      .with({ type: "success" }, ({ page, total }) => ({
+                        ...successful,
+                        page: successful.page.append(page),
+                        total,
+                        paging: IDLE_PAGING,
+                      }))
+                      .with({ type: "listFailed" }, () => ({
+                        ...successful,
+                        paging: { type: "failed" as const, message: loadMoreErrorRef.current },
+                      }))
+                      .exhaustive(),
+                  )
+                  .with({ type: "loading" }, { type: "loadFailed" }, () => current)
+                  .exhaustive(),
+              );
+              isLoadingMoreRef.current = false;
+            });
+        },
+      )
+      .with({ type: "loading" }, { type: "loadFailed" }, { type: "success" }, () => undefined)
+      .exhaustive();
   }, []);
 
   return { state, loadMore, refresh, reload };
 }
 
 export { useAsyncPagedResult };
-export type { AsyncPagedResultState };
+export type { AsyncPagedResultState, PagingState };

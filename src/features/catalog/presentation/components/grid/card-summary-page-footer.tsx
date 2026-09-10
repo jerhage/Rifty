@@ -1,4 +1,5 @@
 import { ActivityIndicator, StyleSheet } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
@@ -7,27 +8,24 @@ import { Spacing } from "@/constants/theme";
 import type { CardSummariesDataContent } from "@/features/card/presentation/data/card-summaries-data";
 
 function CardSummaryPageFooter({
-  isLoadingMore,
-  loadMoreError,
+  paging,
   retryLoadMore,
-}: Pick<CardSummariesDataContent, "isLoadingMore" | "loadMoreError" | "retryLoadMore">) {
-  if (loadMoreError) {
-    return (
+}: Pick<CardSummariesDataContent, "paging" | "retryLoadMore">) {
+  return match(paging)
+    .with({ type: "idle" }, () => null)
+    .with({ type: "loadingMore" }, () => (
       <ThemedView style={styles.loadMoreSection}>
-        <ThemedText themeColor="textSecondary">{loadMoreError}</ThemedText>
+        <ActivityIndicator />
+        <ThemedText themeColor="textSecondary">Loading cards…</ThemedText>
+      </ThemedView>
+    ))
+    .with({ type: "failed" }, ({ message }) => (
+      <ThemedView style={styles.loadMoreSection}>
+        <ThemedText themeColor="textSecondary">{message}</ThemedText>
         <Button label="Try again" onPress={retryLoadMore} variant="secondary" />
       </ThemedView>
-    );
-  }
-
-  if (!isLoadingMore) return null;
-
-  return (
-    <ThemedView style={styles.loadMoreSection}>
-      <ActivityIndicator />
-      <ThemedText themeColor="textSecondary">Loading cards…</ThemedText>
-    </ThemedView>
-  );
+    ))
+    .exhaustive();
 }
 
 export { CardSummaryPageFooter };

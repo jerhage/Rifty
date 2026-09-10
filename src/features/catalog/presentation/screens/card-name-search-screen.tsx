@@ -29,10 +29,8 @@ interface CardNameSearchScreenProps extends CardSummariesDataContent {
 function CardNameSearchScreen({
   cards,
   criteria,
-  isLoadingMore,
   isRefreshing,
   loadMore,
-  loadMoreError,
   name,
   onChangeName,
   onClearDomains,
@@ -43,6 +41,7 @@ function CardNameSearchScreen({
   onToggleDomain,
   onToggleSortDirection,
   onToggleType,
+  paging,
   refresh,
   retryLoadMore,
   total,
@@ -63,13 +62,7 @@ function CardNameSearchScreen({
         emptyMessage={
           name.trim() ? "No cards match that search." : "No cards match. Loosen a filter?"
         }
-        footer={
-          <CardSummaryPageFooter
-            isLoadingMore={isLoadingMore}
-            loadMoreError={loadMoreError}
-            retryLoadMore={retryLoadMore}
-          />
-        }
+        footer={<CardSummaryPageFooter paging={paging} retryLoadMore={retryLoadMore} />}
         header={
           <CatalogResultBar
             criteria={criteria}

@@ -10,7 +10,7 @@ import type { CardCounter } from "@/features/card/card-counter";
 import type { CardSummaryLister } from "@/features/card/card-summary-lister";
 import type { CardSummary } from "@/features/card/card-summary";
 import { listCardSummaries } from "@/features/card/use-cases/list-card-summaries";
-import { useAsyncPagedResult } from "@/hooks/use-async-paged-result";
+import { useAsyncPagedResult, type PagingState } from "@/hooks/use-async-paged-result";
 
 const PAGE_SIZE = 30;
 
@@ -18,8 +18,7 @@ interface CardSummariesDataContent {
   readonly cards: readonly CardSummary[];
   readonly hasMore: boolean;
   readonly isRefreshing: boolean;
-  readonly isLoadingMore: boolean;
-  readonly loadMoreError: string | null;
+  readonly paging: PagingState;
   readonly total: number;
   loadMore(): void;
   refresh(): void;
@@ -58,8 +57,7 @@ function CardSummariesData({ cardCounter, cardSummaryLister, children }: CardSum
         cards: loadedState.page.items,
         hasMore: loadedState.page.hasMore,
         isRefreshing: loadedState.isRefreshing,
-        isLoadingMore: loadedState.isLoadingMore,
-        loadMoreError: loadedState.loadMoreError,
+        paging: loadedState.paging,
         total: loadedState.total,
         loadMore,
         refresh,

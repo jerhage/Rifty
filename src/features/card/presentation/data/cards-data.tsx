@@ -11,7 +11,7 @@ import type { CardListCriteria } from "@/features/card/card-list-criteria";
 import type { CardCounter } from "@/features/card/card-counter";
 import type { CardLister } from "@/features/card/card-lister";
 import { listCards } from "@/features/card/use-cases/list-cards";
-import { useAsyncPagedResult } from "@/hooks/use-async-paged-result";
+import { useAsyncPagedResult, type PagingState } from "@/hooks/use-async-paged-result";
 
 const PAGE_SIZE = 30;
 
@@ -19,8 +19,7 @@ interface CardsDataContent {
   readonly cards: readonly Card[];
   readonly hasMore: boolean;
   readonly isRefreshing: boolean;
-  readonly isLoadingMore: boolean;
-  readonly loadMoreError: string | null;
+  readonly paging: PagingState;
   readonly total: number;
   loadMore(): void;
   refresh(): void;
@@ -60,8 +59,7 @@ function CardsData({ cardCounter, cardLister, children, criteria }: CardsDataPro
         cards: loaded.page.items,
         hasMore: loaded.page.hasMore,
         isRefreshing: loaded.isRefreshing,
-        isLoadingMore: loaded.isLoadingMore,
-        loadMoreError: loaded.loadMoreError,
+        paging: loaded.paging,
         total: loaded.total,
         loadMore,
         refresh,

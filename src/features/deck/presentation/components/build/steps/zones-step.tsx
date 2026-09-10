@@ -1,41 +1,43 @@
+import { match } from "ts-pattern";
+
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import type { Card } from "@/features/card/card";
-import type { DeckSection, DeckVerification } from "@/features/deck/deck/deck";
+import type { DeckVerification } from "@/features/deck/deck/deck";
+import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 
-import type { DeckBuildDraft } from "../../../deck-build-steps";
+import type { DeckBuildDraft, DeckBuildStepId } from "../../../deck-build-steps";
+import { saveReadinessLabel } from "../../../deck-legality-format";
 import type { ZonePoolFilters, ZonePoolLayout, ZonePoolView } from "../../../deck-zone-pool";
+import type { DeckSaveStatus } from "../../../hooks/use-deck-save";
 import { BuildFooter } from "../build-footer";
 import { ZonePoolList } from "../zone-pool-list";
 import { ZonesStepHeader } from "./zones-step-header";
 
 interface ZonesStepProps {
   readonly draft: DeckBuildDraft;
-  readonly error: string | null;
-  readonly isSaving: boolean;
   readonly onChangeName: (name: string) => void;
   readonly onChangePoolQuery: (query: string) => void;
-  readonly onEditStep: (index: number) => void;
+  readonly onEditStep: (id: DeckBuildStepId) => void;
   readonly onOpenCard: (card: Card) => void;
   readonly onLoadMorePool: () => void;
   readonly onOpenPoolFilters: () => void;
   readonly onSave: () => void;
   readonly onSelectPoolLayout: (layout: ZonePoolLayout) => void;
   readonly onSelectPoolView: (view: ZonePoolView) => void;
-  readonly onSelectZone: (section: DeckSection) => void;
-  readonly onSetQuantity: (section: DeckSection, card: Card, quantity: number) => void;
+  readonly onSelectZone: (section: ZoneSection) => void;
+  readonly onSetQuantity: (section: ZoneSection, card: Card, quantity: number) => void;
   readonly poolFilters: ZonePoolFilters;
   readonly poolLayout: ZonePoolLayout;
   readonly poolQuery: string;
   readonly poolView: ZonePoolView;
+  readonly saveStatus: DeckSaveStatus;
   readonly verification: DeckVerification;
-  readonly zone: DeckSection;
+  readonly zone: ZoneSection;
   readonly zonePool: readonly Card[];
 }
 
 function ZonesStep({
   draft,
-  error,
-  isSaving,
   onChangeName,
   onChangePoolQuery,
   onEditStep,
@@ -51,6 +53,7 @@ function ZonesStep({
   poolLayout,
   poolQuery,
   poolView,
+  saveStatus,
   verification,
   zone,
   zonePool,
@@ -85,21 +88,29 @@ function ZonesStep({
         zonePool={zonePool}
       />
 
-      <BuildFooter actionLabel={isSaving ? "Saving…" : "Save deck"} onAction={onSave}>
-        {error === null ? (
-          <ThemedText numberOfLines={1} themeColor="textSecondary" type="mono">
-            {verification.type === "illegal"
-              ? `${verification.violations.length} to fix`
-              : "Ready to save"}
-          </ThemedText>
-        ) : (
-          <ThemedText numberOfLines={2} themeColor="negative" type="body">
-            {error}
-          </ThemedText>
-        )}
+      <BuildFooter actionLabel={saveActionLabel(saveStatus)} onAction={onSave}>
+        {match(saveStatus)
+          .with({ type: "failed" }, ({ message }) => (
+            <ThemedText numberOfLines={2} themeColor="negative" type="body">
+              {message}
+            </ThemedText>
+          ))
+          .with({ type: "idle" }, { type: "saving" }, () => (
+            <ThemedText numberOfLines={1} themeColor="textSecondary" type="mono">
+              {saveReadinessLabel(verification)}
+            </ThemedText>
+          ))
+          .exhaustive()}
       </BuildFooter>
     </>
   );
+}
+
+function saveActionLabel(status: DeckSaveStatus): string {
+  return match(status)
+    .with({ type: "saving" }, () => "Saving…")
+    .with({ type: "idle" }, { type: "failed" }, () => "Save deck")
+    .exhaustive();
 }
 
 export { ZonesStep };

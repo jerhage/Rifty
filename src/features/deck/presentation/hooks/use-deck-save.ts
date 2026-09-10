@@ -7,47 +7,68 @@ import type { DeckBuildCapabilities, DeckBuildStart } from "../deck-build-start"
 
 type DeckSaveRequest = Omit<DeckDraft, "id" | "notes" | "createdAt">;
 
+type DeckSaveStatus =
+  | { readonly type: "idle" }
+  | { readonly type: "saving" }
+  | { readonly type: "failed"; readonly message: string };
+
+const IDLE_SAVE: DeckSaveStatus = { type: "idle" };
+
 function useDeckSave(
   start: DeckBuildStart,
   capabilities: DeckBuildCapabilities,
   { onSaved }: { readonly onSaved: () => void },
 ) {
-  const [error, setError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [status, setStatus] = useState<DeckSaveStatus>(IDLE_SAVE);
 
-  const clearError = useCallback(() => setError(null), []);
+  const clearFailure = useCallback(
+    () =>
+      setStatus((current) =>
+        match(current)
+          .with({ type: "failed" }, () => IDLE_SAVE)
+          .with({ type: "idle" }, { type: "saving" }, (kept) => kept)
+          .exhaustive(),
+      ),
+    [],
+  );
 
   const save = useCallback(
     async (request: DeckSaveRequest) => {
       const name = request.name.trim();
       if (name.length === 0) {
-        setError("Give the deck a name.");
+        setStatus({ type: "failed", message: "Give the deck a name." });
         return;
       }
 
-      setIsSaving(true);
+      setStatus({ type: "saving" });
       const result = await saveDeck(
         { ...deckIdentity(start, capabilities), ...request, name },
         capabilities,
       );
-      const failure = match(result)
-        .with({ type: "nameTaken" }, () => "You already have a deck with that name.")
-        .with(
-          { type: "copyLimitExceeded" },
-          ({ violations }) => violations[0]?.message ?? "Too many copies of a card.",
-        )
-        .with({ type: "saveFailed" }, () => "Could not save the deck. Try again.")
-        .with({ type: "success" }, () => null)
-        .exhaustive();
 
-      setIsSaving(false);
-      setError(failure);
-      if (failure === null) onSaved();
+      match(result)
+        .with({ type: "success" }, () => {
+          setStatus(IDLE_SAVE);
+          onSaved();
+        })
+        .with({ type: "nameTaken" }, () =>
+          setStatus({ type: "failed", message: "You already have a deck with that name." }),
+        )
+        .with({ type: "copyLimitExceeded" }, ({ violations }) =>
+          setStatus({
+            type: "failed",
+            message: violations[0]?.message ?? "Too many copies of a card.",
+          }),
+        )
+        .with({ type: "saveFailed" }, () =>
+          setStatus({ type: "failed", message: "Could not save the deck. Try again." }),
+        )
+        .exhaustive();
     },
     [capabilities, onSaved, start],
   );
 
-  return { clearError, error, isSaving, save };
+  return { clearFailure, save, status };
 }
 
 function deckIdentity(
@@ -69,4 +90,4 @@ function deckIdentity(
 }
 
 export { useDeckSave };
-export type { DeckSaveRequest };
+export type { DeckSaveRequest, DeckSaveStatus };

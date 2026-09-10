@@ -6,21 +6,21 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
-import { DECK_BUILD_STEPS } from "../../deck-build-steps";
+import { DECK_BUILD_STEPS, type DeckBuildStep } from "../../deck-build-steps";
 import type { DeckBuildMode } from "../../deck-build-start";
 
 function BuildProgressHeader({
   mode,
   onBack,
-  stepIndex,
+  step,
 }: {
   readonly mode: DeckBuildMode;
   readonly onBack: () => void;
-  readonly stepIndex: number;
+  readonly step: DeckBuildStep;
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const step = DECK_BUILD_STEPS[stepIndex];
+  const stepIndex = DECK_BUILD_STEPS.findIndex((candidate) => candidate.id === step.id);
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
@@ -38,7 +38,7 @@ function BuildProgressHeader({
           <ThemedText type="small">←</ThemedText>
         </Pressable>
         <ThemedText themeColor="textSecondary" type="mono">
-          {`${modeLabel(mode)} · step ${stepIndex + 1} of ${DECK_BUILD_STEPS.length} · ${step?.label ?? ""}`}
+          {`${modeLabel(mode)} · step ${stepIndex + 1} of ${DECK_BUILD_STEPS.length} · ${step.label}`}
         </ThemedText>
       </View>
       <View style={styles.track}>

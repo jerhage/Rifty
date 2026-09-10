@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import type { Card } from "@/features/card/card";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import type { DeckSection } from "@/features/deck/deck/deck";
+import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useDraftSheet } from "@/hooks/use-draft-sheet";
 import { toggle } from "@/shared/toggle";
@@ -18,7 +18,7 @@ import {
 const SEARCH_DEBOUNCE_MS = 300;
 
 function useZonePool(legend: Card | null) {
-  const [zone, setZone] = useState<DeckSection>("mainDeck");
+  const [zone, setZone] = useState<ZoneSection>("mainDeck");
   const [query, setQuery] = useState("");
   const [layout, setLayout] = useState<ZonePoolLayout>("list");
   const [view, setView] = useState<ZonePoolView>("pool");

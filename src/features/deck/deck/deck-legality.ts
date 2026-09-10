@@ -1,7 +1,11 @@
+import { match, P } from "ts-pattern";
+import { z } from "zod/v4";
+
 import type { CardId } from "@/features/card/value-objects/card-id";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 
 import {
+  deckSectionSchema,
   parseDeckVerification,
   type Deck,
   type DeckLegalityViolation,
@@ -10,6 +14,44 @@ import {
   type TournamentRuleset,
 } from "./deck";
 
+const copyAllowanceSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("limited"), copies: z.number().int().nonnegative() }),
+  z.object({ type: z.literal("unlimited") }),
+]);
+
+const zoneSectionSchema = deckSectionSchema.extract([
+  "mainDeck",
+  "runeDeck",
+  "battlefield",
+  "sideboard",
+]);
+
+type CopyAllowance = z.output<typeof copyAllowanceSchema>;
+type ZoneSection = z.output<typeof zoneSectionSchema>;
+
+const UNLIMITED_COPIES: CopyAllowance = { type: "unlimited" };
+
+function limitedCopies(copies: number): CopyAllowance {
+  return { type: "limited", copies: Math.max(0, copies) };
+}
+
+function narrowerAllowance(left: CopyAllowance, right: CopyAllowance): CopyAllowance {
+  return match([left, right] as const)
+    .with([{ type: "unlimited" }, P._], () => right)
+    .with([P._, { type: "unlimited" }], () => left)
+    .with([{ type: "limited" }, { type: "limited" }], ([byLeft, byRight]) =>
+      limitedCopies(Math.min(byLeft.copies, byRight.copies)),
+    )
+    .exhaustive();
+}
+
+function remainingAllowance(allowance: CopyAllowance, heldCopies: number): CopyAllowance {
+  return match(allowance)
+    .with({ type: "unlimited" }, () => UNLIMITED_COPIES)
+    .with({ type: "limited" }, ({ copies }) => limitedCopies(copies - heldCopies))
+    .exhaustive();
+}
+
 interface HeldCopies {
   readonly copies: number;
   readonly printingIds: PrintingId[];
@@ -17,19 +59,49 @@ interface HeldCopies {
 
 /** How many cards a zone must hold, and how many copies of one card it will take. */
 interface ZoneRule {
-  readonly section: DeckSection;
+  readonly section: ZoneSection;
   readonly label: string;
   readonly requiredCount: number;
-  /** `null` where a zone places no limit on copies, as the rune deck does not. */
-  readonly copyLimit: number | null;
+  readonly copyAllowance: CopyAllowance;
 }
 
+const ZONE_RULES_BY_SECTION: Readonly<Record<ZoneSection, ZoneRule>> = {
+  mainDeck: {
+    section: "mainDeck",
+    label: "Main deck",
+    requiredCount: 40,
+    copyAllowance: { type: "limited", copies: 3 },
+  },
+  runeDeck: {
+    section: "runeDeck",
+    label: "Rune deck",
+    requiredCount: 12,
+    copyAllowance: { type: "unlimited" },
+  },
+  battlefield: {
+    section: "battlefield",
+    label: "Battlefields",
+    requiredCount: 3,
+    copyAllowance: { type: "limited", copies: 1 },
+  },
+  sideboard: {
+    section: "sideboard",
+    label: "Sideboard",
+    requiredCount: 10,
+    copyAllowance: { type: "limited", copies: 3 },
+  },
+};
+
 const ZONE_RULES: readonly ZoneRule[] = [
-  { section: "mainDeck", label: "Main deck", requiredCount: 40, copyLimit: 3 },
-  { section: "runeDeck", label: "Rune deck", requiredCount: 12, copyLimit: null },
-  { section: "battlefield", label: "Battlefields", requiredCount: 3, copyLimit: 1 },
-  { section: "sideboard", label: "Sideboard", requiredCount: 10, copyLimit: 3 },
+  ZONE_RULES_BY_SECTION.mainDeck,
+  ZONE_RULES_BY_SECTION.runeDeck,
+  ZONE_RULES_BY_SECTION.battlefield,
+  ZONE_RULES_BY_SECTION.sideboard,
 ];
+
+function zoneRule(section: ZoneSection): ZoneRule {
+  return ZONE_RULES_BY_SECTION[section];
+}
 
 /**
  * Three copies of a name in total across the main deck and the sideboard, so a card cannot hide
@@ -37,6 +109,8 @@ const ZONE_RULES: readonly ZoneRule[] = [
  */
 const SHARED_COPY_LIMIT = 3;
 const SHARED_COPY_SECTIONS: readonly DeckSection[] = ["mainDeck", "sideboard"];
+
+const LEGEND_ALLOWANCE: CopyAllowance = { type: "limited", copies: 1 };
 
 const RIFTBOUND_STANDARD: TournamentRuleset = {
   id: "riftbound-standard",
@@ -46,17 +120,18 @@ const RIFTBOUND_STANDARD: TournamentRuleset = {
 
 /** Sections whose copies of a card count against the same allowance as `section`. */
 function sectionsSharingAllowance(section: DeckSection): readonly DeckSection[] {
-  return SHARED_COPY_SECTIONS.includes(section) ? SHARED_COPY_SECTIONS : [section];
+  return match(section)
+    .with("mainDeck", "sideboard", () => SHARED_COPY_SECTIONS)
+    .with("legend", "runeDeck", "battlefield", (alone): readonly DeckSection[] => [alone])
+    .exhaustive();
 }
 
-function copyAllowance(section: DeckSection): number | null {
-  if (SHARED_COPY_SECTIONS.includes(section)) return SHARED_COPY_LIMIT;
-
-  const rule = ZONE_RULES.find((candidate) => candidate.section === section);
-
-  // A zone with no rule is the legend, which is a singleton. `null` on a rule means no limit at
-  // all, so it must not collapse into a default of one.
-  return rule ? rule.copyLimit : 1;
+function copyAllowance(section: DeckSection): CopyAllowance {
+  return match(section)
+    .with("legend", () => LEGEND_ALLOWANCE)
+    .with("mainDeck", "sideboard", () => limitedCopies(SHARED_COPY_LIMIT))
+    .with("runeDeck", "battlefield", (zone) => zoneRule(zone).copyAllowance)
+    .exhaustive();
 }
 
 /** Copies of a card already held in the sections that share this one's allowance. */
@@ -78,18 +153,16 @@ function copiesHeldElsewhere(
     .reduce((total, entry) => total + entry.quantity, 0);
 }
 
-/** How many more copies this section will take, or `null` where the zone sets no limit. */
 function remainingCopies(
   deck: Deck,
   section: DeckSection,
   cardId: CardId,
   printingId: PrintingId,
-): number | null {
-  const allowance = copyAllowance(section);
-
-  if (allowance === null) return null;
-
-  return Math.max(0, allowance - copiesHeldElsewhere(deck, section, cardId, printingId));
+): CopyAllowance {
+  return remainingAllowance(
+    copyAllowance(section),
+    copiesHeldElsewhere(deck, section, cardId, printingId),
+  );
 }
 
 function copiesByCard(deck: Deck, sections: readonly DeckSection[]): Map<CardId, HeldCopies> {
@@ -187,21 +260,31 @@ function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolat
     });
   }
 
-  if (rule.copyLimit !== null && !SHARED_COPY_SECTIONS.includes(rule.section)) {
-    for (const [cardId, held] of copiesByCard(deck, [rule.section])) {
-      if (held.copies <= rule.copyLimit) continue;
+  return [...violations, ...zoneCopyViolations(deck, rule)];
+}
 
-      violations.push({
-        type: "cardConstraint",
-        cardId,
-        printingIds: held.printingIds,
-        rule: { kind: "sectionCopyLimit", section: rule.section },
-        message: `${rule.label} allows ${copiesLabel(rule.copyLimit)} of a card. This one has ${held.copies}.`,
-      });
-    }
-  }
+function zoneCopyViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolation[] {
+  return match(rule.section)
+    .with("mainDeck", "sideboard", (): readonly DeckLegalityViolation[] => [])
+    .with("runeDeck", "battlefield", () => zoneAllowanceViolations(deck, rule))
+    .exhaustive();
+}
 
-  return violations;
+function zoneAllowanceViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolation[] {
+  return match(rule.copyAllowance)
+    .with({ type: "unlimited" }, (): readonly DeckLegalityViolation[] => [])
+    .with({ type: "limited" }, ({ copies }): readonly DeckLegalityViolation[] =>
+      [...copiesByCard(deck, [rule.section])]
+        .filter(([, held]) => held.copies > copies)
+        .map(([cardId, held]) => ({
+          type: "cardConstraint" as const,
+          cardId,
+          printingIds: held.printingIds,
+          rule: { kind: "sectionCopyLimit" as const, section: rule.section },
+          message: `${rule.label} allows ${copiesLabel(copies)} of a card. This one has ${held.copies}.`,
+        })),
+    )
+    .exhaustive();
 }
 
 function sharedCopyViolations(deck: Deck): readonly DeckLegalityViolation[] {
@@ -226,5 +309,17 @@ function copiesLabel(limit: number): string {
   return limit === 1 ? "one copy" : `${limit} copies`;
 }
 
-export { copyAllowance, remainingCopies, RIFTBOUND_STANDARD, verifyDeck, ZONE_RULES };
-export type { ZoneRule };
+export {
+  copyAllowance,
+  limitedCopies,
+  narrowerAllowance,
+  remainingAllowance,
+  remainingCopies,
+  RIFTBOUND_STANDARD,
+  sectionsSharingAllowance,
+  UNLIMITED_COPIES,
+  verifyDeck,
+  ZONE_RULES,
+  zoneRule,
+};
+export type { CopyAllowance, ZoneRule, ZoneSection };

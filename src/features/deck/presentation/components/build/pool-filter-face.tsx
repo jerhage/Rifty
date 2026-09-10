@@ -10,7 +10,7 @@ import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import { ORDERED_DOMAINS, type CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import type { DeckSection } from "@/features/deck/deck/deck";
+import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 import { useDomainColors, useKeywordColor } from "@/hooks/use-theme";
 
 import {
@@ -37,7 +37,7 @@ function PoolFilterFace({
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleKeyword: (keywordId: string) => void;
   readonly onToggleType: (typeId: CardType) => void;
-  readonly zone: DeckSection;
+  readonly zone: ZoneSection;
 }) {
   const keywordColor = useKeywordColor();
   const domainColors = useDomainColors();

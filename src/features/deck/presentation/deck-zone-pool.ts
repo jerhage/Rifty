@@ -1,9 +1,10 @@
+import { match } from "ts-pattern";
+
 import type { Card } from "@/features/card/card";
 import type { CardListCriteria } from "@/features/card/card-list-criteria";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import type { DeckSection } from "@/features/deck/deck/deck";
-import { ZONE_RULES } from "@/features/deck/deck/deck-legality";
+import { zoneRule, type ZoneSection } from "@/features/deck/deck/deck-legality";
 
 interface ZonePoolFilters {
   readonly domainIds: readonly CardDomain[];
@@ -16,6 +17,10 @@ const EMPTY_POOL_FILTERS: ZonePoolFilters = {
   keywordIds: [],
   typeIds: [],
 };
+
+const RUNE_ZONE_TYPES: readonly CardType[] = ["Rune"];
+const BATTLEFIELD_ZONE_TYPES: readonly CardType[] = ["Battlefield"];
+const PLAYABLE_ZONE_TYPES: readonly CardType[] = ["Unit", "Spell", "Gear"];
 
 type ZonePoolLayout = "list" | "grid";
 
@@ -36,40 +41,36 @@ function defaultPoolFilters(legend: Card | null): ZonePoolFilters {
 }
 
 /** Card types a zone will accept. Runes and battlefields take exactly one, so they offer no choice. */
-function zoneCardTypes(section: DeckSection): readonly CardType[] {
-  if (section === "runeDeck") return ["Rune"];
-  if (section === "battlefield") return ["Battlefield"];
-
-  return ["Unit", "Spell", "Gear"];
+function zoneCardTypes(section: ZoneSection): readonly CardType[] {
+  return match(section)
+    .with("runeDeck", () => RUNE_ZONE_TYPES)
+    .with("battlefield", () => BATTLEFIELD_ZONE_TYPES)
+    .with("mainDeck", "sideboard", () => PLAYABLE_ZONE_TYPES)
+    .exhaustive();
 }
 
-function allowsTypeChoice(section: DeckSection): boolean {
+function allowsTypeChoice(section: ZoneSection): boolean {
   return zoneCardTypes(section).length > 1;
 }
 
-function zoneRuleSummary(section: DeckSection): string {
-  const rule = ZONE_RULES.find((candidate) => candidate.section === section);
+function zoneRuleSummary(section: ZoneSection): string {
+  const rule = zoneRule(section);
 
-  if (!rule) return "";
-
-  const copies =
-    rule.copyLimit === null
-      ? "no copy limit"
-      : rule.copyLimit === 1
-        ? "1 each"
-        : `max ${rule.copyLimit} each`;
+  const copies = match(rule.copyAllowance)
+    .with({ type: "unlimited" }, () => "no copy limit")
+    .with({ type: "limited", copies: 1 }, () => "1 each")
+    .with({ type: "limited" }, ({ copies: limit }) => `max ${limit} each`)
+    .exhaustive();
 
   return `${rule.requiredCount} cards · ${copies}`;
 }
 
-function searchHint(section: DeckSection): string {
-  const rule = ZONE_RULES.find((candidate) => candidate.section === section);
-
-  return `Search ${rule ? rule.label.toLowerCase() : "cards"}`;
+function searchHint(section: ZoneSection): string {
+  return `Search ${zoneRule(section).label.toLowerCase()}`;
 }
 
 function poolCriteria(
-  section: DeckSection,
+  section: ZoneSection,
   filters: ZonePoolFilters,
   query: string,
 ): Omit<CardListCriteria, "limit" | "offset"> {

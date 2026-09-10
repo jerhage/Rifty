@@ -1,3 +1,5 @@
+import { match, P } from "ts-pattern";
+
 import type { Clock } from "@/application/ports/clock";
 import type { CardId } from "@/features/card/value-objects/card-id";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
@@ -33,31 +35,46 @@ interface SetDeckCardQuantityCapabilities {
  */
 async function setDeckCardQuantity(
   id: DeckId,
-  { cardId, printingId, quantity, section }: DeckCardQuantity,
+  quantityRequest: DeckCardQuantity,
   { clock, deckFinder, deckSaver }: SetDeckCardQuantityCapabilities,
 ): Promise<SetDeckCardQuantityResult> {
+  const { cardId, printingId, quantity, section } = quantityRequest;
+
   try {
     const current = await deckFinder.get(id);
     if (!current) return { type: "notFound" };
 
-    const allowed = remainingCopies(current, section, cardId, printingId);
-    if (allowed !== null && quantity > allowed) return { type: "copyLimitReached", allowed };
-
-    const others = current.entries.filter(
-      (entry) =>
-        entry.section !== section || entry.cardId !== cardId || entry.printingId !== printingId,
-    );
-    const deck = parseDeck({
-      ...current,
-      entries: quantity > 0 ? [...others, { section, cardId, printingId, quantity }] : others,
-      updatedAt: clock.now(),
-    });
-    await deckSaver.save(deck);
-
-    return { type: "success", deck };
+    return await match(remainingCopies(current, section, cardId, printingId))
+      .with(
+        { type: "limited", copies: P.number.lt(quantity) },
+        ({ copies }): SetDeckCardQuantityResult => ({ type: "copyLimitReached", allowed: copies }),
+      )
+      .with({ type: "limited" }, { type: "unlimited" }, () =>
+        savedWithQuantity(current, quantityRequest, { clock, deckSaver }),
+      )
+      .exhaustive();
   } catch {
     return { type: "saveFailed" };
   }
+}
+
+async function savedWithQuantity(
+  current: Deck,
+  { cardId, printingId, quantity, section }: DeckCardQuantity,
+  { clock, deckSaver }: Pick<SetDeckCardQuantityCapabilities, "clock" | "deckSaver">,
+): Promise<SetDeckCardQuantityResult> {
+  const others = current.entries.filter(
+    (entry) =>
+      entry.section !== section || entry.cardId !== cardId || entry.printingId !== printingId,
+  );
+  const deck = parseDeck({
+    ...current,
+    entries: quantity > 0 ? [...others, { section, cardId, printingId, quantity }] : others,
+    updatedAt: clock.now(),
+  });
+  await deckSaver.save(deck);
+
+  return { type: "success", deck };
 }
 
 export { setDeckCardQuantity };

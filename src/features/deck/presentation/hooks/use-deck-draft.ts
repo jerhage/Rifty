@@ -2,8 +2,11 @@ import { useCallback, useMemo, useState } from "react";
 import { match } from "ts-pattern";
 
 import type { Card } from "@/features/card/card";
-import type { DeckSection } from "@/features/deck/deck/deck";
-import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
+import {
+  RIFTBOUND_STANDARD,
+  verifyDeck,
+  type ZoneSection,
+} from "@/features/deck/deck/deck-legality";
 
 import { minimumForCard } from "../deck-build-allowance";
 import type { DeckBuildStart } from "../deck-build-start";
@@ -40,7 +43,7 @@ function useDeckDraft(start: DeckBuildStart) {
     setDraft((current) => ({ ...current, name }));
   }, []);
 
-  const setQuantity = useCallback((section: DeckSection, card: Card, quantity: number) => {
+  const setQuantity = useCallback((section: ZoneSection, card: Card, quantity: number) => {
     setDraft((current) =>
       withZoneCard(current, section, card.printingId, {
         card,

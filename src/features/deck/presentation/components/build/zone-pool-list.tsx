@@ -6,7 +6,7 @@ import { match } from "ts-pattern";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import type { DeckSection } from "@/features/deck/deck/deck";
+import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 
 import { minimumForCard, remainingForCard } from "../../deck-build-allowance";
 import { placedCards, quantityOf, type DeckBuildDraft } from "../../deck-build-steps";
@@ -28,10 +28,10 @@ function ZonePoolList({
   readonly draft: DeckBuildDraft;
   readonly onLoadMorePool: () => void;
   readonly onOpenCard: (card: Card) => void;
-  readonly onSetQuantity: (section: DeckSection, card: Card, quantity: number) => void;
+  readonly onSetQuantity: (section: ZoneSection, card: Card, quantity: number) => void;
   readonly poolLayout: ZonePoolLayout;
   readonly poolView: ZonePoolView;
-  readonly zone: DeckSection;
+  readonly zone: ZoneSection;
   readonly zonePool: readonly Card[];
 }) {
   const [poolWidth, setPoolWidth] = useState<number | null>(null);
@@ -66,8 +66,8 @@ function ZonePoolList({
         onLayout={measurePool}
         renderItem={({ item }) => {
           const placement = {
+            allowance: remainingForCard(draft, zone, item),
             card: item,
-            maxQuantity: remainingForCard(draft, zone, item),
             minQuantity: minimumForCard(draft, zone, item),
             onChange: (quantity: number) => onSetQuantity(zone, item, quantity),
             onOpenCard,

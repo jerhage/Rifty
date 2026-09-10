@@ -1,25 +1,31 @@
 import { Pressable, StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius } from "@/constants/theme";
+import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
 import { useTheme } from "@/hooks/use-theme";
 
 type StepperSurface = "inline" | "overlay";
 
 function CardStepper({
-  maxQuantity,
+  allowance,
   minQuantity,
   onChange,
   quantity,
   surface = "inline",
 }: {
-  readonly maxQuantity: number | null;
+  readonly allowance: CopyAllowance;
   readonly minQuantity: number;
   readonly onChange: (quantity: number) => void;
   readonly quantity: number;
   readonly surface?: StepperSurface;
 }) {
   const theme = useTheme();
+  const atAllowance = match(allowance)
+    .with({ type: "unlimited" }, () => false)
+    .with({ type: "limited" }, ({ copies }) => quantity >= copies)
+    .exhaustive();
 
   return (
     <View
@@ -41,11 +47,7 @@ function CardStepper({
       >
         {quantity}
       </ThemedText>
-      <StepButton
-        disabled={maxQuantity !== null && quantity >= maxQuantity}
-        label="+"
-        onPress={() => onChange(quantity + 1)}
-      />
+      <StepButton disabled={atAllowance} label="+" onPress={() => onChange(quantity + 1)} />
     </View>
   );
 }

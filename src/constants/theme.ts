@@ -46,6 +46,7 @@ const Colors = {
   },
 } as const;
 
+type Theme = (typeof Colors)[keyof typeof Colors];
 type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 /**
@@ -201,4 +202,4 @@ export {
   Spacing,
   SpeedColors,
 };
-export type { ThemeColor };
+export type { Theme, ThemeColor };

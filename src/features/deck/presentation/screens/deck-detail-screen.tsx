@@ -1,6 +1,5 @@
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
@@ -21,6 +20,7 @@ import { useTheme } from "@/hooks/use-theme";
 
 import { DeckCardRow } from "../components/detail/deck-card-row";
 import { MAIN_DECK_SECTIONS, MAIN_DECK_WITH_LEGEND, deckCards, deckGroups } from "../deck-contents";
+import { legalityColor, outstandingFixesLabel } from "../deck-legality-format";
 import { deckCountLabel, editedLabel } from "../deck-summary-format";
 
 interface DeckDetailScreenProps {
@@ -71,11 +71,8 @@ function DeckDetailScreen({
           <ThemedText themeColor="textTertiary" type="mono">
             {deckCountLabel(deck)} · {editedLabel(deck.updatedAt, now)}
           </ThemedText>
-          <ThemedText
-            style={{ color: verification.type === "legal" ? theme.positive : theme.warning }}
-            type="mono"
-          >
-            {legalityLabel(verification)}
+          <ThemedText style={{ color: legalityColor(verification, theme) }} type="mono">
+            {outstandingFixesLabel(verification)}
           </ThemedText>
         </View>
 
@@ -122,14 +119,6 @@ function DeckDetailScreen({
       </ScrollView>
     </ThemedView>
   );
-}
-
-function legalityLabel(verification: DeckVerification): string {
-  return match(verification)
-    .with({ type: "legal" }, () => "Legal")
-    .with({ type: "unverified" }, () => "Not checked")
-    .with({ type: "illegal" }, ({ violations }) => `${violations.length} to fix`)
-    .exhaustive();
 }
 
 export { DeckDetailScreen };

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { CardCounter } from "@/features/card/card-counter";
 import type { CardLister } from "@/features/card/card-lister";
 import { CardsData, type CardsDataContent } from "@/features/card/presentation/data/cards-data";
-import type { DeckSection } from "@/features/deck/deck/deck";
+import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 
 import { poolCriteria, type ZonePoolFilters } from "../deck-zone-pool";
 
@@ -20,7 +20,7 @@ function ZonePoolData({
   readonly children: (pool: CardsDataContent) => ReactNode;
   readonly filters: ZonePoolFilters;
   readonly query: string;
-  readonly zone: DeckSection;
+  readonly zone: ZoneSection;
 }) {
   return (
     <CardsData

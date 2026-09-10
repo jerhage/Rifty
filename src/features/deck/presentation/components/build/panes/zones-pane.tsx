@@ -46,8 +46,6 @@ function ZonesPane({
         <>
           <ZonesStep
             draft={draft.draft}
-            error={saving.error}
-            isSaving={saving.isSaving}
             onChangeName={draft.changeName}
             onChangePoolQuery={pool.setQuery}
             onEditStep={steps.goToStep}
@@ -63,6 +61,7 @@ function ZonesPane({
             poolLayout={pool.layout}
             poolQuery={pool.query}
             poolView={pool.view}
+            saveStatus={saving.status}
             verification={draft.verification}
             zone={pool.zone}
             zonePool={zonePool.cards}

@@ -64,7 +64,7 @@ describe("deck build", () => {
     await act(() => result.current.steps.back());
 
     expect(onExit).toHaveBeenCalledTimes(1);
-    expect(result.current.steps.stepIndex).toBe(0);
+    expect(result.current.steps.step.id).toBe("legend");
   });
 
   it("resets the pool to the legend's domains and clears the query on the zones step", async () => {
@@ -88,7 +88,7 @@ describe("deck build", () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.draft.pickLegend(legend));
-    await act(() => result.current.steps.goToStep(2));
+    await act(() => result.current.steps.goToStep("zones"));
     await act(() => result.current.pool.openFilters());
     await act(() => result.current.pool.toggleDomain("Fury"));
     await act(() => result.current.pool.applyFilters());
@@ -153,14 +153,16 @@ describe("deck build", () => {
 
     await act(() => result.current.saving.save());
 
-    expect(result.current.saving.error).toBe("Give the deck a name.");
+    expect(result.current.saving.status).toEqual({
+      type: "failed",
+      message: "Give the deck a name.",
+    });
     expect(saves).not.toHaveBeenCalled();
     expect(onSaved).not.toHaveBeenCalled();
-    expect(result.current.saving.isSaving).toBe(false);
 
     await act(() => result.current.draft.changeName("Storm"));
 
-    expect(result.current.saving.error).toBeNull();
+    expect(result.current.saving.status).toEqual({ type: "idle" });
   });
 
   it("debounces the legend query while the field stays live", async () => {

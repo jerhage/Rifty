@@ -7,22 +7,23 @@ import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { CARD_ASPECT_RATIO, CardArt } from "@/features/card/presentation/components/card-art";
 import { DomainBar } from "@/features/card/presentation/components/domain-bar";
+import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import { poolCardSubtitle } from "../../deck-zone-pool";
 import { CardStepper } from "./card-stepper";
 
 function BuildCardTile({
+  allowance,
   card,
-  maxQuantity,
   minQuantity,
   onChange,
   onOpenCard,
   quantity,
   width,
 }: {
+  readonly allowance: CopyAllowance;
   readonly card: Card;
-  readonly maxQuantity: number | null;
   readonly minQuantity: number;
   readonly onChange: (quantity: number) => void;
   readonly onOpenCard: (card: Card) => void;
@@ -65,7 +66,7 @@ function BuildCardTile({
 
         <View style={styles.stepper}>
           <CardStepper
-            maxQuantity={maxQuantity}
+            allowance={allowance}
             minQuantity={minQuantity}
             onChange={onChange}
             quantity={quantity}

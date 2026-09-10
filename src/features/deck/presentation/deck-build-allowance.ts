@@ -1,60 +1,70 @@
+import { match } from "ts-pattern";
+
 import type { Card } from "@/features/card/card";
-import type { DeckSection } from "@/features/deck/deck/deck";
-import { copyAllowance, ZONE_RULES } from "@/features/deck/deck/deck-legality";
+import {
+  copyAllowance,
+  limitedCopies,
+  narrowerAllowance,
+  remainingAllowance,
+  sectionsSharingAllowance,
+  UNLIMITED_COPIES,
+  zoneRule,
+  type CopyAllowance,
+  type ZoneSection,
+} from "@/features/deck/deck/deck-legality";
 
 import { copiesOfName, quantityOf, zoneCounts, type DeckBuildDraft } from "./deck-build-steps";
-
-const SHARED_SECTIONS: readonly DeckSection[] = ["mainDeck", "sideboard"];
-
-/**
- * The rune deck is the one zone the builder will not let you overfill. The other three are worked
- * on over time and are allowed to sit above or below their target.
- */
-const CAPPED_SECTIONS: readonly DeckSection[] = ["runeDeck"];
-
-function sectionsSharingWith(section: DeckSection): readonly DeckSection[] {
-  return SHARED_SECTIONS.includes(section) ? SHARED_SECTIONS : [section];
-}
 
 /**
  * Copies of this card already committed somewhere the player cannot change from this zone — the
  * other shared zone, or another printing of the same card.
  */
-function lockedCopies(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
-  return copiesOfName(draft, card.cardId, sectionsSharingWith(section), {
+function lockedCopies(draft: DeckBuildDraft, section: ZoneSection, card: Card): number {
+  return copiesOfName(draft, card.cardId, sectionsSharingAllowance(section), {
     section,
     printingId: card.printingId,
   });
 }
 
-function zoneCapacity(section: DeckSection): number | null {
-  if (!CAPPED_SECTIONS.includes(section)) return null;
+/**
+ * The rune deck is the one zone the builder will not let you overfill. The other three are worked
+ * on over time and are allowed to sit above or below their target.
+ */
+function copiesFittingZone(draft: DeckBuildDraft, section: ZoneSection, card: Card): CopyAllowance {
+  return match(section)
+    .with("runeDeck", (zone) => {
+      const freeSlots = zoneRule(zone).requiredCount - slotsHeldByOtherPrintings(draft, zone, card);
 
-  return ZONE_RULES.find((rule) => rule.section === section)?.requiredCount ?? null;
+      return limitedCopies(freeSlots);
+    })
+    .with("mainDeck", "battlefield", "sideboard", () => UNLIMITED_COPIES)
+    .exhaustive();
 }
 
-/** How many more of this card the zone will take, or `null` where nothing limits it. */
-function remainingForCard(draft: DeckBuildDraft, section: DeckSection, card: Card): number | null {
-  const allowance = copyAllowance(section);
-  const byCopies =
-    allowance === null ? null : Math.max(0, allowance - lockedCopies(draft, section, card));
+function remainingForCard(draft: DeckBuildDraft, section: ZoneSection, card: Card): CopyAllowance {
+  return narrowerAllowance(
+    remainingAllowance(copyAllowance(section), lockedCopies(draft, section, card)),
+    copiesFittingZone(draft, section, card),
+  );
+}
 
-  const capacity = zoneCapacity(section);
-  if (capacity === null) return byCopies;
-
-  const heldByOthers =
-    (zoneCounts(draft)[section] ?? 0) - quantityOf(draft, section, card.printingId);
-  const byCapacity = Math.max(0, capacity - heldByOthers);
-
-  return byCopies === null ? byCapacity : Math.min(byCopies, byCapacity);
+function slotsHeldByOtherPrintings(
+  draft: DeckBuildDraft,
+  section: ZoneSection,
+  card: Card,
+): number {
+  return (zoneCounts(draft)[section] ?? 0) - quantityOf(draft, section, card.printingId);
 }
 
 /**
  * The deck names one of its main deck cards as the chosen champion, so that printing cannot be
  * taken out from under it.
  */
-function minimumForCard(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
-  return section === "mainDeck" && draft.chosenChampion?.printingId === card.printingId ? 1 : 0;
+function minimumForCard(draft: DeckBuildDraft, section: ZoneSection, card: Card): number {
+  return match(section)
+    .with("mainDeck", () => (draft.chosenChampion?.printingId === card.printingId ? 1 : 0))
+    .with("runeDeck", "battlefield", "sideboard", () => 0)
+    .exhaustive();
 }
 
-export { lockedCopies, minimumForCard, remainingForCard, zoneCapacity };
+export { lockedCopies, minimumForCard, remainingForCard };

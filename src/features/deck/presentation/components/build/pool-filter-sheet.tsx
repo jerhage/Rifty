@@ -3,7 +3,7 @@ import { BottomSheet, RNHostView } from "@expo/ui";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import type { DeckSection } from "@/features/deck/deck/deck";
+import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 import { useTheme } from "@/hooks/use-theme";
 
 import type { ZonePoolFilters } from "../../deck-zone-pool";
@@ -30,7 +30,7 @@ function PoolFilterSheet({
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleKeyword: (keywordId: string) => void;
   readonly onToggleType: (typeId: CardType) => void;
-  readonly zone: DeckSection;
+  readonly zone: ZoneSection;
 }) {
   const theme = useTheme();
 

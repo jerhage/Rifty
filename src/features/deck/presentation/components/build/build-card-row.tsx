@@ -5,22 +5,23 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { DomainBar } from "@/features/card/presentation/components/domain-bar";
+import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import { poolCardSubtitle } from "../../deck-zone-pool";
 import { CardStepper } from "./card-stepper";
 
 function BuildCardRow({
+  allowance,
   card,
-  maxQuantity,
   minQuantity,
   onChange,
   onOpenCard,
   quantity,
 }: {
-  readonly card: Card;
   /** The most this printing may hold here, sharing its allowance with other printings. */
-  readonly maxQuantity: number | null;
+  readonly allowance: CopyAllowance;
+  readonly card: Card;
   readonly minQuantity: number;
   readonly onChange: (quantity: number) => void;
   readonly onOpenCard: (card: Card) => void;
@@ -66,7 +67,7 @@ function BuildCardRow({
       </Pressable>
 
       <CardStepper
-        maxQuantity={maxQuantity}
+        allowance={allowance}
         minQuantity={minQuantity}
         onChange={onChange}
         quantity={quantity}

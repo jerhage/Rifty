@@ -2,9 +2,15 @@ import { useCallback, useState } from "react";
 import { match } from "ts-pattern";
 
 import type { DeckBuildStart } from "../deck-build-start";
-import { DECK_BUILD_STEPS, type DeckBuildStep } from "../deck-build-steps";
+import { stepFor, type DeckBuildStep, type DeckBuildStepId } from "../deck-build-steps";
 
-const ZONES_STEP_INDEX = DECK_BUILD_STEPS.findIndex((step) => step.id === "zones");
+type StepAdvance =
+  | { readonly type: "finished" }
+  | { readonly type: "step"; readonly id: DeckBuildStepId };
+
+type StepRetreat =
+  | { readonly type: "exit" }
+  | { readonly type: "step"; readonly id: DeckBuildStepId };
 
 function useDeckBuildSteps(
   start: DeckBuildStart,
@@ -13,41 +19,53 @@ function useDeckBuildSteps(
     onExit,
   }: { readonly onEnterStep: (step: DeckBuildStep) => void; readonly onExit: () => void },
 ) {
-  const [stepIndex, setStepIndex] = useState(() => openingStep(start));
+  const [stepId, setStepId] = useState<DeckBuildStepId>(() => openingStepId(start));
 
   const goToStep = useCallback(
-    (index: number) => {
-      setStepIndex(index);
-      onEnterStep(stepAt(index));
+    (id: DeckBuildStepId) => {
+      setStepId(id);
+      onEnterStep(stepFor(id));
     },
     [onEnterStep],
   );
 
-  const next = useCallback(
-    () => goToStep(Math.min(DECK_BUILD_STEPS.length - 1, stepIndex + 1)),
-    [goToStep, stepIndex],
-  );
+  const next = useCallback(() => {
+    match(advanceFrom(stepId))
+      .with({ type: "finished" }, () => undefined)
+      .with({ type: "step" }, ({ id }) => goToStep(id))
+      .exhaustive();
+  }, [goToStep, stepId]);
 
   const back = useCallback(() => {
-    if (stepIndex === 0) {
-      onExit();
-      return;
-    }
+    match(retreatFrom(stepId))
+      .with({ type: "exit" }, () => onExit())
+      .with({ type: "step" }, ({ id }) => goToStep(id))
+      .exhaustive();
+  }, [goToStep, onExit, stepId]);
 
-    goToStep(stepIndex - 1);
-  }, [goToStep, onExit, stepIndex]);
-
-  return { back, goToStep, mode: start.type, next, step: stepAt(stepIndex), stepIndex };
+  return { back, goToStep, mode: start.type, next, step: stepFor(stepId) };
 }
 
-function stepAt(index: number): DeckBuildStep {
-  return DECK_BUILD_STEPS[index] ?? DECK_BUILD_STEPS[0];
+function advanceFrom(id: DeckBuildStepId): StepAdvance {
+  return match<DeckBuildStepId, StepAdvance>(id)
+    .with("legend", () => ({ type: "step", id: "chosenChampion" }))
+    .with("chosenChampion", () => ({ type: "step", id: "zones" }))
+    .with("zones", () => ({ type: "finished" }))
+    .exhaustive();
 }
 
-function openingStep(start: DeckBuildStart): number {
-  return match(start)
-    .with({ type: "new" }, () => 0)
-    .with({ type: "edit" }, () => ZONES_STEP_INDEX)
+function retreatFrom(id: DeckBuildStepId): StepRetreat {
+  return match<DeckBuildStepId, StepRetreat>(id)
+    .with("legend", () => ({ type: "exit" }))
+    .with("chosenChampion", () => ({ type: "step", id: "legend" }))
+    .with("zones", () => ({ type: "step", id: "chosenChampion" }))
+    .exhaustive();
+}
+
+function openingStepId(start: DeckBuildStart): DeckBuildStepId {
+  return match<DeckBuildStart, DeckBuildStepId>(start)
+    .with({ type: "new" }, () => "legend")
+    .with({ type: "edit" }, () => "zones")
     .exhaustive();
 }
 

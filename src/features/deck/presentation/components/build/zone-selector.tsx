@@ -2,8 +2,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
-import type { DeckSection } from "@/features/deck/deck/deck";
-import { ZONE_RULES } from "@/features/deck/deck/deck-legality";
+import { ZONE_RULES, type ZoneSection } from "@/features/deck/deck/deck-legality";
 import { useTheme } from "@/hooks/use-theme";
 
 function ZoneSelector({
@@ -12,8 +11,8 @@ function ZoneSelector({
   selected,
 }: {
   readonly counts: Readonly<Record<string, number>>;
-  readonly onSelect: (section: DeckSection) => void;
-  readonly selected: DeckSection;
+  readonly onSelect: (section: ZoneSection) => void;
+  readonly selected: ZoneSection;
 }) {
   const theme = useTheme();
 

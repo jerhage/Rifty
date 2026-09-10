@@ -48,7 +48,7 @@ function DeckBuildScreen({
 }: DeckBuildScreenProps) {
   return (
     <ThemedView style={styles.screen}>
-      <BuildProgressHeader mode={steps.mode} onBack={steps.back} stepIndex={steps.stepIndex} />
+      <BuildProgressHeader mode={steps.mode} onBack={steps.back} step={steps.step} />
       {match(steps.step.id)
         .with("legend", () => (
           <LegendPane

@@ -11,6 +11,7 @@ import {
   type DeckLegalityRule,
   type DeckLegalityViolation,
   type DeckName,
+  type DeckVerification,
 } from "../deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "../deck-legality";
 import type { DeckLister } from "../deck-lister";
@@ -65,9 +66,12 @@ async function saveDeck(
 function copyLimitViolations(deck: Deck): readonly DeckLegalityViolation[] {
   const verification = verifyDeck(deck, RIFTBOUND_STANDARD);
 
-  return verification.type === "illegal"
-    ? verification.violations.filter((violation) => isCopyLimitRule(violation.rule))
-    : [];
+  return match<DeckVerification, readonly DeckLegalityViolation[]>(verification)
+    .with({ type: "illegal" }, ({ violations }) =>
+      violations.filter((violation) => isCopyLimitRule(violation.rule)),
+    )
+    .with({ type: "legal" }, { type: "unverified" }, () => [])
+    .exhaustive();
 }
 
 function isCopyLimitRule(rule: DeckLegalityRule): boolean {

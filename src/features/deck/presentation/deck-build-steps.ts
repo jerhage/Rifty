@@ -17,28 +17,38 @@ interface DeckBuildStep {
   readonly blurb: string;
 }
 
-const DECK_BUILD_STEPS: readonly DeckBuildStep[] = [
-  {
+const DECK_BUILD_STEPS_BY_ID: Readonly<Record<DeckBuildStepId, DeckBuildStep>> = {
+  legend: {
     id: "legend",
     label: "Legend",
     title: "Pick your Legend",
     blurb:
       "Starts the game in play and sets which domains your 40 can pull from. It sits outside every count.",
   },
-  {
+  chosenChampion: {
     id: "chosenChampion",
     label: "Chosen Champion",
     title: "Name your Champion",
     blurb:
       "One champion unit is your Chosen Champion. It starts in the champion zone and shares its three copies with the main deck.",
   },
-  {
+  zones: {
     id: "zones",
     label: "Zones",
     title: "Build zones",
     blurb: "Fill each zone, then check the deck before you save it.",
   },
+};
+
+const DECK_BUILD_STEPS: readonly DeckBuildStep[] = [
+  DECK_BUILD_STEPS_BY_ID.legend,
+  DECK_BUILD_STEPS_BY_ID.chosenChampion,
+  DECK_BUILD_STEPS_BY_ID.zones,
 ];
+
+function stepFor(id: DeckBuildStepId): DeckBuildStep {
+  return DECK_BUILD_STEPS_BY_ID[id];
+}
 
 interface DraftZoneCard {
   readonly card: Card;
@@ -229,6 +239,7 @@ export {
   placedCardTotal,
   placedCards,
   quantityOf,
+  stepFor,
   withZoneCard,
   zoneCounts,
 };

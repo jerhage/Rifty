@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-import type { DeckSection } from "@/features/deck/deck/deck";
+import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 
 import type { DeckBuildCapabilities, DeckBuildStart } from "../deck-build-start";
 
@@ -23,7 +23,7 @@ function useDeckBuild(
 
   const { changeName, entries } = draft;
   const { resetFor, setZone } = pool;
-  const { clearError, save: saveRequest } = saving;
+  const { clearFailure, save: saveRequest } = saving;
 
   const steps = useDeckBuildSteps(start, {
     /** The zones step opens on the legend's own domains rather than the whole catalog. */
@@ -36,14 +36,14 @@ function useDeckBuild(
   const nameDeck = useCallback(
     (name: string) => {
       changeName(name);
-      clearError();
+      clearFailure();
     },
-    [changeName, clearError],
+    [changeName, clearFailure],
   );
 
   /** Each zone draws from a different pool, so its filters do not carry across. */
   const selectZone = useCallback(
-    (section: DeckSection) => {
+    (section: ZoneSection) => {
       setZone(section);
       resetFor(legend);
     },

@@ -2,7 +2,8 @@ import { StyleSheet, TextInput, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
-import type { DeckSection, DeckVerification } from "@/features/deck/deck/deck";
+import type { DeckVerification } from "@/features/deck/deck/deck";
+import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 import { useTheme } from "@/hooks/use-theme";
 
 import {
@@ -10,7 +11,9 @@ import {
   placedCards,
   zoneCounts,
   type DeckBuildDraft,
+  type DeckBuildStepId,
 } from "../../../deck-build-steps";
+import { completenessLabel, legalityColor } from "../../../deck-legality-format";
 import {
   activePoolFilterCount,
   searchHint,
@@ -44,17 +47,17 @@ function ZonesStepHeader({
   readonly draft: DeckBuildDraft;
   readonly onChangeName: (name: string) => void;
   readonly onChangePoolQuery: (query: string) => void;
-  readonly onEditStep: (index: number) => void;
+  readonly onEditStep: (id: DeckBuildStepId) => void;
   readonly onOpenPoolFilters: () => void;
   readonly onSelectPoolLayout: (layout: ZonePoolLayout) => void;
   readonly onSelectPoolView: (view: ZonePoolView) => void;
-  readonly onSelectZone: (section: DeckSection) => void;
+  readonly onSelectZone: (section: ZoneSection) => void;
   readonly poolFilters: ZonePoolFilters;
   readonly poolLayout: ZonePoolLayout;
   readonly poolQuery: string;
   readonly poolView: ZonePoolView;
   readonly verification: DeckVerification;
-  readonly zone: DeckSection;
+  readonly zone: ZoneSection;
 }) {
   const theme = useTheme();
   const isPool = poolView === "pool";
@@ -72,17 +75,18 @@ function ZonesStepHeader({
           style={[styles.nameInput, { color: theme.text }]}
           value={draft.name}
         />
-        <ThemedText
-          style={{ color: verification.type === "legal" ? theme.positive : theme.warning }}
-          type="mono"
-        >
-          {verification.type === "legal" ? "Legal" : "Incomplete"}
+        <ThemedText style={{ color: legalityColor(verification, theme) }} type="mono">
+          {completenessLabel(verification)}
         </ThemedText>
       </View>
 
       <View style={styles.chips}>
-        <BuildPickChip card={draft.legend} label="Legend" onEdit={() => onEditStep(0)} />
-        <BuildPickChip card={draft.chosenChampion} label="Champion" onEdit={() => onEditStep(1)} />
+        <BuildPickChip card={draft.legend} label="Legend" onEdit={() => onEditStep("legend")} />
+        <BuildPickChip
+          card={draft.chosenChampion}
+          label="Champion"
+          onEdit={() => onEditStep("chosenChampion")}
+        />
       </View>
 
       <View style={styles.zones}>

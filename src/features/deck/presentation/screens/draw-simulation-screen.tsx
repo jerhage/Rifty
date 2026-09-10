@@ -1,14 +1,13 @@
 import { useCallback, useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Radius, Spacing } from "@/constants/theme";
 import type { RandomSource } from "@/application/ports/random-source";
-import { MULLIGAN_LIMIT, drawOdds, handStats } from "@/features/analysis/draw-simulation";
+import { drawOdds, handStats } from "@/features/analysis/draw-simulation";
 import { DrawOddsPanel } from "@/features/analysis/presentation/components/draw-odds";
 import { HandStatsPanel } from "@/features/analysis/presentation/components/hand-stats";
 import type { Card } from "@/features/card/card";
@@ -17,7 +16,16 @@ import { useTheme } from "@/hooks/use-theme";
 import { shuffle } from "@/shared/shuffle";
 
 import { HandCardTile } from "../components/draw/hand-card-tile";
+import { MulliganStatusBar } from "../components/draw/mulligan-status-bar";
 import { MAIN_DECK_SECTIONS, chosenChampionCard, deckCards } from "../deck-contents";
+import {
+  handLabel,
+  mulliganAction,
+  mulliganActionLabel,
+  mulliganCounterLabel,
+  mulliganDisabled,
+  mulliganStatusMessage,
+} from "../draw-simulation-format";
 import { useDrawSimulation } from "../hooks/use-draw-simulation";
 
 interface DrawSimulationScreenProps {
@@ -57,53 +65,7 @@ function DrawSimulationScreen({
     toggleSelection,
   } = useDrawSimulation(copies, shuffleCards);
 
-  const handLabel = match(mulligan)
-    .with(
-      { type: "spent" },
-      (spent) => `Opening hand · Hand ${handNumber} · Mulliganed ${spent.replaced}`,
-    )
-    .with({ type: "available" }, () => `Opening hand · Hand ${handNumber}`)
-    .exhaustive();
-
-  const limitMessage = match(notice)
-    .with({ type: "none" }, () => null)
-    .with(
-      { type: "selectionLimit" },
-      () => "Two is the mulligan limit. Tap a chosen card again to deselect it.",
-    )
-    .with({ type: "mulliganSpent" }, () => "One mulligan per game — this hand is set.")
-    .exhaustive();
-
-  const statusNote = match(mulligan)
-    .with({ type: "spent" }, (spent) =>
-      spent.replaced === 0
-        ? "The deck ran out before the redraw. No second mulligan."
-        : `You mulliganed ${spent.replaced}. No second mulligan.`,
-    )
-    .with({ type: "available" }, () =>
-      selected.length === 0 ? "Tap up to two cards to mulligan" : `Redraws ${selected.length}`,
-    )
-    .exhaustive();
-
-  const statusCounter = match(mulligan)
-    .with({ type: "spent" }, () => "0 left")
-    .with(
-      { type: "available" },
-      () => `${MULLIGAN_LIMIT - selected.length} of ${MULLIGAN_LIMIT} left`,
-    )
-    .exhaustive();
-
-  const mulliganLabel = match(mulligan)
-    .with({ type: "spent" }, () => "Mulligan spent")
-    .with({ type: "available" }, () =>
-      selected.length === 0 ? "Mulligan" : `Mulligan ${selected.length}`,
-    )
-    .exhaustive();
-
-  const mulliganDisabled = match(mulligan)
-    .with({ type: "spent" }, () => true)
-    .with({ type: "available" }, () => selected.length === 0)
-    .exhaustive();
+  const action = mulliganAction(mulligan, selected.length);
 
   return (
     <ThemedView style={styles.screen}>
@@ -130,7 +92,7 @@ function DrawSimulationScreen({
           <ThemedText type="small">←</ThemedText>
         </Pressable>
         <ThemedText themeColor="textSecondary" type="mono">
-          {handLabel}
+          {handLabel(action, handNumber)}
         </ThemedText>
       </View>
 
@@ -165,18 +127,10 @@ function DrawSimulationScreen({
           </ThemedText>
         ) : null}
 
-        <View style={[styles.status, { backgroundColor: theme.fill, borderColor: theme.border }]}>
-          <ThemedText
-            style={styles.statusNote}
-            themeColor={limitMessage === null ? "textSecondary" : "warning"}
-            type="body"
-          >
-            {limitMessage ?? statusNote}
-          </ThemedText>
-          <ThemedText themeColor="textTertiary" type="mono">
-            {statusCounter}
-          </ThemedText>
-        </View>
+        <MulliganStatusBar
+          counter={mulliganCounterLabel(action)}
+          message={mulliganStatusMessage(action, notice)}
+        />
 
         <View style={styles.panels}>
           <HandStatsPanel stats={handStats(hand)} />
@@ -198,8 +152,8 @@ function DrawSimulationScreen({
       >
         <View style={styles.primary}>
           <Button
-            disabled={mulliganDisabled}
-            label={mulliganLabel}
+            disabled={mulliganDisabled(action)}
+            label={mulliganActionLabel(action)}
             onPress={takeMulligan}
             variant="primary"
           />
@@ -251,21 +205,6 @@ const styles = StyleSheet.create({
   },
   empty: {
     marginTop: Spacing.three,
-  },
-  status: {
-    alignItems: "center",
-    borderRadius: Radius.medium,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    gap: Spacing.two + 2,
-    justifyContent: "space-between",
-    marginTop: Spacing.three - 5,
-    paddingHorizontal: Spacing.three - 4,
-    paddingVertical: Spacing.two + 2,
-  },
-  statusNote: {
-    flex: 1,
-    minWidth: 0,
   },
   panels: {
     gap: Spacing.two + 2,

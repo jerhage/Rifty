@@ -151,7 +151,7 @@ describe("catalog seed", () => {
       card("a", {
         ...legend,
         name: "Kai'Sa - Daughter of the Void",
-        identityName: "Kai'Sa - Daughter of the Void",
+        identityName: "Kai'Sa, Daughter of the Void",
         championName: "Kai'Sa",
       }),
       card("b", {
@@ -165,8 +165,8 @@ describe("catalog seed", () => {
     const { seed, identityConflicts } = buildSeed(cards, [set("OGN")], imagesFor(cards));
 
     expect(seed.catalogCards.map((row) => row.identityName)).toEqual([
-      "Kai'Sa - Daughter of the Void",
-      "Kai'Sa - Daughter of the Void",
+      "Kai'Sa, Daughter of the Void",
+      "Kai'Sa, Daughter of the Void",
     ]);
     expect(identityConflicts).toEqual([]);
   });
@@ -175,7 +175,7 @@ describe("catalog seed", () => {
     const cards: readonly NormalizedCard[] = [
       card("a", {
         name: "Sett - The Boss",
-        identityName: "Sett - The Boss",
+        identityName: "Sett, The Boss",
         championName: "Sett",
       }),
       card("b", { name: "The Boss", identityName: "The Boss" }),
@@ -184,7 +184,7 @@ describe("catalog seed", () => {
     const { seed, identityConflicts } = buildSeed(cards, [set("OGN")], imagesFor(cards));
 
     expect(seed.catalogCards.map((row) => row.identityName)).toEqual([
-      "Sett - The Boss",
+      "Sett, The Boss",
       "The Boss",
     ]);
     expect(identityConflicts).toEqual([]);
@@ -194,7 +194,7 @@ describe("catalog seed", () => {
     const cards: readonly NormalizedCard[] = [
       card("a", {
         name: "Jinx - Loose Cannon",
-        identityName: "Jinx - Loose Cannon",
+        identityName: "Jinx, Loose Cannon",
         championName: "Jinx",
         might: 4,
       }),
@@ -204,13 +204,13 @@ describe("catalog seed", () => {
     const { seed, identityConflicts } = buildSeed(cards, [set("OGN")], imagesFor(cards));
 
     expect(seed.catalogCards.map((row) => row.identityName)).toEqual([
-      "Jinx - Loose Cannon",
+      "Jinx, Loose Cannon",
       "Loose Cannon",
     ]);
     expect(identityConflicts).toEqual([
       {
         identityName: "Loose Cannon",
-        hosts: ["Jinx - Loose Cannon"],
+        hosts: ["Jinx, Loose Cannon"],
         reason: "type, energy, might or power disagree: Unit/3/2/null and Unit/3/4/null",
       },
     ]);

@@ -73,8 +73,10 @@ const LEVEL = /^level\s+\d+$/i;
 const PLACEHOLDER = new Set(["no text"]);
 const SPEED_ORDER: readonly CardSpeed[] = ["normal", "action", "reaction"];
 const NAME_SEPARATOR = /\s+-\s+|,\s+/;
+const ELIDED_APOSTROPHE = /(?<=[\p{L}\p{N}])'(?=[\p{L}\p{N}])/gu;
+const SEPARATOR_RUN = /(?:(?<![\p{L}\p{N}])[^\p{L}\p{N}]|[^\p{L}\p{N}](?![\p{L}\p{N}]))+/gu;
 const NAME_QUALIFIER = /\s*\([^)]*\)\s*$/;
-const CANONICAL_SEPARATOR = " - ";
+const CANONICAL_SEPARATOR = ", ";
 const APOSTROPHE_VARIANT = /[\u2018\u2019\u02bc\u2032]/g;
 const QUOTE_VARIANT = /[\u201c\u201d\u2033]/g;
 const DASH_VARIANT = /[\u2010-\u2015\u2212]/g;
@@ -528,6 +530,13 @@ function identityName(name: string): string {
     .join(CANONICAL_SEPARATOR);
 }
 
+function cleanName(name: string): string {
+  return normalizedPunctuation(name)
+    .replace(ELIDED_APOSTROPHE, "")
+    .replace(SEPARATOR_RUN, " ")
+    .trim();
+}
+
 function printingIdentity(riftboundId: string): PrintingIdentity {
   const segments = riftboundId.split("-");
   const poolCode = segments.length >= 3 ? (segments.at(-1) ?? null) : null;
@@ -548,12 +557,14 @@ function printingIdentity(riftboundId: string): PrintingIdentity {
 
 export {
   ACTOR_LEAD_INS,
+  CANONICAL_SEPARATOR,
   SELF_LEAD_INS,
   SELF_TRAILING_TARGETS,
   TARGET_LEAD_INS,
   TARGET_TRAILING_TARGETS,
   cardSpeeds,
   championName,
+  cleanName,
   identityName,
   keywordOccurrences,
   keywordsWithMagnitude,

@@ -3,8 +3,10 @@ import { z } from "zod/v4";
 import { cardDomainSchema } from "../src/features/card/value-objects/card-domain";
 import { cardTypeSchema } from "../src/features/card/value-objects/card-type";
 import {
+  CANONICAL_SEPARATOR,
   cardSpeeds,
   championName,
+  cleanName,
   identityName,
   keywordOccurrences,
   keywordsWithMagnitude,
@@ -152,7 +154,6 @@ const KEYWORD_REMINDER = /\[([^\]]+)\]\s*_?\(([^)]*)\)/g;
 const DERIVED_SOURCE = "derived";
 const LEADING_DIGITS = /(\d+)/;
 const REPORTED_SAMPLE = 5;
-const IDENTITY_SEPARATOR = " - ";
 type RawCard = z.output<typeof rawCardSchema>;
 type RawSet = z.output<typeof rawSetSchema>;
 type ApiCard = z.output<typeof apiCardSchema>;
@@ -195,6 +196,7 @@ type NormalizedCard = {
 type CardCore = Omit<
   NormalizedCard,
   | "championName"
+  | "cleanName"
   | "collectorNumber"
   | "id"
   | "identityName"
@@ -293,6 +295,7 @@ function normalize({ card, fetchedAt }: FetchedCard): NormalizedCard {
       supertypeId: card.supertype ?? null,
       typeId: card.cardType,
     }),
+    cleanName: cleanName(core.name),
     identityName: identityName(core.name),
     regions: card.regions,
     imageSources: imageSourcesOf(imageCardOf(card)),
@@ -306,7 +309,6 @@ function fromRaw(card: RawCard): CardCore {
   return {
     setCode: card.set.set_id,
     name: normalizedPunctuation(card.name),
-    cleanName: card.metadata.clean_name ?? normalizedName(card.name),
     energy: card.attributes.energy,
     might: card.attributes.might,
     power: card.attributes.power,
@@ -334,7 +336,6 @@ function fromFlat(card: ApiCard, fetchedAt: string): CardCore {
   return {
     setCode: card.setCode,
     name: normalizedPunctuation(card.name),
-    cleanName: normalizedName(card.name),
     energy: card.cost ?? null,
     might: card.might ?? null,
     power: card.power ?? null,
@@ -554,12 +555,12 @@ function printingsByIdentity(
 
 function hostIdentities(identities: readonly string[], tail: string): readonly string[] {
   return identities.filter(
-    (identity) => identity !== tail && identity.endsWith(IDENTITY_SEPARATOR + tail),
+    (identity) => identity !== tail && identity.endsWith(CANONICAL_SEPARATOR + tail),
   );
 }
 
 function droppedPrefix(host: string, tail: string): string {
-  return host.slice(0, host.length - tail.length - IDENTITY_SEPARATOR.length);
+  return host.slice(0, host.length - tail.length - CANONICAL_SEPARATOR.length);
 }
 
 function gameplayShape(card: NormalizedCard): string {
@@ -724,13 +725,6 @@ function uniqueBy<Row>(rows: readonly Row[], keyOf: (row: Row) => readonly strin
     return true;
   });
 }
-function normalizedName(name: string): string {
-  return name
-    .normalize("NFKD")
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim();
-}
-
 function assertValid(seed: Seed): void {
   seed.cardSets.forEach((row) => cardSetInsertSchema.parse(row));
   seed.setMarketplaceReferences.forEach((row) => setMarketplaceReferenceInsertSchema.parse(row));

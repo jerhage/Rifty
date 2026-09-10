@@ -3,6 +3,7 @@ import { downloadTargetFor, imageFileNames } from "../../scripts/card-image-file
 import {
   cardSpeeds,
   championName,
+  cleanName,
   identityName,
   keywordOccurrences,
   keywordsWithMagnitude,
@@ -317,21 +318,21 @@ describe("card derivation", () => {
 
   it("strips the printing qualifier from a card's identity", () => {
     expect(identityName("Yasuo (Alternate Art)")).toBe("Yasuo");
-    expect(identityName("Jinx, Loose Cannon (Signature)")).toBe("Jinx - Loose Cannon");
+    expect(identityName("Jinx, Loose Cannon (Signature)")).toBe("Jinx, Loose Cannon");
     expect(identityName("Sett (Overnumbered)")).toBe("Sett");
   });
 
   it("canonicalizes the separator so one card keeps one identity", () => {
-    expect(identityName("Sett - Brawler")).toBe("Sett - Brawler");
-    expect(identityName("Sett, Brawler")).toBe("Sett - Brawler");
-    expect(identityName("Mel - Newly Awakened (Alternate Art)")).toBe("Mel - Newly Awakened");
+    expect(identityName("Sett - Brawler")).toBe("Sett, Brawler");
+    expect(identityName("Sett, Brawler")).toBe("Sett, Brawler");
+    expect(identityName("Mel - Newly Awakened (Alternate Art)")).toBe("Mel, Newly Awakened");
     expect(identityName("Riven - Shattered")).toBe(identityName("Riven, Shattered"));
   });
 
   it("folds every apostrophe and dash variant so one card keeps one identity", () => {
     expect(identityName("Doran\u2019s Shield")).toBe("Doran's Shield");
     expect(identityName("Aspirant\u2019s Climb")).toBe(identityName("Aspirant's Climb"));
-    expect(identityName("K\u2019Sante \u2013 Courageous")).toBe("K'Sante - Courageous");
+    expect(identityName("K\u2019Sante \u2013 Courageous")).toBe("K'Sante, Courageous");
     expect(identityName("Kai\u2019Sa,  Survivor  ")).toBe(identityName("Kai'Sa - Survivor"));
   });
 
@@ -339,6 +340,33 @@ describe("card derivation", () => {
     expect(identityName("Blazing Scorcher")).toBe("Blazing Scorcher");
     expect(identityName("Anti-Mage")).toBe("Anti-Mage");
     expect(identityName("Yordle Sniper")).toBe("Yordle Sniper");
+  });
+
+  it("elides punctuation inside a word but collapses a separator to one space", () => {
+    expect(cleanName("Doran's Shield")).toBe("Dorans Shield");
+    expect(cleanName("Kai'Sa - Survivor")).toBe("KaiSa Survivor");
+    expect(cleanName("Sett - Brawler")).toBe("Sett Brawler");
+    expect(cleanName("Mel, Soul's Reflection")).toBe("Mel Souls Reflection");
+  });
+
+  it("keeps a hyphen that joins a word and drops one that introduces a subtitle", () => {
+    expect(cleanName("Mega-Mech")).toBe("Mega-Mech");
+    expect(cleanName("Ahri - Nine-Tailed Fox")).toBe("Ahri Nine-Tailed Fox");
+    expect(cleanName("Renata Glasc - Chem-Baroness")).toBe("Renata Glasc Chem-Baroness");
+    expect(cleanName("B.F. Sword")).toBe("B.F Sword");
+  });
+
+  it("folds every apostrophe and dash variant so one card keeps one search key", () => {
+    expect(cleanName("Doran\u2019s Shield")).toBe(cleanName("Doran's Shield"));
+    expect(cleanName("Aspirant\u2019s Climb")).toBe("Aspirants Climb");
+    expect(cleanName("Kai\u2019Sa \u2013 Survivor")).toBe(cleanName("Kai'Sa - Survivor"));
+  });
+
+  it("leaves no empty, doubled or edge space in the search key", () => {
+    expect(cleanName("Yasuo - Remorseful (Alternate Art)")).toBe("Yasuo Remorseful Alternate Art");
+    expect(cleanName("Recruit (271) // Buff")).toBe("Recruit 271 Buff");
+    expect(cleanName("Get Excited!")).toBe("Get Excited");
+    expect(cleanName("Ol' Poro")).toBe("Ol Poro");
   });
 
   it("reads the pool, the collector number, and both printing marks from the id", () => {

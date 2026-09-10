@@ -120,7 +120,7 @@ describe("draw odds", () => {
   it("reports the pinned card held among the copies", () => {
     const odds = drawOdds(library, champion).pinned;
 
-    expect(odds?.name).toBe("Volibear - Furious");
+    expect(odds?.name).toBe("Volibear, Furious");
     expect(odds?.copies).toBe(3);
     expect(odds?.opening).toBeCloseTo(0.880952, 6);
     expect(odds?.byTurnThree).toBeCloseTo(0.988095, 6);
@@ -152,7 +152,7 @@ describe("draw odds", () => {
   it("counts every printing of the pinned card as copies of one card", () => {
     const odds = drawOdds(splitPrintings, champion).pinned;
 
-    expect(odds?.name).toBe("Volibear - Furious");
+    expect(odds?.name).toBe("Volibear, Furious");
     expect(odds?.copies).toBe(3);
     expect(odds?.opening).toBeCloseTo(0.880952, 6);
     expect(odds?.byTurnThree).toBeCloseTo(0.988095, 6);

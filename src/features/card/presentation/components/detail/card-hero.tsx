@@ -1,10 +1,11 @@
 import { StyleSheet, View } from "react-native";
 import { match } from "ts-pattern";
 
-import { CardImage } from "@/components/ui/atoms/card-image";
 import { Radius } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { useTheme } from "@/hooks/use-theme";
+
+import { CardImage } from "../card-image";
 
 /** The card face, shown plain — its own printing already carries the cost, might and domain. */
 function CardHero({ card }: { readonly card: Card }) {

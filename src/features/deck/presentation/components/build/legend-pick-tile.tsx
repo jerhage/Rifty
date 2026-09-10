@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { CardImage } from "@/components/ui/atoms/card-image";
-import { DomainBar } from "@/components/ui/atoms/domain-bar";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
+import { CardImage } from "@/features/card/presentation/components/card-image";
+import { DomainBar } from "@/features/card/presentation/components/domain-bar";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 function LegendPickTile({

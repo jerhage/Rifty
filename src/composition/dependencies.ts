@@ -2,6 +2,7 @@ import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
 import type { RandomSource } from "@/application/ports/random-source";
 import type { CardRepository } from "@/features/catalog/card/card-repository";
+import type { KeywordLister } from "@/features/catalog/keyword/keyword-lister";
 import type { SetRepository } from "@/features/catalog/set/set-repository";
 import type { DeckRepository } from "@/features/deck/deck/deck-repository";
 import { openAppDataStore } from "@/infrastructure/database/open-app-data-store";
@@ -13,6 +14,7 @@ import { withQueryLogging } from "@/infrastructure/logging/with-query-logging";
 
 interface CatalogDependencies {
   readonly cardRepository: CardRepository;
+  readonly keywordLister: KeywordLister;
   readonly setRepository: SetRepository;
 }
 
@@ -34,6 +36,7 @@ async function createAppDependencies(): Promise<AppDependencies> {
   return {
     catalog: {
       cardRepository: withQueryLogging(store.catalog.cards, logger, "CardRepository"),
+      keywordLister: withQueryLogging(store.catalog.keywords, logger, "KeywordLister"),
       setRepository: withQueryLogging(store.catalog.sets, logger, "SetRepository"),
     },
     clock: new SystemClock(),

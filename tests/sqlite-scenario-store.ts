@@ -34,6 +34,7 @@ import {
 } from "@/infrastructure/database/catalog-schema/taxonomy";
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
 import { SqliteDeckRepository } from "@/infrastructure/sqlite/sqlite-deck-repository";
+import { SqliteKeywordRepository } from "@/infrastructure/sqlite/sqlite-keyword-repository";
 import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
 
 /** The real engine and committed migrations, holding both catalog and deck tables. */
@@ -255,6 +256,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
 
   return {
     cards: new SqliteCardRepository(database, TEST_IMAGE_BASE_URL),
+    keywords: new SqliteKeywordRepository(database),
     sets: new SqliteSetRepository(database),
     deckStore: { repository: new SqliteDeckRepository(database) },
     seedCard,

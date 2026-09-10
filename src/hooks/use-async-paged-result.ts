@@ -56,22 +56,18 @@ function useAsyncPagedResult<T>({
   const runRef = useRef(run);
   const pageSizeRef = useRef(pageSize);
   const loadMoreErrorRef = useRef(loadMoreErrorMessage);
-  const stateRef = useRef(state);
   const firstPageController = useRef<AbortController | null>(null);
   const loadMoreController = useRef<AbortController | null>(null);
-  const isLoadingMoreRef = useRef(false);
 
   useEffect(() => {
     runRef.current = run;
     pageSizeRef.current = pageSize;
     loadMoreErrorRef.current = loadMoreErrorMessage;
-    stateRef.current = state;
   });
 
   const startFirstPage = useCallback(() => {
     firstPageController.current?.abort();
     loadMoreController.current?.abort();
-    isLoadingMoreRef.current = false;
     const controller = new AbortController();
     firstPageController.current = controller;
 
@@ -153,53 +149,68 @@ function useAsyncPagedResult<T>({
     });
   }, [startFirstPage]);
 
-  const loadMore = useCallback(() => {
-    if (isLoadingMoreRef.current) return;
+  const paging = match(state)
+    .with({ type: "success" }, (successful) => successful.paging)
+    .with({ type: "loading" }, { type: "loadFailed" }, () => IDLE_PAGING)
+    .exhaustive();
+  const loadedCount = match(state)
+    .with({ type: "success" }, (successful) => successful.page.items.length)
+    .with({ type: "loading" }, { type: "loadFailed" }, () => 0)
+    .exhaustive();
 
-    match(stateRef.current)
-      .with(
-        {
-          type: "success",
-          paging: { type: P.union("idle", "failed") },
-          page: { hasMore: true },
-        },
-        (loaded) => {
-          const offset = loaded.page.items.length;
-          loadMoreController.current?.abort();
-          const controller = new AbortController();
-          loadMoreController.current = controller;
-          isLoadingMoreRef.current = true;
-          setState({ ...loaded, paging: { type: "loadingMore" } });
+  useEffect(() => {
+    match(paging)
+      .with({ type: "loadingMore" }, () => {
+        loadMoreController.current?.abort();
+        const controller = new AbortController();
+        loadMoreController.current = controller;
 
-          void runRef
-            .current({ limit: pageSizeRef.current, offset }, { signal: controller.signal })
-            .then((read) => {
-              if (controller.signal.aborted) return;
-              setState((current) =>
-                match(current)
-                  .with({ type: "success" }, (successful) =>
-                    match(read)
-                      .with({ type: "success" }, ({ page, total }) => ({
-                        ...successful,
-                        page: successful.page.append(page),
-                        total,
-                        paging: IDLE_PAGING,
-                      }))
-                      .with({ type: "listFailed" }, () => ({
-                        ...successful,
-                        paging: { type: "failed" as const, message: loadMoreErrorRef.current },
-                      }))
-                      .exhaustive(),
-                  )
-                  .with({ type: "loading" }, { type: "loadFailed" }, () => current)
-                  .exhaustive(),
-              );
-              isLoadingMoreRef.current = false;
-            });
-        },
-      )
-      .with({ type: "loading" }, { type: "loadFailed" }, { type: "success" }, () => undefined)
+        void runRef
+          .current(
+            { limit: pageSizeRef.current, offset: loadedCount },
+            { signal: controller.signal },
+          )
+          .then((read) => {
+            if (controller.signal.aborted) return;
+            setState((current) =>
+              match(current)
+                .with({ type: "success" }, (successful) =>
+                  match(read)
+                    .with({ type: "success" }, ({ page, total }) => ({
+                      ...successful,
+                      page: successful.page.append(page),
+                      total,
+                      paging: IDLE_PAGING,
+                    }))
+                    .with({ type: "listFailed" }, () => ({
+                      ...successful,
+                      paging: { type: "failed" as const, message: loadMoreErrorRef.current },
+                    }))
+                    .exhaustive(),
+                )
+                .with({ type: "loading" }, { type: "loadFailed" }, () => current)
+                .exhaustive(),
+            );
+          });
+      })
+      .with({ type: "idle" }, { type: "failed" }, () => undefined)
       .exhaustive();
+  }, [paging, loadedCount]);
+
+  const loadMore = useCallback(() => {
+    setState((current) =>
+      match(current)
+        .with(
+          {
+            type: "success",
+            paging: { type: P.union("idle", "failed") },
+            page: { hasMore: true },
+          },
+          (loaded) => ({ ...loaded, paging: { type: "loadingMore" as const } }),
+        )
+        .with({ type: "loading" }, { type: "loadFailed" }, { type: "success" }, () => current)
+        .exhaustive(),
+    );
   }, []);
 
   return { state, loadMore, refresh, reload };

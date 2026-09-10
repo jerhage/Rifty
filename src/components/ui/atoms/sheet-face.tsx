@@ -10,6 +10,7 @@ function SheetFace({
   action,
   body,
   confirmLabel,
+  footerNote,
   onConfirm,
   title,
 }: {
@@ -17,6 +18,8 @@ function SheetFace({
   readonly action?: ReactNode;
   readonly body: ReactNode;
   readonly confirmLabel: string;
+  /** Optional content above the confirm button. */
+  readonly footerNote?: ReactNode;
   readonly onConfirm: () => void;
   readonly title: string;
 }) {
@@ -30,8 +33,11 @@ function SheetFace({
         </ThemedText>
         {action}
       </View>
-      <ScrollView contentContainerStyle={styles.body}>{body}</ScrollView>
+      <ScrollView contentContainerStyle={styles.body} style={styles.scroll}>
+        {body}
+      </ScrollView>
       <View style={[styles.footer, { borderTopColor: theme.border }]}>
+        {footerNote}
         <Button label={confirmLabel} onPress={onConfirm} variant="primary" />
       </View>
     </View>
@@ -55,6 +61,10 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
   },
+  scroll: {
+    flexGrow: 1,
+    height: 0,
+  },
   body: {
     gap: Spacing.four,
     paddingBottom: Spacing.three,
@@ -63,6 +73,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     borderTopWidth: StyleSheet.hairlineWidth,
+    gap: Spacing.two,
     paddingBottom: Spacing.five,
     paddingHorizontal: Spacing.three + 2,
     paddingTop: Spacing.three - 4,

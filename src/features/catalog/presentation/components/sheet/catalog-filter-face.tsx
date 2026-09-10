@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { Chip } from "@/components/ui/atoms/chip";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
+import { SheetFace } from "@/components/ui/atoms/sheet-face";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/catalog/keyword/keyword";
@@ -14,7 +15,6 @@ import {
 } from "../../catalog-query-criteria";
 import { KeywordFilterChips } from "./keyword-filter-chips";
 import { MinimumAttributeInput } from "./minimum-attribute-input";
-import { SheetFace } from "./sheet-face";
 
 /**
  * Carries only the facets with nowhere else to go — domains and card types are already chips above

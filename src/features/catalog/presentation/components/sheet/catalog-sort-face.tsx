@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { RadioRow } from "@/components/ui/atoms/radio-row";
 import { SegmentedControl, SegmentedOption } from "@/components/ui/atoms/segmented-control";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
+import { SheetFace } from "@/components/ui/atoms/sheet-face";
 import { Spacing } from "@/constants/theme";
 
 import type { CatalogQueryCriteria } from "../../catalog-query-criteria";
@@ -14,7 +15,6 @@ import {
   SORT_OPTIONS,
   sortWithDirection,
 } from "../../catalog-sort-options";
-import { SheetFace } from "./sheet-face";
 
 /**
  * Attribute and direction are chosen separately, so each ordering appears once. The order control

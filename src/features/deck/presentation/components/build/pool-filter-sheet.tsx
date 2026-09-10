@@ -1,10 +1,10 @@
 import { BottomSheet, RNHostView } from "@expo/ui";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { Chip } from "@/components/ui/atoms/chip";
 import { ColorDot } from "@/components/ui/atoms/color-dot";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
-import { Button } from "@/components/ui/atoms/button";
+import { SheetFace } from "@/components/ui/atoms/sheet-face";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/catalog/keyword/keyword";
@@ -56,11 +56,8 @@ function PoolFilterSheet({
       snapPoints={["half", "full"]}
     >
       <RNHostView>
-        <View style={styles.face}>
-          <View style={styles.titleRow}>
-            <ThemedText type="display" style={styles.title}>
-              Narrow the pool
-            </ThemedText>
+        <SheetFace
+          action={
             <Pressable
               accessibilityRole="button"
               onPress={onReset}
@@ -70,59 +67,61 @@ function PoolFilterSheet({
                 Reset
               </ThemedText>
             </Pressable>
-          </View>
-
-          <ScrollView contentContainerStyle={styles.body}>
-            <LabelledSection label="Domain">
-              <View style={styles.chips}>
-                {ORDERED_DOMAINS.map((domainId) => (
-                  <Chip
-                    adornment={<ColorDot color={domainColors[domainId]} />}
-                    key={domainId}
-                    label={domainId}
-                    onPress={() => onToggleDomain(domainId)}
-                    selected={filters.domainIds.includes(domainId)}
-                    tone="neutral"
-                  />
-                ))}
-              </View>
-            </LabelledSection>
-
-            {allowsTypeChoice(zone) ? (
-              <LabelledSection label="Card type">
+          }
+          body={
+            <>
+              <LabelledSection label="Domain">
                 <View style={styles.chips}>
-                  {zoneCardTypes(zone).map((typeId) => (
+                  {ORDERED_DOMAINS.map((domainId) => (
                     <Chip
-                      key={typeId}
-                      label={typeId}
-                      onPress={() => onToggleType(typeId)}
-                      selected={filters.typeIds.includes(typeId)}
+                      adornment={<ColorDot color={domainColors[domainId]} />}
+                      key={domainId}
+                      label={domainId}
+                      onPress={() => onToggleDomain(domainId)}
+                      selected={filters.domainIds.includes(domainId)}
+                      tone="neutral"
                     />
                   ))}
                 </View>
               </LabelledSection>
-            ) : null}
 
-            <LabelledSection label="Keywords">
-              <KeywordFilterChips
-                keywords={keywords}
-                onToggle={onToggleKeyword}
-                selectedIds={filters.keywordIds}
-              />
-            </LabelledSection>
+              {allowsTypeChoice(zone) ? (
+                <LabelledSection label="Card type">
+                  <View style={styles.chips}>
+                    {zoneCardTypes(zone).map((typeId) => (
+                      <Chip
+                        key={typeId}
+                        label={typeId}
+                        onPress={() => onToggleType(typeId)}
+                        selected={filters.typeIds.includes(typeId)}
+                      />
+                    ))}
+                  </View>
+                </LabelledSection>
+              ) : null}
 
-            <ThemedText themeColor="textTertiary" type="body">
-              {zoneRuleSummary(zone)}
-            </ThemedText>
-          </ScrollView>
+              <LabelledSection label="Keywords">
+                <KeywordFilterChips
+                  keywords={keywords}
+                  onToggle={onToggleKeyword}
+                  selectedIds={filters.keywordIds}
+                />
+              </LabelledSection>
 
-          <View style={[styles.footer, { borderTopColor: theme.border }]}>
+              <ThemedText themeColor="textTertiary" type="body">
+                {zoneRuleSummary(zone)}
+              </ThemedText>
+            </>
+          }
+          confirmLabel="Show results"
+          footerNote={
             <ThemedText themeColor="textSecondary" type="mono" style={styles.result}>
               {resultLabel}
             </ThemedText>
-            <Button label="Show results" onPress={onDismiss} variant="primary" />
-          </View>
-        </View>
+          }
+          onConfirm={onDismiss}
+          title="Narrow the pool"
+        />
       </RNHostView>
     </BottomSheet>
   );
@@ -131,37 +130,10 @@ function PoolFilterSheet({
 export { PoolFilterSheet };
 
 const styles = StyleSheet.create({
-  face: {
-    flex: 1,
-  },
-  titleRow: {
-    alignItems: "baseline",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.three + 2,
-    paddingTop: Spacing.two,
-  },
-  title: {
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  body: {
-    gap: Spacing.four,
-    paddingBottom: Spacing.three,
-    paddingHorizontal: Spacing.three + 2,
-    paddingTop: Spacing.three - 2,
-  },
   chips: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.two - 1,
-  },
-  footer: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    gap: Spacing.two,
-    paddingBottom: Spacing.five,
-    paddingHorizontal: Spacing.three + 2,
-    paddingTop: Spacing.three - 4,
   },
   result: {
     textAlign: "center",

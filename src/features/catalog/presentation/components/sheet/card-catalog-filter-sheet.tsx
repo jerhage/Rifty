@@ -1,10 +1,9 @@
-import { BottomSheet, RNHostView } from "@expo/ui";
 import { View } from "react-native";
 import { match } from "ts-pattern";
 
+import { BottomSheetShell } from "@/components/ui/atoms/bottom-sheet-shell";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import type { CardSet } from "@/features/set/card-set";
-import { useTheme } from "@/hooks/use-theme";
 
 import type { CatalogQueryCriteria } from "../../catalog-query-criteria";
 import type { CatalogSheetState } from "../../hooks/use-catalog-query";
@@ -31,38 +30,29 @@ function CardCatalogFilterSheet({
   readonly onDismiss: () => void;
   readonly sheet: CatalogSheetState;
 }) {
-  const theme = useTheme();
-
   return (
-    <BottomSheet
-      containerColor={theme.backgroundSheet}
-      isPresented={sheet.type !== "hidden"}
-      onDismiss={onDismiss}
-      snapPoints={["half", "full"]}
-    >
-      <RNHostView>
-        {match(sheet)
-          .with({ type: "hidden" }, () => <View />)
-          .with({ type: "sort" }, () => (
-            <CatalogSortFace
-              criteria={criteria}
-              onApply={onApply}
-              onChangeCriteria={onChangeCriteria}
-            />
-          ))
-          .with({ type: "filter" }, () => (
-            <CatalogFilterFace
-              cardSets={cardSets}
-              criteria={criteria}
-              keywords={keywords}
-              onApply={onApply}
-              onChangeCriteria={onChangeCriteria}
-              onClear={onClear}
-            />
-          ))
-          .exhaustive()}
-      </RNHostView>
-    </BottomSheet>
+    <BottomSheetShell isPresented={sheet.type !== "hidden"} onDismiss={onDismiss}>
+      {match(sheet)
+        .with({ type: "hidden" }, () => <View />)
+        .with({ type: "sort" }, () => (
+          <CatalogSortFace
+            criteria={criteria}
+            onApply={onApply}
+            onChangeCriteria={onChangeCriteria}
+          />
+        ))
+        .with({ type: "filter" }, () => (
+          <CatalogFilterFace
+            cardSets={cardSets}
+            criteria={criteria}
+            keywords={keywords}
+            onApply={onApply}
+            onChangeCriteria={onChangeCriteria}
+            onClear={onClear}
+          />
+        ))
+        .exhaustive()}
+    </BottomSheetShell>
   );
 }
 

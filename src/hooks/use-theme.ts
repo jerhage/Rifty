@@ -10,7 +10,7 @@ function useTheme() {
   return Colors[resolvedScheme(useColorScheme())];
 }
 
-/** Accent colors keyed by catalog domain, for the current color scheme. */
+/** Accent colors keyed by card domain, for the current color scheme. */
 function useDomainColors() {
   return DomainColors[resolvedScheme(useColorScheme())];
 }

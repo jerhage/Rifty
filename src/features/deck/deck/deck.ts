@@ -1,8 +1,9 @@
 import { z } from "zod/v4";
 
 /** Stable game-card identity retained by a deck even when catalog data is reseeded. */
-const cardIdSchema = z.string().trim().min(1);
-const printingIdSchema = z.string().trim().min(1);
+import { cardIdSchema } from "@/features/card/value-objects/card-id";
+import { printingIdSchema } from "@/features/card/value-objects/printing-id";
+
 const deckIdSchema = z.string().trim().min(1);
 const deckNameSchema = z.string().trim().min(1);
 const deckSectionSchema = z.enum(["legend", "mainDeck", "runeDeck", "battlefield", "sideboard"]);
@@ -103,8 +104,6 @@ function parseDeckVerification(value: unknown): DeckVerification {
   return deckVerificationSchema.parse(value);
 }
 
-type CardId = z.output<typeof cardIdSchema>;
-type PrintingId = z.output<typeof printingIdSchema>;
 type DeckId = z.output<typeof deckIdSchema>;
 type DeckName = z.output<typeof deckNameSchema>;
 type DeckSection = z.output<typeof deckSectionSchema>;
@@ -119,7 +118,6 @@ type LegalDeck = Extract<DeckVerification, { type: "legal" }>;
 type IllegalDeck = Extract<DeckVerification, { type: "illegal" }>;
 
 export {
-  cardIdSchema,
   deckEntrySchema,
   deckIdSchema,
   deckLegalityViolationSchema,
@@ -130,11 +128,9 @@ export {
   deckVerificationSchema,
   parseDeck,
   parseDeckVerification,
-  printingIdSchema,
   tournamentRulesetSchema,
 };
 export type {
-  CardId,
   Deck,
   DeckEntry,
   DeckId,
@@ -145,7 +141,6 @@ export type {
   DeckVerification,
   IllegalDeck,
   LegalDeck,
-  PrintingId,
   TournamentRuleset,
   UnverifiedDeck,
 };

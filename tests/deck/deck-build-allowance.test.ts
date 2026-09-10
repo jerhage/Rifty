@@ -27,7 +27,7 @@ describe("deck build allowance", () => {
   it("counts printings of the same card against one allowance", () => {
     const draft = draftWith({
       zoneCards: {
-        [quantityKey("mainDeck", survivor.id)]: { card: survivor, quantity: 3 },
+        [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 3 },
       },
     });
 
@@ -38,7 +38,7 @@ describe("deck build allowance", () => {
   it("keeps different cards apart even when they share a character", () => {
     const draft = draftWith({
       zoneCards: {
-        [quantityKey("mainDeck", survivor.id)]: { card: survivor, quantity: 3 },
+        [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 3 },
       },
     });
 
@@ -49,21 +49,21 @@ describe("deck build allowance", () => {
     const draft = chooseChampion(EMPTY_DRAFT, survivor);
 
     expect(zoneCounts(draft).mainDeck).toBe(1);
-    expect(quantityOf(draft, "mainDeck", survivor.id)).toBe(1);
-    expect(quantityOf(draft, "mainDeck", survivorAlt.id)).toBe(0);
+    expect(quantityOf(draft, "mainDeck", survivor.printingId)).toBe(1);
+    expect(quantityOf(draft, "mainDeck", survivorAlt.printingId)).toBe(0);
   });
 
   it("keeps the copies already held when a card becomes the champion", () => {
     const draft = chooseChampion(
       draftWith({
         zoneCards: {
-          [quantityKey("mainDeck", survivor.id)]: { card: survivor, quantity: 3 },
+          [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 3 },
         },
       }),
       survivor,
     );
 
-    expect(quantityOf(draft, "mainDeck", survivor.id)).toBe(3);
+    expect(quantityOf(draft, "mainDeck", survivor.printingId)).toBe(3);
   });
 
   it("holds the chosen champion's own printing at one copy in the main deck", () => {
@@ -85,7 +85,7 @@ describe("deck build allowance", () => {
   it("counts the sideboard against the main deck", () => {
     const draft = draftWith({
       zoneCards: {
-        [quantityKey("sideboard", survivorAlt.id)]: { card: survivorAlt, quantity: 2 },
+        [quantityKey("sideboard", survivorAlt.printingId)]: { card: survivorAlt, quantity: 2 },
       },
     });
 
@@ -95,7 +95,7 @@ describe("deck build allowance", () => {
   it("ignores the zone's own copies, which the stepper already owns", () => {
     const draft = draftWith({
       zoneCards: {
-        [quantityKey("mainDeck", survivor.id)]: { card: survivor, quantity: 2 },
+        [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 2 },
       },
     });
 
@@ -106,8 +106,8 @@ describe("deck build allowance", () => {
   it("allows a mix of printings up to the shared limit", () => {
     const draft = draftWith({
       zoneCards: {
-        [quantityKey("mainDeck", survivor.id)]: { card: survivor, quantity: 2 },
-        [quantityKey("mainDeck", survivorAlt.id)]: { card: survivorAlt, quantity: 1 },
+        [quantityKey("mainDeck", survivor.printingId)]: { card: survivor, quantity: 2 },
+        [quantityKey("mainDeck", survivorAlt.printingId)]: { card: survivorAlt, quantity: 1 },
       },
     });
 
@@ -121,7 +121,7 @@ describe("deck build allowance", () => {
       zoneCards: Object.fromEntries(
         Array.from({ length: 20 }, (_unused, index) => {
           const filler = card(`filler-${index}`, "OGN", { name: `Filler ${index}` });
-          return [quantityKey("mainDeck", filler.id), { card: filler, quantity: 3 }];
+          return [quantityKey("mainDeck", filler.printingId), { card: filler, quantity: 3 }];
         }),
       ),
     });
@@ -133,7 +133,7 @@ describe("deck build allowance", () => {
     const other = card("other-rune", "OGN", { name: "Calm Rune" });
     const draft = draftWith({
       zoneCards: {
-        [quantityKey("runeDeck", other.id)]: { card: other, quantity: 10 },
+        [quantityKey("runeDeck", other.printingId)]: { card: other, quantity: 10 },
       },
     });
 
@@ -143,7 +143,7 @@ describe("deck build allowance", () => {
   it("counts a rune's own copies against the twelve, not against itself twice", () => {
     const draft = draftWith({
       zoneCards: {
-        [quantityKey("runeDeck", rune.id)]: { card: rune, quantity: 12 },
+        [quantityKey("runeDeck", rune.printingId)]: { card: rune, quantity: 12 },
       },
     });
 

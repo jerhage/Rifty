@@ -163,7 +163,7 @@ function ZonesStep({
             contentContainerStyle={[styles.pool, poolLayout === "list" && styles.poolRows]}
             data={listed}
             key={poolLayout}
-            keyExtractor={(card) => card.id}
+            keyExtractor={(card) => card.printingId}
             ListEmptyComponent={
               <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
                 {isPool
@@ -182,7 +182,7 @@ function ZonesStep({
                 minQuantity: minimumForCard(draft, zone, item),
                 onChange: (quantity: number) => onSetQuantity(zone, item, quantity),
                 onOpenCard,
-                quantity: quantityOf(draft, zone, item.id),
+                quantity: quantityOf(draft, zone, item.printingId),
               };
 
               return poolLayout === "grid" ? (

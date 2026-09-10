@@ -49,7 +49,7 @@ function LegendStep({
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.content}
         data={legends}
-        keyExtractor={(card) => card.id}
+        keyExtractor={(card) => card.printingId}
         onEndReached={onLoadMore}
         onEndReachedThreshold={0.5}
         ListHeaderComponent={
@@ -82,7 +82,7 @@ function LegendStep({
             card={item}
             onOpenCard={onOpenCard}
             onPick={onPick}
-            selected={selected?.id === item.id}
+            selected={selected?.printingId === item.printingId}
           />
         )}
         style={styles.list}

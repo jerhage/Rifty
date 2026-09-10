@@ -34,7 +34,7 @@ function deckCards(
   cards: readonly Card[],
   sections?: readonly DeckSection[],
 ): readonly CardCopy[] {
-  const byPrintingId = new Map(cards.map((card) => [card.id, card]));
+  const byPrintingId = new Map(cards.map((card) => [card.printingId, card]));
 
   return deck.entries.flatMap((entry) => {
     if (sections && !sections.includes(entry.section)) return [];
@@ -53,13 +53,13 @@ function chosenChampionCard(deck: Deck, cards: readonly Card[]): Card | null {
   const seated = deck.entries.find(
     (entry) => entry.section === "mainDeck" && entry.cardId === cardId,
   );
-  const printed = seated ? cards.find((card) => card.id === seated.printingId) : undefined;
+  const printed = seated ? cards.find((card) => card.printingId === seated.printingId) : undefined;
 
   return printed ?? cards.find((card) => card.cardId === cardId) ?? null;
 }
 
 function deckGroups(deck: Deck, cards: readonly Card[]): readonly DeckGroup[] {
-  const byPrintingId = new Map(cards.map((card) => [card.id, card]));
+  const byPrintingId = new Map(cards.map((card) => [card.printingId, card]));
 
   return GROUP_DEFINITIONS.flatMap((definition) => {
     const resolved = deck.entries.flatMap((entry) => {

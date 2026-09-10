@@ -23,7 +23,7 @@ function sectionsSharingWith(section: DeckSection): readonly DeckSection[] {
 function lockedCopies(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
   return copiesOfName(draft, card.cardId, sectionsSharingWith(section), {
     section,
-    printingId: card.id,
+    printingId: card.printingId,
   });
 }
 
@@ -42,7 +42,8 @@ function remainingForCard(draft: DeckBuildDraft, section: DeckSection, card: Car
   const capacity = zoneCapacity(section);
   if (capacity === null) return byCopies;
 
-  const heldByOthers = (zoneCounts(draft)[section] ?? 0) - quantityOf(draft, section, card.id);
+  const heldByOthers =
+    (zoneCounts(draft)[section] ?? 0) - quantityOf(draft, section, card.printingId);
   const byCapacity = Math.max(0, capacity - heldByOthers);
 
   return byCopies === null ? byCapacity : Math.min(byCopies, byCapacity);
@@ -53,7 +54,7 @@ function remainingForCard(draft: DeckBuildDraft, section: DeckSection, card: Car
  * taken out from under it.
  */
 function minimumForCard(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
-  return section === "mainDeck" && draft.chosenChampion?.id === card.id ? 1 : 0;
+  return section === "mainDeck" && draft.chosenChampion?.printingId === card.printingId ? 1 : 0;
 }
 
 export { lockedCopies, minimumForCard, remainingForCard, zoneCapacity };

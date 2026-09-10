@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { setCodeSchema } from "@/features/set/value-objects/set-code";
 import { cardDomainSchema } from "@/features/card/value-objects/card-domain";
 import { cardTypeSchema } from "@/features/card/value-objects/card-type";
+import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import { taxonomyIdSchema } from "@/features/card/value-objects/taxonomy-id";
 
 const cardSearchSchema = z.discriminatedUnion("type", [
@@ -38,7 +39,7 @@ const cardNumericFilterSchema = z
   );
 
 const cardListCriteriaSchema = z.object({
-  printingIds: z.array(z.string().trim().min(1)).optional(),
+  printingIds: z.array(printingIdSchema).optional(),
   riftboundIds: z.array(z.string().trim().min(1)).optional(),
   setCodes: z.array(setCodeSchema).optional(),
   typeIds: z.array(cardTypeSchema).optional(),

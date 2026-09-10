@@ -1,16 +1,16 @@
-import type { Deck, DeckEntry } from "@/features/deck/deck/deck";
+import type { Deck } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 
-import { deck } from "./fixtures";
+import { deck, type DeckEntryInput } from "./fixtures";
 
 const CHAMPION = "ogn-champion";
 
 function entry(
-  section: DeckEntry["section"],
+  section: DeckEntryInput["section"],
   cardId: string,
   quantity: number,
   printingId: string = cardId,
-): DeckEntry {
+): DeckEntryInput {
   return { section, cardId, printingId, quantity };
 }
 
@@ -18,13 +18,13 @@ function entry(
  * A deck that satisfies every rule. The champion is a main deck card like any other, held at its
  * full allowance of three.
  */
-function legalEntries(): DeckEntry[] {
-  const mainDeck: DeckEntry[] = [
+function legalEntries(): DeckEntryInput[] {
+  const mainDeck: DeckEntryInput[] = [
     entry("mainDeck", CHAMPION, 3),
     ...Array.from({ length: 12 }, (_unused, index) => entry("mainDeck", `ogn-main-${index}`, 3)),
     entry("mainDeck", "ogn-main-last", 1),
   ];
-  const sideboard: DeckEntry[] = [
+  const sideboard: DeckEntryInput[] = [
     ...Array.from({ length: 3 }, (_unused, index) => entry("sideboard", `ogn-side-${index}`, 3)),
     entry("sideboard", "ogn-side-last", 1),
   ];
@@ -40,11 +40,11 @@ function legalEntries(): DeckEntry[] {
   ];
 }
 
-function withEntries(entries: DeckEntry[], champion: string | null = CHAMPION): Deck {
+function withEntries(entries: DeckEntryInput[], champion: string | null = CHAMPION): Deck {
   return deck("under-test", { entries, chosenChampionCardId: champion });
 }
 
-function rulesBroken(entries: DeckEntry[], champion: string | null = CHAMPION): string[] {
+function rulesBroken(entries: DeckEntryInput[], champion: string | null = CHAMPION): string[] {
   const verification = verifyDeck(withEntries(entries, champion), RIFTBOUND_STANDARD);
 
   return verification.type === "illegal"

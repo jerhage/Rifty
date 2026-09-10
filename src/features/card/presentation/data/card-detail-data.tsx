@@ -4,8 +4,9 @@ import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import type { Card, CardId } from "@/features/card/card";
+import type { Card } from "@/features/card/card";
 import type { CardFinder } from "@/features/card/card-finder";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
 
 type CardDetailDataContent =
   | { readonly type: "loading" }
@@ -15,7 +16,7 @@ type CardDetailDataContent =
 
 interface CardDetailDataProps {
   readonly cardFinder: CardFinder;
-  readonly cardId: CardId;
+  readonly cardId: PrintingId;
   readonly children: (card: Card) => ReactNode;
 }
 

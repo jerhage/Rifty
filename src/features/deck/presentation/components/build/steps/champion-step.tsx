@@ -35,7 +35,7 @@ function ChampionStep({
       <FlatList
         contentContainerStyle={styles.content}
         data={champions}
-        keyExtractor={(card) => card.id}
+        keyExtractor={(card) => card.printingId}
         onEndReached={onLoadMore}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
@@ -51,7 +51,7 @@ function ChampionStep({
             card={item}
             onOpenCard={onOpenCard}
             onPick={onPick}
-            selected={selected?.id === item.id}
+            selected={selected?.printingId === item.printingId}
           />
         )}
         style={styles.list}

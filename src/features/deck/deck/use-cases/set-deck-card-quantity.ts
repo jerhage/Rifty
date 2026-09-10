@@ -1,13 +1,8 @@
 import type { Clock } from "@/application/ports/clock";
+import type { CardId } from "@/features/card/value-objects/card-id";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
 
-import {
-  parseDeck,
-  type CardId,
-  type Deck,
-  type DeckId,
-  type DeckSection,
-  type PrintingId,
-} from "../deck";
+import { parseDeck, type Deck, type DeckId, type DeckSection } from "../deck";
 import type { DeckFinder } from "../deck-finder";
 import { remainingCopies } from "../deck-legality";
 import type { DeckSaver } from "../deck-saver";

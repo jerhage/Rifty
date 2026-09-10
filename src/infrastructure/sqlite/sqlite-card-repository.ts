@@ -16,7 +16,8 @@ import {
 } from "drizzle-orm";
 import { match } from "ts-pattern";
 
-import type { Card, CardId } from "@/features/card/card";
+import type { Card } from "@/features/card/card";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import type { CardSummary } from "@/features/card/card-summary";
 import type {
   CardListCriteria,
@@ -61,7 +62,7 @@ class SqliteCardRepository implements CardRepository {
     private readonly imageBaseUrl: string,
   ) {}
 
-  async get(id: CardId, { signal }: ReadOptions = {}): Promise<Card | null> {
+  async get(id: PrintingId, { signal }: ReadOptions = {}): Promise<Card | null> {
     throwIfAborted(signal);
     const [row] = await this.db
       .select(PRINTED_CARD_COLUMNS)

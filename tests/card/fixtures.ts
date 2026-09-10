@@ -1,4 +1,6 @@
 import type { Card, CardKeyword } from "@/features/card/card";
+import { cardIdSchema } from "@/features/card/value-objects/card-id";
+import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import type { CardSet } from "@/features/set/card-set";
 
 import { identityName } from "../../scripts/card-derivation";
@@ -56,8 +58,8 @@ function card(
   const name = options.name ?? `Card ${id}`;
 
   return {
-    id,
-    cardId: options.cardId ?? identityName(name),
+    printingId: printingIdSchema.parse(id),
+    cardId: cardIdSchema.parse(options.cardId ?? identityName(name)),
     riftboundId: `${setCode.toLowerCase()}-${id}-100`,
     setCode,
     collectorNumber: options.collectorNumber ?? 1,

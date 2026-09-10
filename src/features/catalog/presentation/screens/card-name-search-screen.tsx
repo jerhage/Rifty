@@ -4,6 +4,7 @@ import { ThemedView } from "@/components/ui/atoms/themed-view";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardSummariesDataContent } from "@/features/card/presentation/data/card-summaries-data";
 import type { CardType } from "@/features/card/value-objects/card-type";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
 
 import type { CatalogQueryCriteria } from "../catalog-query-criteria";
 import { CardSummaryGrid } from "../components/grid/card-summary-grid";
@@ -19,7 +20,7 @@ interface CardNameSearchScreenProps extends CardSummariesDataContent {
   readonly onClearTypes: () => void;
   readonly onOpenFilters: () => void;
   readonly onOpenSort: () => void;
-  readonly onSelectCard: (id: string) => void;
+  readonly onSelectCard: (id: PrintingId) => void;
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleSortDirection: () => void;
   readonly onToggleType: (typeId: CardType) => void;

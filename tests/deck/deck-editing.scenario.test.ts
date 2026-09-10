@@ -7,7 +7,7 @@ import { saveDeck } from "@/features/deck/deck/use-cases/save-deck";
 import { setDeckCardQuantity } from "@/features/deck/deck/use-cases/set-deck-card-quantity";
 
 import { createSqliteScenarioStore } from "../sqlite-scenario-store";
-import { deck, fixedClock, sequentialIds } from "./fixtures";
+import { cardId, deck, fixedClock, printingId, sequentialIds } from "./fixtures";
 
 function capabilities(repository: ReturnType<typeof createSqliteScenarioStore>["deckStore"]) {
   return {
@@ -85,7 +85,12 @@ describe("deck editing scenarios", () => {
 
     const added = await setDeckCardQuantity(
       "ember",
-      { section: "mainDeck", cardId: "Ember Adept", printingId: "ogn-014", quantity: 3 },
+      {
+        section: "mainDeck",
+        cardId: cardId("Ember Adept"),
+        printingId: printingId("ogn-014"),
+        quantity: 3,
+      },
       dependencies,
     );
     expect(added).toMatchObject({
@@ -99,7 +104,12 @@ describe("deck editing scenarios", () => {
 
     await setDeckCardQuantity(
       "ember",
-      { section: "mainDeck", cardId: "Ember Adept", printingId: "ogn-014", quantity: 2 },
+      {
+        section: "mainDeck",
+        cardId: cardId("Ember Adept"),
+        printingId: printingId("ogn-014"),
+        quantity: 2,
+      },
       dependencies,
     );
     await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
@@ -109,7 +119,12 @@ describe("deck editing scenarios", () => {
 
     await setDeckCardQuantity(
       "ember",
-      { section: "mainDeck", cardId: "Ember Adept", printingId: "ogn-014", quantity: 0 },
+      {
+        section: "mainDeck",
+        cardId: cardId("Ember Adept"),
+        printingId: printingId("ogn-014"),
+        quantity: 0,
+      },
       dependencies,
     );
     await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
@@ -126,12 +141,22 @@ describe("deck editing scenarios", () => {
 
     await setDeckCardQuantity(
       "ember",
-      { section: "mainDeck", cardId: "Ember Adept", printingId: "ogn-014", quantity: 2 },
+      {
+        section: "mainDeck",
+        cardId: cardId("Ember Adept"),
+        printingId: printingId("ogn-014"),
+        quantity: 2,
+      },
       dependencies,
     );
     await setDeckCardQuantity(
       "ember",
-      { section: "sideboard", cardId: "Ember Adept", printingId: "ogn-014", quantity: 1 },
+      {
+        section: "sideboard",
+        cardId: cardId("Ember Adept"),
+        printingId: printingId("ogn-014"),
+        quantity: 1,
+      },
       dependencies,
     );
 
@@ -163,7 +188,12 @@ describe("deck editing scenarios", () => {
     await expect(
       setDeckCardQuantity(
         "ember",
-        { section: "mainDeck", cardId: "Ember Hero", printingId: "ogn-hero", quantity: 3 },
+        {
+          section: "mainDeck",
+          cardId: cardId("Ember Hero"),
+          printingId: printingId("ogn-hero"),
+          quantity: 3,
+        },
         dependencies,
       ),
     ).resolves.toEqual({ type: "copyLimitReached", allowed: 1 });
@@ -171,7 +201,12 @@ describe("deck editing scenarios", () => {
     await expect(
       setDeckCardQuantity(
         "ember",
-        { section: "mainDeck", cardId: "Ember Hero", printingId: "ogn-hero", quantity: 1 },
+        {
+          section: "mainDeck",
+          cardId: cardId("Ember Hero"),
+          printingId: printingId("ogn-hero"),
+          quantity: 1,
+        },
         dependencies,
       ),
     ).resolves.toMatchObject({ type: "success" });
@@ -191,7 +226,12 @@ describe("deck editing scenarios", () => {
     await expect(
       setDeckCardQuantity(
         "ember",
-        { section: "mainDeck", cardId: "Ember Hero", printingId: "ogn-hero-alt", quantity: 1 },
+        {
+          section: "mainDeck",
+          cardId: cardId("Ember Hero"),
+          printingId: printingId("ogn-hero-alt"),
+          quantity: 1,
+        },
         dependencies,
       ),
     ).resolves.toEqual({ type: "copyLimitReached", allowed: 0 });
@@ -210,8 +250,18 @@ describe("deck editing scenarios", () => {
         createdAt: "2026-09-01T10:00:00.000Z",
         chosenChampionCardId: null,
         entries: [
-          { section: "mainDeck", cardId: "Ember Hero", printingId: "ogn-hero", quantity: 3 },
-          { section: "mainDeck", cardId: "Ember Hero", printingId: "ogn-hero-alt", quantity: 1 },
+          {
+            section: "mainDeck",
+            cardId: cardId("Ember Hero"),
+            printingId: printingId("ogn-hero"),
+            quantity: 3,
+          },
+          {
+            section: "mainDeck",
+            cardId: cardId("Ember Hero"),
+            printingId: printingId("ogn-hero-alt"),
+            quantity: 1,
+          },
         ],
       },
       dependencies,
@@ -240,7 +290,12 @@ describe("deck editing scenarios", () => {
     await expect(
       setDeckCardQuantity(
         "ember",
-        { section: "mainDeck", cardId: "Ember Spark", printingId: "ogn-a", quantity: 3 },
+        {
+          section: "mainDeck",
+          cardId: cardId("Ember Spark"),
+          printingId: printingId("ogn-a"),
+          quantity: 3,
+        },
         dependencies,
       ),
     ).resolves.toMatchObject({ type: "success" });
@@ -255,7 +310,12 @@ describe("deck editing scenarios", () => {
     await expect(
       setDeckCardQuantity(
         "ember",
-        { section: "runeDeck", cardId: "Fury Rune", printingId: "ogn-rune", quantity: 12 },
+        {
+          section: "runeDeck",
+          cardId: cardId("Fury Rune"),
+          printingId: printingId("ogn-rune"),
+          quantity: 12,
+        },
         dependencies,
       ),
     ).resolves.toMatchObject({ type: "success" });
@@ -272,7 +332,12 @@ describe("deck editing scenarios", () => {
       createdAt: "2026-09-01T10:00:00.000Z",
       chosenChampionCardId: null,
       entries: [
-        { section: "mainDeck", cardId: "Ember Adept", printingId: "ogn-014", quantity: 3 },
+        {
+          section: "mainDeck",
+          cardId: cardId("Ember Adept"),
+          printingId: printingId("ogn-014"),
+          quantity: 3,
+        },
       ] as const,
     };
 
@@ -287,7 +352,12 @@ describe("deck editing scenarios", () => {
           ...draft,
           name: "Ember Aggro",
           entries: [
-            { section: "mainDeck", cardId: "Ember Blade", printingId: "ogn-020", quantity: 2 },
+            {
+              section: "mainDeck",
+              cardId: cardId("Ember Blade"),
+              printingId: printingId("ogn-020"),
+              quantity: 2,
+            },
           ],
         },
         dependencies,
@@ -354,10 +424,20 @@ describe("deck editing scenarios", () => {
         name: "Ember Tempo",
         notes: "",
         createdAt: "2026-09-01T10:00:00.000Z",
-        chosenChampionCardId: "Ember Hero",
+        chosenChampionCardId: cardId("Ember Hero"),
         entries: [
-          { section: "mainDeck", cardId: "Ember Hero", printingId: "ogn-hero", quantity: 3 },
-          { section: "sideboard", cardId: "Ember Hero", printingId: "ogn-hero", quantity: 1 },
+          {
+            section: "mainDeck",
+            cardId: cardId("Ember Hero"),
+            printingId: printingId("ogn-hero"),
+            quantity: 3,
+          },
+          {
+            section: "sideboard",
+            cardId: cardId("Ember Hero"),
+            printingId: printingId("ogn-hero"),
+            quantity: 1,
+          },
         ],
       },
       dependencies,
@@ -381,7 +461,12 @@ describe("deck editing scenarios", () => {
           createdAt: "2026-09-01T10:00:00.000Z",
           chosenChampionCardId: null,
           entries: [
-            { section: "mainDeck", cardId: "Ember Adept", printingId: "ogn-014", quantity: 3 },
+            {
+              section: "mainDeck",
+              cardId: cardId("Ember Adept"),
+              printingId: printingId("ogn-014"),
+              quantity: 3,
+            },
           ],
         },
         dependencies,

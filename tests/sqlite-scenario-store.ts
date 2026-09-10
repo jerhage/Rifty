@@ -127,7 +127,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
     database
       .insert(cardPrintings)
       .values({
-        id: card.id,
+        id: card.printingId,
         cardId: card.cardId,
         riftboundId: card.riftboundId,
         setCode: card.setCode,
@@ -146,7 +146,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
     database
       .insert(cardMedia)
       .values({
-        printingId: card.id,
+        printingId: card.printingId,
         imageFile: `${card.riftboundId}.webp`,
         artist: null,
         accessibilityText: null,
@@ -154,14 +154,14 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
       .run();
     database
       .insert(cardImageSources)
-      .values({ printingId: card.id, url: card.imageUrl, priority: 0 })
+      .values({ printingId: card.printingId, url: card.imageUrl, priority: 0 })
       .run();
     if (card.marketplaceReferences.length > 0) {
       database
         .insert(cardMarketplaceReferences)
         .values(
           card.marketplaceReferences.map((reference) => ({
-            printingId: card.id,
+            printingId: card.printingId,
             marketplace: reference.marketplace,
             externalId: reference.externalId,
           })),

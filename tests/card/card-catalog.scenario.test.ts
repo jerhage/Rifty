@@ -1,4 +1,5 @@
 import { findCard } from "@/features/card/use-cases/find-card";
+import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import { listCards } from "@/features/card/use-cases/list-cards";
 import { Page } from "@/shared/page";
 
@@ -24,7 +25,7 @@ describe("card catalog scenarios", () => {
     store.seedSet(unleashed);
     store.seedCard(vi);
 
-    await expect(findCard(vi.id, { cardFinder: store.cards })).resolves.toEqual({
+    await expect(findCard(vi.printingId, { cardFinder: store.cards })).resolves.toEqual({
       type: "success",
       card: {
         ...vi,
@@ -59,7 +60,7 @@ describe("card catalog scenarios", () => {
     store.seedSet(venture);
     store.seedCard(threshold);
 
-    const found = await findCard(threshold.id, { cardFinder: store.cards });
+    const found = await findCard(threshold.printingId, { cardFinder: store.cards });
 
     expect(found).toEqual({ type: "success", card: threshold });
     store.close();
@@ -102,7 +103,9 @@ describe("card catalog scenarios", () => {
   it("reports an absent card without treating it as a storage failure", async () => {
     const store = createSqliteScenarioStore();
 
-    await expect(findCard("unknown", { cardFinder: store.cards })).resolves.toEqual({
+    await expect(
+      findCard(printingIdSchema.parse("unknown"), { cardFinder: store.cards }),
+    ).resolves.toEqual({
       type: "notFound",
     });
     store.close();
@@ -117,7 +120,7 @@ describe("card catalog scenarios", () => {
     }
 
     await expect(store.cards.getPage({ limit: 10, offset: 0 })).resolves.toMatchObject({
-      items: expect.arrayContaining([expect.objectContaining({ id: "card-1" })]),
+      items: expect.arrayContaining([expect.objectContaining({ printingId: "card-1" })]),
       hasMore: true,
     });
     await expect(store.cards.getPage({ limit: 10, offset: 10 })).resolves.toEqual(
@@ -138,7 +141,7 @@ describe("card catalog scenarios", () => {
       Page.create(
         [
           {
-            id: jinx.id,
+            printingId: jinx.printingId,
             riftboundId: jinx.riftboundId,
             domainIds: jinx.domainIds,
             imageUrl: jinx.imageUrl,
@@ -168,8 +171,8 @@ describe("card catalog scenarios", () => {
 
     await expect(store.cards.getSummaryPage()).resolves.toMatchObject({
       items: [
-        { id: spire.id, orientation: "landscape" },
-        { id: unit.id, orientation: "portrait" },
+        { printingId: spire.printingId, orientation: "landscape" },
+        { printingId: unit.printingId, orientation: "portrait" },
       ],
     });
     store.close();
@@ -188,11 +191,11 @@ describe("card catalog scenarios", () => {
     await expect(
       store.cards.getSummaryPage({ anyDomainIds: ["Calm", "Mind"] }),
     ).resolves.toMatchObject({
-      items: [{ id: "calm" }, { id: "mind" }, { id: "both" }],
+      items: [{ printingId: "calm" }, { printingId: "mind" }, { printingId: "both" }],
     });
     await expect(
       store.cards.getSummaryPage({ domainIds: ["Calm", "Mind"] }),
-    ).resolves.toMatchObject({ items: [{ id: "both" }] });
+    ).resolves.toMatchObject({ items: [{ printingId: "both" }] });
     store.close();
   });
 
@@ -237,23 +240,28 @@ describe("card catalog scenarios", () => {
     }
 
     await expect(store.cards.getSummaryPage({ keywordIds: ["shield"] })).resolves.toMatchObject({
-      items: [{ id: carrier.id }, { id: granter.id }, { id: twice.id }, { id: manyTargets.id }],
+      items: [
+        { printingId: carrier.printingId },
+        { printingId: granter.printingId },
+        { printingId: twice.printingId },
+        { printingId: manyTargets.printingId },
+      ],
     });
     await expect(store.cards.count({ keywordIds: ["shield"] })).resolves.toBe(4);
     await expect(
       store.cards.getSummaryPage({ keywordIds: ["shield", "tank"] }),
     ).resolves.toMatchObject({
       items: [
-        { id: carrier.id },
-        { id: granter.id },
-        { id: twice.id },
-        { id: manyTargets.id },
-        { id: tank.id },
+        { printingId: carrier.printingId },
+        { printingId: granter.printingId },
+        { printingId: twice.printingId },
+        { printingId: manyTargets.printingId },
+        { printingId: tank.printingId },
       ],
     });
     await expect(
       store.cards.getSummaryPage({ keywordIds: ["shield"], domainIds: ["Fury"] }),
-    ).resolves.toMatchObject({ items: [{ id: twice.id }] });
+    ).resolves.toMatchObject({ items: [{ printingId: twice.printingId }] });
     store.close();
   });
 
@@ -284,11 +292,11 @@ describe("card catalog scenarios", () => {
     store.seedCard(other);
 
     await expect(store.cards.getPage({ riftboundIds: [kept.riftboundId] })).resolves.toMatchObject({
-      items: [{ id: "kept" }],
+      items: [{ printingId: "kept" }],
     });
     await expect(
       store.cards.getPage({ riftboundIds: [kept.riftboundId, other.riftboundId] }),
-    ).resolves.toMatchObject({ items: [{ id: "kept" }, { id: "other" }] });
+    ).resolves.toMatchObject({ items: [{ printingId: "kept" }, { printingId: "other" }] });
     await expect(store.cards.getPage({ riftboundIds: ["missing"] })).resolves.toMatchObject({
       items: [],
     });
@@ -332,7 +340,7 @@ describe("card catalog scenarios", () => {
       withinDomainIds: ["Fury", "Calm"],
     });
 
-    expect(page.items.map((item) => item.id).sort()).toEqual(["akali-calm", "akali-fury"]);
+    expect(page.items.map((item) => item.printingId).sort()).toEqual(["akali-calm", "akali-fury"]);
     store.close();
   });
 
@@ -381,13 +389,31 @@ describe("card catalog scenarios", () => {
 
     await expect(
       store.cards.getSummaryPage({ sort: { type: "name", direction: "ascending" } }),
-    ).resolves.toMatchObject({ items: [{ id: alpha.id }, { id: beta.id }, { id: zeta.id }] });
+    ).resolves.toMatchObject({
+      items: [
+        { printingId: alpha.printingId },
+        { printingId: beta.printingId },
+        { printingId: zeta.printingId },
+      ],
+    });
     await expect(
       store.cards.getSummaryPage({ sort: { type: "energy", direction: "descending" } }),
-    ).resolves.toMatchObject({ items: [{ id: alpha.id }, { id: beta.id }, { id: zeta.id }] });
+    ).resolves.toMatchObject({
+      items: [
+        { printingId: alpha.printingId },
+        { printingId: beta.printingId },
+        { printingId: zeta.printingId },
+      ],
+    });
     await expect(
       store.cards.getSummaryPage({ sort: { type: "power", direction: "ascending" } }),
-    ).resolves.toMatchObject({ items: [{ id: beta.id }, { id: alpha.id }, { id: zeta.id }] });
+    ).resolves.toMatchObject({
+      items: [
+        { printingId: beta.printingId },
+        { printingId: alpha.printingId },
+        { printingId: zeta.printingId },
+      ],
+    });
     store.close();
   });
 
@@ -423,18 +449,18 @@ describe("card catalog scenarios", () => {
     store.seedCard(originsCard);
 
     await expect(store.cards.getSummaryPage({ setCodes: [origins.code] })).resolves.toMatchObject({
-      items: [{ id: originsCard.id }],
+      items: [{ printingId: originsCard.printingId }],
     });
 
     await expect(
       store.cards.getSummaryPage({ energy: { type: "between", minimum: 3, maximum: 5 } }),
-    ).resolves.toMatchObject({ items: [{ id: adept.id }] });
+    ).resolves.toMatchObject({ items: [{ printingId: adept.printingId }] });
     await expect(
       store.cards.getSummaryPage({ power: { type: "atLeast", value: 2 } }),
-    ).resolves.toMatchObject({ items: [{ id: master.id }] });
+    ).resolves.toMatchObject({ items: [{ printingId: master.printingId }] });
     await expect(
       store.cards.getSummaryPage({ domainIds: ["Fury", "Order"] }),
-    ).resolves.toMatchObject({ items: [{ id: master.id }] });
+    ).resolves.toMatchObject({ items: [{ printingId: master.printingId }] });
     store.close();
   });
 
@@ -457,7 +483,7 @@ describe("card catalog scenarios", () => {
       Page.create(
         [
           {
-            id: kaisa.id,
+            printingId: kaisa.printingId,
             riftboundId: kaisa.riftboundId,
             domainIds: kaisa.domainIds,
             imageUrl: kaisa.imageUrl,
@@ -495,7 +521,7 @@ describe("card catalog scenarios", () => {
     const criteria = { search: { type: "name", text: "(Alternate Art)" } } as const;
     const page = await store.cards.getSummaryPage(criteria);
 
-    expect(page.items.map((summary) => summary.id)).toEqual([alternate.id]);
+    expect(page.items.map((summary) => summary.printingId)).toEqual([alternate.printingId]);
     await expect(store.cards.count(criteria)).resolves.toBe(page.items.length);
     store.close();
   });
@@ -525,7 +551,7 @@ describe("card catalog scenarios", () => {
       Page.create(
         [
           {
-            id: drawnName.id,
+            printingId: drawnName.printingId,
             riftboundId: drawnName.riftboundId,
             domainIds: drawnName.domainIds,
             imageUrl: drawnName.imageUrl,
@@ -542,7 +568,7 @@ describe("card catalog scenarios", () => {
       Page.create(
         [
           {
-            id: drawSpell.id,
+            printingId: drawSpell.printingId,
             riftboundId: drawSpell.riftboundId,
             domainIds: drawSpell.domainIds,
             imageUrl: drawSpell.imageUrl,
@@ -559,7 +585,7 @@ describe("card catalog scenarios", () => {
       Page.create(
         [
           {
-            id: drawnName.id,
+            printingId: drawnName.printingId,
             riftboundId: drawnName.riftboundId,
             domainIds: drawnName.domainIds,
             imageUrl: drawnName.imageUrl,
@@ -567,7 +593,7 @@ describe("card catalog scenarios", () => {
             orientation: drawnName.orientation,
           },
           {
-            id: drawSpell.id,
+            printingId: drawSpell.printingId,
             riftboundId: drawSpell.riftboundId,
             domainIds: drawSpell.domainIds,
             imageUrl: drawSpell.imageUrl,
@@ -605,7 +631,7 @@ describe("card catalog scenarios", () => {
       Page.create(
         [
           {
-            id: furyOrder.id,
+            printingId: furyOrder.printingId,
             riftboundId: furyOrder.riftboundId,
             domainIds: furyOrder.domainIds,
             imageUrl: furyOrder.imageUrl,

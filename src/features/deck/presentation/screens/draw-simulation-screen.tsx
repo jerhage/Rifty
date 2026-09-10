@@ -152,7 +152,7 @@ function DrawSimulationScreen({
           {hand.map((card, index) => (
             <HandCardTile
               card={card}
-              key={`${card.id}-${index}`}
+              key={`-`}
               onToggleSelection={() => toggleSelection(index)}
               selected={selected.includes(index)}
             />

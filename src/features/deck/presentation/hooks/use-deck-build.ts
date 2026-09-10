@@ -150,7 +150,7 @@ function useDeckBuild(
   /** Changing the legend clears the champion, whose tag and domains have to match it. */
   const pickLegend = useCallback((legend: Card) => {
     setDraft((current) =>
-      current.legend?.id === legend.id
+      current.legend?.printingId === legend.printingId
         ? { ...current, legend: null }
         : { ...current, legend, chosenChampion: null },
     );
@@ -158,7 +158,7 @@ function useDeckBuild(
 
   const pickChampion = useCallback((champion: Card) => {
     setDraft((current) =>
-      current.chosenChampion?.id === champion.id
+      current.chosenChampion?.printingId === champion.printingId
         ? { ...current, chosenChampion: null }
         : chooseChampion(current, champion),
     );
@@ -174,7 +174,7 @@ function useDeckBuild(
       ...current,
       zoneCards: {
         ...current.zoneCards,
-        [quantityKey(section, card.id)]: {
+        [quantityKey(section, card.printingId)]: {
           card,
           quantity: Math.max(minimumForCard(current, section, card), quantity),
         },

@@ -53,7 +53,7 @@ function toDomainCard({
   const persistedPrinting = cardPrintingSelectSchema.parse(printing);
 
   return parseCard({
-    id: persistedPrinting.id,
+    printingId: persistedPrinting.id,
     cardId: persistedCard.id,
     riftboundId: persistedPrinting.riftboundId,
     setCode: persistedPrinting.setCode,
@@ -115,7 +115,7 @@ function toDomainCardSummary({
     .parse(printing);
 
   return parseCardSummary({
-    id: persistedPrinting.id,
+    printingId: persistedPrinting.id,
     riftboundId: persistedPrinting.riftboundId,
     name: persistedPrinting.printedName,
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),

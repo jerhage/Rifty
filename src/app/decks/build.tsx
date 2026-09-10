@@ -22,7 +22,7 @@ function DeckBuildRoute() {
     [clock, decks.deckRepository, idGenerator],
   );
   const openCard = useCallback(
-    (card: Card) => router.push({ pathname: "/cards/[id]", params: { id: card.id } }),
+    (card: Card) => router.push({ pathname: "/cards/[id]", params: { id: card.printingId } }),
     [router],
   );
   const goBack = useCallback(() => router.back(), [router]);

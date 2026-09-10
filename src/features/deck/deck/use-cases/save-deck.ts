@@ -1,8 +1,8 @@
 import type { Clock } from "@/application/ports/clock";
+import type { CardId } from "@/features/card/value-objects/card-id";
 
 import {
   parseDeck,
-  type CardId,
   type Deck,
   type DeckEntry,
   type DeckId,

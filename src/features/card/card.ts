@@ -2,6 +2,8 @@ import { z } from "zod/v4";
 
 import { marketplaceReferenceSchema } from "@/features/set/value-objects/marketplace-reference";
 import { cardDomainSchema } from "@/features/card/value-objects/card-domain";
+import { cardIdSchema } from "@/features/card/value-objects/card-id";
+import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import { cardSpeedSchema } from "@/features/card/value-objects/card-speed";
 import { cardTypeSchema } from "@/features/card/value-objects/card-type";
 import { keywordAllegianceSchema } from "@/features/card/value-objects/keyword-allegiance";
@@ -9,7 +11,6 @@ import { keywordTargetKindSchema } from "@/features/card/value-objects/keyword-t
 import { setCodeSchema } from "@/features/set/value-objects/set-code";
 import { taxonomyIdSchema } from "@/features/card/value-objects/taxonomy-id";
 
-const cardIdSchema = z.string().trim().min(1);
 const cardKeywordTargetSchema = z.object({
   kind: keywordTargetKindSchema,
   isToken: z.boolean(),
@@ -33,7 +34,7 @@ const cardClassificationSchema = z.object({
   rarityId: taxonomyIdSchema,
 });
 const cardSchema = z.object({
-  id: cardIdSchema,
+  printingId: printingIdSchema,
   cardId: cardIdSchema,
   riftboundId: z.string().trim().min(1),
   setCode: setCodeSchema,
@@ -65,7 +66,6 @@ function parseCard(value: unknown): Card {
   return cardSchema.parse(value);
 }
 
-type CardId = z.output<typeof cardIdSchema>;
 type CardAttributes = z.output<typeof cardAttributesSchema>;
 type CardClassification = z.output<typeof cardClassificationSchema>;
 type CardKeyword = z.output<typeof cardKeywordSchema>;
@@ -75,9 +75,8 @@ type Card = z.output<typeof cardSchema>;
 export {
   cardAttributesSchema,
   cardClassificationSchema,
-  cardIdSchema,
   cardOrientationSchema,
   cardSchema,
   parseCard,
 };
-export type { Card, CardAttributes, CardClassification, CardId, CardKeyword, CardKeywordTarget };
+export type { Card, CardAttributes, CardClassification, CardKeyword, CardKeywordTarget };

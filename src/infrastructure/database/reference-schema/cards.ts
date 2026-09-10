@@ -9,7 +9,7 @@ import { cardSupertypes, cardTypes, domains, rarities, tags } from "./taxonomy";
 
 const cardOrientationSchema = z.enum(["landscape", "portrait"]);
 
-/** Catalog tables persist individual card printings and their related data. */
+/** Card rows hold gameplay identity; printing rows hold one released manifestation of it. */
 const cards = sqliteTable(
   "card",
   {

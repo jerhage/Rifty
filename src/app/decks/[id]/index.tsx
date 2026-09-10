@@ -50,7 +50,9 @@ function DeckDetail({
         router.push({ pathname: "/decks/[id]/draw", params: { id: deck.id } })
       }
       onEdit={() => router.push({ pathname: "/decks/build", params: { deckId: deck.id } })}
-      onOpenCard={(card: Card) => router.push({ pathname: "/cards/[id]", params: { id: card.id } })}
+      onOpenCard={(card: Card) =>
+        router.push({ pathname: "/cards/[id]", params: { id: card.printingId } })
+      }
       verification={verifyDeck(deck, RIFTBOUND_STANDARD)}
     />
   );

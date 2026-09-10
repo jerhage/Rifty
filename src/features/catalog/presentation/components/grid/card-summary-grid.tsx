@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
 
 import { CardGridItem } from "./card-grid-item";
 
@@ -17,7 +18,7 @@ interface CardSummaryGridProps {
   readonly isRefreshing: boolean;
   readonly onEndReached: () => void;
   readonly onRefresh: () => void;
-  readonly onSelectCard: (id: string) => void;
+  readonly onSelectCard: (id: PrintingId) => void;
 }
 
 function CardSummaryGrid({
@@ -56,7 +57,7 @@ function CardSummaryGrid({
         },
       ]}
       data={cards}
-      keyExtractor={(card) => card.id}
+      keyExtractor={(card) => card.printingId}
       ListEmptyComponent={
         <ThemedText themeColor="textSecondary" type="body" style={styles.empty}>
           {emptyMessage}

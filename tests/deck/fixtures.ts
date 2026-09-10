@@ -1,9 +1,24 @@
+import type { z } from "zod/v4";
+
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
-import type { Deck } from "@/features/deck/deck/deck";
+import { cardIdSchema, type CardId } from "@/features/card/value-objects/card-id";
+import { printingIdSchema, type PrintingId } from "@/features/card/value-objects/printing-id";
+import { deckSchema, parseDeck, type Deck } from "@/features/deck/deck/deck";
 
-function deck(id: string, options: Partial<Omit<Deck, "id">> = {}): Deck {
-  return {
+type DeckInput = z.input<typeof deckSchema>;
+type DeckEntryInput = DeckInput["entries"][number];
+
+function cardId(value: string): CardId {
+  return cardIdSchema.parse(value);
+}
+
+function printingId(value: string): PrintingId {
+  return printingIdSchema.parse(value);
+}
+
+function deck(id: string, options: Partial<Omit<DeckInput, "id">> = {}): Deck {
+  return parseDeck({
     id,
     name: options.name ?? `Deck ${id}`,
     notes: options.notes ?? "",
@@ -13,7 +28,7 @@ function deck(id: string, options: Partial<Omit<Deck, "id">> = {}): Deck {
     entries: options.entries ?? [
       { section: "mainDeck", cardId: "Card 001", printingId: "ogn-001", quantity: 4 },
     ],
-  };
+  });
 }
 
 /** Hands out the given instants in order, repeating the last one once they run out. */
@@ -31,4 +46,5 @@ function sequentialIds(prefix = "deck"): IdGenerator {
   return { next: () => `${prefix}-${++index}` };
 }
 
-export { deck, fixedClock, sequentialIds };
+export { cardId, deck, fixedClock, printingId, sequentialIds };
+export type { DeckEntryInput };

@@ -106,7 +106,7 @@ function DeckDetailScreen({
             {group.cards.map((held) => (
               <DeckCardRow
                 card={held.card}
-                key={held.card.id}
+                key={held.card.printingId}
                 onOpenCard={onOpenCard}
                 quantity={held.quantity}
               />

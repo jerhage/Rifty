@@ -1,4 +1,5 @@
-import type { Card, CardId } from "../card";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
+import type { Card } from "../card";
 import type { CardFinder } from "../card-finder";
 
 type FindCardResult =
@@ -10,7 +11,10 @@ interface FindCardCapabilities {
   readonly cardFinder: CardFinder;
 }
 
-async function findCard(id: CardId, { cardFinder }: FindCardCapabilities): Promise<FindCardResult> {
+async function findCard(
+  id: PrintingId,
+  { cardFinder }: FindCardCapabilities,
+): Promise<FindCardResult> {
   try {
     const card = await cardFinder.get(id);
     return card ? { type: "success", card } : { type: "notFound" };

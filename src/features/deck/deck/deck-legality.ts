@@ -1,11 +1,12 @@
+import type { CardId } from "@/features/card/value-objects/card-id";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
+
 import {
   parseDeckVerification,
-  type CardId,
   type Deck,
   type DeckLegalityViolation,
   type DeckSection,
   type DeckVerification,
-  type PrintingId,
   type TournamentRuleset,
 } from "./deck";
 

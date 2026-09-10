@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/atoms/skeleton";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import { CARD_ASPECT_RATIO, CardArt } from "@/features/card/presentation/components/card-art";
 import { DomainBar } from "@/features/card/presentation/components/domain-bar";
 import { useTheme } from "@/hooks/use-theme";
@@ -16,7 +17,7 @@ function CardGridItem({
   width,
 }: {
   readonly card: CardSummary;
-  readonly onPress: (id: string) => void;
+  readonly onPress: (id: PrintingId) => void;
   readonly width: number | null;
 }) {
   const theme = useTheme();
@@ -31,7 +32,7 @@ function CardGridItem({
     <Pressable
       accessibilityLabel={`Open ${card.name}`}
       accessibilityRole="button"
-      onPress={() => onPress(card.id)}
+      onPress={() => onPress(card.printingId)}
       style={({ pressed }) => [
         styles.card,
         width === null ? undefined : { flexBasis: width, flexShrink: 0, width },

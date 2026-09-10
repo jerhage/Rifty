@@ -363,6 +363,615 @@ const renderText = () => {
   return lines.join("\n");
 };
 
+const featureTargetsOf = (feature: string) =>
+  targetsOf(feature).filter((target) => featureZoneNames.has(target));
+
+const featureEdges = new Map<string, Set<string>>();
+for (const feature of featureZones) featureEdges.set(feature, new Set(featureTargetsOf(feature)));
+
+const featureCycles = tarjanCycles(featureZones, featureEdges);
+const featuresAreAcyclic = featureCycles.length === 0;
+
+const featureDepths = () => {
+  const depths = new Map<string, number>();
+  const visit = (feature: string): number => {
+    const cached = depths.get(feature);
+    if (cached !== undefined) return cached;
+    let deepest = 0;
+    for (const target of featureEdges.get(feature) ?? []) deepest = Math.max(deepest, visit(target) + 1);
+    depths.set(feature, deepest);
+    return deepest;
+  };
+  for (const feature of featureZones) visit(feature);
+  return depths;
+};
+
+const orderedFeatures = (() => {
+  if (!featuresAreAcyclic) return [...featureZones].sort((a, b) => a.localeCompare(b));
+  const depths = featureDepths();
+  return [...featureZones].sort(
+    (a, b) => (depths.get(b) ?? 0) - (depths.get(a) ?? 0) || a.localeCompare(b),
+  );
+})();
+
+const renderFeatureList = (reason: string | undefined) => {
+  const width = Math.max(...orderedFeatures.map((feature) => feature.length));
+  const lines: string[] = [];
+  if (reason !== undefined) {
+    lines.push(reason);
+    lines.push("");
+  }
+  for (const feature of orderedFeatures) {
+    const targets = featureTargetsOf(feature);
+    lines.push(
+      `  ${pad(feature, width)} ──► ${targets.length === 0 ? "(nothing)" : targets.join(", ")}`,
+    );
+  }
+  return lines.join("\n");
+};
+
+const north = 1;
+const east = 2;
+const south = 4;
+const west = 8;
+const laneGap = 6;
+const dummyGap = 3;
+const drawingMargin = 2;
+const drawingWidthLimit = 100;
+
+const boxCharacters = new Map<number, string>([
+  [north, "│"],
+  [south, "│"],
+  [north | south, "│"],
+  [east, "─"],
+  [west, "─"],
+  [east | west, "─"],
+  [south | east, "┌"],
+  [south | west, "┐"],
+  [north | east, "└"],
+  [north | west, "┘"],
+  [north | south | east, "├"],
+  [north | south | west, "┤"],
+  [south | east | west, "┬"],
+  [north | east | west, "┴"],
+  [north | south | east | west, "┼"],
+]);
+
+type DrawingNode = {
+  readonly id: string;
+  readonly layer: number;
+  readonly label: string;
+  readonly isDummy: boolean;
+  readonly width: number;
+  readonly seedRank: number;
+  readonly seedName: string;
+  readonly sources: string[];
+  readonly targets: string[];
+};
+
+type Arrival = {
+  readonly target: string;
+  readonly kind: "vertical" | "bus" | "fromLeft" | "fromRight";
+  readonly ports: readonly number[];
+};
+
+const median = (values: readonly number[]) => {
+  const sorted = [...values].sort((a, b) => a - b);
+  const half = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 1) return sorted[half] ?? 0;
+  return Math.round(((sorted[half - 1] ?? 0) + (sorted[half] ?? 0)) / 2);
+};
+
+const layerNumbers = (order: readonly string[], edges: ReadonlyMap<string, ReadonlySet<string>>) => {
+  const importers = new Map<string, string[]>();
+  for (const node of order) importers.set(node, []);
+  for (const node of order) {
+    for (const target of edges.get(node) ?? []) importers.get(target)?.push(node);
+  }
+  const layers = new Map<string, number>();
+  const visit = (node: string): number => {
+    const known = layers.get(node);
+    if (known !== undefined) return known;
+    let deepest = 0;
+    for (const importer of importers.get(node) ?? []) {
+      deepest = Math.max(deepest, visit(importer) + 1);
+    }
+    layers.set(node, deepest);
+    return deepest;
+  };
+  for (const node of order) visit(node);
+  return layers;
+};
+
+const buildDrawingNodes = (
+  order: readonly string[],
+  edges: ReadonlyMap<string, ReadonlySet<string>>,
+) => {
+  const layers = layerNumbers(order, edges);
+  const nodes = new Map<string, DrawingNode>();
+  const add = (node: Omit<DrawingNode, "sources" | "targets">) =>
+    nodes.set(node.id, { ...node, sources: [], targets: [] });
+  order.forEach((node, index) =>
+    add({
+      id: node,
+      layer: layers.get(node) ?? 0,
+      label: node,
+      isDummy: false,
+      width: node.length,
+      seedRank: index,
+      seedName: "",
+    }),
+  );
+  const link = (from: string, to: string) => {
+    nodes.get(from)?.targets.push(to);
+    nodes.get(to)?.sources.push(from);
+  };
+  order.forEach((source, index) => {
+    for (const target of [...(edges.get(source) ?? [])].sort()) {
+      const start = layers.get(source) ?? 0;
+      const finish = layers.get(target) ?? 0;
+      let previous = source;
+      for (let level = start + 1; level < finish; level += 1) {
+        const id = `${source}>${target}#${level}`;
+        add({
+          id,
+          layer: level,
+          label: "",
+          isDummy: true,
+          width: 1,
+          seedRank: index,
+          seedName: target,
+        });
+        link(previous, id);
+        previous = id;
+      }
+      link(previous, target);
+    }
+  });
+  return nodes;
+};
+
+const orderLayers = (nodes: ReadonlyMap<string, DrawingNode>) => {
+  const depth = Math.max(...[...nodes.values()].map((node) => node.layer)) + 1;
+  const layers: string[][] = [];
+  for (let level = 0; level < depth; level += 1) {
+    layers.push(
+      [...nodes.values()]
+        .filter((node) => node.layer === level)
+        .sort(
+          (a, b) =>
+            a.seedRank - b.seedRank ||
+            Number(a.isDummy) - Number(b.isDummy) ||
+            a.seedName.localeCompare(b.seedName) ||
+            a.id.localeCompare(b.id),
+        )
+        .map((node) => node.id),
+    );
+  }
+  const positions = (level: number) =>
+    new Map((layers[level] ?? []).map((id, index) => [id, index]));
+
+  const crossings = () => {
+    let total = 0;
+    for (let level = 0; level + 1 < layers.length; level += 1) {
+      const upper = positions(level);
+      const lower = positions(level + 1);
+      const pairs: (readonly [number, number])[] = [];
+      for (const id of layers[level] ?? []) {
+        for (const target of nodes.get(id)?.targets ?? []) {
+          const from = upper.get(id);
+          const to = lower.get(target);
+          if (from !== undefined && to !== undefined) pairs.push([from, to]);
+        }
+      }
+      for (let a = 0; a < pairs.length; a += 1) {
+        for (let b = a + 1; b < pairs.length; b += 1) {
+          const first = pairs[a];
+          const second = pairs[b];
+          if (first === undefined || second === undefined) continue;
+          if ((first[0] - second[0]) * (first[1] - second[1]) < 0) total += 1;
+        }
+      }
+    }
+    return total;
+  };
+
+  const sweep = (downward: boolean) => {
+    const levels = [...layers.keys()].slice(1);
+    for (const level of downward ? levels : [...levels].reverse()) {
+      const reference = positions(downward ? level - 1 : level + 1);
+      const current = positions(level);
+      const members = layers[level] ?? [];
+      const keyOf = (id: string) => {
+        const node = nodes.get(id);
+        const neighbors = (downward ? node?.sources : node?.targets) ?? [];
+        const values = neighbors
+          .map((neighbor) => reference.get(neighbor))
+          .filter((value): value is number => value !== undefined);
+        if (values.length === 0) return current.get(id) ?? 0;
+        return values.reduce((sum, value) => sum + value, 0) / values.length;
+      };
+      layers[level] = [...members].sort(
+        (a, b) => keyOf(a) - keyOf(b) || (current.get(a) ?? 0) - (current.get(b) ?? 0),
+      );
+    }
+  };
+
+  let best = layers.map((members) => [...members]);
+  let fewest = crossings();
+  for (let pass = 0; pass < 8 && layers.length > 1; pass += 1) {
+    sweep(pass % 2 === 0);
+    const measured = crossings();
+    if (measured < fewest) {
+      fewest = measured;
+      best = layers.map((members) => [...members]);
+    }
+  }
+  for (let level = 0; level < layers.length; level += 1) layers[level] = best[level] ?? [];
+  return { layers, crossings: fewest };
+};
+
+const laneLayout = (width: number, ports: readonly number[]) => {
+  if (ports.length === 0) return { offsets: [] as number[], left: undefined };
+  let bestStart = 0;
+  let bestEnd = 0;
+  let start = 0;
+  for (let end = 0; end < ports.length; end += 1) {
+    while ((ports[end] ?? 0) - (ports[start] ?? 0) > width - 1) start += 1;
+    if (end - start > bestEnd - bestStart) {
+      bestStart = start;
+      bestEnd = end;
+    }
+  }
+  const first = ports[bestStart] ?? 0;
+  const last = ports[bestEnd] ?? 0;
+  const left = first - Math.floor((width - 1 - (last - first)) / 2);
+  return { offsets: ports.map((port) => Math.min(width - 1, Math.max(0, port - left))), left };
+};
+
+const assignColumns = (nodes: ReadonlyMap<string, DrawingNode>, layers: readonly string[][]) => {
+  const lefts = new Map<string, number>();
+  const offsets = new Map<string, Map<string, number>>();
+  const widthOf = (id: string) => nodes.get(id)?.width ?? 1;
+  const centerOf = (id: string) => Math.floor((widthOf(id) - 1) / 2);
+  const leftOf = (id: string) => lefts.get(id) ?? drawingMargin;
+  const portOf = (id: string) => leftOf(id) + centerOf(id);
+  const laneOf = (source: string, target: string) =>
+    leftOf(source) + (offsets.get(source)?.get(target) ?? centerOf(source));
+  const separation = (before: string, after: string) =>
+    widthOf(before) +
+    (nodes.get(before)?.isDummy === true && nodes.get(after)?.isDummy === true
+      ? dummyGap
+      : laneGap);
+  const orderedTargets = (node: DrawingNode) => {
+    const below = new Map((layers[node.layer + 1] ?? []).map((id, index) => [id, index]));
+    return [...node.targets].sort(
+      (a, b) => portOf(a) - portOf(b) || (below.get(a) ?? 0) - (below.get(b) ?? 0) || a.localeCompare(b),
+    );
+  };
+  const laneLayoutOf = (node: DrawingNode) => {
+    const targets = orderedTargets(node);
+    return { targets, ...laneLayout(node.width, targets.map(portOf)) };
+  };
+  const relane = () => {
+    for (const node of nodes.values()) {
+      const { targets, offsets: lanes } = laneLayoutOf(node);
+      offsets.set(node.id, new Map(targets.map((target, index) => [target, lanes[index] ?? 0])));
+    }
+  };
+  for (const members of layers) {
+    let cursor = drawingMargin;
+    members.forEach((id, index) => {
+      lefts.set(id, cursor);
+      cursor += separation(id, members[index + 1] ?? id);
+    });
+  }
+  relane();
+
+  const placeLayer = (level: number, downward: boolean) => {
+    const members = layers[level] ?? [];
+    const desired = new Map<string, number>();
+    for (const id of members) {
+      const node = nodes.get(id);
+      if (node === undefined) continue;
+      if (!downward && node.isDummy) continue;
+      if (downward) {
+        const wanted = node.sources.map((source) => laneOf(source, id) - centerOf(id));
+        if (wanted.length > 0) desired.set(id, median(wanted));
+        continue;
+      }
+      const wanted = laneLayoutOf(node).left;
+      if (wanted !== undefined) desired.set(id, wanted);
+    }
+    const settled = new Set<number>();
+    const byPriority = [...members.keys()].sort(
+      (a, b) => priorityOf(members[b] ?? "") - priorityOf(members[a] ?? "") || a - b,
+    );
+    for (const index of byPriority) {
+      const id = members[index];
+      if (id === undefined) continue;
+      const want = desired.get(id);
+      if (want === undefined) {
+        settled.add(index);
+        continue;
+      }
+      let lowest = Number.MIN_SAFE_INTEGER;
+      for (let before = index - 1; before >= 0; before -= 1) {
+        if (!settled.has(before)) continue;
+        let bound = leftOf(members[before] ?? "");
+        for (let step = before; step < index; step += 1) {
+          bound += separation(members[step] ?? "", members[step + 1] ?? "");
+        }
+        lowest = bound;
+        break;
+      }
+      let highest = Number.MAX_SAFE_INTEGER;
+      for (let after = index + 1; after < members.length; after += 1) {
+        if (!settled.has(after)) continue;
+        let bound = leftOf(members[after] ?? "");
+        for (let step = index; step < after; step += 1) {
+          bound -= separation(members[step] ?? "", members[step + 1] ?? "");
+        }
+        highest = bound;
+        break;
+      }
+      lefts.set(id, Math.min(Math.max(want, lowest), Math.max(highest, lowest)));
+      for (let after = index + 1; after < members.length; after += 1) {
+        const previous = members[after - 1] ?? "";
+        const current = members[after] ?? "";
+        const minimum = leftOf(previous) + separation(previous, current);
+        if (leftOf(current) < minimum) lefts.set(current, minimum);
+      }
+      for (let before = index - 1; before >= 0; before -= 1) {
+        const next = members[before + 1] ?? "";
+        const current = members[before] ?? "";
+        const maximum = leftOf(next) - separation(current, next);
+        if (leftOf(current) > maximum) lefts.set(current, maximum);
+      }
+      settled.add(index);
+    }
+  };
+
+  const priorityOf = (id: string) => {
+    const node = nodes.get(id);
+    if (node === undefined) return 0;
+    return node.isDummy ? Number.MAX_SAFE_INTEGER : node.sources.length + node.targets.length;
+  };
+
+  const levels = [...layers.keys()];
+  for (let pass = 0; pass < 24; pass += 1) {
+    for (const level of [...levels].reverse()) placeLayer(level, false);
+    relane();
+    for (const level of levels) placeLayer(level, true);
+    relane();
+  }
+  const smallest = Math.min(...lefts.values());
+  for (const [id, value] of lefts) lefts.set(id, value + drawingMargin - smallest);
+  return { lefts, offsets };
+};
+
+const planArrivals = (
+  nodes: ReadonlyMap<string, DrawingNode>,
+  layers: readonly string[][],
+  lefts: ReadonlyMap<string, number>,
+  offsets: ReadonlyMap<string, ReadonlyMap<string, number>>,
+) => {
+  const leftOf = (id: string) => lefts.get(id) ?? drawingMargin;
+  const widthOf = (id: string) => nodes.get(id)?.width ?? 1;
+  const centerOf = (id: string) => Math.floor((widthOf(id) - 1) / 2);
+  const portOf = (id: string) => leftOf(id) + centerOf(id);
+  const laneOf = (source: string, target: string) =>
+    leftOf(source) + (offsets.get(source)?.get(target) ?? centerOf(source));
+  const plans: Arrival[][] = [];
+  for (let level = 0; level + 1 < layers.length; level += 1) {
+    const members = layers[level + 1] ?? [];
+    const occupant = new Map<number, string>();
+    for (const id of members) {
+      if (nodes.get(id)?.isDummy === true) {
+        occupant.set(portOf(id), id);
+        continue;
+      }
+      for (let column = leftOf(id); column < leftOf(id) + widthOf(id); column += 1) {
+        occupant.set(column, id);
+      }
+    }
+    const arrivals: Arrival[] = [];
+    for (const id of members) {
+      const node = nodes.get(id);
+      if (node === undefined || node.sources.length === 0) continue;
+      const lanes = [...new Set(node.sources.map((source) => laneOf(source, id)))].sort(
+        (a, b) => a - b,
+      );
+      const start = leftOf(id);
+      const finish = start + widthOf(id) - 1;
+      const runIsClear = (from: number, to: number, own: readonly number[]) => {
+        for (let column = from; column <= to; column += 1) {
+          const holder = occupant.get(column);
+          if (holder === undefined) continue;
+          const held = nodes.get(holder);
+          if (
+            own.includes(column) &&
+            held?.isDummy === true &&
+            held.sources.some((source) => laneOf(source, holder) === column)
+          ) {
+            continue;
+          }
+          return false;
+        }
+        return true;
+      };
+      const fromLeft = node.isDummy ? [] : lanes.filter((lane) => lane <= start - 3);
+      const fromRight = node.isDummy ? [] : lanes.filter((lane) => lane >= finish + 3);
+      const overhead = lanes.filter(
+        (lane) => !fromLeft.includes(lane) && !fromRight.includes(lane),
+      );
+      const spilled: number[] = [];
+      if (fromLeft.length > 0 && runIsClear(fromLeft[0] ?? 0, start - 1, fromLeft)) {
+        arrivals.push({ target: id, kind: "fromLeft", ports: fromLeft });
+      } else spilled.push(...fromLeft);
+      if (
+        fromRight.length > 0 &&
+        runIsClear(finish + 1, fromRight[fromRight.length - 1] ?? 0, fromRight)
+      ) {
+        arrivals.push({ target: id, kind: "fromRight", ports: fromRight });
+      } else spilled.push(...fromRight);
+      const remaining = [...new Set([...overhead, ...spilled])].sort((a, b) => a - b);
+      if (remaining.length === 0) continue;
+      if (remaining.length === 1 && remaining[0] === portOf(id)) {
+        arrivals.push({ target: id, kind: "vertical", ports: remaining });
+        continue;
+      }
+      arrivals.push({ target: id, kind: "bus", ports: remaining });
+    }
+    plans.push(arrivals);
+  }
+  return plans;
+};
+
+const packBusRows = (arrivals: readonly Arrival[], portOf: (id: string) => number) => {
+  const rows = new Map<Arrival, number>();
+  const taken: { from: number; to: number }[][] = [];
+  for (const bus of arrivals.filter((arrival) => arrival.kind === "bus")) {
+    const columns = [...bus.ports, portOf(bus.target)];
+    const span = { from: Math.min(...columns), to: Math.max(...columns) };
+    let row = 0;
+    while ((taken[row] ?? []).some((other) => span.from <= other.to + 1 && other.from <= span.to + 1)) {
+      row += 1;
+    }
+    taken[row] = [...(taken[row] ?? []), span];
+    rows.set(bus, row);
+  }
+  return { rows, count: taken.length };
+};
+
+const renderFeatureDrawing = (): { drawing: string; crossings: number } | { reason: string } => {
+  const nodes = buildDrawingNodes(orderedFeatures, featureEdges);
+  const { layers, crossings } = orderLayers(nodes);
+  const { lefts, offsets } = assignColumns(nodes, layers);
+  const leftOf = (id: string) => lefts.get(id) ?? drawingMargin;
+  const widthOf = (id: string) => nodes.get(id)?.width ?? 1;
+  const portOf = (id: string) => leftOf(id) + Math.floor((widthOf(id) - 1) / 2);
+  const plans = planArrivals(nodes, layers, lefts, offsets);
+  const packed = plans.map((arrivals) => packBusRows(arrivals, portOf));
+  const bandRows = packed.map(({ count }) => (count === 0 ? 1 : count + 2));
+  const labelRows: number[] = [0];
+  for (const rows of bandRows) labelRows.push((labelRows[labelRows.length - 1] ?? 0) + rows + 1);
+
+  const masks = new Map<string, number>();
+  const glyphs = new Map<string, string>();
+  const cell = (row: number, column: number) => `${row}:${column}`;
+  const connect = (row: number, column: number, bits: number) =>
+    masks.set(cell(row, column), (masks.get(cell(row, column)) ?? 0) | bits);
+  const vertical = (column: number, fromRow: number, toRow: number, continues: boolean) => {
+    for (let row = fromRow; row <= toRow; row += 1) {
+      connect(row, column, north | (row < toRow || continues ? south : 0));
+    }
+  };
+  const horizontal = (row: number, fromColumn: number, toColumn: number) => {
+    for (let column = fromColumn; column <= toColumn; column += 1) {
+      connect(row, column, (column > fromColumn ? west : 0) | (column < toColumn ? east : 0));
+    }
+  };
+
+  for (const members of layers) {
+    for (const id of members) {
+      const node = nodes.get(id);
+      if (node === undefined) continue;
+      const row = labelRows[node.layer] ?? 0;
+      if (node.isDummy) {
+        connect(row, portOf(id), north | south);
+        continue;
+      }
+      [...node.label].forEach((character, offset) =>
+        glyphs.set(cell(row, leftOf(id) + offset), character),
+      );
+    }
+  }
+
+  for (let level = 0; level + 1 < layers.length; level += 1) {
+    const top = (labelRows[level] ?? 0) + 1;
+    const bottom = (labelRows[level + 1] ?? 0) - 1;
+    const targetRow = labelRows[level + 1] ?? 0;
+    const busRows = packed[level]?.rows ?? new Map<Arrival, number>();
+    for (const arrival of plans[level] ?? []) {
+      if (arrival.kind === "vertical") {
+        vertical(arrival.ports[0] ?? 0, top, bottom, true);
+        continue;
+      }
+      if (arrival.kind === "bus") {
+        const row = top + 1 + (busRows.get(arrival) ?? 0);
+        const columns = [...arrival.ports, portOf(arrival.target)];
+        for (const lane of arrival.ports) vertical(lane, top, row, false);
+        horizontal(row, Math.min(...columns), Math.max(...columns));
+        connect(row, portOf(arrival.target), south);
+        vertical(portOf(arrival.target), row + 1, bottom, true);
+        continue;
+      }
+      const facingLeft = arrival.kind === "fromLeft";
+      const arrowColumn = facingLeft
+        ? leftOf(arrival.target) - 2
+        : leftOf(arrival.target) + widthOf(arrival.target) + 1;
+      const outer = facingLeft ? Math.min(...arrival.ports) : Math.max(...arrival.ports);
+      const inner = facingLeft ? arrowColumn - 1 : arrowColumn + 1;
+      for (const lane of arrival.ports) vertical(lane, top, targetRow, false);
+      horizontal(targetRow, Math.min(outer, inner), Math.max(outer, inner));
+      for (const lane of arrival.ports) {
+        connect(
+          targetRow,
+          lane,
+          facingLeft ? east | (lane > outer ? west : 0) : west | (lane < outer ? east : 0),
+        );
+      }
+      connect(targetRow, inner, facingLeft ? east : west);
+      glyphs.set(cell(targetRow, arrowColumn), facingLeft ? "►" : "◄");
+    }
+  }
+
+  const totalRows = (labelRows[labelRows.length - 1] ?? 0) + 1;
+  const marked = [...masks.keys(), ...glyphs.keys()];
+  const totalColumns = Math.max(0, ...marked.map((entry) => Number(entry.split(":")[1]))) + 1;
+  if (totalColumns > drawingWidthLimit) {
+    return {
+      reason: `The drawing would need ${totalColumns} columns, past the ${drawingWidthLimit}-column limit — listing the edges instead.`,
+    };
+  }
+  const lines: string[] = [];
+  for (let row = 0; row < totalRows; row += 1) {
+    let line = "";
+    for (let column = 0; column < totalColumns; column += 1) {
+      line += glyphs.get(cell(row, column)) ?? boxCharacters.get(masks.get(cell(row, column)) ?? 0) ?? " ";
+    }
+    lines.push(line.replace(/[ ]+$/, ""));
+  }
+  return { drawing: lines.join("\n"), crossings };
+};
+
+const renderSimple = () => {
+  const lines: string[] = [];
+  lines.push(
+    `${featureZones.length} features — ${
+      featuresAreAcyclic
+        ? "a DAG, no cycles"
+        : `not a DAG, ${featureCycles.length} cycle(s) between features`
+    }`,
+  );
+  lines.push("");
+  if (!featuresAreAcyclic || featureZones.length === 0) lines.push(renderFeatureList(undefined));
+  else {
+    const drawn = renderFeatureDrawing();
+    lines.push("drawing" in drawn ? drawn.drawing : renderFeatureList(drawn.reason));
+  }
+  lines.push("");
+  lines.push(
+    featuresAreAcyclic
+      ? "Everything above depends on what is below."
+      : `Listed alphabetically — a cycle leaves no such order: ${featureCycles
+          .map((cycle) => cycle.path.join(" → "))
+          .join("; ")}`,
+  );
+  return lines.join("\n");
+};
+
 const mermaidId = (zone: string) => zone.replace(/[^A-Za-z0-9_]/g, "_");
 
 const renderMermaid = () => {
@@ -392,11 +1001,24 @@ const renderMermaid = () => {
   return lines.join("\n");
 };
 
+const renderFeatureMermaid = () => {
+  const lines: string[] = ["```mermaid", "graph LR"];
+  for (const feature of orderedFeatures) lines.push(`  ${mermaidId(feature)}["${feature}"]`);
+  for (const feature of orderedFeatures) {
+    for (const target of featureTargetsOf(feature)) {
+      lines.push(`  ${mermaidId(feature)} --> ${mermaidId(target)}`);
+    }
+  }
+  lines.push("```");
+  return lines.join("\n");
+};
+
 const wantsMermaid = process.argv.includes("--mermaid");
+const wantsFull = process.argv.includes("--full");
 const wantsQuiet = process.argv.includes("--quiet");
 
-if (wantsMermaid) console.log(renderMermaid());
-else if (!wantsQuiet) console.log(renderText());
+if (wantsMermaid) console.log(wantsFull ? renderMermaid() : renderFeatureMermaid());
+else if (!wantsQuiet) console.log(wantsFull ? renderText() : renderSimple());
 
 const problems: string[] = [];
 

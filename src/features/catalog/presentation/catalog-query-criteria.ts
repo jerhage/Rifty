@@ -47,8 +47,12 @@ function parseNonnegativeInteger(value: string): number | undefined {
 
 function minimumValue(filter: CardNumericFilter | undefined): string {
   return match(filter)
+    .with(undefined, () => "")
     .with({ type: "atLeast" }, ({ value }) => String(value))
-    .otherwise(() => "");
+    .with({ type: "exact" }, ({ value }) => String(value))
+    .with({ type: "between" }, ({ minimum }) => String(minimum))
+    .with({ type: "atMost" }, () => "")
+    .exhaustive();
 }
 
 /**

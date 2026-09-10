@@ -1,10 +1,10 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { Chip } from "@/components/ui/atoms/chip";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
 import { SelectableChipRow } from "@/components/ui/atoms/selectable-chip-row";
 import { SheetFace } from "@/components/ui/atoms/sheet-face";
-import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { TextAction } from "@/components/ui/atoms/text-action";
 import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import type { CardSet } from "@/features/set/card-set";
@@ -36,17 +36,7 @@ function CatalogFilterFace({
 
   return (
     <SheetFace
-      action={
-        <Pressable
-          accessibilityRole="button"
-          onPress={onClear}
-          style={({ pressed }) => pressed && styles.pressed}
-        >
-          <ThemedText themeColor="accent" type="mono">
-            Reset
-          </ThemedText>
-        </Pressable>
-      }
+      action={<TextAction label="Reset" onPress={onClear} />}
       body={
         <>
           <LabelledSection label="Sets">
@@ -106,8 +96,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.two - 1,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

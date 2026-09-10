@@ -1,10 +1,11 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { Chip } from "@/components/ui/atoms/chip";
 import { ColorDot } from "@/components/ui/atoms/color-dot";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
 import { SelectableChipRow } from "@/components/ui/atoms/selectable-chip-row";
 import { SheetFace } from "@/components/ui/atoms/sheet-face";
+import { TextAction } from "@/components/ui/atoms/text-action";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/card/keyword/keyword";
@@ -44,17 +45,7 @@ function PoolFilterFace({
 
   return (
     <SheetFace
-      action={
-        <Pressable
-          accessibilityRole="button"
-          onPress={onReset}
-          style={({ pressed }) => pressed && styles.pressed}
-        >
-          <ThemedText themeColor="accent" type="mono">
-            Reset
-          </ThemedText>
-        </Pressable>
-      }
+      action={<TextAction label="Reset" onPress={onReset} />}
       body={
         <>
           <LabelledSection label="Domain">
@@ -117,8 +108,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.two - 1,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

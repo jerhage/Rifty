@@ -20,6 +20,15 @@ function toggleSet(criteria: CatalogQueryCriteria, setCode: SetCode): CatalogQue
   return { ...criteria, setCodes: nextCodes.length === 0 ? undefined : nextCodes };
 }
 
+function toggleKeyword(criteria: CatalogQueryCriteria, keywordId: string): CatalogQueryCriteria {
+  const currentIds = criteria.keywordIds ?? [];
+  const nextIds = currentIds.includes(keywordId)
+    ? currentIds.filter((id) => id !== keywordId)
+    : [...currentIds, keywordId];
+
+  return { ...criteria, keywordIds: nextIds.length === 0 ? undefined : nextIds };
+}
+
 function setMinimum(
   criteria: CatalogQueryCriteria,
   property: NumericAttribute,
@@ -55,6 +64,7 @@ function activeFilterCount(criteria: CatalogQueryCriteria): number {
     criteria.rarityIds?.length ?? 0,
     criteria.supertypeIds?.length ?? 0,
     criteria.tagIds?.length ?? 0,
+    criteria.keywordIds?.length ?? 0,
     criteria.energy === undefined ? 0 : 1,
     criteria.might === undefined ? 0 : 1,
     criteria.power === undefined ? 0 : 1,
@@ -63,5 +73,5 @@ function activeFilterCount(criteria: CatalogQueryCriteria): number {
   return facets.filter((count) => count > 0).length;
 }
 
-export { activeFilterCount, minimumValue, setMinimum, toggleSet };
+export { activeFilterCount, minimumValue, setMinimum, toggleKeyword, toggleSet };
 export type { CatalogQueryCriteria, NumericAttribute };

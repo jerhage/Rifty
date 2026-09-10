@@ -5,6 +5,7 @@ import { ThemedView } from "@/components/ui/atoms/themed-view";
 import type { Card } from "@/features/catalog/card/card";
 import type { CardCounter } from "@/features/catalog/card/card-counter";
 import type { CardLister } from "@/features/catalog/card/card-lister";
+import type { Keyword } from "@/features/catalog/keyword/keyword";
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
 import type { DeckSection, DeckVerification } from "@/features/deck/deck/deck";
@@ -27,6 +28,7 @@ interface DeckBuildScreenProps {
   readonly draft: DeckBuildDraft;
   readonly error: string | null;
   readonly isSaving: boolean;
+  readonly keywords: readonly Keyword[];
   readonly legendDomainIds: readonly CardDomain[];
   readonly isPoolFilterOpen: boolean;
   /** What the field shows; `legendSearchQuery` is the settled value the query uses. */
@@ -52,6 +54,7 @@ interface DeckBuildScreenProps {
   readonly onSetQuantity: (section: DeckSection, card: Card, quantity: number) => void;
   readonly onToggleLegendDomain: (domainId: CardDomain) => void;
   readonly onTogglePoolDomain: (domainId: CardDomain) => void;
+  readonly onTogglePoolKeyword: (keywordId: string) => void;
   readonly onTogglePoolType: (typeId: CardType) => void;
   readonly poolFilters: ZonePoolFilters;
   readonly poolLayout: ZonePoolLayout;
@@ -74,6 +77,7 @@ function DeckBuildScreen({
   error,
   isSaving,
   isPoolFilterOpen,
+  keywords,
   legendDomainIds,
   legendQuery,
   legendSearchQuery,
@@ -97,6 +101,7 @@ function DeckBuildScreen({
   onSetQuantity,
   onToggleLegendDomain,
   onTogglePoolDomain,
+  onTogglePoolKeyword,
   onTogglePoolType,
   poolFilters,
   poolLayout,
@@ -185,9 +190,11 @@ function DeckBuildScreen({
                 <PoolFilterSheet
                   filters={poolFilters}
                   isPresented={isPoolFilterOpen}
+                  keywords={keywords}
                   onDismiss={onDismissPoolFilters}
                   onReset={onResetPoolFilters}
                   onToggleDomain={onTogglePoolDomain}
+                  onToggleKeyword={onTogglePoolKeyword}
                   onToggleType={onTogglePoolType}
                   resultLabel={pool.total === 1 ? "1 card" : `${pool.total} cards`}
                   zone={zone}

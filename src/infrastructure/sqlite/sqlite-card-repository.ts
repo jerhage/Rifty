@@ -4,6 +4,7 @@ import {
   count,
   desc,
   eq,
+  exists,
   gte,
   inArray,
   lte,
@@ -257,6 +258,21 @@ class SqliteCardRepository implements CardRepository {
             .select({ cardId: cardDomains.cardId })
             .from(cardDomains)
             .where(notInArray(cardDomains.domainId, [...new Set(criteria.withinDomainIds)])),
+        ),
+      );
+    }
+    if (criteria.keywordIds?.length) {
+      conditions.push(
+        exists(
+          this.db
+            .select({ matched: sql`1` })
+            .from(cardKeywords)
+            .where(
+              and(
+                eq(cardKeywords.cardId, catalogCards.id),
+                inArray(cardKeywords.keywordId, [...new Set(criteria.keywordIds)]),
+              ),
+            ),
         ),
       );
     }

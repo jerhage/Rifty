@@ -7,10 +7,12 @@ import { LabelledSection } from "@/components/ui/atoms/labelled-section";
 import { Button } from "@/components/ui/atoms/button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
+import type { Keyword } from "@/features/catalog/keyword/keyword";
 import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
 import type { CardType } from "@/features/catalog/value-objects/card-type";
 import type { DeckSection } from "@/features/deck/deck/deck";
 import { ORDERED_DOMAINS } from "@/features/catalog/presentation/catalog-facet-order";
+import { KeywordFilterChips } from "@/features/catalog/presentation/components/sheet/keyword-filter-chips";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import {
@@ -23,18 +25,22 @@ import {
 function PoolFilterSheet({
   filters,
   isPresented,
+  keywords,
   onDismiss,
   onReset,
   onToggleDomain,
+  onToggleKeyword,
   onToggleType,
   resultLabel,
   zone,
 }: {
   readonly filters: ZonePoolFilters;
   readonly isPresented: boolean;
+  readonly keywords: readonly Keyword[];
   readonly onDismiss: () => void;
   readonly onReset: () => void;
   readonly onToggleDomain: (domainId: CardDomain) => void;
+  readonly onToggleKeyword: (keywordId: string) => void;
   readonly onToggleType: (typeId: CardType) => void;
   readonly resultLabel: string;
   readonly zone: DeckSection;
@@ -96,6 +102,14 @@ function PoolFilterSheet({
                 </View>
               </LabelledSection>
             ) : null}
+
+            <LabelledSection label="Keywords">
+              <KeywordFilterChips
+                keywords={keywords}
+                onToggle={onToggleKeyword}
+                selectedIds={filters.keywordIds}
+              />
+            </LabelledSection>
 
             <ThemedText themeColor="textTertiary" type="body">
               {zoneRuleSummary(zone)}

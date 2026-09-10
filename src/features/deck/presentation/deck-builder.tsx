@@ -1,6 +1,7 @@
 import type { CardCounter } from "@/features/catalog/card/card-counter";
 import type { Card } from "@/features/catalog/card/card";
 import type { CardLister } from "@/features/catalog/card/card-lister";
+import type { Keyword } from "@/features/catalog/keyword/keyword";
 
 import {
   useDeckBuild,
@@ -13,6 +14,7 @@ function DeckBuilder({
   capabilities,
   cardCounter,
   cardLister,
+  keywords,
   onExit,
   onOpenCard,
   onSaved,
@@ -21,6 +23,7 @@ function DeckBuilder({
   readonly capabilities: DeckBuildCapabilities;
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
+  readonly keywords: readonly Keyword[];
   readonly onExit: () => void;
   readonly onOpenCard: (card: Card) => void;
   readonly onSaved: () => void;
@@ -36,6 +39,7 @@ function DeckBuilder({
       error={build.error}
       isPoolFilterOpen={build.isPoolFilterOpen}
       isSaving={build.isSaving}
+      keywords={keywords}
       legendDomainIds={build.legendDomainIds}
       legendQuery={build.legendQuery}
       legendSearchQuery={build.debouncedLegendQuery}
@@ -58,6 +62,7 @@ function DeckBuilder({
       onSetQuantity={build.setQuantity}
       onToggleLegendDomain={build.toggleLegendDomain}
       onTogglePoolDomain={build.togglePoolDomain}
+      onTogglePoolKeyword={build.togglePoolKeyword}
       onTogglePoolType={build.togglePoolType}
       mode={build.mode}
       poolFilters={build.poolFilters}

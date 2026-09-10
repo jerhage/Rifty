@@ -2,7 +2,7 @@ import { findCard } from "@/features/catalog/card/use-cases/find-card";
 import { listCards } from "@/features/catalog/card/use-cases/list-cards";
 import { Page } from "@/shared/page";
 
-import { card, cardSet, carriedKeyword } from "./fixtures";
+import { card, cardSet, carriedKeyword, grantedKeyword } from "./fixtures";
 import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 
 describe("card catalog scenarios", () => {
@@ -193,6 +193,89 @@ describe("card catalog scenarios", () => {
     await expect(
       store.cards.getSummaryPage({ domainIds: ["Calm", "Mind"] }),
     ).resolves.toMatchObject({ items: [{ id: "both" }] });
+    store.close();
+  });
+
+  it("matches any occurrence of a keyword whatever it targets, listing each card once", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const carrier = card("carrier", unleashed.code, {
+      collectorNumber: 1,
+      keywords: [carriedKeyword("shield", "Shield", 1)],
+    });
+    const granter = card("granter", unleashed.code, {
+      collectorNumber: 2,
+      keywords: [grantedKeyword("shield", "Shield")],
+    });
+    const twice = card("twice", unleashed.code, {
+      collectorNumber: 3,
+      domainIds: ["Fury"],
+      keywords: [carriedKeyword("shield", "Shield", 1), grantedKeyword("shield", "Shield", 2)],
+    });
+    const manyTargets = card("many-targets", unleashed.code, {
+      collectorNumber: 4,
+      keywords: [
+        {
+          id: "shield",
+          name: "Shield",
+          value: null,
+          targets: [
+            { kind: "unit", isToken: false, allegiance: "friendly" },
+            { kind: "unit", isToken: true, allegiance: "own" },
+          ],
+        },
+      ],
+    });
+    const tank = card("tank", unleashed.code, {
+      collectorNumber: 5,
+      keywords: [carriedKeyword("tank", "Tank")],
+    });
+    const plain = card("plain", unleashed.code, { collectorNumber: 6 });
+    for (const seeded of [carrier, granter, twice, manyTargets, tank, plain]) {
+      store.seedCard(seeded);
+    }
+
+    await expect(store.cards.getSummaryPage({ keywordIds: ["shield"] })).resolves.toMatchObject({
+      items: [
+        { id: carrier.id },
+        { id: granter.id },
+        { id: twice.id },
+        { id: manyTargets.id },
+      ],
+    });
+    await expect(store.cards.count({ keywordIds: ["shield"] })).resolves.toBe(4);
+    await expect(
+      store.cards.getSummaryPage({ keywordIds: ["shield", "tank"] }),
+    ).resolves.toMatchObject({
+      items: [
+        { id: carrier.id },
+        { id: granter.id },
+        { id: twice.id },
+        { id: manyTargets.id },
+        { id: tank.id },
+      ],
+    });
+    await expect(
+      store.cards.getSummaryPage({ keywordIds: ["shield"], domainIds: ["Fury"] }),
+    ).resolves.toMatchObject({ items: [{ id: twice.id }] });
+    store.close();
+  });
+
+  it("offers every keyword the catalog holds, ordered by name", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    store.seedCard(
+      card("warden", unleashed.code, {
+        keywords: [carriedKeyword("tank", "Tank"), grantedKeyword("shield", "Shield")],
+      }),
+    );
+
+    await expect(store.keywords.getAll()).resolves.toEqual([
+      { id: "shield", name: "Shield", reminderText: null },
+      { id: "tank", name: "Tank", reminderText: null },
+    ]);
     store.close();
   });
 

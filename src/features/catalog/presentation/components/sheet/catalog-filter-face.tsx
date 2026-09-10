@@ -4,9 +4,15 @@ import { Chip } from "@/components/ui/atoms/chip";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
+import type { Keyword } from "@/features/catalog/keyword/keyword";
 import type { CardSet } from "@/features/catalog/set/card-set";
 
-import { toggleSet, type CatalogQueryCriteria } from "../../catalog-query-criteria";
+import {
+  toggleKeyword,
+  toggleSet,
+  type CatalogQueryCriteria,
+} from "../../catalog-query-criteria";
+import { KeywordFilterChips } from "./keyword-filter-chips";
 import { MinimumAttributeInput } from "./minimum-attribute-input";
 import { SheetFace } from "./sheet-face";
 
@@ -17,12 +23,14 @@ import { SheetFace } from "./sheet-face";
 function CatalogFilterFace({
   cardSets,
   criteria,
+  keywords,
   onApply,
   onChangeCriteria,
   onClear,
 }: {
   readonly cardSets: readonly CardSet[];
   readonly criteria: CatalogQueryCriteria;
+  readonly keywords: readonly Keyword[];
   readonly onApply: () => void;
   readonly onChangeCriteria: (criteria: CatalogQueryCriteria) => void;
   readonly onClear: () => void;
@@ -53,6 +61,14 @@ function CatalogFilterFace({
                 />
               ))}
             </View>
+          </LabelledSection>
+
+          <LabelledSection label="Keywords">
+            <KeywordFilterChips
+              keywords={keywords}
+              onToggle={(keywordId) => onChangeCriteria(toggleKeyword(criteria, keywordId))}
+              selectedIds={criteria.keywordIds ?? []}
+            />
           </LabelledSection>
 
           <LabelledSection label="Minimum attributes">

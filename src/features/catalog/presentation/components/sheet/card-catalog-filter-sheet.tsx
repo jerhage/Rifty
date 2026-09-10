@@ -2,6 +2,7 @@ import { BottomSheet, RNHostView } from "@expo/ui";
 import { View } from "react-native";
 import { match } from "ts-pattern";
 
+import type { Keyword } from "@/features/catalog/keyword/keyword";
 import type { CardSet } from "@/features/catalog/set/card-set";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -14,6 +15,7 @@ import { CatalogSortFace } from "./catalog-sort-face";
 function CardCatalogFilterSheet({
   cardSets,
   criteria,
+  keywords,
   onApply,
   onChangeCriteria,
   onClear,
@@ -22,6 +24,7 @@ function CardCatalogFilterSheet({
 }: {
   readonly cardSets: readonly CardSet[];
   readonly criteria: CatalogQueryCriteria;
+  readonly keywords: readonly Keyword[];
   readonly onApply: () => void;
   readonly onChangeCriteria: (criteria: CatalogQueryCriteria) => void;
   readonly onClear: () => void;
@@ -51,6 +54,7 @@ function CardCatalogFilterSheet({
             <CatalogFilterFace
               cardSets={cardSets}
               criteria={criteria}
+              keywords={keywords}
               onApply={onApply}
               onChangeCriteria={onChangeCriteria}
               onClear={onClear}

@@ -15,7 +15,12 @@ describe("deck zone pool", () => {
   });
 
   it("asks the query for any of the chosen domains, never all of them", () => {
-    const one = poolCriteria("mainDeck", { query: "", domainIds: ["Fury"], typeIds: [] });
+    const one = poolCriteria("mainDeck", {
+      query: "",
+      domainIds: ["Fury"],
+      keywordIds: [],
+      typeIds: [],
+    });
     const two = poolCriteria("mainDeck", defaultPoolFilters(legend));
 
     expect(one.anyDomainIds).toEqual(["Fury"]);
@@ -40,6 +45,13 @@ describe("deck zone pool", () => {
       text: "volibear",
     });
     expect(legendCriteria("   ", []).search).toBeUndefined();
+  });
+
+  it("asks the query for any of the chosen keywords", () => {
+    const filters = { ...defaultPoolFilters(legend), keywordIds: ["shield", "tank"] };
+
+    expect(poolCriteria("mainDeck", filters).keywordIds).toEqual(["shield", "tank"]);
+    expect(poolCriteria("mainDeck", defaultPoolFilters(legend)).keywordIds).toBeUndefined();
   });
 
   it("limits each zone to the card types it accepts", () => {

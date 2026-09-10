@@ -3,6 +3,7 @@ import { useCallback, useMemo } from "react";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import type { Card } from "@/features/catalog/card/card";
+import { KeywordsData } from "@/features/catalog/presentation/data/keywords-data";
 import { DeckDetailData } from "@/features/deck/presentation/data/deck-detail-data";
 import { DeckBuilder } from "@/features/deck/presentation/deck-builder";
 
@@ -26,38 +27,42 @@ function DeckBuildRoute() {
   );
   const goBack = useCallback(() => router.back(), [router]);
 
-  if (!deckId) {
-    return (
-      <DeckBuilder
-        capabilities={capabilities}
-        cardCounter={catalog.cardRepository}
-        cardLister={catalog.cardRepository}
-        onExit={goBack}
-        onOpenCard={openCard}
-        onSaved={goBack}
-        start={{ type: "new" }}
-      />
-    );
-  }
-
   return (
-    <DeckDetailData
-      cardLister={catalog.cardRepository}
-      deckFinder={decks.deckRepository}
-      deckId={deckId}
-    >
-      {({ cards, deck }) => (
-        <DeckBuilder
-          capabilities={capabilities}
-          cardCounter={catalog.cardRepository}
-          cardLister={catalog.cardRepository}
-          onExit={goBack}
-          onOpenCard={openCard}
-          onSaved={goBack}
-          start={{ type: "edit", cards, deck }}
-        />
-      )}
-    </DeckDetailData>
+    <KeywordsData keywordLister={catalog.keywordLister}>
+      {(keywords) =>
+        deckId ? (
+          <DeckDetailData
+            cardLister={catalog.cardRepository}
+            deckFinder={decks.deckRepository}
+            deckId={deckId}
+          >
+            {({ cards, deck }) => (
+              <DeckBuilder
+                capabilities={capabilities}
+                cardCounter={catalog.cardRepository}
+                cardLister={catalog.cardRepository}
+                keywords={keywords}
+                onExit={goBack}
+                onOpenCard={openCard}
+                onSaved={goBack}
+                start={{ type: "edit", cards, deck }}
+              />
+            )}
+          </DeckDetailData>
+        ) : (
+          <DeckBuilder
+            capabilities={capabilities}
+            cardCounter={catalog.cardRepository}
+            cardLister={catalog.cardRepository}
+            keywords={keywords}
+            onExit={goBack}
+            onOpenCard={openCard}
+            onSaved={goBack}
+            start={{ type: "new" }}
+          />
+        )
+      }
+    </KeywordsData>
   );
 }
 

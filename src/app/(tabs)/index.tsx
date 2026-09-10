@@ -4,6 +4,7 @@ import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import { CardCatalogFilterSheet } from "@/features/catalog/presentation/components/sheet/card-catalog-filter-sheet";
 import { CardSetsData } from "@/features/catalog/presentation/data/card-sets-data";
 import { CardSummariesData } from "@/features/catalog/presentation/data/card-summaries-data";
+import { KeywordsData } from "@/features/catalog/presentation/data/keywords-data";
 import { useCatalogQuery } from "@/features/catalog/presentation/hooks/use-catalog-query";
 import { CardNameSearchScreen } from "@/features/catalog/presentation/screens/card-name-search-screen";
 
@@ -37,15 +38,20 @@ function HomeScreen() {
       </CardSummariesData>
       <CardSetsData setLister={catalog.setRepository}>
         {(cardSets) => (
-          <CardCatalogFilterSheet
-            cardSets={cardSets}
-            criteria={catalogQuery.draftCriteria}
-            onApply={catalogQuery.applyFilters}
-            onChangeCriteria={catalogQuery.setDraftCriteria}
-            onClear={catalogQuery.clearFilters}
-            onDismiss={catalogQuery.dismissSheet}
-            sheet={catalogQuery.sheet}
-          />
+          <KeywordsData keywordLister={catalog.keywordLister}>
+            {(keywords) => (
+              <CardCatalogFilterSheet
+                cardSets={cardSets}
+                criteria={catalogQuery.draftCriteria}
+                keywords={keywords}
+                onApply={catalogQuery.applyFilters}
+                onChangeCriteria={catalogQuery.setDraftCriteria}
+                onClear={catalogQuery.clearFilters}
+                onDismiss={catalogQuery.dismissSheet}
+                sheet={catalogQuery.sheet}
+              />
+            )}
+          </KeywordsData>
         )}
       </CardSetsData>
     </>

@@ -8,10 +8,16 @@ import { ZONE_RULES } from "@/features/deck/deck/deck-legality";
 interface ZonePoolFilters {
   readonly query: string;
   readonly domainIds: readonly CardDomain[];
+  readonly keywordIds: readonly string[];
   readonly typeIds: readonly CardType[];
 }
 
-const EMPTY_POOL_FILTERS: ZonePoolFilters = { query: "", domainIds: [], typeIds: [] };
+const EMPTY_POOL_FILTERS: ZonePoolFilters = {
+  query: "",
+  domainIds: [],
+  keywordIds: [],
+  typeIds: [],
+};
 
 type ZonePoolLayout = "list" | "grid";
 
@@ -75,6 +81,7 @@ function poolCriteria(
     typeIds: chosenTypes.length > 0 ? chosenTypes : [...zoneCardTypes(section)],
     // A deck plays anything inside its legend's domains, so several domains mean any of them.
     anyDomainIds: filters.domainIds.length > 0 ? [...filters.domainIds] : undefined,
+    keywordIds: filters.keywordIds.length > 0 ? [...filters.keywordIds] : undefined,
     search: query ? { type: "nameOrRulesText", text: query } : undefined,
   };
 }
@@ -94,7 +101,7 @@ function legendCriteria(
 }
 
 function activePoolFilterCount(filters: ZonePoolFilters): number {
-  return filters.domainIds.length + filters.typeIds.length;
+  return filters.domainIds.length + filters.keywordIds.length + filters.typeIds.length;
 }
 
 export {

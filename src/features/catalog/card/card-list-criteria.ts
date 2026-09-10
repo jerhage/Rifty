@@ -49,6 +49,7 @@ const cardListCriteriaSchema = z.object({
   anyDomainIds: z.array(cardDomainSchema).optional(),
   withinDomainIds: z.array(cardDomainSchema).optional(),
   tagIds: z.array(taxonomyIdSchema).optional(),
+  keywordIds: z.array(z.string().trim().min(1)).optional(),
   championNames: z.array(z.string().trim().min(1)).optional(),
   energy: cardNumericFilterSchema.optional(),
   might: cardNumericFilterSchema.optional(),

@@ -111,6 +111,12 @@ function useDeckBuild(
       domainIds: toggle(current.domainIds, domainId),
     }));
   }, []);
+  const togglePoolKeyword = useCallback((keywordId: string) => {
+    setPoolFilters((current) => ({
+      ...current,
+      keywordIds: toggle(current.keywordIds, keywordId),
+    }));
+  }, []);
   const togglePoolType = useCallback((typeId: CardType) => {
     setPoolFilters((current) => ({ ...current, typeIds: toggle(current.typeIds, typeId) }));
   }, []);
@@ -252,6 +258,7 @@ function useDeckBuild(
     verification,
     toggleLegendDomain,
     togglePoolDomain,
+    togglePoolKeyword,
     togglePoolType,
     zone,
   };

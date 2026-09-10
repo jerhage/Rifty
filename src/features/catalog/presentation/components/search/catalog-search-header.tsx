@@ -6,11 +6,10 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { SearchGlyph } from "@/components/ui/icons/search-glyph";
 import { MaxContentWidth, Radius, Spacing } from "@/constants/theme";
-import type { CardDomain } from "@/features/catalog/value-objects/card-domain";
-import type { CardType } from "@/features/catalog/value-objects/card-type";
+import { ORDERED_DOMAINS, type CardDomain } from "@/features/catalog/value-objects/card-domain";
+import { ORDERED_CARD_TYPES, type CardType } from "@/features/catalog/value-objects/card-type";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
-import { ORDERED_CARD_TYPES, ORDERED_DOMAINS } from "../../catalog-facet-order";
 import type { CatalogQueryCriteria } from "../../catalog-query-criteria";
 import { DomainChip } from "./domain-chip";
 import { TypeChip } from "./type-chip";

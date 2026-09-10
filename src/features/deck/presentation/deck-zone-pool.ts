@@ -26,15 +26,6 @@ type ZonePoolLayout = "list" | "grid";
 
 type ZonePoolView = "pool" | "inDeck" | "roles";
 
-function poolCardSubtitle(card: Card): string {
-  const energy = card.attributes.energy === null ? null : `${card.attributes.energy}E`;
-  const might = card.attributes.might === null ? null : `${card.attributes.might}M`;
-
-  return [card.classification.typeId, energy, might]
-    .filter((part): part is string => part !== null)
-    .join(" · ");
-}
-
 /** A deck plays within its legend's domains, so the pool starts narrowed to them. */
 function defaultPoolFilters(legend: Card | null): ZonePoolFilters {
   return { ...EMPTY_POOL_FILTERS, domainIds: legend ? [...legend.domainIds] : [] };
@@ -110,7 +101,6 @@ export {
   defaultPoolFilters,
   EMPTY_POOL_FILTERS,
   legendCriteria,
-  poolCardSubtitle,
   poolCriteria,
   searchHint,
   zoneCardTypes,

@@ -1,10 +1,9 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { CardImage } from "@/components/ui/atoms/card-image";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import { DomainBar } from "@/features/card/presentation/components/domain-bar";
+import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 function ChampionPickRow({
@@ -39,10 +38,7 @@ function ChampionPickRow({
         pressed && styles.pressed,
       ]}
     >
-      <View style={[styles.thumb, { backgroundColor: theme.background }]}>
-        <CardImage contentFit="contain" source={card.imageUrl} style={styles.image} />
-        <DomainBar domainIds={card.domainIds} height={2} />
-      </View>
+      <CardThumb card={card} contentFit="contain" style={styles.thumb} />
 
       <View style={styles.text}>
         <View style={styles.titleRow}>
@@ -93,12 +89,7 @@ const styles = StyleSheet.create({
   thumb: {
     aspectRatio: 5 / 7,
     borderRadius: Radius.small + 3,
-    overflow: "hidden",
     width: 64,
-  },
-  image: {
-    height: "100%",
-    width: "100%",
   },
   text: {
     flex: 1,

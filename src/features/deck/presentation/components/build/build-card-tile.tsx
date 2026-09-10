@@ -5,12 +5,12 @@ import { Skeleton } from "@/components/ui/atoms/skeleton";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
+import { formatCardTypeAndAttributes } from "@/features/card/presentation/card-taxonomy-format";
 import { CARD_ASPECT_RATIO, CardArt } from "@/features/card/presentation/components/card-art";
 import { DomainBar } from "@/features/card/presentation/components/domain-bar";
 import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
-import { poolCardSubtitle } from "../../deck-zone-pool";
 import { CardStepper } from "./card-stepper";
 
 function BuildCardTile({
@@ -79,7 +79,7 @@ function BuildCardTile({
         {card.name}
       </ThemedText>
       <ThemedText numberOfLines={1} style={styles.sub} themeColor="textTertiary" type="mono">
-        {poolCardSubtitle(card)}
+        {formatCardTypeAndAttributes(card)}
       </ThemedText>
     </View>
   );

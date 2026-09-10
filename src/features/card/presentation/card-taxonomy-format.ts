@@ -19,5 +19,14 @@ function formatTaxonomyId(value: string): string {
   return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-export { domainAccent, formatDomains, formatTaxonomyId };
+function formatCardTypeAndAttributes(card: Card): string {
+  const energy = card.attributes.energy === null ? null : `${card.attributes.energy}E`;
+  const might = card.attributes.might === null ? null : `${card.attributes.might}M`;
+
+  return [card.classification.typeId, energy, might]
+    .filter((part): part is string => part !== null)
+    .join(" · ");
+}
+
+export { domainAccent, formatCardTypeAndAttributes, formatDomains, formatTaxonomyId };
 export type { DomainPalette };

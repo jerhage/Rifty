@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { CardImage } from "@/components/ui/atoms/card-image";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import { DomainBar } from "@/features/card/presentation/components/domain-bar";
+import { formatCardTypeAndAttributes } from "@/features/card/presentation/card-taxonomy-format";
+import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import { useTheme } from "@/hooks/use-theme";
 
 function DeckCardRow({
@@ -29,16 +29,13 @@ function DeckCardRow({
         pressed && styles.pressed,
       ]}
     >
-      <View style={[styles.thumb, { backgroundColor: theme.background }]}>
-        <CardImage contentFit="cover" source={card.imageUrl} style={styles.image} />
-        <DomainBar domainIds={card.domainIds} height={2} />
-      </View>
+      <CardThumb card={card} contentFit="cover" style={styles.thumb} />
       <View style={styles.text}>
         <ThemedText numberOfLines={1} style={styles.name} type="body">
           {card.name}
         </ThemedText>
         <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.sub}>
-          {subtitle(card)}
+          {formatCardTypeAndAttributes(card)}
         </ThemedText>
       </View>
       <ThemedText themeColor="textSecondary" type="monoValue">
@@ -46,15 +43,6 @@ function DeckCardRow({
       </ThemedText>
     </Pressable>
   );
-}
-
-function subtitle(card: Card): string {
-  const energy = card.attributes.energy === null ? null : `${card.attributes.energy}E`;
-  const might = card.attributes.might === null ? null : `${card.attributes.might}M`;
-
-  return [card.classification.typeId, energy, might]
-    .filter((part): part is string => part !== null)
-    .join(" · ");
 }
 
 export { DeckCardRow };
@@ -73,12 +61,7 @@ const styles = StyleSheet.create({
   thumb: {
     borderRadius: Radius.small + 2,
     height: 42,
-    overflow: "hidden",
     width: 32,
-  },
-  image: {
-    height: "100%",
-    width: "100%",
   },
   text: {
     flex: 1,

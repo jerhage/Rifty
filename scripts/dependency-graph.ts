@@ -378,7 +378,8 @@ const featureDepths = () => {
     const cached = depths.get(feature);
     if (cached !== undefined) return cached;
     let deepest = 0;
-    for (const target of featureEdges.get(feature) ?? []) deepest = Math.max(deepest, visit(target) + 1);
+    for (const target of featureEdges.get(feature) ?? [])
+      deepest = Math.max(deepest, visit(target) + 1);
     depths.set(feature, deepest);
     return deepest;
   };
@@ -462,7 +463,10 @@ const median = (values: readonly number[]) => {
   return Math.round(((sorted[half - 1] ?? 0) + (sorted[half] ?? 0)) / 2);
 };
 
-const layerNumbers = (order: readonly string[], edges: ReadonlyMap<string, ReadonlySet<string>>) => {
+const layerNumbers = (
+  order: readonly string[],
+  edges: ReadonlyMap<string, ReadonlySet<string>>,
+) => {
   const importers = new Map<string, string[]>();
   for (const node of order) importers.set(node, []);
   for (const node of order) {
@@ -646,7 +650,8 @@ const assignColumns = (nodes: ReadonlyMap<string, DrawingNode>, layers: readonly
   const orderedTargets = (node: DrawingNode) => {
     const below = new Map((layers[node.layer + 1] ?? []).map((id, index) => [id, index]));
     return [...node.targets].sort(
-      (a, b) => portOf(a) - portOf(b) || (below.get(a) ?? 0) - (below.get(b) ?? 0) || a.localeCompare(b),
+      (a, b) =>
+        portOf(a) - portOf(b) || (below.get(a) ?? 0) - (below.get(b) ?? 0) || a.localeCompare(b),
     );
   };
   const laneLayoutOf = (node: DrawingNode) => {
@@ -835,7 +840,9 @@ const packBusRows = (arrivals: readonly Arrival[], portOf: (id: string) => numbe
     const columns = [...bus.ports, portOf(bus.target)];
     const span = { from: Math.min(...columns), to: Math.max(...columns) };
     let row = 0;
-    while ((taken[row] ?? []).some((other) => span.from <= other.to + 1 && other.from <= span.to + 1)) {
+    while (
+      (taken[row] ?? []).some((other) => span.from <= other.to + 1 && other.from <= span.to + 1)
+    ) {
       row += 1;
     }
     taken[row] = [...(taken[row] ?? []), span];
@@ -939,7 +946,10 @@ const renderFeatureDrawing = (): { drawing: string; crossings: number } | { reas
   for (let row = 0; row < totalRows; row += 1) {
     let line = "";
     for (let column = 0; column < totalColumns; column += 1) {
-      line += glyphs.get(cell(row, column)) ?? boxCharacters.get(masks.get(cell(row, column)) ?? 0) ?? " ";
+      line +=
+        glyphs.get(cell(row, column)) ??
+        boxCharacters.get(masks.get(cell(row, column)) ?? 0) ??
+        " ";
     }
     lines.push(line.replace(/[ ]+$/, ""));
   }

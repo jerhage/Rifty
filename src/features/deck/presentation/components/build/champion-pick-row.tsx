@@ -5,6 +5,7 @@ import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { domainAccent, formatDomains } from "@/features/card/presentation/card-taxonomy-format";
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
+import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 function ChampionPickRow({
@@ -20,6 +21,7 @@ function ChampionPickRow({
 }) {
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
+  const openCard = useHapticLongPress(() => onOpenCard(card));
 
   return (
     <Pressable
@@ -27,7 +29,7 @@ function ChampionPickRow({
       accessibilityLabel={`Choose ${card.name}`}
       accessibilityRole="radio"
       accessibilityState={{ selected }}
-      onLongPress={() => onOpenCard(card)}
+      onLongPress={openCard}
       onPress={() => onPick(card)}
       style={({ pressed }) => [
         styles.row,

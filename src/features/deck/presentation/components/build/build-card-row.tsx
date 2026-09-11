@@ -9,6 +9,7 @@ import {
 } from "@/features/card/presentation/card-taxonomy-format";
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
+import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import { CardStepper } from "./card-stepper";
@@ -34,6 +35,7 @@ function BuildCardRow({
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
   const inDeck = quantity > 0;
+  const openCard = useHapticLongPress(() => onOpenCard(card));
 
   return (
     <View
@@ -49,7 +51,7 @@ function BuildCardRow({
         accessibilityHint="Press and hold to see the full card"
         accessibilityLabel={card.name}
         accessibilityRole="button"
-        onLongPress={() => onOpenCard(card)}
+        onLongPress={openCard}
         style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       >
         <CardThumb card={card} contentFit="cover" style={styles.thumb} />

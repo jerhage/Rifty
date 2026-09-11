@@ -6,6 +6,7 @@ import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { domainAccent } from "@/features/card/presentation/card-taxonomy-format";
 import { DomainBar } from "@/features/card/presentation/components/domain-bar";
+import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 function LegendPickTile({
@@ -21,6 +22,7 @@ function LegendPickTile({
 }) {
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
+  const openCard = useHapticLongPress(() => onOpenCard(card));
 
   return (
     <Pressable
@@ -28,7 +30,7 @@ function LegendPickTile({
       accessibilityLabel={`Choose ${card.name}`}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      onLongPress={() => onOpenCard(card)}
+      onLongPress={openCard}
       onPress={() => onPick(card)}
       style={({ pressed }) => [
         styles.tile,

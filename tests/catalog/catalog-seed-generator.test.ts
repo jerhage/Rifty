@@ -219,7 +219,7 @@ describe("catalog seed", () => {
     });
   });
 
-  it("leaves a card blank when no printing prints the field", () => {
+  it("leaves a card blank when no printing prints the field, and still gives it the normal speed", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", { identityName: "Mind Rune", rulesTextRich: "", rulesTextPlain: "" }),
       printing("b", {

@@ -19,7 +19,7 @@ describe("active filter count", () => {
     ).toBe(4);
   });
 
-  it("counts a minimum attribute once whatever its value", () => {
+  it("counts an attribute range once whatever its bounds", () => {
     expect(activeFilterCount({ energy: { type: "between", minimum: 2, maximum: 5 } })).toBe(1);
   });
 });

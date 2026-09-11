@@ -185,7 +185,7 @@ describe("card derivation", () => {
     ]);
   });
 
-  it("keeps the rune cost a keyword is paid with", () => {
+  it("keeps the rune cost inside a keyword's bracket, and not a rune that merely follows it", () => {
     expect(ownedKeywords("[Equip] :rb_rune_calm: (Pay to equip.)")).toEqual([
       { id: "equip", name: "Equip", value: null, cost: ":rb_rune_calm:" },
     ]);
@@ -285,7 +285,7 @@ describe("card derivation", () => {
     ).toBe("K'Sante");
   });
 
-  it("ignores the champion the source names on a card that is not one", () => {
+  it("ignores the champion the source names on a plain unit but keeps it on a signature", () => {
     const plainUnit = { supertypeId: null, typeId: "Unit" };
 
     expect(championName({ name: "Pakaa Cub", champion: "Cat", ...plainUnit })).toBeNull();

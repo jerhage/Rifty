@@ -10,7 +10,7 @@ describe("Page", () => {
     expect(() => (first.items as string[]).push("four")).toThrow("not extensible");
   });
 
-  it("maps items without changing continuation state", () => {
+  it("maps items without changing continuation state, and gives an empty page no continuation", () => {
     expect(Page.create([1, 2], true).map((value) => `${value}`)).toEqual(
       Page.create(["1", "2"], true),
     );

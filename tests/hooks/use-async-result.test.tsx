@@ -53,7 +53,7 @@ describe("useAsyncResult", () => {
     expect(reads).toHaveLength(1);
   });
 
-  it("should read again when the requested identity changes", async () => {
+  it("should read again when the requested identity changes, aborting the previous read and returning to loading", async () => {
     const { find, reads } = createFinder();
     const { rerender, result } = await renderHook(useHarness, {
       initialProps: { find, id: "lux" },

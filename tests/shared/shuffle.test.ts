@@ -7,7 +7,7 @@ function sequence(values: readonly number[]): () => number {
 }
 
 describe("shuffle", () => {
-  it("returns the same multiset of items", () => {
+  it("returns the same multiset of items and leaves the input array unchanged", () => {
     const items = ["a", "b", "c", "d", "e", "a"];
     const shuffled = shuffle(items, sequence([0.7, 0.1, 0.9, 0.35, 0.5]));
 

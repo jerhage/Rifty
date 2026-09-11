@@ -179,7 +179,7 @@ describe("draw odds", () => {
 });
 
 describe("hand stats", () => {
-  it("averages only the cards carrying a value and counts the early plays", () => {
+  it("averages only the cards carrying a value, counts the early plays, and keeps the hand", () => {
     expect(handStats([staple, pair, legend])).toEqual({
       averageEnergy: 2,
       averagePower: 3,

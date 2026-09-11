@@ -199,7 +199,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("matches any occurrence of a keyword whatever it targets, listing each card once", async () => {
+  it("matches any occurrence of any of the keywords whatever it targets, listing and counting each card once, and narrows by domain", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -303,7 +303,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("finds a legend's champions by name without touching another character's", async () => {
+  it("finds a champion's printings inside the chosen domains, leaving out its off-domain printing and other champions", async () => {
     const store = createSqliteScenarioStore();
     const origins = cardSet("OGN", "2026-01-01T00:00:00");
     store.seedSet(origins);
@@ -344,7 +344,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("counts every match, not just the page asked for", async () => {
+  it("counts every match the filters allow, not just the page asked for", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -607,7 +607,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("gets cards belonging to one or every selected domain", async () => {
+  it("requires every selected domain, on full cards and on summaries alike", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);

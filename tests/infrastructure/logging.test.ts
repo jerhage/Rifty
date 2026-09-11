@@ -151,8 +151,10 @@ describe("query logging", () => {
       },
     ]);
   });
+});
 
-  it("provides a logger that is safe to use in tests without output", () => {
+describe("NoopLogger", () => {
+  it("discards a logged call without throwing", () => {
     const logger = new NoopLogger();
 
     expect(() => logger.error("ignored", { reason: "test" })).not.toThrow();

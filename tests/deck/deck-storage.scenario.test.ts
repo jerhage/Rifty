@@ -5,7 +5,7 @@ import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 import { deck } from "./fixtures";
 
 describe("deck storage scenarios", () => {
-  it("hydrates a saved deck with every section it holds", async () => {
+  it("hydrates a saved deck with every section it holds, ordered by section", async () => {
     const store = createSqliteScenarioStore();
     const tempo = deck("ember-tempo", {
       name: "Ember Tempo",

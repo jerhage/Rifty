@@ -283,7 +283,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("lets a zone size drift while it is being built", async () => {
+  it("accepts a quantity that leaves the main deck short of its required size", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));
@@ -303,7 +303,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("allows any number of copies in the rune deck", async () => {
+  it("accepts twelve copies of one card in the rune deck", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));

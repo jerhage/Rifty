@@ -104,7 +104,7 @@ describe("useAsyncPagedResult", () => {
     expect(reads).toHaveLength(1);
   });
 
-  it("should read again when the criteria change", async () => {
+  it("should read again from the first page when the criteria change, aborting the previous read", async () => {
     const { list, reads } = createLister();
     const { rerender } = await renderHook(useHarness, {
       initialProps: { criteria: { typeIds: ["Unit"] }, list },

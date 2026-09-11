@@ -1,6 +1,6 @@
 import { match, P } from "ts-pattern";
 
-import type { CardCopy } from "@/features/analysis/card-copy";
+import { copyCount, type CardCopy } from "@/features/analysis/card-copy";
 import type { Card, CardKeyword, CardKeywordTarget } from "@/features/card/card";
 import type { CardSpeed } from "@/features/card/value-objects/card-speed";
 
@@ -48,10 +48,6 @@ function mightCurve(copies: readonly CardCopy[]): readonly CurveBucket[] {
   ]);
 }
 
-function abilityCardCount(copies: readonly CardCopy[]): number {
-  return copies.reduce((total, entry) => total + entry.quantity, 0);
-}
-
 function totalPower(copies: readonly CardCopy[]): number {
   return copies.reduce(
     (total, entry) => total + (entry.card.attributes.power ?? 0) * entry.quantity,
@@ -66,7 +62,7 @@ interface SpeedShare {
 }
 
 function speedMix(copies: readonly CardCopy[]): readonly SpeedShare[] {
-  const total = copies.reduce((sum, entry) => sum + entry.quantity, 0);
+  const total = copyCount(copies);
 
   return SPEED_ORDER.map((speed) => {
     const count = copies
@@ -142,5 +138,5 @@ function keywordMix(copies: readonly CardCopy[]): KeywordMix {
   };
 }
 
-export { abilityCardCount, energyCurve, keywordMix, mightCurve, speedMix, totalPower };
+export { energyCurve, keywordMix, mightCurve, speedMix, totalPower };
 export type { CurveBucket, KeywordMix, KeywordShare, SpeedShare };

@@ -1,5 +1,5 @@
+import { copyCount } from "@/features/analysis/card-copy";
 import {
-  abilityCardCount,
   energyCurve,
   keywordMix,
   speedMix,
@@ -23,7 +23,7 @@ function deckAnalysis(entries: readonly ResolvedDeckEntry[]): DeckAnalysis {
   const abilityCopies = deckCards(entries, MAIN_DECK_WITH_LEGEND);
 
   return {
-    abilityCards: abilityCardCount(abilityCopies),
+    abilityCards: copyCount(abilityCopies),
     energyBuckets: energyCurve(mainDeckCopies),
     keywords: keywordMix(abilityCopies),
     speeds: speedMix(abilityCopies),

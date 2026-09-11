@@ -14,11 +14,9 @@ import { usePagedReadState, type PagingState } from "@/hooks/use-paged-read-stat
 interface CardsDataContent {
   readonly cards: readonly Card[];
   readonly hasMore: boolean;
-  readonly isRefreshing: boolean;
   readonly paging: PagingState;
   readonly total: number;
   loadMore(): void;
-  refresh(): void;
 }
 
 interface CardsDataProps {
@@ -29,7 +27,7 @@ interface CardsDataProps {
 }
 
 function CardsData({ cardCounter, cardLister, children, criteria }: CardsDataProps) {
-  const { state, loadMore, refresh, reload } = usePagedReadState(
+  const { state, loadMore, reload } = usePagedReadState(
     listCardsPagedQuery(criteria, { cardCounter, cardLister }),
     { loadMoreErrorMessage: "Could not load more cards." },
   );
@@ -46,11 +44,9 @@ function CardsData({ cardCounter, cardLister, children, criteria }: CardsDataPro
       children({
         cards: loaded.items,
         hasMore: loaded.hasMore,
-        isRefreshing: loaded.isRefreshing,
         paging: loaded.paging,
         total: loaded.total,
         loadMore,
-        refresh,
       }),
     )
     .exhaustive();

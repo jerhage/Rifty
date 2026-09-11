@@ -1,4 +1,4 @@
-import type { CardCopy } from "@/features/analysis/card-copy";
+import { copyCount, type CardCopy } from "@/features/analysis/card-copy";
 import type { Card } from "@/features/card/card";
 
 const OPENING_HAND_SIZE = 4;
@@ -61,10 +61,6 @@ function atLeastOneChance(poolSize: number, copies: number, draws: number): numb
   }
 
   return 1 - missChance;
-}
-
-function copyCount(copies: readonly CardCopy[]): number {
-  return copies.reduce((total, entry) => total + entry.quantity, 0);
 }
 
 function copiesByIdentity(copies: readonly CardCopy[]): ReadonlyMap<string, number> {

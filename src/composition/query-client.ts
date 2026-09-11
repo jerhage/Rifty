@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 
-const GC_TIME_MS = 5 * 60 * 1000;
+const GC_TIME_MS = 60 * 60 * 1000;
 
 function createQueryClient(): QueryClient {
   return new QueryClient({

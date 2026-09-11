@@ -12,8 +12,7 @@ import type { DeckSaver } from "../deck-saver";
 type SetDeckCardQuantityResult =
   | { readonly type: "success"; readonly deck: Deck }
   | { readonly type: "notFound" }
-  | { readonly type: "copyLimitReached"; readonly allowed: number }
-  | { readonly type: "saveFailed" };
+  | { readonly type: "copyLimitReached"; readonly allowed: number };
 
 interface DeckCardQuantity {
   readonly section: DeckSection;
@@ -40,22 +39,18 @@ async function setDeckCardQuantity(
 ): Promise<SetDeckCardQuantityResult> {
   const { cardId, printingId, quantity, section } = quantityRequest;
 
-  try {
-    const current = await deckFinder.get(id);
-    if (!current) return { type: "notFound" };
+  const current = await deckFinder.get(id);
+  if (!current) return { type: "notFound" };
 
-    return await match(remainingCopies(current, section, cardId, printingId))
-      .with(
-        { type: "limited", copies: P.number.lt(quantity) },
-        ({ copies }): SetDeckCardQuantityResult => ({ type: "copyLimitReached", allowed: copies }),
-      )
-      .with({ type: "limited" }, { type: "unlimited" }, () =>
-        savedWithQuantity(current, quantityRequest, { clock, deckSaver }),
-      )
-      .exhaustive();
-  } catch {
-    return { type: "saveFailed" };
-  }
+  return await match(remainingCopies(current, section, cardId, printingId))
+    .with(
+      { type: "limited", copies: P.number.lt(quantity) },
+      ({ copies }): SetDeckCardQuantityResult => ({ type: "copyLimitReached", allowed: copies }),
+    )
+    .with({ type: "limited" }, { type: "unlimited" }, () =>
+      savedWithQuantity(current, quantityRequest, { clock, deckSaver }),
+    )
+    .exhaustive();
 }
 
 async function savedWithQuantity(

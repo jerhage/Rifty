@@ -1,5 +1,4 @@
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useRouter } from "expo-router";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import type { Deck } from "@/features/deck/deck/deck";
@@ -11,26 +10,14 @@ function DecksRoute() {
 
   return (
     <DecksData deckLister={decks.deckRepository}>
-      {({ decks: savedDecks, reload }) => <DeckList decks={savedDecks} onChanged={reload} />}
+      {({ decks: savedDecks }) => <DeckList decks={savedDecks} />}
     </DecksData>
   );
 }
 
-function DeckList({
-  decks: savedDecks,
-  onChanged,
-}: {
-  readonly decks: readonly Deck[];
-  readonly onChanged: () => void;
-}) {
+function DeckList({ decks: savedDecks }: { readonly decks: readonly Deck[] }) {
   const router = useRouter();
   const { clock } = useAppDependencies();
-
-  useFocusEffect(
-    useCallback(() => {
-      onChanged();
-    }, [onChanged]),
-  );
 
   return (
     <DeckListScreen

@@ -7,6 +7,8 @@ import type {
 } from "@/features/deck/presentation/deck-build-start";
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
+import { createTestWrapper } from "../test-wrapper";
+
 import { fixedClock, sequentialIds } from "./fixtures";
 
 const capabilities: DeckBuildCapabilities = {
@@ -19,8 +21,9 @@ const capabilities: DeckBuildCapabilities = {
 const start: DeckBuildStart = { type: "new" };
 
 async function renderBuild() {
-  return await renderHook(() =>
-    useDeckBuild(start, capabilities, { onExit: () => undefined, onSaved: () => undefined }),
+  return await renderHook(
+    () => useDeckBuild(start, capabilities, { onExit: () => undefined, onSaved: () => undefined }),
+    { wrapper: createTestWrapper() },
   );
 }
 

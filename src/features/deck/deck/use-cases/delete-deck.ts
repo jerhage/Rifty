@@ -1,7 +1,7 @@
 import type { DeckId } from "../deck";
 import type { DeckRemover } from "../deck-remover";
 
-type DeleteDeckResult = { readonly type: "success" } | { readonly type: "deleteFailed" };
+type DeleteDeckResult = { readonly type: "success" };
 
 interface DeleteDeckCapabilities {
   readonly deckRemover: DeckRemover;
@@ -12,12 +12,8 @@ async function deleteDeck(
   id: DeckId,
   { deckRemover }: DeleteDeckCapabilities,
 ): Promise<DeleteDeckResult> {
-  try {
-    await deckRemover.remove(id);
-    return { type: "success" };
-  } catch {
-    return { type: "deleteFailed" };
-  }
+  await deckRemover.remove(id);
+  return { type: "success" };
 }
 
 export { deleteDeck };

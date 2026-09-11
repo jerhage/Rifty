@@ -1,74 +1,62 @@
-import { useCallback, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { match } from "ts-pattern";
 
-import { saveDeck, type DeckDraft } from "@/features/deck/deck/use-cases/save-deck";
+import type { DeckDraft } from "@/features/deck/deck/use-cases/save-deck";
+import { deckKeys } from "@/features/deck/presentation/queries/deck-keys";
+import { saveDeckMutation } from "@/features/deck/presentation/queries/deck-queries";
+import { useWriteState } from "@/hooks/use-write-state";
 
 import type { DeckBuildCapabilities, DeckBuildStart } from "../deck-build-start";
 
 type DeckSaveRequest = Omit<DeckDraft, "id" | "notes" | "createdAt">;
-
-type DeckSaveStatus =
-  | { readonly type: "idle" }
-  | { readonly type: "saving" }
-  | { readonly type: "failed"; readonly message: string };
-
-const IDLE_SAVE: DeckSaveStatus = { type: "idle" };
 
 function useDeckSave(
   start: DeckBuildStart,
   capabilities: DeckBuildCapabilities,
   { onSaved }: { readonly onSaved: () => void },
 ) {
-  const [status, setStatus] = useState<DeckSaveStatus>(IDLE_SAVE);
+  const queryClient = useQueryClient();
+  const { reset, state, submit } = useWriteState({
+    ...saveDeckMutation(capabilities),
+    onSuccess: (result) =>
+      match(result)
+        .with({ type: "success" }, () => {
+          void queryClient.invalidateQueries({ queryKey: deckKeys.all() });
+          onSaved();
+        })
+        .with(
+          { type: "nameMissing" },
+          { type: "nameTaken" },
+          { type: "copyLimitExceeded" },
+          () => undefined,
+        )
+        .exhaustive(),
+  });
 
   const clearFailure = useCallback(
     () =>
-      setStatus((current) =>
-        match(current)
-          .with({ type: "failed" }, () => IDLE_SAVE)
-          .with({ type: "idle" }, { type: "saving" }, (kept) => kept)
-          .exhaustive(),
-      ),
-    [],
+      match(state)
+        .with(
+          { type: "failed" },
+          { type: "nameMissing" },
+          { type: "nameTaken" },
+          { type: "copyLimitExceeded" },
+          () => reset(),
+        )
+        .with({ type: "idle" }, { type: "saving" }, { type: "success" }, () => undefined)
+        .exhaustive(),
+    [reset, state],
   );
 
   const save = useCallback(
-    async (request: DeckSaveRequest) => {
-      const name = request.name.trim();
-      if (name.length === 0) {
-        setStatus({ type: "failed", message: "Give the deck a name." });
-        return;
-      }
-
-      setStatus({ type: "saving" });
-      const result = await saveDeck(
-        { ...deckIdentity(start, capabilities), ...request, name },
-        capabilities,
-      );
-
-      match(result)
-        .with({ type: "success" }, () => {
-          setStatus(IDLE_SAVE);
-          onSaved();
-        })
-        .with({ type: "nameTaken" }, () =>
-          setStatus({ type: "failed", message: "You already have a deck with that name." }),
-        )
-        .with({ type: "copyLimitExceeded" }, ({ violations }) =>
-          setStatus({
-            type: "failed",
-            message: violations[0]?.message ?? "Too many copies of a card.",
-          }),
-        )
-        .with({ type: "saveFailed" }, () =>
-          setStatus({ type: "failed", message: "Could not save the deck. Try again." }),
-        )
-        .exhaustive();
+    (request: DeckSaveRequest) => {
+      submit({ ...deckIdentity(start, capabilities), ...request });
     },
-    [capabilities, onSaved, start],
+    [capabilities, start, submit],
   );
 
-  return { clearFailure, save, status };
+  return { clearFailure, save, state };
 }
 
 function deckIdentity(
@@ -90,4 +78,4 @@ function deckIdentity(
 }
 
 export { useDeckSave };
-export type { DeckSaveRequest, DeckSaveStatus };
+export type { DeckSaveRequest };

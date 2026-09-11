@@ -1,6 +1,6 @@
 import type { Clock } from "@/application/ports/clock";
 
-import { parseDeck, type Deck, type DeckId, type DeckName } from "../deck";
+import { deckNameSchema, parseDeck, type Deck, type DeckId } from "../deck";
 import type { DeckFinder } from "../deck-finder";
 import type { DeckLister } from "../deck-lister";
 import type { DeckSaver } from "../deck-saver";
@@ -8,8 +8,8 @@ import type { DeckSaver } from "../deck-saver";
 type RenameDeckResult =
   | { readonly type: "success"; readonly deck: Deck }
   | { readonly type: "notFound" }
-  | { readonly type: "nameTaken" }
-  | { readonly type: "saveFailed" };
+  | { readonly type: "nameMissing" }
+  | { readonly type: "nameTaken" };
 
 interface RenameDeckCapabilities {
   readonly clock: Clock;
@@ -20,27 +20,26 @@ interface RenameDeckCapabilities {
 
 async function renameDeck(
   id: DeckId,
-  name: DeckName,
+  name: string,
   { clock, deckFinder, deckLister, deckSaver }: RenameDeckCapabilities,
 ): Promise<RenameDeckResult> {
-  try {
-    const current = await deckFinder.get(id);
-    if (!current) return { type: "notFound" };
+  const parsedName = deckNameSchema.safeParse(name);
+  if (!parsedName.success) return { type: "nameMissing" };
 
-    const wanted = name.trim().toLowerCase();
-    const existing = await deckLister.getAll();
-    // Restyling a deck's own capitalization is not a clash with itself.
-    if (existing.some((deck) => deck.id !== id && deck.name.trim().toLowerCase() === wanted)) {
-      return { type: "nameTaken" };
-    }
+  const current = await deckFinder.get(id);
+  if (!current) return { type: "notFound" };
 
-    const deck = parseDeck({ ...current, name, updatedAt: clock.now() });
-    await deckSaver.save(deck);
-
-    return { type: "success", deck };
-  } catch {
-    return { type: "saveFailed" };
+  const wanted = parsedName.data.toLowerCase();
+  const existing = await deckLister.getAll();
+  // Restyling a deck's own capitalization is not a clash with itself.
+  if (existing.some((deck) => deck.id !== id && deck.name.trim().toLowerCase() === wanted)) {
+    return { type: "nameTaken" };
   }
+
+  const deck = parseDeck({ ...current, name: parsedName.data, updatedAt: clock.now() });
+  await deckSaver.save(deck);
+
+  return { type: "success", deck };
 }
 
 export { renameDeck };

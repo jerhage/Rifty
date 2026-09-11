@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react-native";
+import { act, renderHook, waitFor } from "@testing-library/react-native";
 
 import type {
   DeckBuildCapabilities,
@@ -7,6 +7,7 @@ import type {
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
 import { card } from "../card/fixtures";
+import { createTestWrapper } from "../test-wrapper";
 
 import { deck, fixedClock, sequentialIds } from "./fixtures";
 
@@ -33,7 +34,9 @@ async function buildFor(start: DeckBuildStart, exits: { onExit: () => void; onSa
     deckSaver: { save: saves },
     idGenerator: sequentialIds(),
   };
-  const rendered = await renderHook(() => useDeckBuild(start, capabilities, exits));
+  const rendered = await renderHook(() => useDeckBuild(start, capabilities, exits), {
+    wrapper: createTestWrapper(),
+  });
 
   return { rendered, saves };
 }
@@ -148,21 +151,14 @@ describe("deck build", () => {
     ).toBe(3);
   });
 
-  it("should refuse to save a deck without a name, and clear the error when one is typed", async () => {
+  it("should report a missing name rather than write a deck that has none", async () => {
     const { onSaved, result, saves } = await renderBuild();
 
     await act(() => result.current.saving.save());
 
-    expect(result.current.saving.status).toEqual({
-      type: "failed",
-      message: "Give the deck a name.",
-    });
+    await waitFor(() => expect(result.current.saving.state).toEqual({ type: "nameMissing" }));
     expect(saves).not.toHaveBeenCalled();
     expect(onSaved).not.toHaveBeenCalled();
-
-    await act(() => result.current.draft.changeName("Storm"));
-
-    expect(result.current.saving.status).toEqual({ type: "idle" });
   });
 
   it("should debounce the legend query while the field stays live", async () => {

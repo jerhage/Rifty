@@ -51,7 +51,7 @@ function ZonesPane({
             onOpenCard={onOpenCard}
             onSave={() => void saving.save()}
             pool={pool}
-            saveStatus={saving.status}
+            saveState={saving.state}
             zonePool={zonePool.cards}
           />
           <PoolFilterSheet

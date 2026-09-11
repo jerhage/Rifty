@@ -1,14 +1,14 @@
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
 
-import { parseDeck, type Deck, type DeckName } from "../deck";
+import { deckNameSchema, parseDeck, type Deck, type DeckName } from "../deck";
 import type { DeckLister } from "../deck-lister";
 import type { DeckSaver } from "../deck-saver";
 
 type CreateDeckResult =
   | { readonly type: "success"; readonly deck: Deck }
-  | { readonly type: "nameTaken" }
-  | { readonly type: "saveFailed" };
+  | { readonly type: "nameMissing" }
+  | { readonly type: "nameTaken" };
 
 interface CreateDeckCapabilities {
   readonly clock: Clock;
@@ -22,33 +22,31 @@ interface CreateDeckCapabilities {
  * ignores case. That is stricter than the unique index behind it.
  */
 async function createDeck(
-  name: DeckName,
+  name: string,
   { clock, deckLister, deckSaver, idGenerator }: CreateDeckCapabilities,
 ): Promise<CreateDeckResult> {
-  try {
-    if (await isNameTaken(name, deckLister)) return { type: "nameTaken" };
+  const parsedName = deckNameSchema.safeParse(name);
+  if (!parsedName.success) return { type: "nameMissing" };
+  if (await isNameTaken(parsedName.data, deckLister)) return { type: "nameTaken" };
 
-    const createdAt = clock.now();
-    const deck = parseDeck({
-      id: idGenerator.next(),
-      name,
-      notes: "",
-      createdAt,
-      updatedAt: createdAt,
-      chosenChampionCardId: null,
-      entries: [],
-    });
-    await deckSaver.save(deck);
+  const createdAt = clock.now();
+  const deck = parseDeck({
+    id: idGenerator.next(),
+    name: parsedName.data,
+    notes: "",
+    createdAt,
+    updatedAt: createdAt,
+    chosenChampionCardId: null,
+    entries: [],
+  });
+  await deckSaver.save(deck);
 
-    return { type: "success", deck };
-  } catch {
-    return { type: "saveFailed" };
-  }
+  return { type: "success", deck };
 }
 
 async function isNameTaken(name: DeckName, deckLister: DeckLister): Promise<boolean> {
   const existing = await deckLister.getAll();
-  const wanted = name.trim().toLowerCase();
+  const wanted = name.toLowerCase();
 
   return existing.some((deck) => deck.name.trim().toLowerCase() === wanted);
 }

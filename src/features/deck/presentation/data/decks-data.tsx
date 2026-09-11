@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
@@ -6,8 +6,8 @@ import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
-import { listDecks, type ListDecksResult } from "@/features/deck/deck/use-cases/list-decks";
-import { type AsyncRun, useAsyncResult } from "@/hooks/use-async-result";
+import { decksQuery } from "@/features/deck/presentation/queries/deck-queries";
+import { useReadState } from "@/hooks/use-read-state";
 
 interface DecksDataContent {
   readonly decks: readonly Deck[];
@@ -20,15 +20,11 @@ interface DecksDataProps {
 }
 
 function DecksData({ children, deckLister }: DecksDataProps) {
-  const run = useCallback<AsyncRun<ListDecksResult>>(
-    (options) => listDecks({ deckLister }, options),
-    [deckLister],
-  );
-  const { reload, result } = useAsyncResult(run);
+  const { reload, state } = useReadState(decksQuery({ deckLister }));
 
-  return match(result)
+  return match(state)
     .with({ type: "loading" }, () => <LoadingState />)
-    .with({ type: "listFailed" }, () => (
+    .with({ type: "failed" }, () => (
       <ErrorState
         action={<Button label="Try again" onPress={reload} variant="secondary" />}
         message="Could not load your decks."

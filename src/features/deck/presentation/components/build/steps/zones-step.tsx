@@ -2,14 +2,22 @@ import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import type { Card } from "@/features/card/card";
+import type { DeckVerification } from "@/features/deck/deck/deck";
+import type { SaveDeckResult } from "@/features/deck/deck/use-cases/save-deck";
+import type { WriteState } from "@/hooks/use-write-state";
 
 import type { DeckBuildStepId } from "../../../deck-build-steps";
 import { saveReadinessLabel } from "../../../deck-legality-format";
 import type { ZoneDraftViewState, ZonePoolViewState } from "../../../hooks/use-deck-build";
-import type { DeckSaveStatus } from "../../../hooks/use-deck-save";
 import { BuildFooter } from "../build-footer";
 import { ZonePoolList } from "../zone-pool-list";
 import { ZonesStepHeader } from "./zones-step-header";
+
+type DeckSaveState = WriteState<SaveDeckResult>;
+
+type SaveFooterMessage =
+  | { readonly type: "failure"; readonly message: string }
+  | { readonly type: "readiness"; readonly message: string };
 
 interface ZonesStepProps {
   readonly draft: ZoneDraftViewState;
@@ -18,7 +26,7 @@ interface ZonesStepProps {
   readonly onOpenCard: (card: Card) => void;
   readonly onSave: () => void;
   readonly pool: ZonePoolViewState;
-  readonly saveStatus: DeckSaveStatus;
+  readonly saveState: DeckSaveState;
   readonly zonePool: readonly Card[];
 }
 
@@ -29,7 +37,7 @@ function ZonesStep({
   onOpenCard,
   onSave,
   pool,
-  saveStatus,
+  saveState,
   zonePool,
 }: ZonesStepProps) {
   return (
@@ -47,16 +55,16 @@ function ZonesStep({
         zonePool={zonePool}
       />
 
-      <BuildFooter actionLabel={saveActionLabel(saveStatus)} onAction={onSave}>
-        {match(saveStatus)
-          .with({ type: "failed" }, ({ message }) => (
+      <BuildFooter actionLabel={saveActionLabel(saveState)} onAction={onSave}>
+        {match(footerMessage(saveState, draft.verification))
+          .with({ type: "failure" }, ({ message }) => (
             <ThemedText numberOfLines={2} themeColor="negative" type="body">
               {message}
             </ThemedText>
           ))
-          .with({ type: "idle" }, { type: "saving" }, () => (
+          .with({ type: "readiness" }, ({ message }) => (
             <ThemedText numberOfLines={1} themeColor="textSecondary" type="mono">
-              {saveReadinessLabel(draft.verification)}
+              {message}
             </ThemedText>
           ))
           .exhaustive()}
@@ -65,10 +73,43 @@ function ZonesStep({
   );
 }
 
-function saveActionLabel(status: DeckSaveStatus): string {
-  return match(status)
+function saveActionLabel(state: DeckSaveState): string {
+  return match(state)
     .with({ type: "saving" }, () => "Saving…")
-    .with({ type: "idle" }, { type: "failed" }, () => "Save deck")
+    .with(
+      { type: "idle" },
+      { type: "failed" },
+      { type: "success" },
+      { type: "nameMissing" },
+      { type: "nameTaken" },
+      { type: "copyLimitExceeded" },
+      () => "Save deck",
+    )
+    .exhaustive();
+}
+
+function footerMessage(state: DeckSaveState, verification: DeckVerification): SaveFooterMessage {
+  return match<DeckSaveState, SaveFooterMessage>(state)
+    .with({ type: "failed" }, () => ({
+      type: "failure",
+      message: "Could not save the deck. Try again.",
+    }))
+    .with({ type: "nameMissing" }, () => ({
+      type: "failure",
+      message: "Give the deck a name.",
+    }))
+    .with({ type: "nameTaken" }, () => ({
+      type: "failure",
+      message: "You already have a deck with that name.",
+    }))
+    .with({ type: "copyLimitExceeded" }, ({ violations }) => ({
+      type: "failure",
+      message: violations[0]?.message ?? "Too many copies of a card.",
+    }))
+    .with({ type: "idle" }, { type: "saving" }, { type: "success" }, () => ({
+      type: "readiness",
+      message: saveReadinessLabel(verification),
+    }))
     .exhaustive();
 }
 

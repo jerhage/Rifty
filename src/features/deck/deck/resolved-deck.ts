@@ -1,10 +1,11 @@
-import type { CardCopy } from "@/features/analysis/card-copy";
 import type { Card } from "@/features/card/card";
 
 import type { Deck, DeckSection } from "./deck";
 
 /** A deck entry whose printing has been resolved to the card the catalog holds for it. */
-interface ResolvedDeckEntry extends CardCopy {
+interface ResolvedDeckEntry {
+  readonly card: Card;
+  readonly quantity: number;
   readonly section: DeckSection;
 }
 

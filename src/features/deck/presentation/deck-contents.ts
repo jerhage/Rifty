@@ -33,7 +33,9 @@ function deckCards(
   entries: readonly ResolvedDeckEntry[],
   sections: readonly DeckSection[],
 ): readonly CardCopy[] {
-  return entries.filter((entry) => sections.includes(entry.section));
+  return entries
+    .filter((entry) => sections.includes(entry.section))
+    .map(({ card, quantity }) => ({ card, quantity }));
 }
 
 function deckGroups(entries: readonly ResolvedDeckEntry[]): readonly DeckGroup[] {

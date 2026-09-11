@@ -89,7 +89,7 @@ interface KeywordMix {
   readonly keywords: readonly KeywordShare[];
 }
 
-function benefitsTheDeck(target: CardKeywordTarget): boolean {
+function benefitsOwnSide(target: CardKeywordTarget): boolean {
   return match(target)
     .with({ kind: "self" }, () => true)
     .with(
@@ -108,7 +108,7 @@ function benefitsTheDeck(target: CardKeywordTarget): boolean {
 function countedKeywords(card: Card): readonly CardKeyword[] {
   return card.keywords.filter(
     (keyword) =>
-      keyword.targets.some(benefitsTheDeck) && !EXCLUDED_KEYWORD_IDS.includes(keyword.id),
+      keyword.targets.some(benefitsOwnSide) && !EXCLUDED_KEYWORD_IDS.includes(keyword.id),
   );
 }
 

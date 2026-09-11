@@ -9,7 +9,7 @@ import type { CardsByPrintingIdsFinder } from "@/features/card/cards-by-printing
 import type { DeckId } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
 import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
-import { getResolvedDeckQuery } from "@/features/deck/presentation/queries/deck-queries";
+import { getResolvedDeckQuery } from "@/features/deck/queries/deck-queries";
 import { useReadState } from "@/hooks/use-read-state";
 
 interface DeckDetailContent {

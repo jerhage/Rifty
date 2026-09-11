@@ -5,7 +5,7 @@ import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
-import { listKeywordsQuery } from "@/features/card/presentation/queries/card-queries";
+import { listKeywordsQuery } from "@/features/card/queries/card-queries";
 import { useReadState } from "@/hooks/use-read-state";
 
 interface KeywordsDataProps {

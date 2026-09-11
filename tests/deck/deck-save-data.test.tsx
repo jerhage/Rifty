@@ -12,7 +12,7 @@ import {
   type DeckSaveControls,
 } from "@/features/deck/presentation/data/deck-save-data";
 import type { DeckBuildCapabilities } from "@/features/deck/presentation/deck-build-start";
-import { listDecksQuery } from "@/features/deck/presentation/queries/deck-queries";
+import { listDecksQuery } from "@/features/deck/queries/deck-queries";
 import { useReadState } from "@/hooks/use-read-state";
 
 import { createTestWrapper } from "../test-wrapper";

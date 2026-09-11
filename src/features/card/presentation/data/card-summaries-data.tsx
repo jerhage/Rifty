@@ -7,8 +7,8 @@ import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { CardCounter } from "@/features/card/card-counter";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { CardSummaryLister } from "@/features/card/card-summary-lister";
-import type { CardListKeyCriteria } from "@/features/card/presentation/queries/card-keys";
-import { listCardSummariesPagedQuery } from "@/features/card/presentation/queries/card-queries";
+import type { CardListKeyCriteria } from "@/features/card/queries/card-keys";
+import { listCardSummariesPagedQuery } from "@/features/card/queries/card-queries";
 import { usePagedReadState, type PagingState } from "@/hooks/use-paged-read-state";
 
 interface CardSummariesDataContent {

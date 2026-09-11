@@ -4,7 +4,7 @@ import { match } from "ts-pattern";
 import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { CardSet } from "@/features/set/card-set";
-import { listCardSetsQuery } from "@/features/set/presentation/queries/set-queries";
+import { listCardSetsQuery } from "@/features/set/queries/set-queries";
 import type { SetLister } from "@/features/set/set-lister";
 import { useReadState } from "@/hooks/use-read-state";
 

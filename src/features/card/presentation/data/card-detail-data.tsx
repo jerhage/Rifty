@@ -5,7 +5,7 @@ import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Card } from "@/features/card/card";
 import type { CardFinder } from "@/features/card/card-finder";
-import { getCardQuery } from "@/features/card/presentation/queries/card-queries";
+import { getCardQuery } from "@/features/card/queries/card-queries";
 import type { FindCardResult } from "@/features/card/use-cases/find-card";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import { useReadState, type ReadState } from "@/hooks/use-read-state";

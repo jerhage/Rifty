@@ -6,8 +6,8 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import type { CardId } from "@/features/card/value-objects/card-id";
 import type { DeckEntry, DeckVerification } from "@/features/deck/deck/deck";
 import type { DeckDraft, SaveDeckResult } from "@/features/deck/deck/use-cases/save-deck";
-import { deckKeys } from "@/features/deck/presentation/queries/deck-keys";
-import { saveDeckMutation } from "@/features/deck/presentation/queries/deck-queries";
+import { deckKeys } from "@/features/deck/queries/deck-keys";
+import { saveDeckMutation } from "@/features/deck/queries/deck-queries";
 import { useWriteState, type WriteState } from "@/hooks/use-write-state";
 
 import { BuildFooter } from "../components/build/build-footer";

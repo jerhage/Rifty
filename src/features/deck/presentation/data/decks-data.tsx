@@ -6,7 +6,7 @@ import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
-import { listDecksQuery } from "@/features/deck/presentation/queries/deck-queries";
+import { listDecksQuery } from "@/features/deck/queries/deck-queries";
 import { useReadState } from "@/hooks/use-read-state";
 
 interface DecksDataContent {

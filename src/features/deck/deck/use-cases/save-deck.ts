@@ -68,7 +68,7 @@ function copyLimitViolations(deck: Deck): readonly DeckLegalityViolation[] {
     .with({ type: "illegal" }, ({ violations }) =>
       violations.filter((violation) => isCopyLimitRule(violation.rule)),
     )
-    .with({ type: "legal" }, { type: "unverified" }, () => [])
+    .with({ type: "legal" }, () => [])
     .exhaustive();
 }
 

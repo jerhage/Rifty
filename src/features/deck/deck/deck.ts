@@ -53,15 +53,6 @@ const tournamentRulesetSchema = z.object({
   version: z.string().trim().min(1),
 });
 
-const deckUnverifiedReasonSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("notChecked") }),
-  z.object({
-    type: z.literal("missingCards"),
-    cardIds: z.array(cardIdSchema).min(1),
-  }),
-  z.object({ type: z.literal("unknownRuleset") }),
-]);
-
 const deckLegalityRuleSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("sectionRequired"), section: deckSectionSchema }),
   z.object({ kind: z.literal("sectionSize"), section: deckSectionSchema }),
@@ -94,10 +85,6 @@ const deckLegalityViolationSchema = z.discriminatedUnion("type", [
  */
 const deckVerificationSchema = z.discriminatedUnion("type", [
   z.object({
-    type: z.literal("unverified"),
-    reason: deckUnverifiedReasonSchema,
-  }),
-  z.object({
     type: z.literal("legal"),
     ruleset: tournamentRulesetSchema,
   }),
@@ -126,11 +113,9 @@ interface DeckComposition {
   readonly chosenChampionCardId: CardId | null;
 }
 type TournamentRuleset = z.output<typeof tournamentRulesetSchema>;
-type DeckUnverifiedReason = z.output<typeof deckUnverifiedReasonSchema>;
 type DeckLegalityRule = z.output<typeof deckLegalityRuleSchema>;
 type DeckLegalityViolation = z.output<typeof deckLegalityViolationSchema>;
 type DeckVerification = z.output<typeof deckVerificationSchema>;
-type UnverifiedDeck = Extract<DeckVerification, { type: "unverified" }>;
 type LegalDeck = Extract<DeckVerification, { type: "legal" }>;
 type IllegalDeck = Extract<DeckVerification, { type: "illegal" }>;
 
@@ -143,7 +128,6 @@ export {
   deckNameSchema,
   deckSchema,
   deckSectionSchema,
-  deckUnverifiedReasonSchema,
   deckVerificationSchema,
   parseDeck,
   parseDeckVerification,
@@ -158,10 +142,8 @@ export type {
   DeckLegalityViolation,
   DeckName,
   DeckSection,
-  DeckUnverifiedReason,
   DeckVerification,
   IllegalDeck,
   LegalDeck,
   TournamentRuleset,
-  UnverifiedDeck,
 };

@@ -320,13 +320,10 @@ function copiesLabel(limit: number): string {
 }
 
 export {
-  copyAllowance,
   limitedCopies,
   narrowerAllowance,
-  remainingAllowance,
   remainingCopies,
   RIFTBOUND_STANDARD,
-  sectionsSharingAllowance,
   UNLIMITED_COPIES,
   verifyDeck,
   ZONE_RULES,

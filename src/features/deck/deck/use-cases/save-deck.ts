@@ -15,6 +15,7 @@ import {
 } from "../deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "../deck-legality";
 import type { DeckLister } from "../deck-lister";
+import { isDeckNameTaken } from "../deck-naming";
 import type { DeckSaver } from "../deck-saver";
 
 type SaveDeckResult =
@@ -46,9 +47,7 @@ async function saveDeck(
   if (!parsedName.success) return { type: "nameMissing" };
 
   const name = parsedName.data;
-  const wanted = name.toLowerCase();
-  const existing = await deckLister.getAll();
-  if (existing.some((deck) => deck.id !== draft.id && deck.name.trim().toLowerCase() === wanted)) {
+  if (isDeckNameTaken(name, await deckLister.getAll(), draft.id)) {
     return { type: "nameTaken" };
   }
 

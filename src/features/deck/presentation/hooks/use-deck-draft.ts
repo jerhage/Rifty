@@ -12,7 +12,7 @@ import { minimumForCard } from "../deck-build-allowance";
 import type { DeckBuildStart } from "../deck-build-start";
 import {
   chooseChampion,
-  draftEntries,
+  draftComposition,
   draftFromDeck,
   EMPTY_DRAFT,
   withZoneCard,
@@ -52,18 +52,19 @@ function useDeckDraft(start: DeckBuildStart) {
     );
   }, []);
 
-  const entries = useMemo(() => draftEntries(draft), [draft]);
+  const composition = useMemo(() => draftComposition(draft), [draft]);
 
-  const verification = useMemo(
-    () =>
-      verifyDeck(
-        { entries, chosenChampionCardId: draft.chosenChampion?.cardId ?? null },
-        RIFTBOUND_STANDARD,
-      ),
-    [draft.chosenChampion, entries],
-  );
+  const verification = useMemo(() => verifyDeck(composition, RIFTBOUND_STANDARD), [composition]);
 
-  return { changeName, draft, entries, pickChampion, pickLegend, setQuantity, verification };
+  return {
+    changeName,
+    draft,
+    entries: composition.entries,
+    pickChampion,
+    pickLegend,
+    setQuantity,
+    verification,
+  };
 }
 
 function openingDraft(start: DeckBuildStart): DeckBuildDraft {

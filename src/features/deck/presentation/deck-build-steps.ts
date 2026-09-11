@@ -1,7 +1,11 @@
 import type { Card } from "@/features/card/card";
-import type { CardId } from "@/features/card/value-objects/card-id";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
-import { DECK_SECTIONS, type DeckEntry, type DeckSection } from "@/features/deck/deck/deck";
+import {
+  DECK_SECTIONS,
+  type DeckComposition,
+  type DeckEntry,
+  type DeckSection,
+} from "@/features/deck/deck/deck";
 import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 
 type DeckBuildStepId = "legend" | "chosenChampion" | "zones";
@@ -120,6 +124,14 @@ function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
   return entries;
 }
 
+/** The draft reduced to the shape the deck's own rules read. */
+function draftComposition(draft: DeckBuildDraft): DeckComposition {
+  return {
+    entries: draftEntries(draft),
+    chosenChampionCardId: draft.chosenChampion?.cardId ?? null,
+  };
+}
+
 function draftFromDeck({ chosenChampionCard, deck, entries }: ResolvedDeck): DeckBuildDraft {
   let draft: DeckBuildDraft = {
     ...EMPTY_DRAFT,
@@ -179,36 +191,10 @@ function zoneCounts(draft: DeckBuildDraft): Record<string, number> {
   }, {});
 }
 
-/**
- * Copies of a card held in the given sections, counted across printings: a regular art and an
- * alternate art of the same card draw on one allowance.
- */
-function copiesOfName(
-  draft: DeckBuildDraft,
-  cardId: CardId,
-  sections: readonly DeckSection[],
-  exclude?: { readonly section: DeckSection; readonly printingId: PrintingId },
-): number {
-  let total = 0;
-
-  for (const section of sections) {
-    for (const placed of Object.values(draft.zoneCards[section])) {
-      if (placed.card.cardId !== cardId || placed.quantity <= 0) continue;
-      if (exclude && exclude.section === section && exclude.printingId === placed.card.printingId) {
-        continue;
-      }
-
-      total += placed.quantity;
-    }
-  }
-
-  return total;
-}
-
 export {
   chooseChampion,
-  copiesOfName,
   DECK_BUILD_STEPS,
+  draftComposition,
   draftEntries,
   draftFromDeck,
   EMPTY_DRAFT,

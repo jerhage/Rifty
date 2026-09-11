@@ -3,6 +3,7 @@ import type { Clock } from "@/application/ports/clock";
 import { deckNameSchema, parseDeck, type Deck, type DeckId } from "../deck";
 import type { DeckFinder } from "../deck-finder";
 import type { DeckLister } from "../deck-lister";
+import { isDeckNameTaken } from "../deck-naming";
 import type { DeckSaver } from "../deck-saver";
 
 type RenameDeckResult =
@@ -29,10 +30,7 @@ async function renameDeck(
   const current = await deckFinder.get(id);
   if (!current) return { type: "notFound" };
 
-  const wanted = parsedName.data.toLowerCase();
-  const existing = await deckLister.getAll();
-  // Restyling a deck's own capitalization is not a clash with itself.
-  if (existing.some((deck) => deck.id !== id && deck.name.trim().toLowerCase() === wanted)) {
+  if (isDeckNameTaken(parsedName.data, await deckLister.getAll(), id)) {
     return { type: "nameTaken" };
   }
 

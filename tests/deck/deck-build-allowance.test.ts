@@ -1,7 +1,6 @@
 import type { Card } from "@/features/card/card";
 import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 import {
-  lockedCopies,
   minimumForCard,
   remainingForCard,
 } from "@/features/deck/presentation/deck-build-allowance";
@@ -35,7 +34,6 @@ describe("deck build allowance", () => {
   it("should count printings of the same card against one allowance", () => {
     const draft = draftWith(["mainDeck", survivor, 3]);
 
-    expect(lockedCopies(draft, "mainDeck", survivorAlt)).toBe(3);
     expect(remainingForCard(draft, "mainDeck", survivorAlt)).toEqual({
       type: "limited",
       copies: 0,
@@ -77,7 +75,6 @@ describe("deck build allowance", () => {
   it("should count the champion's seated copy against its other printings", () => {
     const draft = chooseChampion(EMPTY_DRAFT, survivor);
 
-    expect(lockedCopies(draft, "mainDeck", survivorAlt)).toBe(1);
     expect(remainingForCard(draft, "mainDeck", survivorAlt)).toEqual({
       type: "limited",
       copies: 2,
@@ -90,10 +87,29 @@ describe("deck build allowance", () => {
     expect(remainingForCard(draft, "mainDeck", survivor)).toEqual({ type: "limited", copies: 1 });
   });
 
+  it("should refuse a fourth copy split across the main deck and the sideboard", () => {
+    const draft = draftWith(["mainDeck", survivor, 2], ["sideboard", survivorAlt, 1]);
+
+    expect(remainingForCard(draft, "mainDeck", evolutionary)).toEqual({
+      type: "limited",
+      copies: 3,
+    });
+    expect(remainingForCard(draft, "mainDeck", survivorAlt)).toEqual({
+      type: "limited",
+      copies: 0,
+    });
+    expect(remainingForCard(draft, "sideboard", survivorAlt)).toEqual({
+      type: "limited",
+      copies: 1,
+    });
+    expect(
+      remainingForCard(draftWith(["sideboard", survivorAlt, 3]), "mainDeck", survivor),
+    ).toEqual({ type: "limited", copies: 0 });
+  });
+
   it("should ignore the zone's own copies, which the stepper already owns", () => {
     const draft = draftWith(["mainDeck", survivor, 2]);
 
-    expect(lockedCopies(draft, "mainDeck", survivor)).toBe(0);
     expect(remainingForCard(draft, "mainDeck", survivor)).toEqual({ type: "limited", copies: 3 });
   });
 

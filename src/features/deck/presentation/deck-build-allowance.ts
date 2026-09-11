@@ -2,35 +2,28 @@ import { match } from "ts-pattern";
 
 import type { Card } from "@/features/card/card";
 import {
-  copyAllowance,
   limitedCopies,
   narrowerAllowance,
-  remainingAllowance,
-  sectionsSharingAllowance,
+  remainingCopies,
   UNLIMITED_COPIES,
   zoneRule,
   type CopyAllowance,
   type ZoneSection,
 } from "@/features/deck/deck/deck-legality";
 
-import { copiesOfName, quantityOf, zoneCounts, type DeckBuildDraft } from "./deck-build-steps";
+import { draftComposition, quantityOf, zoneCounts, type DeckBuildDraft } from "./deck-build-steps";
 
 /**
- * Copies of this card already committed somewhere the player cannot change from this zone — the
- * other shared zone, or another printing of the same card.
+ * The rune deck is the one zone the builder will not let you overfill, because runes are
+ * interchangeable filler and going past twelve is never intentional. The other three are built up
+ * over time and are allowed to sit off their target, which `verifyDeck` reports rather than
+ * prevents. This is a builder affordance, not a rule of the game.
  */
-function lockedCopies(draft: DeckBuildDraft, section: ZoneSection, card: Card): number {
-  return copiesOfName(draft, card.cardId, sectionsSharingAllowance(section), {
-    section,
-    printingId: card.printingId,
-  });
-}
-
-/**
- * The rune deck is the one zone the builder will not let you overfill. The other three are worked
- * on over time and are allowed to sit above or below their target.
- */
-function copiesFittingZone(draft: DeckBuildDraft, section: ZoneSection, card: Card): CopyAllowance {
+function copiesTheBuilderWillAdd(
+  draft: DeckBuildDraft,
+  section: ZoneSection,
+  card: Card,
+): CopyAllowance {
   return match(section)
     .with("runeDeck", (zone) => {
       const freeSlots = zoneRule(zone).requiredCount - slotsHeldByOtherPrintings(draft, zone, card);
@@ -43,8 +36,8 @@ function copiesFittingZone(draft: DeckBuildDraft, section: ZoneSection, card: Ca
 
 function remainingForCard(draft: DeckBuildDraft, section: ZoneSection, card: Card): CopyAllowance {
   return narrowerAllowance(
-    remainingAllowance(copyAllowance(section), lockedCopies(draft, section, card)),
-    copiesFittingZone(draft, section, card),
+    remainingCopies(draftComposition(draft), section, card.cardId, card.printingId),
+    copiesTheBuilderWillAdd(draft, section, card),
   );
 }
 
@@ -67,4 +60,4 @@ function minimumForCard(draft: DeckBuildDraft, section: ZoneSection, card: Card)
     .exhaustive();
 }
 
-export { lockedCopies, minimumForCard, remainingForCard };
+export { minimumForCard, remainingForCard };

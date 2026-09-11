@@ -1,15 +1,16 @@
-import { useCallback, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Card } from "@/features/card/card";
 import type { CardFinder } from "@/features/card/card-finder";
-import { findCard, type FindCardResult } from "@/features/card/use-cases/find-card";
+import { cardDetailQuery } from "@/features/card/presentation/queries/card-queries";
+import type { FindCardResult } from "@/features/card/use-cases/find-card";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
-import { type AsyncResult, type AsyncRun, useAsyncResult } from "@/hooks/use-async-result";
+import { useReadState, type ReadState } from "@/hooks/use-read-state";
 
-type CardDetailDataContent = AsyncResult<FindCardResult>;
+type CardDetailDataContent = ReadState<FindCardResult>;
 
 interface CardDetailDataProps {
   readonly cardFinder: CardFinder;
@@ -18,16 +19,12 @@ interface CardDetailDataProps {
 }
 
 function CardDetailData({ cardFinder, cardId, children }: CardDetailDataProps) {
-  const run = useCallback<AsyncRun<FindCardResult>>(
-    (options) => findCard(cardId, { cardFinder }, options),
-    [cardFinder, cardId],
-  );
-  const { result } = useAsyncResult(run);
+  const { state } = useReadState(cardDetailQuery(cardId, { cardFinder }));
 
-  return match(result)
+  return match(state)
     .with({ type: "loading" }, () => <LoadingState />)
+    .with({ type: "failed" }, () => <ErrorState message="Could not load this card." />)
     .with({ type: "notFound" }, () => <ErrorState message="Card not found." />)
-    .with({ type: "loadFailed" }, () => <ErrorState message="Could not load this card." />)
     .with({ type: "success" }, ({ card }) => children(card))
     .exhaustive();
 }

@@ -4,8 +4,7 @@ import type { DeckFinder } from "../deck-finder";
 
 type FindDeckResult =
   | { readonly type: "success"; readonly deck: Deck }
-  | { readonly type: "notFound" }
-  | { readonly type: "loadFailed" };
+  | { readonly type: "notFound" };
 
 interface FindDeckCapabilities {
   readonly deckFinder: DeckFinder;
@@ -16,12 +15,8 @@ async function findDeck(
   { deckFinder }: FindDeckCapabilities,
   options?: ReadOptions,
 ): Promise<FindDeckResult> {
-  try {
-    const deck = await deckFinder.get(id, options);
-    return deck ? { type: "success", deck } : { type: "notFound" };
-  } catch {
-    return { type: "loadFailed" };
-  }
+  const deck = await deckFinder.get(id, options);
+  return deck ? { type: "success", deck } : { type: "notFound" };
 }
 
 export { findDeck };

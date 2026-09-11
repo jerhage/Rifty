@@ -1,12 +1,12 @@
-import { useCallback, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
-import { listKeywords, type ListKeywordsResult } from "@/features/card/use-cases/list-keywords";
-import { type AsyncRun, useAsyncResult } from "@/hooks/use-async-result";
+import { keywordsQuery } from "@/features/card/presentation/queries/card-queries";
+import { useReadState } from "@/hooks/use-read-state";
 
 interface KeywordsDataProps {
   readonly children: (keywords: readonly Keyword[]) => ReactNode;
@@ -14,15 +14,11 @@ interface KeywordsDataProps {
 }
 
 function KeywordsData({ children, keywordLister }: KeywordsDataProps) {
-  const run = useCallback<AsyncRun<ListKeywordsResult>>(
-    (options) => listKeywords({ keywordLister }, options),
-    [keywordLister],
-  );
-  const { result } = useAsyncResult(run);
+  const { state } = useReadState(keywordsQuery({ keywordLister }));
 
-  return match(result)
+  return match(state)
     .with({ type: "loading" }, () => <LoadingState />)
-    .with({ type: "listFailed" }, () => <ErrorState message="Could not load keywords." />)
+    .with({ type: "failed" }, () => <ErrorState message="Could not load keywords." />)
     .with({ type: "success" }, ({ keywords }) => children(keywords))
     .exhaustive();
 }

@@ -5,9 +5,11 @@ import type { CardSummaryLister } from "../card-summary-lister";
 import type { Page } from "@/shared/page";
 import type { ReadOptions } from "@/shared/read-options";
 
-type ListCardSummariesResult =
-  | { readonly type: "success"; readonly page: Page<CardSummary>; readonly total: number }
-  | { readonly type: "listFailed" };
+type ListCardSummariesResult = {
+  readonly type: "success";
+  readonly page: Page<CardSummary>;
+  readonly total: number;
+};
 
 interface ListCardSummariesCapabilities {
   readonly cardCounter: CardCounter;
@@ -19,16 +21,12 @@ async function listCardSummaries(
   { cardCounter, cardSummaryLister }: ListCardSummariesCapabilities,
   options?: ReadOptions,
 ): Promise<ListCardSummariesResult> {
-  try {
-    const [page, total] = await Promise.all([
-      cardSummaryLister.getSummaryPage(criteria, options),
-      cardCounter.count(criteria, options),
-    ]);
+  const [page, total] = await Promise.all([
+    cardSummaryLister.getSummaryPage(criteria, options),
+    cardCounter.count(criteria, options),
+  ]);
 
-    return { type: "success", page, total };
-  } catch {
-    return { type: "listFailed" };
-  }
+  return { type: "success", page, total };
 }
 
 export { listCardSummaries };

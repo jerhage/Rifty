@@ -1,5 +1,4 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import type { Card } from "@/features/card/card";
@@ -14,32 +13,19 @@ function DeckDetailRoute() {
 
   return (
     <DeckDetailData
+      cardCounter={cardDependencies.cardRepository}
       cardLister={cardDependencies.cardRepository}
       deckFinder={decks.deckRepository}
       deckId={id}
     >
-      {({ cards, deck, reload }) => <DeckDetail cards={cards} deck={deck} onChanged={reload} />}
+      {({ cards, deck }) => <DeckDetail cards={cards} deck={deck} />}
     </DeckDetailData>
   );
 }
 
-function DeckDetail({
-  cards,
-  deck,
-  onChanged,
-}: {
-  readonly cards: readonly Card[];
-  readonly deck: Deck;
-  readonly onChanged: () => void;
-}) {
+function DeckDetail({ cards, deck }: { readonly cards: readonly Card[]; readonly deck: Deck }) {
   const router = useRouter();
   const { clock } = useAppDependencies();
-
-  useFocusEffect(
-    useCallback(() => {
-      onChanged();
-    }, [onChanged]),
-  );
 
   return (
     <DeckDetailScreen

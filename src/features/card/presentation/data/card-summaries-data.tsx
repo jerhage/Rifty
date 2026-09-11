@@ -1,22 +1,15 @@
-import { useCallback, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
 import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { CardCounter } from "@/features/card/card-counter";
-import type { CardListCriteria } from "@/features/card/card-list-criteria";
-import type { CardSummaryLister } from "@/features/card/card-summary-lister";
 import type { CardSummary } from "@/features/card/card-summary";
-import { listCardSummaries } from "@/features/card/use-cases/list-card-summaries";
-import {
-  useAsyncPagedResult,
-  type PagedRun,
-  type PagingState,
-} from "@/hooks/use-async-paged-result";
-import { useStableValue } from "@/hooks/use-stable-value";
-
-const PAGE_SIZE = 30;
+import type { CardSummaryLister } from "@/features/card/card-summary-lister";
+import type { CardListKeyCriteria } from "@/features/card/presentation/queries/card-keys";
+import { cardSummariesQuery } from "@/features/card/presentation/queries/card-queries";
+import { usePagedReadState, type PagingState } from "@/hooks/use-paged-read-state";
 
 interface CardSummariesDataContent {
   readonly cards: readonly CardSummary[];
@@ -33,7 +26,7 @@ interface CardSummariesDataProps {
   readonly cardCounter: CardCounter;
   readonly cardSummaryLister: CardSummaryLister;
   readonly children: (content: CardSummariesDataContent) => ReactNode;
-  readonly criteria: Omit<CardListCriteria, "limit" | "offset">;
+  readonly criteria: CardListKeyCriteria;
 }
 
 function CardSummariesData({
@@ -42,37 +35,26 @@ function CardSummariesData({
   children,
   criteria,
 }: CardSummariesDataProps) {
-  const stableCriteria = useStableValue(criteria);
-  const run = useCallback<PagedRun<CardSummary>>(
-    ({ limit, offset }, options) =>
-      listCardSummaries(
-        { ...stableCriteria, limit, offset },
-        { cardCounter, cardSummaryLister },
-        options,
-      ),
-    [cardCounter, cardSummaryLister, stableCriteria],
+  const { state, loadMore, refresh, reload } = usePagedReadState(
+    cardSummariesQuery(criteria, { cardCounter, cardSummaryLister }),
+    { loadMoreErrorMessage: "Could not load more cards." },
   );
-  const { state, loadMore, refresh, reload } = useAsyncPagedResult<CardSummary>({
-    loadMoreErrorMessage: "Could not load more cards.",
-    pageSize: PAGE_SIZE,
-    run,
-  });
 
   return match(state)
     .with({ type: "loading" }, () => <LoadingState />)
-    .with({ type: "loadFailed" }, () => (
+    .with({ type: "failed" }, () => (
       <ErrorState
         action={<Button label="Try again" onPress={reload} variant="link" />}
         message="Could not load cards."
       />
     ))
-    .with({ type: "success" }, (loadedState) =>
+    .with({ type: "success" }, (loaded) =>
       children({
-        cards: loadedState.page.items,
-        hasMore: loadedState.page.hasMore,
-        isRefreshing: loadedState.isRefreshing,
-        paging: loadedState.paging,
-        total: loadedState.total,
+        cards: loaded.items,
+        hasMore: loaded.hasMore,
+        isRefreshing: loaded.isRefreshing,
+        paging: loaded.paging,
+        total: loaded.total,
         loadMore,
         refresh,
         retryLoadMore: loadMore,

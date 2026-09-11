@@ -32,6 +32,7 @@ function DeckBuildRoute() {
       {(keywords) =>
         deckId ? (
           <DeckDetailData
+            cardCounter={cardDependencies.cardRepository}
             cardLister={cardDependencies.cardRepository}
             deckFinder={decks.deckRepository}
             deckId={deckId}

@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/atoms/button";
 import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Card } from "@/features/card/card";
+import type { CardCounter } from "@/features/card/card-counter";
 import type { CardLister } from "@/features/card/card-lister";
+import { cardLookupQuery } from "@/features/card/presentation/queries/card-queries";
+import type { ListCardsResult } from "@/features/card/use-cases/list-cards";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import type { Deck, DeckId } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
-import { findDeck } from "@/features/deck/deck/use-cases/find-deck";
-import { type AsyncRun, useAsyncResult } from "@/hooks/use-async-result";
-import { throwIfAborted } from "@/shared/read-options";
-
-const CARD_LOOKUP_LIMIT = 100;
+import type { FindDeckResult } from "@/features/deck/deck/use-cases/find-deck";
+import { deckDetailQuery } from "@/features/deck/presentation/queries/deck-queries";
+import { useReadState, type ReadState } from "@/hooks/use-read-state";
 
 interface DeckDetailContent {
   readonly cards: readonly Card[];
@@ -20,60 +22,88 @@ interface DeckDetailContent {
   reload(): void;
 }
 
-type DeckDetailOutcome =
+type DeckDetailState =
+  | { readonly type: "loading" }
+  | { readonly type: "failed"; readonly error: unknown }
   | { readonly type: "notFound" }
-  | { readonly type: "loadFailed" }
-  | { readonly type: "success"; readonly deck: Deck; readonly cards: readonly Card[] };
+  | { readonly type: "success"; readonly cards: readonly Card[]; readonly deck: Deck };
 
 function DeckDetailData({
+  cardCounter,
   cardLister,
   children,
   deckFinder,
   deckId,
 }: {
+  readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
   readonly children: (content: DeckDetailContent) => ReactNode;
   readonly deckFinder: DeckFinder;
   readonly deckId: DeckId;
 }) {
-  const run = useCallback<AsyncRun<DeckDetailOutcome>>(
-    async (options) => {
-      const found = await findDeck(deckId, { deckFinder }, options);
-
-      return match(found)
-        .with({ type: "notFound" }, () => ({ type: "notFound" }) as const)
-        .with({ type: "loadFailed" }, () => ({ type: "loadFailed" }) as const)
-        .with({ type: "success" }, async ({ deck }) => {
-          const printingIds = [...new Set(deck.entries.map((entry) => entry.printingId))];
-          if (!printingIds.length) return { type: "success", deck, cards: [] } as const;
-
-          try {
-            const page = await cardLister.getPage(
-              { printingIds, limit: CARD_LOOKUP_LIMIT },
-              options,
-            );
-            return { type: "success", deck, cards: page.items } as const;
-          } catch {
-            throwIfAborted(options.signal);
-            return { type: "loadFailed" } as const;
-          }
-        })
-        .exhaustive();
-    },
-    [cardLister, deckFinder, deckId],
+  const { reload: reloadDeck, state: deckState } = useReadState(
+    deckDetailQuery(deckId, { deckFinder }),
   );
-  const { reload, result } = useAsyncResult(run);
+  const printingIds = seatedPrintingIds(deckState);
+  const { reload: reloadCards, state: cardsState } = useReadState({
+    ...cardLookupQuery(printingIds, { cardCounter, cardLister }),
+    enabled: printingIds.length > 0,
+  });
 
-  return match(result)
+  const reload = useCallback(() => {
+    reloadDeck();
+    reloadCards();
+  }, [reloadCards, reloadDeck]);
+
+  return match(deckDetailState(deckState, cardsState))
     .with({ type: "loading" }, () => <LoadingState />)
-    .with({ type: "notFound" }, () => <ErrorState message="That deck no longer exists." />)
-    .with({ type: "loadFailed" }, () => (
+    .with({ type: "failed" }, () => (
       <ErrorState
         action={<Button label="Try again" onPress={reload} variant="secondary" />}
         message="Could not load the deck."
       />
     ))
+    .with({ type: "notFound" }, () => <ErrorState message="That deck no longer exists." />)
     .with({ type: "success" }, ({ cards, deck }) => children({ cards, deck, reload }))
+    .exhaustive();
+}
+
+function seatedPrintingIds(deckState: ReadState<FindDeckResult>): readonly PrintingId[] {
+  return match(deckState)
+    .with({ type: "success" }, ({ deck }) => [
+      ...new Set(deck.entries.map((entry) => entry.printingId)),
+    ])
+    .with({ type: "loading" }, { type: "failed" }, { type: "notFound" }, () => [])
+    .exhaustive();
+}
+
+function deckDetailState(
+  deckState: ReadState<FindDeckResult>,
+  cardsState: ReadState<ListCardsResult>,
+): DeckDetailState {
+  return match(deckState)
+    .with(
+      { type: "loading" },
+      { type: "failed" },
+      { type: "notFound" },
+      (unresolved): DeckDetailState => unresolved,
+    )
+    .with({ type: "success" }, ({ deck }): DeckDetailState =>
+      deck.entries.length === 0
+        ? { type: "success", cards: [], deck }
+        : deckCardsState(deck, cardsState),
+    )
+    .exhaustive();
+}
+
+function deckCardsState(deck: Deck, cardsState: ReadState<ListCardsResult>): DeckDetailState {
+  return match(cardsState)
+    .with({ type: "loading" }, { type: "failed" }, (unresolved): DeckDetailState => unresolved)
+    .with({ type: "success" }, ({ page }): DeckDetailState => ({
+      type: "success",
+      cards: page.items,
+      deck,
+    }))
     .exhaustive();
 }
 

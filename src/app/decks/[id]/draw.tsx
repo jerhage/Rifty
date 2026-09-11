@@ -11,6 +11,7 @@ function DrawSimulationRoute() {
 
   return (
     <DeckDetailData
+      cardCounter={cardDependencies.cardRepository}
       cardLister={cardDependencies.cardRepository}
       deckFinder={decks.deckRepository}
       deckId={id}

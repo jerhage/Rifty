@@ -5,8 +5,7 @@ import type { CardFinder } from "../card-finder";
 
 type FindCardResult =
   | { readonly type: "success"; readonly card: Card }
-  | { readonly type: "notFound" }
-  | { readonly type: "loadFailed" };
+  | { readonly type: "notFound" };
 
 interface FindCardCapabilities {
   readonly cardFinder: CardFinder;
@@ -17,12 +16,8 @@ async function findCard(
   { cardFinder }: FindCardCapabilities,
   options?: ReadOptions,
 ): Promise<FindCardResult> {
-  try {
-    const card = await cardFinder.get(id, options);
-    return card ? { type: "success", card } : { type: "notFound" };
-  } catch {
-    return { type: "loadFailed" };
-  }
+  const card = await cardFinder.get(id, options);
+  return card ? { type: "success", card } : { type: "notFound" };
 }
 
 export { findCard };

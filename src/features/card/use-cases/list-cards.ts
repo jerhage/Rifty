@@ -5,9 +5,11 @@ import type { Card } from "../card";
 import type { Page } from "@/shared/page";
 import type { ReadOptions } from "@/shared/read-options";
 
-type ListCardsResult =
-  | { readonly type: "success"; readonly page: Page<Card>; readonly total: number }
-  | { readonly type: "listFailed" };
+type ListCardsResult = {
+  readonly type: "success";
+  readonly page: Page<Card>;
+  readonly total: number;
+};
 
 interface ListCardsCapabilities {
   readonly cardCounter: CardCounter;
@@ -19,16 +21,12 @@ async function listCards(
   { cardCounter, cardLister }: ListCardsCapabilities,
   options?: ReadOptions,
 ): Promise<ListCardsResult> {
-  try {
-    const [page, total] = await Promise.all([
-      cardLister.getPage(criteria, options),
-      cardCounter.count(criteria, options),
-    ]);
+  const [page, total] = await Promise.all([
+    cardLister.getPage(criteria, options),
+    cardCounter.count(criteria, options),
+  ]);
 
-    return { type: "success", page, total };
-  } catch {
-    return { type: "listFailed" };
-  }
+  return { type: "success", page, total };
 }
 
 export { listCards };

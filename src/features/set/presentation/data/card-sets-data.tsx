@@ -1,12 +1,12 @@
-import { useCallback, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { CardSet } from "@/features/set/card-set";
+import { cardSetsQuery } from "@/features/set/presentation/queries/set-queries";
 import type { SetLister } from "@/features/set/set-lister";
-import { listSets, type ListSetsResult } from "@/features/set/use-cases/list-sets";
-import { type AsyncRun, useAsyncResult } from "@/hooks/use-async-result";
+import { useReadState } from "@/hooks/use-read-state";
 
 interface CardSetsDataProps {
   readonly children: (cardSets: readonly CardSet[]) => ReactNode;
@@ -14,15 +14,11 @@ interface CardSetsDataProps {
 }
 
 function CardSetsData({ children, setLister }: CardSetsDataProps) {
-  const run = useCallback<AsyncRun<ListSetsResult>>(
-    (options) => listSets({ setLister }, options),
-    [setLister],
-  );
-  const { result } = useAsyncResult(run);
+  const { state } = useReadState(cardSetsQuery({ setLister }));
 
-  return match(result)
+  return match(state)
     .with({ type: "loading" }, () => <LoadingState />)
-    .with({ type: "listFailed" }, () => <ErrorState message="Could not load card sets." />)
+    .with({ type: "failed" }, () => <ErrorState message="Could not load card sets." />)
     .with({ type: "success" }, ({ cardSets }) => children(cardSets))
     .exhaustive();
 }

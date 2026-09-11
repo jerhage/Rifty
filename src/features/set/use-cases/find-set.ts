@@ -5,8 +5,7 @@ import type { SetFinder } from "../set-finder";
 
 type FindSetResult =
   | { readonly type: "success"; readonly cardSet: CardSet }
-  | { readonly type: "notFound" }
-  | { readonly type: "loadFailed" };
+  | { readonly type: "notFound" };
 
 interface FindSetCapabilities {
   readonly setFinder: SetFinder;
@@ -17,12 +16,8 @@ async function findSet(
   { setFinder }: FindSetCapabilities,
   options?: ReadOptions,
 ): Promise<FindSetResult> {
-  try {
-    const cardSet = await setFinder.get(code, options);
-    return cardSet ? { type: "success", cardSet } : { type: "notFound" };
-  } catch {
-    return { type: "loadFailed" };
-  }
+  const cardSet = await setFinder.get(code, options);
+  return cardSet ? { type: "success", cardSet } : { type: "notFound" };
 }
 
 export { findSet };

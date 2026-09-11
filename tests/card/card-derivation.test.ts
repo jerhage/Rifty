@@ -48,19 +48,19 @@ function label(keyword: KeywordOccurrence): string {
 }
 
 describe("card derivation", () => {
-  it("reads only the bracket run that opens the text", () => {
+  it("should read only the bracket run that opens the text", () => {
     expect(leadingTokens(sunlitGuardian)).toEqual(["Shield", "Tank"]);
     expect(leadingTokens(blastCone)).toEqual([]);
   });
 
-  it("keeps the keywords a card owns and drops the ones it merely grants", () => {
+  it("should keep the keywords a card owns and drop the ones it merely grants", () => {
     expect(ownedKeywords(block).map((keyword) => keyword.name)).toEqual(["Hidden", "Action"]);
     expect(ownedKeywords(boneSkewer).map((keyword) => keyword.name)).toEqual(["Hidden"]);
     expect(ownedKeywords(blastCone)).toEqual([]);
     expect(ownedKeywords(akaliRogueAssassin).map((keyword) => keyword.name)).toEqual(["Empower"]);
   });
 
-  it("captures every keyword the text prints, not only the run that opens it", () => {
+  it("should capture every keyword the text prints, not only the run that opens it", () => {
     expect(targeted(ambessa)).toEqual([
       "empower=self:own",
       "empowered=self:own",
@@ -72,7 +72,7 @@ describe("card derivation", () => {
     ]);
   });
 
-  it("names what a keyword lands on, not only whether it is the card itself", () => {
+  it("should name what a keyword lands on, not only whether it is the card itself", () => {
     expect(targeted(block)).toEqual([
       "hidden=self:own",
       "action=self:own",
@@ -95,7 +95,7 @@ describe("card derivation", () => {
     ]);
   });
 
-  it("keeps a gear's own condition apart from a condition on a thing it chose", () => {
+  it("should keep a gear's own condition apart from a condition on a thing it chose", () => {
     expect(
       targeted("Opponents' spells cost [1] more. If this is [Empowered], they cost [2] more."),
     ).toEqual(["empowered=self:own"]);
@@ -104,7 +104,7 @@ describe("card derivation", () => {
     );
   });
 
-  it("gives a quoted granted ability to the token that carries it, not to the printing", () => {
+  it("should give a quoted granted ability to the token that carries it, not to the printing", () => {
     expect(
       targeted(
         'Play a 0 :rb_might: Shadow Clone unit token. (It has "When I attack, give me [Assault 4] this turn.")',
@@ -117,13 +117,13 @@ describe("card derivation", () => {
     ).toEqual(["reaction=gear token:friendly", "add=gear token:friendly"]);
   });
 
-  it("records both players when the text says each of them does it", () => {
+  it("should record both players when the text says each of them does it", () => {
     expect(targeted("When combat starts here, the attacker and defender each [Add] [1].")).toEqual([
       "add=player:own+player:enemy",
     ]);
   });
 
-  it("reads a keyword named as a rule, an effect, or a cost rather than as a bearer", () => {
+  it("should read a keyword named as a rule, an effect, or a cost rather than as a bearer", () => {
     expect(targeted("You ignore [Tank] while assigning combat damage here.")).toEqual([
       "tank=rule:unspecified",
     ]);
@@ -135,20 +135,20 @@ describe("card derivation", () => {
     ).toEqual(["repeat=cost:friendly"]);
   });
 
-  it("reads a keyword a reminder defines as part of the definition, not as an occurrence", () => {
+  it("should read a keyword a reminder defines as part of the definition, not as an occurrence", () => {
     expect(targeted("[Weaponmaster] (When you play me, you may [Equip] an Equipment.)")).toEqual([
       "weaponmaster=self:own",
     ]);
     expect(targeted("[Shield] (+1 :rb_might: while I'm a defender.)")).toEqual(["shield=self:own"]);
   });
 
-  it("reads the target that follows the bracket when the lead-in names none", () => {
+  it("should read the target that follows the bracket when the lead-in names none", () => {
     expect(targeted("When I attack, [Stun] an enemy unit.")).toEqual(["stun=unit:enemy"]);
     expect(targeted("You may exhaust this to [Stun] it.")).toEqual(["stun=unit:unspecified"]);
     expect(targeted("Spend 2 XP: [Buff] me.")).toEqual(["buff=self:own"]);
   });
 
-  it("keeps a keyword that fills your own pool with you, unless the text names another actor", () => {
+  it("should keep a keyword that fills your own pool with you, unless the text names another actor", () => {
     expect(targeted("When I move, [Add] :rb_energy_1:.")).toEqual(["add=player:own"]);
     expect(targeted("While your score is behind, your Gold [Add] an extra :rb_energy_1:.")).toEqual(
       ["add=player:own"],
@@ -160,7 +160,7 @@ describe("card derivation", () => {
     expect(targeted("Choose a player. They [Burn 1].")).toEqual(["burn 1=player:any_player"]);
   });
 
-  it("reports a lead-in and a trailing phrase it has none of rather than guessing a target", () => {
+  it("should report a lead-in and a trailing phrase it has none of rather than guessing a target", () => {
     expect(keywordOccurrences("When you hold here, [Vision] twice.")).toEqual([
       {
         id: "vision",
@@ -176,7 +176,7 @@ describe("card derivation", () => {
     ]);
   });
 
-  it("splits a keyword's magnitude out of its name", () => {
+  it("should split a keyword's magnitude out of its name", () => {
     expect(ownedKeywords("[Shield 3] (+3 while defending.)")).toEqual([
       { id: "shield", name: "Shield", value: 3, cost: null },
     ]);
@@ -185,7 +185,7 @@ describe("card derivation", () => {
     ]);
   });
 
-  it("keeps the rune cost inside a keyword's bracket, and not a rune that merely follows it", () => {
+  it("should keep the rune cost inside a keyword's bracket, and not a rune that merely follows it", () => {
     expect(ownedKeywords("[Equip] :rb_rune_calm: (Pay to equip.)")).toEqual([
       { id: "equip", name: "Equip", value: null, cost: ":rb_rune_calm:" },
     ]);
@@ -205,7 +205,7 @@ describe("card derivation", () => {
     ]);
   });
 
-  it("treats a bare keyword as one where that keyword is ever numbered", () => {
+  it("should treat a bare keyword as one where that keyword is ever numbered", () => {
     const magnitudeIds = keywordsWithMagnitude(["[Shield 3]", "[Hunt 2]", "[Tank]", "[Shield]"]);
 
     expect([...magnitudeIds].sort()).toEqual(["hunt", "shield"]);
@@ -220,22 +220,22 @@ describe("card derivation", () => {
     ]);
   });
 
-  it("folds casing drift onto one keyword", () => {
+  it("should fold casing drift onto one keyword", () => {
     expect(ownedKeywords("[ADD]")).toEqual(ownedKeywords("[Add]"));
     expect(ownedKeywords("[Quick-Draw]")[0]?.name).toBe("Quick-Draw");
   });
 
-  it("ignores the tokens that are not keywords", () => {
+  it("should ignore the tokens that are not keywords", () => {
     expect(ownedKeywords("[&gt;] [NO TEXT] [Level 6]")).toEqual([]);
     expect(keywordOccurrences("[&gt;] [NO TEXT] [Level 6] [2]")).toEqual([]);
   });
 
-  it("gives a hidden card both the speed it is played at and the speed it returns at", () => {
+  it("should give a hidden card both the speed it is played at and the speed it returns at", () => {
     expect(cardSpeeds(standUnited)).toEqual(["action", "reaction"]);
     expect(cardSpeeds("[Hidden] (Hide now.)Draw 1.")).toEqual(["action", "reaction"]);
   });
 
-  it("reads speed from the run that opens a line, not from a mention inside a sentence", () => {
+  it("should read speed from the run that opens a line, not from a mention inside a sentence", () => {
     expect(cardSpeeds("[Reaction] (Play any time.)Counter a spell.")).toEqual(["reaction"]);
     expect(cardSpeeds("[Action] (Play on your turn.)Stun a unit.")).toEqual(["action"]);
     expect(cardSpeeds("Exhaust me: play a [Reaction] spell.")).toEqual(["normal"]);
@@ -243,7 +243,7 @@ describe("card derivation", () => {
     expect(cardSpeeds(sunlitGuardian)).toEqual(["normal"]);
   });
 
-  it("adds the speed an ability on a later line is activated at", () => {
+  it("should add the speed an ability on a later line is activated at", () => {
     expect(cardSpeeds(akaliRogueAssassin)).toEqual(["normal", "action"]);
     expect(cardSpeeds("Draw 1.\n[Reaction][>] :rb_exhaust: Deal 1 to a unit.")).toEqual([
       "normal",
@@ -251,14 +251,14 @@ describe("card derivation", () => {
     ]);
   });
 
-  it("leaves a card that opens at its own speed off the normal speed", () => {
+  it("should leave a card that opens at its own speed off the normal speed", () => {
     expect(cardSpeeds("[Reaction] (Play any time.)Counter a spell.\n[Action][>] Draw 1.")).toEqual([
       "action",
       "reaction",
     ]);
   });
 
-  it("prefers the champion the source names, and falls back to the name prefix", () => {
+  it("should prefer the champion the source names, and fall back to the name prefix", () => {
     const champion = { supertypeId: "Champion", typeId: "Unit" };
     const legend = { supertypeId: null, typeId: "Legend" };
 
@@ -274,7 +274,7 @@ describe("card derivation", () => {
     expect(championName({ name: "Mageseeker Warden", champion: null, ...champion })).toBeNull();
   });
 
-  it("folds the champion's name to one spelling as well", () => {
+  it("should fold the champion's name to one spelling as well", () => {
     const legend = { supertypeId: null, typeId: "Legend" };
 
     expect(
@@ -285,7 +285,7 @@ describe("card derivation", () => {
     ).toBe("K'Sante");
   });
 
-  it("ignores the champion the source names on a plain unit but keeps it on a signature", () => {
+  it("should ignore the champion the source names on a plain unit but keep it on a signature", () => {
     const plainUnit = { supertypeId: null, typeId: "Unit" };
 
     expect(championName({ name: "Pakaa Cub", champion: "Cat", ...plainUnit })).toBeNull();
@@ -297,7 +297,7 @@ describe("card derivation", () => {
     ).toBe("Ivern");
   });
 
-  it("names every local file webp and keeps two printings of one id apart", () => {
+  it("should name every local file webp and keep two printings of one id apart", () => {
     const cards = [
       { id: "a", riftboundId: "opp-247-298", imageUrl: "https://x/a.png" },
       { id: "b", riftboundId: "opp-247-298", imageUrl: "https://x/b.webp" },
@@ -311,65 +311,65 @@ describe("card derivation", () => {
     ]);
   });
 
-  it("downloads under the source's own format, then converts to the webp it is named for", () => {
+  it("should download under the source's own format, then convert to the webp it is named for", () => {
     expect(downloadTargetFor("opp-247-298.webp", "https://x/a.png")).toBe("opp-247-298.png");
     expect(downloadTargetFor("opp-247-298.webp", "https://x/a.webp")).toBe("opp-247-298.webp");
   });
 
-  it("strips the printing qualifier from a card's identity", () => {
+  it("should strip the printing qualifier from a card's identity", () => {
     expect(identityName("Yasuo (Alternate Art)")).toBe("Yasuo");
     expect(identityName("Jinx, Loose Cannon (Signature)")).toBe("Jinx, Loose Cannon");
     expect(identityName("Sett (Overnumbered)")).toBe("Sett");
   });
 
-  it("canonicalizes the separator so one card keeps one identity", () => {
+  it("should canonicalize the separator so one card keeps one identity", () => {
     expect(identityName("Sett - Brawler")).toBe("Sett, Brawler");
     expect(identityName("Sett, Brawler")).toBe("Sett, Brawler");
     expect(identityName("Mel - Newly Awakened (Alternate Art)")).toBe("Mel, Newly Awakened");
     expect(identityName("Riven - Shattered")).toBe(identityName("Riven, Shattered"));
   });
 
-  it("folds every apostrophe and dash variant so one card keeps one identity", () => {
+  it("should fold every apostrophe and dash variant so one card keeps one identity", () => {
     expect(identityName("Doran\u2019s Shield")).toBe("Doran's Shield");
     expect(identityName("Aspirant\u2019s Climb")).toBe(identityName("Aspirant's Climb"));
     expect(identityName("K\u2019Sante \u2013 Courageous")).toBe("K'Sante, Courageous");
     expect(identityName("Kai\u2019Sa,  Survivor  ")).toBe(identityName("Kai'Sa - Survivor"));
   });
 
-  it("leaves a name with no separator and no qualifier alone", () => {
+  it("should leave a name with no separator and no qualifier alone", () => {
     expect(identityName("Blazing Scorcher")).toBe("Blazing Scorcher");
     expect(identityName("Anti-Mage")).toBe("Anti-Mage");
     expect(identityName("Yordle Sniper")).toBe("Yordle Sniper");
   });
 
-  it("elides punctuation inside a word but collapses a separator to one space", () => {
+  it("should elide punctuation inside a word but collapse a separator to one space", () => {
     expect(cleanName("Doran's Shield")).toBe("Dorans Shield");
     expect(cleanName("Kai'Sa - Survivor")).toBe("KaiSa Survivor");
     expect(cleanName("Sett - Brawler")).toBe("Sett Brawler");
     expect(cleanName("Mel, Soul's Reflection")).toBe("Mel Souls Reflection");
   });
 
-  it("keeps a hyphen that joins a word and drops one that introduces a subtitle", () => {
+  it("should keep a hyphen that joins a word and drop one that introduces a subtitle", () => {
     expect(cleanName("Mega-Mech")).toBe("Mega-Mech");
     expect(cleanName("Ahri - Nine-Tailed Fox")).toBe("Ahri Nine-Tailed Fox");
     expect(cleanName("Renata Glasc - Chem-Baroness")).toBe("Renata Glasc Chem-Baroness");
     expect(cleanName("B.F. Sword")).toBe("B.F Sword");
   });
 
-  it("folds every apostrophe and dash variant so one card keeps one search key", () => {
+  it("should fold every apostrophe and dash variant so one card keeps one search key", () => {
     expect(cleanName("Doran\u2019s Shield")).toBe(cleanName("Doran's Shield"));
     expect(cleanName("Aspirant\u2019s Climb")).toBe("Aspirants Climb");
     expect(cleanName("Kai\u2019Sa \u2013 Survivor")).toBe(cleanName("Kai'Sa - Survivor"));
   });
 
-  it("leaves no empty, doubled or edge space in the search key", () => {
+  it("should leave no empty, doubled or edge space in the search key", () => {
     expect(cleanName("Yasuo - Remorseful (Alternate Art)")).toBe("Yasuo Remorseful Alternate Art");
     expect(cleanName("Recruit (271) // Buff")).toBe("Recruit 271 Buff");
     expect(cleanName("Get Excited!")).toBe("Get Excited");
     expect(cleanName("Ol' Poro")).toBe("Ol Poro");
   });
 
-  it("reads the pool, the collector number, and both printing marks from the id", () => {
+  it("should read the pool, the collector number, and both printing marks from the id", () => {
     expect(printingIdentity("ogn-042-298")).toEqual({
       poolCode: "298",
       collectorNumber: 42,
@@ -390,7 +390,7 @@ describe("card derivation", () => {
     });
   });
 
-  it("leaves the newer id format without a pool rather than guessing one", () => {
+  it("should leave the newer id format without a pool rather than guessing one", () => {
     expect(printingIdentity("VEN-001")).toEqual({
       poolCode: null,
       collectorNumber: 1,

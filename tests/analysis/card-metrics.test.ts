@@ -54,7 +54,7 @@ const played: readonly CardCopy[] = [
 const withSupport: readonly CardCopy[] = [{ card: legend, quantity: 1 }, ...played];
 
 describe("card metrics", () => {
-  it("buckets the copies it is given by energy", () => {
+  it("should bucket the copies it is given by energy", () => {
     expect(energyCurve(played)).toEqual([
       { label: "0-1", count: 3 },
       { label: "2", count: 1 },
@@ -64,7 +64,7 @@ describe("card metrics", () => {
     ]);
   });
 
-  it("buckets those copies by might and totals their power", () => {
+  it("should bucket those copies by might and total their power", () => {
     expect(mightCurve(played)).toEqual([
       { label: "0-1", count: 3 },
       { label: "2", count: 0 },
@@ -76,12 +76,12 @@ describe("card metrics", () => {
     expect(totalPower(played)).toBe(3);
   });
 
-  it("counts a supporting copy alongside the rest when it is handed one", () => {
+  it("should count a supporting copy alongside the rest when it is handed one", () => {
     expect(speedMix(withSupport).find((entry) => entry.speed === "reaction")?.count).toBe(3);
     expect(keywordMix(withSupport).keywords.map((keyword) => keyword.id)).toContain("vision");
   });
 
-  it("counts a card at every speed it can be played, so shares can pass the copy count", () => {
+  it("should count a card at every speed it can be played, so shares can pass the copy count", () => {
     expect(speedMix(withSupport)).toEqual([
       { speed: "normal", count: 4, share: 4 / 7 },
       { speed: "action", count: 2, share: 2 / 7 },
@@ -89,7 +89,7 @@ describe("card metrics", () => {
     ]);
   });
 
-  it("tallies keywords by copies held, most common first, and sums their values", () => {
+  it("should tally keywords by copies held, most common first, and sum their values", () => {
     expect(keywordMix(withSupport)).toEqual({
       carrying: 6,
       keywords: [
@@ -100,7 +100,7 @@ describe("card metrics", () => {
     });
   });
 
-  it("leaves out the keywords excluded from this analysis", () => {
+  it("should leave out the keywords excluded from this analysis", () => {
     const shown = keywordMix(withSupport).keywords.map((keyword) => keyword.id);
 
     expect(shown).not.toContain("reaction");
@@ -108,7 +108,7 @@ describe("card metrics", () => {
     expect(shown).toContain("tank");
   });
 
-  it("leaves out keywords a card only grants to other units", () => {
+  it("should leave out keywords a card only grants to other units", () => {
     const granter = card("granter", "OGN", {
       keywords: [grantedKeyword("shield", "Shield", 2), carriedKeyword("tank", "Tank")],
     });
@@ -118,7 +118,7 @@ describe("card metrics", () => {
     expect(mix.carrying).toBe(1);
   });
 
-  it("counts keywords that act on the controller, such as Add", () => {
+  it("should count keywords that act on the controller, such as Add", () => {
     const ramp = card("ramp", "OGN", { keywords: [controllerKeyword("add", "Add")] });
     const mix = keywordMix([{ card: ramp, quantity: 2 }]);
 
@@ -126,13 +126,13 @@ describe("card metrics", () => {
     expect(mix.carrying).toBe(2);
   });
 
-  it("leaves out a keyword carried by a token the card creates", () => {
+  it("should leave out a keyword carried by a token the card creates", () => {
     const summoner = card("summoner", "OGN", { keywords: [tokenKeyword("assault", "Assault", 4)] });
 
     expect(keywordMix([{ card: summoner, quantity: 1 }])).toEqual({ carrying: 0, keywords: [] });
   });
 
-  it("counts no keyword when it is handed no copies", () => {
+  it("should count no keyword when it is handed no copies", () => {
     expect(keywordMix([])).toEqual({
       carrying: 0,
       keywords: [],

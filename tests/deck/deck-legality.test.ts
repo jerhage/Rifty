@@ -66,7 +66,7 @@ function rulesBroken(entries: DeckEntryInput[], champion: string | null = CHAMPI
 }
 
 describe("deck legality", () => {
-  it("accepts a deck that satisfies every zone", () => {
+  it("should accept a deck that satisfies every zone", () => {
     const verification = verifyDeck(withEntries(legalEntries()), RIFTBOUND_STANDARD);
 
     expect(verification).toEqual({
@@ -76,7 +76,7 @@ describe("deck legality", () => {
     });
   });
 
-  it("reports every zone of an empty deck rather than stopping at the first", () => {
+  it("should report every zone of an empty deck rather than stopping at the first", () => {
     expect(rulesBroken([], null)).toEqual([
       "battlefield-size",
       "chosenChampion-required",
@@ -87,7 +87,7 @@ describe("deck legality", () => {
     ]);
   });
 
-  it("requires the chosen champion to be one of the main deck's cards", () => {
+  it("should require the chosen champion to be one of the main deck's cards", () => {
     const entries = legalEntries().filter(
       (held) => !(held.section === "mainDeck" && held.cardId === CHAMPION),
     );
@@ -96,7 +96,7 @@ describe("deck legality", () => {
     expect(rulesBroken(entries)).toEqual(["chosenChampion-in-main-deck"]);
   });
 
-  it("counts the champion's copies against the shared limit like any other card", () => {
+  it("should count the champion's copies against the shared limit like any other card", () => {
     const entries = legalEntries().filter(
       (held) => !(held.section === "sideboard" && held.cardId === "ogn-side-last"),
     );
@@ -106,7 +106,7 @@ describe("deck legality", () => {
     expect(rulesBroken(entries)).toEqual(["shared-copy-limit"]);
   });
 
-  it("counts main deck and sideboard copies against one shared limit", () => {
+  it("should count main deck and sideboard copies against one shared limit", () => {
     const entries = legalEntries();
     // ogn-main-0 already holds its full three copies in the main deck.
     entries.push(entry("sideboard", "ogn-main-0", 1));
@@ -125,21 +125,21 @@ describe("deck legality", () => {
     expect(rulesBroken(entries)).toEqual([]);
   });
 
-  it("allows only one copy of each battlefield", () => {
+  it("should allow only one copy of each battlefield", () => {
     const entries = legalEntries().filter((held) => held.section !== "battlefield");
     entries.push(entry("battlefield", "ogn-bf1", 3));
 
     expect(rulesBroken(entries)).toEqual(["battlefield-copy-limit"]);
   });
 
-  it("rejects a second legend", () => {
+  it("should reject a second legend", () => {
     const entries = legalEntries();
     entries.push(entry("legend", "ogn-legend-2", 1));
 
     expect(rulesBroken(entries)).toEqual(["legend-required"]);
   });
 
-  it("names the offending card and its printings on a copy-limit violation", () => {
+  it("should name the offending card and its printings on a copy-limit violation", () => {
     const entries = legalEntries().filter((held) => held.section !== "battlefield");
     entries.push(entry("battlefield", "ogn-bf1", 3));
     const verification = verifyDeck(withEntries(entries), RIFTBOUND_STANDARD);
@@ -150,7 +150,7 @@ describe("deck legality", () => {
     });
   });
 
-  it("counts copies of a card across all of its printings", () => {
+  it("should count copies of a card across all of its printings", () => {
     const entries = legalEntries().filter(
       (held) => !(held.section === "sideboard" && held.cardId === "ogn-side-last"),
     );
@@ -159,7 +159,7 @@ describe("deck legality", () => {
     expect(rulesBroken(entries)).toEqual(["shared-copy-limit"]);
   });
 
-  it("rejects a fourth copy of a card split across two printings of it", () => {
+  it("should reject a fourth copy of a card split across two printings of it", () => {
     const entries = legalEntries().filter(
       (held) => !(held.section === "mainDeck" && held.cardId === "ogn-main-last"),
     );
@@ -179,7 +179,7 @@ describe("deck legality", () => {
     });
   });
 
-  it("allows a card's three copies to be split across its printings", () => {
+  it("should allow a card's three copies to be split across its printings", () => {
     const entries = legalEntries().filter(
       (held) => !(held.section === "mainDeck" && held.cardId === "ogn-main-0"),
     );
@@ -189,7 +189,7 @@ describe("deck legality", () => {
     expect(rulesBroken(entries)).toEqual([]);
   });
 
-  it("allows only one copy of a battlefield however its printings are mixed", () => {
+  it("should allow only one copy of a battlefield however its printings are mixed", () => {
     const entries = legalEntries().filter((held) => held.section !== "battlefield");
     entries.push(entry("battlefield", "ogn-bf1", 1));
     entries.push(entry("battlefield", "ogn-bf1", 1, "ogn-bf1a"));

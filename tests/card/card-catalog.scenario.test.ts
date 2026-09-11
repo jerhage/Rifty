@@ -7,7 +7,7 @@ import { card, cardSet, carriedKeyword, grantedKeyword } from "./fixtures";
 import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 
 describe("card catalog scenarios", () => {
-  it("hydrates a card printing with its classification, media, and references", async () => {
+  it("should hydrate a card printing with its classification, media, and references", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00", "Unleashed");
     const vi = card("vi-signature", unleashed.code, {
@@ -39,7 +39,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("keeps an occurrence with several targets as one keyword rather than one per target", async () => {
+  it("should keep an occurrence with several targets as one keyword rather than one per target", async () => {
     const store = createSqliteScenarioStore();
     const venture = cardSet("VEN", "2026-08-14T00:00:00", "Venture");
     const threshold = card("threshold", venture.code, {
@@ -66,7 +66,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("filters cards by taxonomy and text without exposing persistence rows", async () => {
+  it("should filter cards by taxonomy and text without exposing persistence rows", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -100,7 +100,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("reports an absent card without treating it as a storage failure", async () => {
+  it("should report an absent card without treating it as a storage failure", async () => {
     const store = createSqliteScenarioStore();
 
     await expect(
@@ -111,7 +111,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("returns ten cards first and exposes the final card through the next page", async () => {
+  it("should return ten cards first and expose the final card through the next page", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -129,7 +129,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("lists only the card data needed by the catalog screen", async () => {
+  it("should list only the card data needed by the catalog screen", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -155,7 +155,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("carries the orientation the catalog grid needs to place landscape battlefields", async () => {
+  it("should carry the orientation the catalog grid needs to place landscape battlefields", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -178,7 +178,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("matches any of the given domains, unlike the all-of domain filter", async () => {
+  it("should match any of the given domains, unlike the all-of domain filter", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -199,7 +199,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("matches any occurrence of any of the keywords whatever it targets, listing and counting each card once, and narrows by domain", async () => {
+  it("should match any occurrence of any of the keywords whatever it targets, listing and counting each card once, and narrow by domain", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -265,7 +265,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("offers every keyword the catalog holds, ordered by name", async () => {
+  it("should offer every keyword the catalog holds, ordered by name", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -282,7 +282,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("resolves cards by the riftbound id a deck stores", async () => {
+  it("should resolve cards by the riftbound id a deck stores", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -303,7 +303,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("finds a champion's printings inside the chosen domains, leaving out its off-domain printing and other champions", async () => {
+  it("should find a champion's printings inside the chosen domains, leaving out its off-domain printing and other champions", async () => {
     const store = createSqliteScenarioStore();
     const origins = cardSet("OGN", "2026-01-01T00:00:00");
     store.seedSet(origins);
@@ -344,7 +344,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("counts every match the filters allow, not just the page asked for", async () => {
+  it("should count every match the filters allow, not just the page asked for", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -364,7 +364,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("sorts card summaries by text and numeric attributes in SQL", async () => {
+  it("should sort card summaries by text and numeric attributes in SQL", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -417,7 +417,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("filters card summaries by set, numeric attributes, and domains in SQL", async () => {
+  it("should filter card summaries by set, numeric attributes, and domains in SQL", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     const origins = cardSet("OGN", "2025-10-31T00:00:00");
@@ -464,7 +464,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("finds card summaries by printed or normalized card name", async () => {
+  it("should find card summaries by printed or normalized card name", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -500,7 +500,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("finds a printing by the name printed on it", async () => {
+  it("should find a printing by the name printed on it", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -526,7 +526,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("searches card summaries by name, plain rules text, or both", async () => {
+  it("should search card summaries by name, plain rules text, or both", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
@@ -607,7 +607,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("requires every selected domain, on full cards and on summaries alike", async () => {
+  it("should require every selected domain, on full cards and on summaries alike", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);

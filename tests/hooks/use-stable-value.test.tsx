@@ -7,7 +7,7 @@ interface Criteria {
 }
 
 describe("useStableValue", () => {
-  it("keeps the first reference while the next value is structurally equal", async () => {
+  it("should keep the first reference while the next value is structurally equal", async () => {
     const { result, rerender } = await renderHook(
       (criteria: Criteria) => useStableValue(criteria),
       { initialProps: { typeIds: ["Unit"] } },
@@ -19,7 +19,7 @@ describe("useStableValue", () => {
     expect(result.current).toBe(first);
   });
 
-  it("adopts the next reference once a value differs", async () => {
+  it("should adopt the next reference once a value differs", async () => {
     const { result, rerender } = await renderHook(
       (criteria: Criteria) => useStableValue(criteria),
       { initialProps: { typeIds: ["Unit"] } },

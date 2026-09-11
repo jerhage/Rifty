@@ -58,7 +58,7 @@ function imagesFor(printings: readonly NormalizedCard[]): ReadonlyMap<string, st
 }
 
 describe("catalog seed", () => {
-  it("gathers the printings that share an identity under one card", () => {
+  it("should gather the printings that share an identity under one card", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", { identityName: "Sett, Brawler" }),
       printing("b", { identityName: "Sett, Brawler", riftboundId: "SFD-232" }),
@@ -77,7 +77,7 @@ describe("catalog seed", () => {
     expect(() => assertValid(seed)).not.toThrow();
   });
 
-  it("keeps every printing and names one of them for each Riftbound ID", () => {
+  it("should keep every printing and name one of them for each Riftbound ID", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", { riftboundId: "OGN-001" }),
       printing("b", { riftboundId: "OGN-001", isAlternateArt: true }),
@@ -93,7 +93,7 @@ describe("catalog seed", () => {
     ]);
   });
 
-  it("gives every printing a media row so none drops out of the catalog", () => {
+  it("should give every printing a media row so none drops out of the catalog", () => {
     const printings: readonly NormalizedCard[] = [printing("a"), printing("b"), printing("c")];
 
     const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
@@ -102,7 +102,7 @@ describe("catalog seed", () => {
     expect(() => assertValid(seed)).not.toThrow();
   });
 
-  it("takes each single value from the newest printing", () => {
+  it("should take each single value from the newest printing", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", {
         identityName: "Teemo, Strategist",
@@ -133,7 +133,7 @@ describe("catalog seed", () => {
     });
   });
 
-  it("prefers the canonical base printing when printings tie at the newest date", () => {
+  it("should prefer the canonical base printing when printings tie at the newest date", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", {
         identityName: "Master Yi, Tempered",
@@ -154,7 +154,7 @@ describe("catalog seed", () => {
     expect(seed.cardPrintings.map((row) => row.id)).toEqual(["b", "a"]);
   });
 
-  it("takes the union of the lists its printings carry", () => {
+  it("should take the union of the lists its printings carry", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", {
         identityName: "Sett, Brawler",
@@ -182,7 +182,7 @@ describe("catalog seed", () => {
     expect(seed.cardSpeeds.map((row) => row.speed)).toEqual(["reaction", "action"]);
   });
 
-  it("never lets a blank printing beat a printing that has the field", () => {
+  it("should never let a blank printing beat a printing that has the field", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", {
         identityName: "Bandle Tree",
@@ -219,7 +219,7 @@ describe("catalog seed", () => {
     });
   });
 
-  it("leaves a card blank when no printing prints the field, and still gives it the normal speed", () => {
+  it("should leave a card blank when no printing prints the field, and still give it the normal speed", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", { identityName: "Mind Rune", rulesTextRich: "", rulesTextPlain: "" }),
       printing("b", {
@@ -235,7 +235,7 @@ describe("catalog seed", () => {
     expect(seed.cardSpeeds.map((row) => row.speed)).toEqual(["normal"]);
   });
 
-  it("keeps a secondary feed from resolving a card the primary feed also prints", () => {
+  it("should keep a secondary feed from resolving a card the primary feed also prints", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", {
         identityName: "Master Yi, Wuju Bladesman",
@@ -280,7 +280,7 @@ describe("catalog seed", () => {
     expect(seed.cardPrintings.map((row) => row.id)).toEqual(["a", "b"]);
   });
 
-  it("records a keyword once per target it is printed at", () => {
+  it("should record a keyword once per target it is printed at", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", { rulesTextPlain: "[Empowered]\nOther friendly units here have [Empowered]." }),
     ];
@@ -313,7 +313,7 @@ describe("catalog seed", () => {
     ]);
   });
 
-  it("records a keyword its printings share only once", () => {
+  it("should record a keyword its printings share only once", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", { identityName: "Vilemaw", rulesTextPlain: "[Ambush] Deal 1." }),
       printing("b", { identityName: "Vilemaw", rulesTextPlain: "[Ambush] Deal 1." }),
@@ -325,7 +325,7 @@ describe("catalog seed", () => {
     expect(seed.cardKeywords[0]).toMatchObject({ cardId: "Vilemaw", keywordId: "ambush" });
   });
 
-  it("gives one occurrence a row for each target it names", () => {
+  it("should give one occurrence a row for each target it names", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", {
         rulesTextPlain: "When combat starts here, the attacker and defender each [Add] [1].",
@@ -341,7 +341,7 @@ describe("catalog seed", () => {
     ]);
   });
 
-  it("refuses to guess a target it has no phrase for", () => {
+  it("should refuse to guess a target it has no phrase for", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", { rulesTextPlain: "When you hold here, [Vision] twice." }),
     ];
@@ -351,7 +351,7 @@ describe("catalog seed", () => {
     );
   });
 
-  it("skips a card whose set is absent rather than dropping it silently", () => {
+  it("should skip a card whose set is absent rather than dropping it silently", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a"),
       printing("b", { setCode: "MISSING" }),
@@ -363,7 +363,7 @@ describe("catalog seed", () => {
     expect(seed.cardPrintings.map((row) => row.id)).toEqual(["a"]);
   });
 
-  it("reunites a promo that dropped its champion prefix with the card it reprints", () => {
+  it("should reunite a promo that dropped its champion prefix with the card it reprints", () => {
     const legend = { typeId: "Legend", energy: null, might: null, power: null } as const;
     const printings: readonly NormalizedCard[] = [
       printing("a", {
@@ -391,7 +391,7 @@ describe("catalog seed", () => {
     expect(identityConflicts).toEqual([]);
   });
 
-  it("leaves a card that merely shares a suffix with another under its own identity", () => {
+  it("should leave a card that merely shares a suffix with another under its own identity", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", {
         name: "Sett - The Boss",
@@ -407,7 +407,7 @@ describe("catalog seed", () => {
     expect(identityConflicts).toEqual([]);
   });
 
-  it("reports rather than merges a truncated identity whose gameplay attributes disagree", () => {
+  it("should report rather than merge a truncated identity whose gameplay attributes disagree", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", {
         name: "Jinx - Loose Cannon",
@@ -430,7 +430,7 @@ describe("catalog seed", () => {
     ]);
   });
 
-  it("fails generation when a printing has no media row", () => {
+  it("should fail generation when a printing has no media row", () => {
     const printings: readonly NormalizedCard[] = [printing("a"), printing("b")];
 
     const { seed } = buildSeed(printings, [set("OGN")], imagesFor([printing("a")]));
@@ -438,7 +438,7 @@ describe("catalog seed", () => {
     expect(() => assertValid(seed)).toThrow(/no media row: b/);
   });
 
-  it("fails generation when a Riftbound ID has no canonical printing", () => {
+  it("should fail generation when a Riftbound ID has no canonical printing", () => {
     const printings: readonly NormalizedCard[] = [printing("a"), printing("b")];
 
     const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
@@ -447,7 +447,7 @@ describe("catalog seed", () => {
     expect(() => assertValid(seed)).toThrow(/no canonical printing: OGN-a, OGN-b/);
   });
 
-  it("fails generation when a printing names a card the seed has no row for", () => {
+  it("should fail generation when a printing names a card the seed has no row for", () => {
     const printings: readonly NormalizedCard[] = [printing("a")];
 
     const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
@@ -456,7 +456,7 @@ describe("catalog seed", () => {
     expect(() => assertValid(seed)).toThrow(/card_printing rows name an owner/);
   });
 
-  it("fails generation when a satellite outlives the card it belongs to", () => {
+  it("should fail generation when a satellite outlives the card it belongs to", () => {
     const printings: readonly NormalizedCard[] = [printing("a")];
 
     const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));

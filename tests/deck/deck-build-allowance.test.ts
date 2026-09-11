@@ -32,7 +32,7 @@ function draftWith(...placements: readonly Placement[]): DeckBuildDraft {
 }
 
 describe("deck build allowance", () => {
-  it("counts printings of the same card against one allowance", () => {
+  it("should count printings of the same card against one allowance", () => {
     const draft = draftWith(["mainDeck", survivor, 3]);
 
     expect(lockedCopies(draft, "mainDeck", survivorAlt)).toBe(3);
@@ -42,7 +42,7 @@ describe("deck build allowance", () => {
     });
   });
 
-  it("keeps different cards apart even when they share a character", () => {
+  it("should keep different cards apart even when they share a character", () => {
     const draft = draftWith(["mainDeck", survivor, 3]);
 
     expect(remainingForCard(draft, "mainDeck", evolutionary)).toEqual({
@@ -51,7 +51,7 @@ describe("deck build allowance", () => {
     });
   });
 
-  it("seats the chosen champion in the main deck as an ordinary card", () => {
+  it("should seat the chosen champion in the main deck as an ordinary card", () => {
     const draft = chooseChampion(EMPTY_DRAFT, survivor);
 
     expect(zoneCounts(draft).mainDeck).toBe(1);
@@ -59,13 +59,13 @@ describe("deck build allowance", () => {
     expect(quantityOf(draft, "mainDeck", survivorAlt.printingId)).toBe(0);
   });
 
-  it("keeps the copies already held when a card becomes the champion", () => {
+  it("should keep the copies already held when a card becomes the champion", () => {
     const draft = chooseChampion(draftWith(["mainDeck", survivor, 3]), survivor);
 
     expect(quantityOf(draft, "mainDeck", survivor.printingId)).toBe(3);
   });
 
-  it("holds the chosen champion's own printing at one copy in the main deck", () => {
+  it("should hold the chosen champion's own printing at one copy in the main deck", () => {
     const draft = chooseChampion(EMPTY_DRAFT, survivor);
 
     expect(minimumForCard(draft, "mainDeck", survivor)).toBe(1);
@@ -74,7 +74,7 @@ describe("deck build allowance", () => {
     expect(minimumForCard(EMPTY_DRAFT, "mainDeck", survivor)).toBe(0);
   });
 
-  it("counts the champion's seated copy against its other printings", () => {
+  it("should count the champion's seated copy against its other printings", () => {
     const draft = chooseChampion(EMPTY_DRAFT, survivor);
 
     expect(lockedCopies(draft, "mainDeck", survivorAlt)).toBe(1);
@@ -84,20 +84,20 @@ describe("deck build allowance", () => {
     });
   });
 
-  it("counts the sideboard against the main deck", () => {
+  it("should count the sideboard against the main deck", () => {
     const draft = draftWith(["sideboard", survivorAlt, 2]);
 
     expect(remainingForCard(draft, "mainDeck", survivor)).toEqual({ type: "limited", copies: 1 });
   });
 
-  it("ignores the zone's own copies, which the stepper already owns", () => {
+  it("should ignore the zone's own copies, which the stepper already owns", () => {
     const draft = draftWith(["mainDeck", survivor, 2]);
 
     expect(lockedCopies(draft, "mainDeck", survivor)).toBe(0);
     expect(remainingForCard(draft, "mainDeck", survivor)).toEqual({ type: "limited", copies: 3 });
   });
 
-  it("allows a mix of printings up to the shared limit", () => {
+  it("should allow a mix of printings up to the shared limit", () => {
     const draft = draftWith(["mainDeck", survivor, 2], ["mainDeck", survivorAlt, 1]);
 
     // Two regular plus one alternate art is the full allowance, so neither row takes another.
@@ -108,7 +108,7 @@ describe("deck build allowance", () => {
     });
   });
 
-  it("lets the main deck run past its target", () => {
+  it("should let the main deck run past its target", () => {
     const draft = draftWith(
       ...Array.from({ length: 20 }, (_unused, index): Placement => [
         "mainDeck",
@@ -123,27 +123,27 @@ describe("deck build allowance", () => {
     });
   });
 
-  it("stops the rune deck at twelve cards", () => {
+  it("should stop the rune deck at twelve cards", () => {
     const other = card("other-rune", "OGN", { name: "Calm Rune" });
     const draft = draftWith(["runeDeck", other, 10]);
 
     expect(remainingForCard(draft, "runeDeck", rune)).toEqual({ type: "limited", copies: 2 });
   });
 
-  it("counts a rune's own copies against the twelve, not against itself twice", () => {
+  it("should count a rune's own copies against the twelve, not against itself twice", () => {
     const draft = draftWith(["runeDeck", rune, 12]);
 
     expect(remainingForCard(draft, "runeDeck", rune)).toEqual({ type: "limited", copies: 12 });
   });
 
-  it("offers the full rune deck when it is empty", () => {
+  it("should offer the full rune deck when it is empty", () => {
     expect(remainingForCard(EMPTY_DRAFT, "runeDeck", rune)).toEqual({
       type: "limited",
       copies: 12,
     });
   });
 
-  it("allows one copy of a battlefield", () => {
+  it("should allow one copy of a battlefield", () => {
     expect(remainingForCard(EMPTY_DRAFT, "battlefield", rune)).toEqual({
       type: "limited",
       copies: 1,

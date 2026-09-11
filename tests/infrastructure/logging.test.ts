@@ -33,7 +33,7 @@ class MemoryLogger implements Logger {
 }
 
 describe("query logging", () => {
-  it("logs an async repository call, its duration, and an array result count", async () => {
+  it("should log an async repository call, its duration, and an array result count", async () => {
     const logger = new MemoryLogger();
     const repository = withQueryLogging(
       {
@@ -63,7 +63,7 @@ describe("query logging", () => {
     ]);
   });
 
-  it("logs a failed repository call with its duration and rethrows the error", async () => {
+  it("should log a failed repository call with its duration and rethrow the error", async () => {
     const logger = new MemoryLogger();
     const failure = new Error("database unavailable");
     const repository = withQueryLogging(
@@ -94,7 +94,7 @@ describe("query logging", () => {
     ]);
   });
 
-  it("counts items in a paged repository result", async () => {
+  it("should count items in a paged repository result", async () => {
     const logger = new MemoryLogger();
     const repository = withQueryLogging(
       {
@@ -115,7 +115,7 @@ describe("query logging", () => {
     });
   });
 
-  it("counts one found record and zero absent records", async () => {
+  it("should count one found record and zero absent records", async () => {
     const logger = new MemoryLogger();
     const repository = withQueryLogging(
       {
@@ -134,7 +134,7 @@ describe("query logging", () => {
     expect(logger.entries.at(3)?.metadata).toMatchObject({ resultCount: 0 });
   });
 
-  it("adapts Drizzle query logging without adding a duration", () => {
+  it("should adapt Drizzle query logging without adding a duration", () => {
     const logger = new MemoryLogger();
     const adapter = new DrizzleLoggerAdapter(logger);
 
@@ -154,7 +154,7 @@ describe("query logging", () => {
 });
 
 describe("NoopLogger", () => {
-  it("discards a logged call without throwing", () => {
+  it("should discard a logged call without throwing", () => {
     const logger = new NoopLogger();
 
     expect(() => logger.error("ignored", { reason: "test" })).not.toThrow();

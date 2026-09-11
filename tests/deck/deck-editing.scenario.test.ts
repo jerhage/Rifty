@@ -21,7 +21,7 @@ function capabilities(repository: ReturnType<typeof createSqliteScenarioStore>["
 }
 
 describe("deck editing scenarios", () => {
-  it("creates an empty deck that is immediately readable", async () => {
+  it("should create an empty deck that is immediately readable", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
 
@@ -44,7 +44,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("refuses a name that differs from an existing deck only by case", async () => {
+  it("should refuse a name that differs from an existing deck only by case", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     await createDeck("Ember Tempo", dependencies);
@@ -55,7 +55,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("renames a deck and stamps it, but lets it keep its own name", async () => {
+  it("should rename a deck and stamp it, but let it keep its own name", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { name: "Ember Tempo" }));
@@ -78,7 +78,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("adds, updates and removes a card quantity", async () => {
+  it("should add, update and remove a card quantity", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));
@@ -134,7 +134,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("keeps the same card in different sections apart", async () => {
+  it("should keep the same card in different sections apart", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));
@@ -172,7 +172,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("refuses a fourth copy across the zones that share an allowance", async () => {
+  it("should refuse a fourth copy across the zones that share an allowance", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(
@@ -213,7 +213,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("refuses a fourth copy of a card added under a second printing", async () => {
+  it("should refuse a fourth copy of a card added under a second printing", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(
@@ -239,7 +239,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("refuses to save a card held four times across two of its printings", async () => {
+  it("should refuse to save a card held four times across two of its printings", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
 
@@ -283,7 +283,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("accepts a quantity that leaves the main deck short of its required size", async () => {
+  it("should accept a quantity that leaves the main deck short of its required size", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));
@@ -303,7 +303,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("accepts twelve copies of one card in the rune deck", async () => {
+  it("should accept twelve copies of one card in the rune deck", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));
@@ -323,7 +323,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("saves a whole deck, then saves over it with what the builder holds", async () => {
+  it("should save a whole deck, then save over it with what the builder holds", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     const draft = {
@@ -380,7 +380,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("refuses to save a deck over another deck's name, but keeps its own", async () => {
+  it("should refuse to save a deck over another deck's name, but keep its own", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("iron", { name: "Iron Wall" }));
@@ -415,7 +415,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("refuses a save that puts a fourth copy of a card in the shared zones", async () => {
+  it("should refuse a save that puts a fourth copy of a card in the shared zones", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
 
@@ -449,7 +449,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("saves a deck whose zones are still the wrong size", async () => {
+  it("should save a deck whose zones are still the wrong size", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
 
@@ -476,7 +476,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("deletes a deck and the entries belonging to it", async () => {
+  it("should delete a deck and the entries belonging to it", async () => {
     const store = createSqliteScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(

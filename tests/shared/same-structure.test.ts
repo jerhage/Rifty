@@ -1,7 +1,7 @@
 import { sameStructure } from "@/shared/same-structure";
 
 describe("sameStructure", () => {
-  it("matches records holding the same values in a different key order", () => {
+  it("should match records holding the same values in a different key order", () => {
     expect(
       sameStructure(
         { search: { type: "nameOrRulesText", text: "lux" }, typeIds: ["Unit"] },
@@ -10,13 +10,13 @@ describe("sameStructure", () => {
     ).toBe(true);
   });
 
-  it("matches an absent key against an explicitly undefined one", () => {
+  it("should match an absent key against an explicitly undefined one", () => {
     expect(sameStructure({ typeIds: ["Unit"] }, { typeIds: ["Unit"], keywordIds: undefined })).toBe(
       true,
     );
   });
 
-  it("separates records differing in a nested value", () => {
+  it("should separate records differing in a nested value", () => {
     expect(
       sameStructure(
         { energy: { type: "atLeast", value: 2 } },
@@ -25,17 +25,17 @@ describe("sameStructure", () => {
     ).toBe(false);
   });
 
-  it("separates arrays differing in order or length", () => {
+  it("should separate arrays differing in order or length", () => {
     expect(sameStructure(["Calm", "Mind"], ["Mind", "Calm"])).toBe(false);
     expect(sameStructure(["Calm"], ["Calm", "Mind"])).toBe(false);
   });
 
-  it("separates an array from a record and null from a record", () => {
+  it("should separate an array from a record and null from a record", () => {
     expect(sameStructure([], {})).toBe(false);
     expect(sameStructure(null, {})).toBe(false);
   });
 
-  it("matches equal scalars and separates unequal ones", () => {
+  it("should match equal scalars and separate unequal ones", () => {
     expect(sameStructure("Unit", "Unit")).toBe(true);
     expect(sameStructure(1, "1")).toBe(false);
   });

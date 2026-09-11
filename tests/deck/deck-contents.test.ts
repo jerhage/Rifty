@@ -53,7 +53,7 @@ const built = deck("d1", {
 });
 
 describe("deck contents", () => {
-  it("splits the main deck by card type and keeps other zones apart", () => {
+  it("should split the main deck by card type and keep other zones apart", () => {
     expect(deckGroups(built, cards).map((group) => [group.title, group.count])).toEqual([
       ["Legend", 1],
       ["Units", 4],
@@ -62,11 +62,11 @@ describe("deck contents", () => {
     ]);
   });
 
-  it("drops entries whose card is missing from the catalog", () => {
+  it("should drop entries whose card is missing from the catalog", () => {
     expect(deckGroups(built, [cheap]).map((group) => group.title)).toEqual(["Units"]);
   });
 
-  it("resolves each entry against its own printing when two printings share a riftbound id", () => {
+  it("should resolve each entry against its own printing when two printings share a riftbound id", () => {
     const alternate = parseCard({
       ...cheap,
       printingId: "cheap-alt",
@@ -94,7 +94,7 @@ describe("deck contents", () => {
     ]);
   });
 
-  it("names the chosen champion's own printing", () => {
+  it("should name the chosen champion's own printing", () => {
     expect(chosenChampionCard(built, cards)?.printingId).toBe(champion.printingId);
   });
 });

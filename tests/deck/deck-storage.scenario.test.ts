@@ -5,7 +5,7 @@ import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 import { deck } from "./fixtures";
 
 describe("deck storage scenarios", () => {
-  it("hydrates a saved deck with every section it holds, ordered by section", async () => {
+  it("should hydrate a saved deck with every section it holds, ordered by section", async () => {
     const store = createSqliteScenarioStore();
     const tempo = deck("ember-tempo", {
       name: "Ember Tempo",
@@ -36,7 +36,7 @@ describe("deck storage scenarios", () => {
     store.close();
   });
 
-  it("reports an absent deck without treating it as a storage failure", async () => {
+  it("should report an absent deck without treating it as a storage failure", async () => {
     const store = createSqliteScenarioStore();
 
     await expect(findDeck("unknown", { deckFinder: store.deckStore.repository })).resolves.toEqual({
@@ -45,7 +45,7 @@ describe("deck storage scenarios", () => {
     store.close();
   });
 
-  it("lists decks most recently edited first", async () => {
+  it("should list decks most recently edited first", async () => {
     const store = createSqliteScenarioStore();
     const older = deck("iron-wall", { name: "Iron Wall", updatedAt: "2026-09-01T10:00:00.000Z" });
     const newer = deck("veil-tempo", { name: "Veil Tempo", updatedAt: "2026-09-07T18:30:00.000Z" });
@@ -59,7 +59,7 @@ describe("deck storage scenarios", () => {
     store.close();
   });
 
-  it("keeps a deck with no entries readable", async () => {
+  it("should keep a deck with no entries readable", async () => {
     const store = createSqliteScenarioStore();
     store.seedDeck(deck("empty", { entries: [] }));
 

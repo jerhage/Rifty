@@ -1,7 +1,7 @@
 import { Page } from "@/shared/page";
 
 describe("Page", () => {
-  it("keeps items immutable and carries the latest page's continuation state when appended", () => {
+  it("should keep items immutable and carry the latest page's continuation state when appended", () => {
     const first = Page.create(["one", "two"], true);
     const combined = first.append(Page.create(["three"], false));
 
@@ -10,7 +10,7 @@ describe("Page", () => {
     expect(() => (first.items as string[]).push("four")).toThrow("not extensible");
   });
 
-  it("maps items without changing continuation state, and gives an empty page no continuation", () => {
+  it("should map items without changing continuation state, and give an empty page no continuation", () => {
     expect(Page.create([1, 2], true).map((value) => `${value}`)).toEqual(
       Page.create(["1", "2"], true),
     );

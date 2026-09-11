@@ -5,7 +5,7 @@ import { parseCardSet } from "@/features/set/card-set";
 import { card, cardSet } from "./fixtures";
 
 describe("card and set domain validation", () => {
-  it("rejects a card with a blank printing id or an unusable image URL", () => {
+  it("should reject a card with a blank printing id or an unusable image URL", () => {
     expect(() => parseCard({ ...card("vi", "UNL"), printingId: " " })).toThrow("Too small");
     expect(() =>
       parseCard({
@@ -15,7 +15,7 @@ describe("card and set domain validation", () => {
     ).toThrow("Invalid URL");
   });
 
-  it("rejects invalid card list criteria and a blank set code", () => {
+  it("should reject invalid card list criteria and a blank set code", () => {
     expect(() => parseCardListCriteria({ limit: 0 })).toThrow("Too small");
     expect(() => parseCardListCriteria({ sort: { type: "name", direction: "up" } })).toThrow();
     expect(() =>

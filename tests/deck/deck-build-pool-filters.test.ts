@@ -28,7 +28,7 @@ describe("deck build pool filters", () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it("edits the draft without touching the applied filters or the pool query", async () => {
+  it("should edit the draft without touching the applied filters or the pool query", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openFilters());
@@ -53,7 +53,7 @@ describe("deck build pool filters", () => {
     expect(criteria.typeIds).toEqual(["Unit", "Spell", "Gear"]);
   });
 
-  it("commits the draft when the sheet is confirmed", async () => {
+  it("should commit the draft when the sheet is confirmed", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openFilters());
@@ -71,7 +71,7 @@ describe("deck build pool filters", () => {
     ).toEqual(["shield"]);
   });
 
-  it("discards the draft when the sheet is dismissed without confirming", async () => {
+  it("should discard the draft when the sheet is dismissed without confirming", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openFilters());
@@ -89,7 +89,7 @@ describe("deck build pool filters", () => {
     expect(result.current.pool.draftFilters.domainIds).toEqual([]);
   });
 
-  it("reopens the sheet on the applied filters rather than an abandoned draft", async () => {
+  it("should reopen the sheet on the applied filters rather than an abandoned draft", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openFilters());
@@ -100,7 +100,7 @@ describe("deck build pool filters", () => {
     expect(result.current.pool.draftFilters.typeIds).toEqual([]);
   });
 
-  it("resets only the draft, leaving the pool as it is until confirmed", async () => {
+  it("should reset only the draft, leaving the pool as it is until confirmed", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openFilters());
@@ -114,7 +114,7 @@ describe("deck build pool filters", () => {
     expect(result.current.pool.filters.keywordIds).toEqual(["shield"]);
   });
 
-  it("leaves the search text alone when the filters are reset", async () => {
+  it("should leave the search text alone when the filters are reset", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.setQuery("volibear"));
@@ -126,7 +126,7 @@ describe("deck build pool filters", () => {
     expect(result.current.pool.query).toBe("volibear");
   });
 
-  it("counts the applied filters on the badge, not the ones being chosen", async () => {
+  it("should count the applied filters on the badge, not the ones being chosen", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openFilters());
@@ -141,7 +141,7 @@ describe("deck build pool filters", () => {
     expect(activePoolFilterCount(result.current.pool.filters)).toBe(2);
   });
 
-  it("clears both the applied filters and the draft when the zone changes", async () => {
+  it("should clear both the applied filters and the draft when the zone changes", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openFilters());
@@ -156,7 +156,7 @@ describe("deck build pool filters", () => {
     expect(result.current.pool.draftFilters.keywordIds).toEqual([]);
   });
 
-  it("clears the search text when the zone changes", async () => {
+  it("should clear the search text when the zone changes", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.setQuery("volibear"));
@@ -173,7 +173,7 @@ describe("deck build pool filters", () => {
     expect(result.current.pool.searchQuery).toBe("");
   });
 
-  it("keeps the search field live, debounced rather than deferred to the sheet", async () => {
+  it("should keep the search field live, debounced rather than deferred to the sheet", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.setQuery("volibear"));
@@ -198,7 +198,7 @@ describe("deck build pool filters", () => {
     });
   });
 
-  it("keeps the search text through a confirmed sheet", async () => {
+  it("should keep the search text through a confirmed sheet", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.setQuery("volibear"));

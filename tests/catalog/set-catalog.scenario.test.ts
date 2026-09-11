@@ -5,7 +5,7 @@ import { cardSet } from "../card/fixtures";
 import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 
 describe("set catalog scenarios", () => {
-  it("lists sets in publication order and retains marketplace references", async () => {
+  it("should list sets in publication order and retains marketplace references", async () => {
     const store = createSqliteScenarioStore();
     const origins = cardSet("OGN", "2025-10-31T00:00:00", "Origins");
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00", "Unleashed");

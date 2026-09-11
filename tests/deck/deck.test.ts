@@ -18,11 +18,11 @@ const deck = {
 };
 
 describe("deck schema", () => {
-  it("accepts incomplete decks so people can build freely", () => {
+  it("should accept incomplete decks so people can build freely", () => {
     expect(parseDeck(deck)).toEqual(deck);
   });
 
-  it("rejects duplicate quantity entries for one printing in a section", () => {
+  it("should reject duplicate quantity entries for one printing in a section", () => {
     expect(() =>
       parseDeck({
         ...deck,
@@ -39,7 +39,7 @@ describe("deck schema", () => {
     ).toThrow("only one quantity entry");
   });
 
-  it("accepts two printings of one card in the same section", () => {
+  it("should accept two printings of one card in the same section", () => {
     expect(
       parseDeck({
         ...deck,
@@ -56,7 +56,7 @@ describe("deck schema", () => {
     ).toHaveLength(2);
   });
 
-  it("derives unverified, legal, and illegal verification states from one schema", () => {
+  it("should derive unverified, legal, and illegal verification states from one schema", () => {
     expect(
       parseDeckVerification({ type: "unverified", deck, reason: { type: "notChecked" } }),
     ).toMatchObject({ type: "unverified" });

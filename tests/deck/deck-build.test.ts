@@ -50,7 +50,7 @@ describe("deck build", () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it("opens a new deck on the first step and an edit on the zones step", async () => {
+  it("should open a new deck on the first step and an edit on the zones step", async () => {
     expect((await renderBuild()).result.current.steps.step.id).toBe("legend");
 
     const editing = await renderBuild({ type: "edit", cards: [], deck: deck("deck-1") });
@@ -58,7 +58,7 @@ describe("deck build", () => {
     expect(editing.result.current.steps.step.id).toBe("zones");
   });
 
-  it("leaves the builder when back is pressed on the first step", async () => {
+  it("should leave the builder when back is pressed on the first step", async () => {
     const { onExit, result } = await renderBuild();
 
     await act(() => result.current.steps.back());
@@ -67,7 +67,7 @@ describe("deck build", () => {
     expect(result.current.steps.step.id).toBe("legend");
   });
 
-  it("resets the pool to the legend's domains and clears the query on the zones step", async () => {
+  it("should reset the pool to the legend's domains and clear the query on the zones step", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.draft.pickLegend(legend));
@@ -84,7 +84,7 @@ describe("deck build", () => {
     expect(result.current.pool.query).toBe("");
   });
 
-  it("resets the pool to the legend's domains when the zone changes", async () => {
+  it("should reset the pool to the legend's domains when the zone changes", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.draft.pickLegend(legend));
@@ -101,7 +101,7 @@ describe("deck build", () => {
     expect(result.current.pool.filters.domainIds).toEqual(["Fury"]);
   });
 
-  it("clears the chosen champion when a different legend is picked", async () => {
+  it("should clear the chosen champion when a different legend is picked", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.draft.pickLegend(legend));
@@ -115,7 +115,7 @@ describe("deck build", () => {
     expect(result.current.draft.draft.chosenChampion).toBeNull();
   });
 
-  it("deselects a legend or a champion picked twice", async () => {
+  it("should deselect a legend or a champion picked twice", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.draft.pickLegend(legend));
@@ -129,7 +129,7 @@ describe("deck build", () => {
     expect(result.current.draft.draft.chosenChampion).toBeNull();
   });
 
-  it("keeps one copy of the chosen champion in the main deck", async () => {
+  it("should keep one copy of the chosen champion in the main deck", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.draft.pickChampion(champion));
@@ -148,7 +148,7 @@ describe("deck build", () => {
     ).toBe(3);
   });
 
-  it("refuses to save a deck without a name, and clears the error when one is typed", async () => {
+  it("should refuse to save a deck without a name, and clear the error when one is typed", async () => {
     const { onSaved, result, saves } = await renderBuild();
 
     await act(() => result.current.saving.save());
@@ -165,7 +165,7 @@ describe("deck build", () => {
     expect(result.current.saving.status).toEqual({ type: "idle" });
   });
 
-  it("debounces the legend query while the field stays live", async () => {
+  it("should debounce the legend query while the field stays live", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.legends.setQuery("voli"));

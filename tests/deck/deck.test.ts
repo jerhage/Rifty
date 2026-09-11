@@ -58,19 +58,17 @@ describe("deck schema", () => {
 
   it("should derive unverified, legal, and illegal verification states from one schema", () => {
     expect(
-      parseDeckVerification({ type: "unverified", deck, reason: { type: "notChecked" } }),
+      parseDeckVerification({ type: "unverified", reason: { type: "notChecked" } }),
     ).toMatchObject({ type: "unverified" });
     expect(
       parseDeckVerification({
         type: "legal",
-        deck,
         ruleset: { id: "constructed", format: "Constructed", version: "2026-09-07" },
       }),
     ).toMatchObject({ type: "legal" });
     expect(
       parseDeckVerification({
         type: "illegal",
-        deck,
         ruleset: { id: "constructed", format: "Constructed", version: "2026-09-07" },
         violations: [
           {

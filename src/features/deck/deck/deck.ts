@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 
 /** Stable game-card identity retained by a deck even when catalog data is reseeded. */
-import { cardIdSchema } from "@/features/card/value-objects/card-id";
+import { cardIdSchema, type CardId } from "@/features/card/value-objects/card-id";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 
 const deckIdSchema = z.string().trim().min(1);
@@ -86,21 +86,23 @@ const deckLegalityViolationSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
-/** A derived assessment, never a persisted deck field: catalog data and tournament rules can change. */
+/**
+ * A derived assessment, never a persisted deck field: catalog data and tournament rules can change.
+ *
+ * `ruleset` is kept deliberately although nothing reads it yet. Which ruleset judged a deck is a
+ * real fact about the verification, and it becomes meaningful as soon as a second format exists.
+ */
 const deckVerificationSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("unverified"),
-    deck: deckSchema,
     reason: deckUnverifiedReasonSchema,
   }),
   z.object({
     type: z.literal("legal"),
-    deck: deckSchema,
     ruleset: tournamentRulesetSchema,
   }),
   z.object({
     type: z.literal("illegal"),
-    deck: deckSchema,
     ruleset: tournamentRulesetSchema,
     violations: z.array(deckLegalityViolationSchema).min(1),
   }),
@@ -119,6 +121,10 @@ type DeckName = z.output<typeof deckNameSchema>;
 type DeckSection = z.output<typeof deckSectionSchema>;
 type DeckEntry = z.output<typeof deckEntrySchema>;
 type Deck = z.output<typeof deckSchema>;
+interface DeckContents {
+  readonly entries: readonly DeckEntry[];
+  readonly chosenChampionCardId: CardId | null;
+}
 type TournamentRuleset = z.output<typeof tournamentRulesetSchema>;
 type DeckUnverifiedReason = z.output<typeof deckUnverifiedReasonSchema>;
 type DeckLegalityRule = z.output<typeof deckLegalityRuleSchema>;
@@ -145,6 +151,7 @@ export {
 };
 export type {
   Deck,
+  DeckContents,
   DeckEntry,
   DeckId,
   DeckLegalityRule,

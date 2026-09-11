@@ -1,9 +1,9 @@
 import { match } from "ts-pattern";
 
-import type { Deck, DeckLegalityRule } from "@/features/deck/deck/deck";
+import type { Deck, DeckContents, DeckLegalityRule } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 
-import { deck, type DeckEntryInput } from "./fixtures";
+import { cardId, deck, printingId, type DeckEntryInput } from "./fixtures";
 
 const CHAMPION = "ogn-champion";
 
@@ -46,6 +46,18 @@ function withEntries(entries: DeckEntryInput[], champion: string | null = CHAMPI
   return deck("under-test", { entries, chosenChampionCardId: champion });
 }
 
+function contentsOf(entries: DeckEntryInput[], champion: string | null = CHAMPION): DeckContents {
+  return {
+    entries: entries.map((held) => ({
+      section: held.section,
+      cardId: cardId(held.cardId),
+      printingId: printingId(held.printingId),
+      quantity: held.quantity,
+    })),
+    chosenChampionCardId: champion === null ? null : cardId(champion),
+  };
+}
+
 function ruleLabel(rule: DeckLegalityRule): string {
   return match(rule)
     .with({ kind: "sectionRequired" }, ({ section }) => `${section}-required`)
@@ -69,9 +81,19 @@ describe("deck legality", () => {
   it("should accept a deck that satisfies every zone", () => {
     const verification = verifyDeck(withEntries(legalEntries()), RIFTBOUND_STANDARD);
 
-    expect(verification).toEqual({
+    expect(verification).toEqual({ type: "legal", ruleset: RIFTBOUND_STANDARD });
+  });
+
+  it("should judge contents supplied without a saved deck", () => {
+    expect(verifyDeck(contentsOf(legalEntries()), RIFTBOUND_STANDARD)).toEqual({
       type: "legal",
-      deck: withEntries(legalEntries()),
+      ruleset: RIFTBOUND_STANDARD,
+    });
+  });
+
+  it("should report violations for contents supplied without a saved deck", () => {
+    expect(verifyDeck(contentsOf([], null), RIFTBOUND_STANDARD)).toMatchObject({
+      type: "illegal",
       ruleset: RIFTBOUND_STANDARD,
     });
   });

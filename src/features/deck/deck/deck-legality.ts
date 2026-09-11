@@ -7,7 +7,7 @@ import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import {
   deckSectionSchema,
   parseDeckVerification,
-  type Deck,
+  type DeckContents,
   type DeckLegalityViolation,
   type DeckSection,
   type DeckVerification,
@@ -136,14 +136,14 @@ function copyAllowance(section: DeckSection): CopyAllowance {
 
 /** Copies of a card already held in the sections that share this one's allowance. */
 function copiesHeldElsewhere(
-  deck: Deck,
+  contents: DeckContents,
   section: DeckSection,
   cardId: CardId,
   printingId: PrintingId,
 ): number {
   const sharing = sectionsSharingAllowance(section);
 
-  return deck.entries
+  return contents.entries
     .filter(
       (entry) =>
         entry.cardId === cardId &&
@@ -154,21 +154,24 @@ function copiesHeldElsewhere(
 }
 
 function remainingCopies(
-  deck: Deck,
+  contents: DeckContents,
   section: DeckSection,
   cardId: CardId,
   printingId: PrintingId,
 ): CopyAllowance {
   return remainingAllowance(
     copyAllowance(section),
-    copiesHeldElsewhere(deck, section, cardId, printingId),
+    copiesHeldElsewhere(contents, section, cardId, printingId),
   );
 }
 
-function copiesByCard(deck: Deck, sections: readonly DeckSection[]): Map<CardId, HeldCopies> {
+function copiesByCard(
+  contents: DeckContents,
+  sections: readonly DeckSection[],
+): Map<CardId, HeldCopies> {
   const held = new Map<CardId, HeldCopies>();
 
-  for (const entry of deck.entries) {
+  for (const entry of contents.entries) {
     if (!sections.includes(entry.section)) continue;
 
     const current = held.get(entry.cardId);
@@ -183,28 +186,26 @@ function copiesByCard(deck: Deck, sections: readonly DeckSection[]): Map<CardId,
   return held;
 }
 
-function verifyDeck(deck: Deck, ruleset: TournamentRuleset): DeckVerification {
+function verifyDeck(contents: DeckContents, ruleset: TournamentRuleset): DeckVerification {
   const violations = [
-    ...singletonViolations(deck, "legend", "Legend"),
-    ...championViolations(deck),
-    ...ZONE_RULES.flatMap((rule) => zoneViolations(deck, rule)),
-    ...sharedCopyViolations(deck),
+    ...singletonViolations(contents, "legend", "Legend"),
+    ...championViolations(contents),
+    ...ZONE_RULES.flatMap((rule) => zoneViolations(contents, rule)),
+    ...sharedCopyViolations(contents),
   ];
 
   return parseDeckVerification(
-    violations.length === 0
-      ? { type: "legal", deck, ruleset }
-      : { type: "illegal", deck, ruleset, violations },
+    violations.length === 0 ? { type: "legal", ruleset } : { type: "illegal", ruleset, violations },
   );
 }
 
 /** The legend and the chosen champion are each exactly one card, outside every other count. */
 function singletonViolations(
-  deck: Deck,
+  contents: DeckContents,
   section: DeckSection,
   label: string,
 ): readonly DeckLegalityViolation[] {
-  const total = sectionTotal(deck, section);
+  const total = sectionTotal(contents, section);
 
   if (total === 1) return [];
 
@@ -218,8 +219,8 @@ function singletonViolations(
 }
 
 /** The chosen champion is a main deck card, so the deck has to actually hold a copy of it. */
-function championViolations(deck: Deck): readonly DeckLegalityViolation[] {
-  const cardId = deck.chosenChampionCardId;
+function championViolations(contents: DeckContents): readonly DeckLegalityViolation[] {
+  const cardId = contents.chosenChampionCardId;
 
   if (cardId === null) {
     return [
@@ -231,7 +232,7 @@ function championViolations(deck: Deck): readonly DeckLegalityViolation[] {
     ];
   }
 
-  const held = deck.entries.some(
+  const held = contents.entries.some(
     (entry) => entry.section === "mainDeck" && entry.cardId === cardId,
   );
 
@@ -248,9 +249,9 @@ function championViolations(deck: Deck): readonly DeckLegalityViolation[] {
       ];
 }
 
-function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolation[] {
+function zoneViolations(contents: DeckContents, rule: ZoneRule): readonly DeckLegalityViolation[] {
   const violations: DeckLegalityViolation[] = [];
-  const total = sectionTotal(deck, rule.section);
+  const total = sectionTotal(contents, rule.section);
 
   if (total !== rule.requiredCount) {
     violations.push({
@@ -260,21 +261,27 @@ function zoneViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolat
     });
   }
 
-  return [...violations, ...zoneCopyViolations(deck, rule)];
+  return [...violations, ...zoneCopyViolations(contents, rule)];
 }
 
-function zoneCopyViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolation[] {
+function zoneCopyViolations(
+  contents: DeckContents,
+  rule: ZoneRule,
+): readonly DeckLegalityViolation[] {
   return match(rule.section)
     .with("mainDeck", "sideboard", (): readonly DeckLegalityViolation[] => [])
-    .with("runeDeck", "battlefield", () => zoneAllowanceViolations(deck, rule))
+    .with("runeDeck", "battlefield", () => zoneAllowanceViolations(contents, rule))
     .exhaustive();
 }
 
-function zoneAllowanceViolations(deck: Deck, rule: ZoneRule): readonly DeckLegalityViolation[] {
+function zoneAllowanceViolations(
+  contents: DeckContents,
+  rule: ZoneRule,
+): readonly DeckLegalityViolation[] {
   return match(rule.copyAllowance)
     .with({ type: "unlimited" }, (): readonly DeckLegalityViolation[] => [])
     .with({ type: "limited" }, ({ copies }): readonly DeckLegalityViolation[] =>
-      [...copiesByCard(deck, [rule.section])]
+      [...copiesByCard(contents, [rule.section])]
         .filter(([, held]) => held.copies > copies)
         .map(([cardId, held]) => ({
           type: "cardConstraint" as const,
@@ -287,8 +294,8 @@ function zoneAllowanceViolations(deck: Deck, rule: ZoneRule): readonly DeckLegal
     .exhaustive();
 }
 
-function sharedCopyViolations(deck: Deck): readonly DeckLegalityViolation[] {
-  return [...copiesByCard(deck, SHARED_COPY_SECTIONS)]
+function sharedCopyViolations(contents: DeckContents): readonly DeckLegalityViolation[] {
+  return [...copiesByCard(contents, SHARED_COPY_SECTIONS)]
     .filter(([, held]) => held.copies > SHARED_COPY_LIMIT)
     .map(([cardId, held]) => ({
       type: "cardConstraint" as const,
@@ -299,8 +306,8 @@ function sharedCopyViolations(deck: Deck): readonly DeckLegalityViolation[] {
     }));
 }
 
-function sectionTotal(deck: Deck, section: DeckSection): number {
-  return deck.entries
+function sectionTotal(contents: DeckContents, section: DeckSection): number {
+  return contents.entries
     .filter((entry) => entry.section === section)
     .reduce((total, entry) => total + entry.quantity, 0);
 }

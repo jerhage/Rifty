@@ -54,22 +54,13 @@ function useDeckDraft(start: DeckBuildStart) {
 
   const entries = useMemo(() => draftEntries(draft), [draft]);
 
-  /** Judged against a stand-in deck: the draft is not saved yet, so it has no identity. */
   const verification = useMemo(
     () =>
       verifyDeck(
-        {
-          id: "draft",
-          name: draft.name || "Draft",
-          notes: "",
-          createdAt: "1970-01-01T00:00:00.000Z",
-          updatedAt: "1970-01-01T00:00:00.000Z",
-          chosenChampionCardId: draft.chosenChampion?.cardId ?? null,
-          entries,
-        },
+        { entries, chosenChampionCardId: draft.chosenChampion?.cardId ?? null },
         RIFTBOUND_STANDARD,
       ),
-    [draft.chosenChampion, draft.name, entries],
+    [draft.chosenChampion, entries],
   );
 
   return { changeName, draft, entries, pickChampion, pickLegend, setQuantity, verification };

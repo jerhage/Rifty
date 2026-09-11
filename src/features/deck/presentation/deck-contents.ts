@@ -1,7 +1,7 @@
 import type { CardCopy } from "@/features/analysis/card-copy";
-import type { Card } from "@/features/card/card";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import type { Deck, DeckSection } from "@/features/deck/deck/deck";
+import type { DeckSection } from "@/features/deck/deck/deck";
+import type { ResolvedDeckEntry } from "@/features/deck/deck/resolved-deck";
 
 interface DeckGroup {
   readonly title: string;
@@ -30,47 +30,17 @@ const MAIN_DECK_SECTIONS: readonly DeckSection[] = ["mainDeck"];
 const MAIN_DECK_WITH_LEGEND: readonly DeckSection[] = ["legend", "mainDeck"];
 
 function deckCards(
-  deck: Deck,
-  cards: readonly Card[],
-  sections?: readonly DeckSection[],
+  entries: readonly ResolvedDeckEntry[],
+  sections: readonly DeckSection[],
 ): readonly CardCopy[] {
-  const byPrintingId = new Map(cards.map((card) => [card.printingId, card]));
-
-  return deck.entries.flatMap((entry) => {
-    if (sections && !sections.includes(entry.section)) return [];
-
-    const card = byPrintingId.get(entry.printingId);
-
-    return card ? [{ card, quantity: entry.quantity }] : [];
-  });
+  return entries.filter((entry) => sections.includes(entry.section));
 }
 
-function chosenChampionCard(deck: Deck, cards: readonly Card[]): Card | null {
-  const cardId = deck.chosenChampionCardId;
-
-  if (cardId === null) return null;
-
-  const seated = deck.entries.find(
-    (entry) => entry.section === "mainDeck" && entry.cardId === cardId,
-  );
-  const printed = seated ? cards.find((card) => card.printingId === seated.printingId) : undefined;
-
-  return printed ?? cards.find((card) => card.cardId === cardId) ?? null;
-}
-
-function deckGroups(deck: Deck, cards: readonly Card[]): readonly DeckGroup[] {
-  const byPrintingId = new Map(cards.map((card) => [card.printingId, card]));
-
+function deckGroups(entries: readonly ResolvedDeckEntry[]): readonly DeckGroup[] {
   return GROUP_DEFINITIONS.flatMap((definition) => {
-    const resolved = deck.entries.flatMap((entry) => {
-      if (!definition.sections.includes(entry.section)) return [];
-
-      const card = byPrintingId.get(entry.printingId);
-      if (!card) return [];
-      if (definition.typeIds && !definition.typeIds.includes(card.classification.typeId)) return [];
-
-      return [{ card, quantity: entry.quantity }];
-    });
+    const resolved = deckCards(entries, definition.sections).filter(
+      (held) => !definition.typeIds || definition.typeIds.includes(held.card.classification.typeId),
+    );
 
     if (resolved.length === 0) return [];
 
@@ -85,5 +55,5 @@ function deckGroups(deck: Deck, cards: readonly Card[]): readonly DeckGroup[] {
   });
 }
 
-export { MAIN_DECK_SECTIONS, MAIN_DECK_WITH_LEGEND, chosenChampionCard, deckCards, deckGroups };
+export { MAIN_DECK_SECTIONS, MAIN_DECK_WITH_LEGEND, deckCards, deckGroups };
 export type { DeckGroup };

@@ -7,7 +7,8 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import type { Deck, DeckVerification } from "@/features/deck/deck/deck";
+import type { DeckVerification } from "@/features/deck/deck/deck";
+import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 import { useTheme } from "@/hooks/use-theme";
 
 import { DeckAnalysisPanels } from "../components/detail/deck-analysis-panels";
@@ -17,27 +18,26 @@ import { legalityColor, outstandingFixesLabel } from "../deck-legality-format";
 import { deckCountLabel, editedLabel } from "../deck-summary-format";
 
 interface DeckDetailScreenProps {
-  readonly cards: readonly Card[];
-  readonly deck: Deck;
   readonly now: string;
   readonly onDrawSimulation: () => void;
   readonly onEdit: () => void;
   readonly onOpenCard: (card: Card) => void;
+  readonly resolvedDeck: ResolvedDeck;
   readonly verification: DeckVerification;
 }
 
 function DeckDetailScreen({
-  cards,
-  deck,
   now,
   onDrawSimulation,
   onEdit,
   onOpenCard,
+  resolvedDeck,
   verification,
 }: DeckDetailScreenProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const groups = deckGroups(deck, cards);
+  const { deck, entries } = resolvedDeck;
+  const groups = deckGroups(entries);
 
   return (
     <ThemedView style={styles.screen}>
@@ -76,7 +76,7 @@ function DeckDetailScreen({
           <Button label="Draw sim" onPress={onDrawSimulation} variant="secondary" />
         </View>
 
-        <DeckAnalysisPanels cards={cards} deck={deck} />
+        <DeckAnalysisPanels entries={entries} />
 
         {groups.map((group) => (
           <DeckSectionGroup group={group} key={group.title} onOpenCard={onOpenCard} />

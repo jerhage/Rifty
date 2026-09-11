@@ -2,8 +2,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import type { Card } from "@/features/card/card";
-import type { Deck } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
+import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 import { DeckDetailData } from "@/features/deck/presentation/data/deck-detail-data";
 import { DeckDetailScreen } from "@/features/deck/presentation/screens/deck-detail-screen";
 
@@ -13,24 +13,23 @@ function DeckDetailRoute() {
 
   return (
     <DeckDetailData
-      cardCounter={cardDependencies.cardRepository}
-      cardLister={cardDependencies.cardRepository}
+      cardByCardIdFinder={cardDependencies.cardRepository}
+      cardsByPrintingIdsFinder={cardDependencies.cardRepository}
       deckFinder={decks.deckRepository}
       deckId={id}
     >
-      {({ cards, deck }) => <DeckDetail cards={cards} deck={deck} />}
+      {({ resolvedDeck }) => <DeckDetail resolvedDeck={resolvedDeck} />}
     </DeckDetailData>
   );
 }
 
-function DeckDetail({ cards, deck }: { readonly cards: readonly Card[]; readonly deck: Deck }) {
+function DeckDetail({ resolvedDeck }: { readonly resolvedDeck: ResolvedDeck }) {
   const router = useRouter();
   const { clock } = useAppDependencies();
+  const { deck } = resolvedDeck;
 
   return (
     <DeckDetailScreen
-      cards={cards}
-      deck={deck}
       now={clock.now()}
       onDrawSimulation={() =>
         router.push({ pathname: "/decks/[id]/draw", params: { id: deck.id } })
@@ -39,6 +38,7 @@ function DeckDetail({ cards, deck }: { readonly cards: readonly Card[]; readonly
       onOpenCard={(card: Card) =>
         router.push({ pathname: "/cards/[id]", params: { id: card.printingId } })
       }
+      resolvedDeck={resolvedDeck}
       verification={verifyDeck(deck, RIFTBOUND_STANDARD)}
     />
   );

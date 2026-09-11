@@ -10,14 +10,13 @@ import type { RandomSource } from "@/application/ports/random-source";
 import { drawOdds, handStats } from "@/features/analysis/draw-simulation";
 import { DrawOddsPanel } from "@/features/analysis/presentation/components/draw-odds";
 import { HandStatsPanel } from "@/features/analysis/presentation/components/hand-stats";
-import type { Card } from "@/features/card/card";
-import type { Deck } from "@/features/deck/deck/deck";
+import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 import { useTheme } from "@/hooks/use-theme";
 import { shuffle } from "@/shared/shuffle";
 
 import { HandCardTile } from "../components/draw/hand-card-tile";
 import { MulliganStatusBar } from "../components/draw/mulligan-status-bar";
-import { MAIN_DECK_SECTIONS, chosenChampionCard, deckCards } from "../deck-contents";
+import { MAIN_DECK_SECTIONS, deckCards } from "../deck-contents";
 import {
   handLabel,
   mulliganActionLabel,
@@ -28,26 +27,27 @@ import {
 import { useDrawSimulation } from "../hooks/use-draw-simulation";
 
 interface DrawSimulationScreenProps {
-  readonly cards: readonly Card[];
-  readonly deck: Deck;
   readonly onBack: () => void;
   readonly onKeep: () => void;
   readonly randomSource: RandomSource;
+  readonly resolvedDeck: ResolvedDeck;
 }
 
 function DrawSimulationScreen({
-  cards,
-  deck,
   onBack,
   onKeep,
   randomSource,
+  resolvedDeck,
 }: DrawSimulationScreenProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const copies = useMemo(() => deckCards(deck, cards, MAIN_DECK_SECTIONS), [cards, deck]);
+  const copies = useMemo(
+    () => deckCards(resolvedDeck.entries, MAIN_DECK_SECTIONS),
+    [resolvedDeck.entries],
+  );
   const odds = useMemo(
-    () => drawOdds(copies, chosenChampionCard(deck, cards)),
-    [cards, copies, deck],
+    () => drawOdds(copies, resolvedDeck.chosenChampionCard),
+    [copies, resolvedDeck.chosenChampionCard],
   );
   const shuffleCards = useCallback(
     <Item,>(items: readonly Item[]): readonly Item[] => shuffle(items, () => randomSource.next()),

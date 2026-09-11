@@ -4,19 +4,12 @@ import { Spacing } from "@/constants/theme";
 import { AttributeCurve } from "@/features/analysis/presentation/components/attribute-curve";
 import { KeywordTally } from "@/features/analysis/presentation/components/keyword-tally";
 import { SpeedMix } from "@/features/analysis/presentation/components/speed-mix";
-import type { Card } from "@/features/card/card";
-import type { Deck } from "@/features/deck/deck/deck";
+import type { ResolvedDeckEntry } from "@/features/deck/deck/resolved-deck";
 
 import { deckAnalysis } from "../../deck-analysis-format";
 
-function DeckAnalysisPanels({
-  cards,
-  deck,
-}: {
-  readonly cards: readonly Card[];
-  readonly deck: Deck;
-}) {
-  const { abilityCards, energyBuckets, keywords, speeds } = deckAnalysis(deck, cards);
+function DeckAnalysisPanels({ entries }: { readonly entries: readonly ResolvedDeckEntry[] }) {
+  const { abilityCards, energyBuckets, keywords, speeds } = deckAnalysis(entries);
 
   return (
     <View style={styles.panels}>

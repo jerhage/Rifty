@@ -32,12 +32,12 @@ function DeckBuildRoute() {
       {(keywords) =>
         deckId ? (
           <DeckDetailData
-            cardCounter={cardDependencies.cardRepository}
-            cardLister={cardDependencies.cardRepository}
+            cardByCardIdFinder={cardDependencies.cardRepository}
+            cardsByPrintingIdsFinder={cardDependencies.cardRepository}
             deckFinder={decks.deckRepository}
             deckId={deckId}
           >
-            {({ cards, deck }) => (
+            {({ resolvedDeck }) => (
               <DeckBuilder
                 capabilities={capabilities}
                 cardCounter={cardDependencies.cardRepository}
@@ -46,7 +46,11 @@ function DeckBuildRoute() {
                 onExit={goBack}
                 onOpenCard={openCard}
                 onSaved={goBack}
-                start={{ type: "edit", cards, deck }}
+                start={{
+                  type: "edit",
+                  cards: resolvedDeck.entries.map((entry) => entry.card),
+                  deck: resolvedDeck.deck,
+                }}
               />
             )}
           </DeckDetailData>

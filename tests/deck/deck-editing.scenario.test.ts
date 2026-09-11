@@ -6,10 +6,10 @@ import { renameDeck } from "@/features/deck/deck/use-cases/rename-deck";
 import { saveDeck } from "@/features/deck/deck/use-cases/save-deck";
 import { setDeckCardQuantity } from "@/features/deck/deck/use-cases/set-deck-card-quantity";
 
-import { createSqliteScenarioStore } from "../sqlite-scenario-store";
-import { cardId, deck, fixedClock, printingId, sequentialIds } from "./fixtures";
+import type { SqliteScenarioStore } from "../sqlite-scenario-store";
+import { cardId, deck, deckScenarioStore, fixedClock, printingId, sequentialIds } from "./fixtures";
 
-function capabilities(repository: ReturnType<typeof createSqliteScenarioStore>["deckStore"]) {
+function capabilities(repository: SqliteScenarioStore["deckStore"]) {
   return {
     clock: fixedClock("2026-09-07T12:00:00.000Z", "2026-09-07T13:00:00.000Z"),
     deckFinder: repository.repository,
@@ -22,7 +22,7 @@ function capabilities(repository: ReturnType<typeof createSqliteScenarioStore>["
 
 describe("deck editing scenarios", () => {
   it("should create an empty deck that is immediately readable", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
 
     await expect(createDeck("Ember Tempo", dependencies)).resolves.toEqual({
@@ -45,7 +45,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should refuse a name that differs from an existing deck only by case", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     await createDeck("Ember Tempo", dependencies);
 
@@ -56,7 +56,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should rename a deck and stamp it, but let it keep its own name", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { name: "Ember Tempo" }));
     store.seedDeck(deck("iron", { name: "Iron Wall" }));
@@ -79,7 +79,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should add, update and remove a card quantity", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));
 
@@ -135,7 +135,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should keep the same card in different sections apart", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));
 
@@ -173,7 +173,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should refuse a fourth copy across the zones that share an allowance", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(
       deck("ember", {
@@ -214,7 +214,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should refuse a fourth copy of a card added under a second printing", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(
       deck("ember", {
@@ -240,7 +240,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should refuse to save a card held four times across two of its printings", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
 
     const rejected = await saveDeck(
@@ -284,7 +284,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should accept a quantity that leaves the main deck short of its required size", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));
 
@@ -304,7 +304,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should accept twelve copies of one card in the rune deck", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("ember", { entries: [] }));
 
@@ -324,7 +324,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should save a whole deck, then save over it with what the builder holds", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     const draft = {
       id: "ember",
@@ -381,7 +381,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should refuse to save a deck over another deck's name, but keep its own", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(deck("iron", { name: "Iron Wall" }));
     store.seedDeck(deck("ember", { name: "Ember Tempo" }));
@@ -416,7 +416,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should refuse a save that puts a fourth copy of a card in the shared zones", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
 
     const rejected = await saveDeck(
@@ -450,7 +450,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should save a deck whose zones are still the wrong size", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
 
     await expect(
@@ -477,7 +477,7 @@ describe("deck editing scenarios", () => {
   });
 
   it("should delete a deck and the entries belonging to it", async () => {
-    const store = createSqliteScenarioStore();
+    const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(
       deck("ember", {

@@ -11,18 +11,17 @@ function DrawSimulationRoute() {
 
   return (
     <DeckDetailData
-      cardCounter={cardDependencies.cardRepository}
-      cardLister={cardDependencies.cardRepository}
+      cardByCardIdFinder={cardDependencies.cardRepository}
+      cardsByPrintingIdsFinder={cardDependencies.cardRepository}
       deckFinder={decks.deckRepository}
       deckId={id}
     >
-      {({ cards, deck }) => (
+      {({ resolvedDeck }) => (
         <DrawSimulationScreen
-          cards={cards}
-          deck={deck}
           onBack={() => router.back()}
           onKeep={() => router.back()}
           randomSource={randomSource}
+          resolvedDeck={resolvedDeck}
         />
       )}
     </DeckDetailData>

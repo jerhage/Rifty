@@ -6,8 +6,45 @@ import { cardIdSchema, type CardId } from "@/features/card/value-objects/card-id
 import { printingIdSchema, type PrintingId } from "@/features/card/value-objects/printing-id";
 import { deckSchema, parseDeck, type Deck } from "@/features/deck/deck/deck";
 
+import { card, cardSet } from "../card/fixtures";
+import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
+
 type DeckInput = z.input<typeof deckSchema>;
 type DeckEntryInput = DeckInput["entries"][number];
+
+const DECK_CATALOG_SET = cardSet("OGN", "2026-01-01T00:00:00", "Origins");
+const DECK_CATALOG_PRINTINGS: readonly {
+  readonly cardId: string;
+  readonly printingId: string;
+}[] = [
+  { cardId: "Card 001", printingId: "ogn-001" },
+  { cardId: "Ember Adept", printingId: "ogn-014" },
+  { cardId: "Ember Answer", printingId: "ogn-050" },
+  { cardId: "Ember Blade", printingId: "ogn-020" },
+  { cardId: "Ember Field", printingId: "ogn-100" },
+  { cardId: "Ember Hero", printingId: "ogn-hero" },
+  { cardId: "Ember Hero", printingId: "ogn-hero-alt" },
+  { cardId: "Ember Legend", printingId: "ogn-003" },
+  { cardId: "Ember Spark", printingId: "ogn-1" },
+  { cardId: "Ember Spark", printingId: "ogn-a" },
+  { cardId: "Fury Rune", printingId: "ogn-rune" },
+];
+
+/** A store whose catalog already holds every card and printing the deck scenarios reference. */
+function deckScenarioStore(): SqliteScenarioStore {
+  const store = createSqliteScenarioStore();
+  store.seedSet(DECK_CATALOG_SET);
+  for (const entry of DECK_CATALOG_PRINTINGS) {
+    store.seedCard(
+      card(entry.printingId, DECK_CATALOG_SET.code, {
+        cardId: cardId(entry.cardId),
+        name: entry.cardId,
+      }),
+    );
+  }
+
+  return store;
+}
 
 function cardId(value: string): CardId {
   return cardIdSchema.parse(value);
@@ -46,5 +83,5 @@ function sequentialIds(prefix = "deck"): IdGenerator {
   return { next: () => `${prefix}-${++index}` };
 }
 
-export { cardId, deck, fixedClock, printingId, sequentialIds };
+export { cardId, deck, deckScenarioStore, fixedClock, printingId, sequentialIds };
 export type { DeckEntryInput };

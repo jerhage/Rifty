@@ -7,8 +7,7 @@ import {
   type KeywordMix,
   type SpeedShare,
 } from "@/features/analysis/card-metrics";
-import type { Card } from "@/features/card/card";
-import type { Deck } from "@/features/deck/deck/deck";
+import type { ResolvedDeckEntry } from "@/features/deck/deck/resolved-deck";
 
 import { MAIN_DECK_SECTIONS, MAIN_DECK_WITH_LEGEND, deckCards } from "./deck-contents";
 
@@ -19,9 +18,9 @@ interface DeckAnalysis {
   readonly speeds: readonly SpeedShare[];
 }
 
-function deckAnalysis(deck: Deck, cards: readonly Card[]): DeckAnalysis {
-  const mainDeckCopies = deckCards(deck, cards, MAIN_DECK_SECTIONS);
-  const abilityCopies = deckCards(deck, cards, MAIN_DECK_WITH_LEGEND);
+function deckAnalysis(entries: readonly ResolvedDeckEntry[]): DeckAnalysis {
+  const mainDeckCopies = deckCards(entries, MAIN_DECK_SECTIONS);
+  const abilityCopies = deckCards(entries, MAIN_DECK_WITH_LEGEND);
 
   return {
     abilityCards: abilityCardCount(abilityCopies),

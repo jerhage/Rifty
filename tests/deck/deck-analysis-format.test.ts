@@ -1,7 +1,7 @@
+import type { ResolvedDeckEntry } from "@/features/deck/deck/resolved-deck";
 import { deckAnalysis } from "@/features/deck/presentation/deck-analysis-format";
 
 import { card, carriedKeyword } from "../card/fixtures";
-import { deck } from "./fixtures";
 
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",
@@ -32,20 +32,17 @@ const bench = card("bench", "OGN", {
   attributes: { energy: 5, might: 5, power: null },
 });
 
-const cards = [legend, cheap, mid, rune, bench];
-const built = deck("d1", {
-  entries: [
-    { section: "legend", cardId: legend.cardId, printingId: legend.printingId, quantity: 1 },
-    { section: "mainDeck", cardId: cheap.cardId, printingId: cheap.printingId, quantity: 3 },
-    { section: "mainDeck", cardId: mid.cardId, printingId: mid.printingId, quantity: 2 },
-    { section: "runeDeck", cardId: rune.cardId, printingId: rune.printingId, quantity: 4 },
-    { section: "sideboard", cardId: bench.cardId, printingId: bench.printingId, quantity: 1 },
-  ],
-});
+const built: readonly ResolvedDeckEntry[] = [
+  { section: "legend", card: legend, quantity: 1 },
+  { section: "mainDeck", card: cheap, quantity: 3 },
+  { section: "mainDeck", card: mid, quantity: 2 },
+  { section: "runeDeck", card: rune, quantity: 4 },
+  { section: "sideboard", card: bench, quantity: 1 },
+];
 
 describe("deck analysis", () => {
   it("should build the energy curve from the main deck alone", () => {
-    expect(deckAnalysis(built, cards).energyBuckets).toEqual([
+    expect(deckAnalysis(built).energyBuckets).toEqual([
       { label: "0-1", count: 3 },
       { label: "2", count: 0 },
       { label: "3", count: 2 },
@@ -55,11 +52,11 @@ describe("deck analysis", () => {
   });
 
   it("should count ability cards across the legend and the main deck", () => {
-    expect(deckAnalysis(built, cards).abilityCards).toBe(6);
+    expect(deckAnalysis(built).abilityCards).toBe(6);
   });
 
   it("should mix speeds across the legend and the main deck", () => {
-    expect(deckAnalysis(built, cards).speeds).toEqual([
+    expect(deckAnalysis(built).speeds).toEqual([
       { speed: "normal", count: 3, share: 3 / 6 },
       { speed: "action", count: 2, share: 2 / 6 },
       { speed: "reaction", count: 1, share: 1 / 6 },
@@ -67,7 +64,7 @@ describe("deck analysis", () => {
   });
 
   it("should tally the keywords the legend and the main deck carry", () => {
-    expect(deckAnalysis(built, cards).keywords).toEqual({
+    expect(deckAnalysis(built).keywords).toEqual({
       carrying: 4,
       keywords: [
         { id: "shield", name: "Shield", count: 3, totalValue: 6 },
@@ -76,8 +73,8 @@ describe("deck analysis", () => {
     });
   });
 
-  it("should measure nothing when no entry resolves to a card", () => {
-    expect(deckAnalysis(built, [])).toEqual({
+  it("should measure nothing when the deck holds no entries", () => {
+    expect(deckAnalysis([])).toEqual({
       abilityCards: 0,
       energyBuckets: [
         { label: "0-1", count: 0 },

@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-sqlite";
 
 import type { Card } from "@/features/card/card";
@@ -44,6 +45,7 @@ import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-reposito
 interface SqliteScenarioStore extends ReferenceDataStore {
   readonly deckStore: DeckDataStore;
   close(): void;
+  removeCardMedia(printingId: string): void;
   seedCard(card: Card): void;
   seedDeck(deck: Deck): void;
   seedSet(cardSet: CardSet): void;
@@ -58,9 +60,13 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
 
   const database = drizzle({ client });
   const seededCardIds = new Set<string>();
+  const seededPrintingIds = new Set<string>();
+  const seededSetCodes = new Set<string>();
   let nextCardKeywordId = 1;
 
   function seedSet(cardSet: CardSet): void {
+    if (seededSetCodes.has(cardSet.code)) return;
+    seededSetCodes.add(cardSet.code);
     database
       .insert(cardSets)
       .values({
@@ -87,6 +93,8 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
   }
 
   function seedCard(card: Card): void {
+    if (seededPrintingIds.has(card.printingId)) return;
+    seededPrintingIds.add(card.printingId);
     database
       .insert(cardTypes)
       .values({ id: card.classification.typeId, name: card.classification.typeId })
@@ -135,9 +143,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         poolCode: null,
         rarityId: card.classification.rarityId,
         printedName: card.name,
-        isAlternateArt: card.isAlternateArt,
-        isOvernumbered: card.isOvernumbered,
-        isSignature: card.isSignature,
+        finish: card.finish,
         flavourText: card.rulesText.flavour,
         sourceUpdatedAt: card.sourceUpdatedAt,
         isCanonical: true,
@@ -268,11 +274,16 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
     }
   }
 
+  function removeCardMedia(printingId: string): void {
+    database.delete(cardMedia).where(eq(cardMedia.printingId, printingId)).run();
+  }
+
   return {
     cards: new SqliteCardRepository(database, TEST_IMAGE_BASE_URL),
     keywords: new SqliteKeywordRepository(database),
     sets: new SqliteSetRepository(database),
     deckStore: { repository: new SqliteDeckRepository(database) },
+    removeCardMedia,
     seedCard,
     seedDeck,
     seedSet,
@@ -293,5 +304,5 @@ function applyMigrations(client: DatabaseSync): void {
   }
 }
 
-export { createSqliteScenarioStore };
+export { applyMigrations, createSqliteScenarioStore };
 export type { SqliteScenarioStore };

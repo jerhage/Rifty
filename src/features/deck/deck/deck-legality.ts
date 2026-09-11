@@ -7,7 +7,7 @@ import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import {
   deckSectionSchema,
   parseDeckVerification,
-  type DeckContents,
+  type DeckComposition,
   type DeckLegalityViolation,
   type DeckSection,
   type DeckVerification,
@@ -136,14 +136,14 @@ function copyAllowance(section: DeckSection): CopyAllowance {
 
 /** Copies of a card already held in the sections that share this one's allowance. */
 function copiesHeldElsewhere(
-  contents: DeckContents,
+  composition: DeckComposition,
   section: DeckSection,
   cardId: CardId,
   printingId: PrintingId,
 ): number {
   const sharing = sectionsSharingAllowance(section);
 
-  return contents.entries
+  return composition.entries
     .filter(
       (entry) =>
         entry.cardId === cardId &&
@@ -154,24 +154,24 @@ function copiesHeldElsewhere(
 }
 
 function remainingCopies(
-  contents: DeckContents,
+  composition: DeckComposition,
   section: DeckSection,
   cardId: CardId,
   printingId: PrintingId,
 ): CopyAllowance {
   return remainingAllowance(
     copyAllowance(section),
-    copiesHeldElsewhere(contents, section, cardId, printingId),
+    copiesHeldElsewhere(composition, section, cardId, printingId),
   );
 }
 
 function copiesByCard(
-  contents: DeckContents,
+  composition: DeckComposition,
   sections: readonly DeckSection[],
 ): Map<CardId, HeldCopies> {
   const held = new Map<CardId, HeldCopies>();
 
-  for (const entry of contents.entries) {
+  for (const entry of composition.entries) {
     if (!sections.includes(entry.section)) continue;
 
     const current = held.get(entry.cardId);
@@ -186,12 +186,12 @@ function copiesByCard(
   return held;
 }
 
-function verifyDeck(contents: DeckContents, ruleset: TournamentRuleset): DeckVerification {
+function verifyDeck(composition: DeckComposition, ruleset: TournamentRuleset): DeckVerification {
   const violations = [
-    ...singletonViolations(contents, "legend", "Legend"),
-    ...championViolations(contents),
-    ...ZONE_RULES.flatMap((rule) => zoneViolations(contents, rule)),
-    ...sharedCopyViolations(contents),
+    ...singletonViolations(composition, "legend", "Legend"),
+    ...championViolations(composition),
+    ...ZONE_RULES.flatMap((rule) => zoneViolations(composition, rule)),
+    ...sharedCopyViolations(composition),
   ];
 
   return parseDeckVerification(
@@ -201,11 +201,11 @@ function verifyDeck(contents: DeckContents, ruleset: TournamentRuleset): DeckVer
 
 /** The legend and the chosen champion are each exactly one card, outside every other count. */
 function singletonViolations(
-  contents: DeckContents,
+  composition: DeckComposition,
   section: DeckSection,
   label: string,
 ): readonly DeckLegalityViolation[] {
-  const total = sectionTotal(contents, section);
+  const total = sectionTotal(composition, section);
 
   if (total === 1) return [];
 
@@ -219,8 +219,8 @@ function singletonViolations(
 }
 
 /** The chosen champion is a main deck card, so the deck has to actually hold a copy of it. */
-function championViolations(contents: DeckContents): readonly DeckLegalityViolation[] {
-  const cardId = contents.chosenChampionCardId;
+function championViolations(composition: DeckComposition): readonly DeckLegalityViolation[] {
+  const cardId = composition.chosenChampionCardId;
 
   if (cardId === null) {
     return [
@@ -232,7 +232,7 @@ function championViolations(contents: DeckContents): readonly DeckLegalityViolat
     ];
   }
 
-  const held = contents.entries.some(
+  const held = composition.entries.some(
     (entry) => entry.section === "mainDeck" && entry.cardId === cardId,
   );
 
@@ -249,9 +249,12 @@ function championViolations(contents: DeckContents): readonly DeckLegalityViolat
       ];
 }
 
-function zoneViolations(contents: DeckContents, rule: ZoneRule): readonly DeckLegalityViolation[] {
+function zoneViolations(
+  composition: DeckComposition,
+  rule: ZoneRule,
+): readonly DeckLegalityViolation[] {
   const violations: DeckLegalityViolation[] = [];
-  const total = sectionTotal(contents, rule.section);
+  const total = sectionTotal(composition, rule.section);
 
   if (total !== rule.requiredCount) {
     violations.push({
@@ -261,27 +264,27 @@ function zoneViolations(contents: DeckContents, rule: ZoneRule): readonly DeckLe
     });
   }
 
-  return [...violations, ...zoneCopyViolations(contents, rule)];
+  return [...violations, ...zoneCopyViolations(composition, rule)];
 }
 
 function zoneCopyViolations(
-  contents: DeckContents,
+  composition: DeckComposition,
   rule: ZoneRule,
 ): readonly DeckLegalityViolation[] {
   return match(rule.section)
     .with("mainDeck", "sideboard", (): readonly DeckLegalityViolation[] => [])
-    .with("runeDeck", "battlefield", () => zoneAllowanceViolations(contents, rule))
+    .with("runeDeck", "battlefield", () => zoneAllowanceViolations(composition, rule))
     .exhaustive();
 }
 
 function zoneAllowanceViolations(
-  contents: DeckContents,
+  composition: DeckComposition,
   rule: ZoneRule,
 ): readonly DeckLegalityViolation[] {
   return match(rule.copyAllowance)
     .with({ type: "unlimited" }, (): readonly DeckLegalityViolation[] => [])
     .with({ type: "limited" }, ({ copies }): readonly DeckLegalityViolation[] =>
-      [...copiesByCard(contents, [rule.section])]
+      [...copiesByCard(composition, [rule.section])]
         .filter(([, held]) => held.copies > copies)
         .map(([cardId, held]) => ({
           type: "cardConstraint" as const,
@@ -294,8 +297,8 @@ function zoneAllowanceViolations(
     .exhaustive();
 }
 
-function sharedCopyViolations(contents: DeckContents): readonly DeckLegalityViolation[] {
-  return [...copiesByCard(contents, SHARED_COPY_SECTIONS)]
+function sharedCopyViolations(composition: DeckComposition): readonly DeckLegalityViolation[] {
+  return [...copiesByCard(composition, SHARED_COPY_SECTIONS)]
     .filter(([, held]) => held.copies > SHARED_COPY_LIMIT)
     .map(([cardId, held]) => ({
       type: "cardConstraint" as const,
@@ -306,8 +309,8 @@ function sharedCopyViolations(contents: DeckContents): readonly DeckLegalityViol
     }));
 }
 
-function sectionTotal(contents: DeckContents, section: DeckSection): number {
-  return contents.entries
+function sectionTotal(composition: DeckComposition, section: DeckSection): number {
+  return composition.entries
     .filter((entry) => entry.section === section)
     .reduce((total, entry) => total + entry.quantity, 0);
 }

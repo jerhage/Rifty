@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 
-import type { Deck, DeckContents, DeckLegalityRule } from "@/features/deck/deck/deck";
+import type { Deck, DeckComposition, DeckLegalityRule } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 
 import { cardId, deck, printingId, type DeckEntryInput } from "./fixtures";
@@ -46,7 +46,10 @@ function withEntries(entries: DeckEntryInput[], champion: string | null = CHAMPI
   return deck("under-test", { entries, chosenChampionCardId: champion });
 }
 
-function contentsOf(entries: DeckEntryInput[], champion: string | null = CHAMPION): DeckContents {
+function compositionOf(
+  entries: DeckEntryInput[],
+  champion: string | null = CHAMPION,
+): DeckComposition {
   return {
     entries: entries.map((held) => ({
       section: held.section,
@@ -84,15 +87,15 @@ describe("deck legality", () => {
     expect(verification).toEqual({ type: "legal", ruleset: RIFTBOUND_STANDARD });
   });
 
-  it("should judge contents supplied without a saved deck", () => {
-    expect(verifyDeck(contentsOf(legalEntries()), RIFTBOUND_STANDARD)).toEqual({
+  it("should judge composition supplied without a saved deck", () => {
+    expect(verifyDeck(compositionOf(legalEntries()), RIFTBOUND_STANDARD)).toEqual({
       type: "legal",
       ruleset: RIFTBOUND_STANDARD,
     });
   });
 
-  it("should report violations for contents supplied without a saved deck", () => {
-    expect(verifyDeck(contentsOf([], null), RIFTBOUND_STANDARD)).toMatchObject({
+  it("should report violations for composition supplied without a saved deck", () => {
+    expect(verifyDeck(compositionOf([], null), RIFTBOUND_STANDARD)).toMatchObject({
       type: "illegal",
       ruleset: RIFTBOUND_STANDARD,
     });

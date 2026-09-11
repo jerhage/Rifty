@@ -121,7 +121,7 @@ type DeckName = z.output<typeof deckNameSchema>;
 type DeckSection = z.output<typeof deckSectionSchema>;
 type DeckEntry = z.output<typeof deckEntrySchema>;
 type Deck = z.output<typeof deckSchema>;
-interface DeckContents {
+interface DeckComposition {
   readonly entries: readonly DeckEntry[];
   readonly chosenChampionCardId: CardId | null;
 }
@@ -151,7 +151,7 @@ export {
 };
 export type {
   Deck,
-  DeckContents,
+  DeckComposition,
   DeckEntry,
   DeckId,
   DeckLegalityRule,

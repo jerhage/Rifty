@@ -23,7 +23,6 @@ function seedCatalog(db: ReturnType<typeof drizzle>): void {
   db.insert(cardSets)
     .values({
       code: "OGN",
-      sourceId: "source-ogn",
       name: "Origins",
       declaredCardCount: 1,
       publishedOn: "2025-10-31T00:00:00",

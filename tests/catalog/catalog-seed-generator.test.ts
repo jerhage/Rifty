@@ -6,7 +6,6 @@ const SPIRITFORGED = "2026-02-13T00:00:00";
 
 function set(code: string, publishedOn: string = ORIGINS): RawSet {
   return {
-    id: `source-${code}`,
     name: `Set ${code}`,
     set_id: code,
     card_count: 10,

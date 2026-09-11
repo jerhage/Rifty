@@ -136,7 +136,6 @@ CREATE TABLE `catalog_seed_state` (
 --> statement-breakpoint
 CREATE TABLE `card_set` (
 	`code` text PRIMARY KEY,
-	`source_id` text NOT NULL UNIQUE,
 	`name` text NOT NULL,
 	`declared_card_count` integer NOT NULL,
 	`published_on` text NOT NULL

@@ -5,7 +5,6 @@ import { setCodeSchema } from "@/features/set/value-objects/set-code";
 
 const cardSetSchema = z.object({
   code: setCodeSchema,
-  sourceId: z.string().trim().min(1),
   name: z.string().trim().min(1),
   declaredCardCount: z.number().int().nonnegative(),
   publishedOn: z.string().trim().min(1),

@@ -24,7 +24,6 @@ function tokenKeyword(id: string, name: string, value: number | null = null): Ca
 function cardSet(code: string, publishedOn: string, name = code): CardSet {
   return {
     code,
-    sourceId: `source-${code}`,
     name,
     declaredCardCount: 100,
     publishedOn,

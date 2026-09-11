@@ -80,7 +80,6 @@ const nullableInteger = z.number().int().nullish();
 const marketplaceId = z.union([z.string(), z.array(z.string())]).nullish();
 const orientationSchema = z.enum(["landscape", "portrait"]);
 const rawSetSchema = z.object({
-  id: z.string(),
   name: z.string(),
   set_id: z.string(),
   card_count: z.number().int(),
@@ -391,7 +390,6 @@ function buildSeed(
   const cardSets = sets
     .map((value) => ({
       code: value.set_id,
-      sourceId: value.id,
       name: value.name,
       declaredCardCount: value.card_count,
       publishedOn: value.published_on,

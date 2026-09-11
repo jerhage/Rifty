@@ -8,7 +8,6 @@ const cardSets = sqliteTable(
   "card_set",
   {
     code: text().primaryKey(),
-    sourceId: text("source_id").notNull().unique(),
     name: text().notNull(),
     declaredCardCount: integer("declared_card_count").notNull(),
     publishedOn: text("published_on").notNull(),
@@ -34,7 +33,6 @@ const setMarketplaceReferences = sqliteTable(
 const cardSetSelectSchema = createSelectSchema(cardSets);
 const cardSetInsertSchema = createInsertSchema(cardSets, {
   code: (schema) => schema.trim().min(1),
-  sourceId: (schema) => schema.trim().min(1),
   name: (schema) => schema.trim().min(1),
   declaredCardCount: (schema) => schema.int().nonnegative(),
   publishedOn: (schema) => schema.min(1),

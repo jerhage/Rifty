@@ -71,7 +71,6 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
       .insert(cardSets)
       .values({
         code: cardSet.code,
-        sourceId: cardSet.sourceId,
         name: cardSet.name,
         declaredCardCount: cardSet.declaredCardCount,
         publishedOn: cardSet.publishedOn,

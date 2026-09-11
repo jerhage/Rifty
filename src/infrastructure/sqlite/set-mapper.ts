@@ -14,7 +14,6 @@ function toDomainCardSet({ cardSet, marketplaceReferences }: SetPersistenceShape
 
   return parseCardSet({
     code: persistedSet.code,
-    sourceId: persistedSet.sourceId,
     name: persistedSet.name,
     declaredCardCount: persistedSet.declaredCardCount,
     publishedOn: persistedSet.publishedOn,

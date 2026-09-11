@@ -91,7 +91,6 @@ const TAXONOMY = {
   cardSets: [
     {
       code: "OGN",
-      sourceId: "source-ogn",
       name: "Origins",
       declaredCardCount: 2,
       publishedOn: "2025-10-31T00:00:00",
@@ -249,7 +248,6 @@ describe("reference seeder", () => {
         cardSets: [
           {
             code: "OGN",
-            sourceId: "source-ogn-renamed",
             name: "Origins, revised",
             declaredCardCount: 9,
             publishedOn: "2025-11-01T00:00:00",
@@ -266,7 +264,6 @@ describe("reference seeder", () => {
 
     const [set] = await db.select().from(cardSets).where(eq(cardSets.code, "OGN"));
     expect(set).toMatchObject({
-      sourceId: "source-ogn-renamed",
       name: "Origins, revised",
       declaredCardCount: 9,
       publishedOn: "2025-11-01T00:00:00",

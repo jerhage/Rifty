@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
@@ -9,7 +9,11 @@ import type { CardListCriteria } from "@/features/card/card-list-criteria";
 import type { CardSummaryLister } from "@/features/card/card-summary-lister";
 import type { CardSummary } from "@/features/card/card-summary";
 import { listCardSummaries } from "@/features/card/use-cases/list-card-summaries";
-import { useAsyncPagedResult, type PagingState } from "@/hooks/use-async-paged-result";
+import {
+  useAsyncPagedResult,
+  type PagedRun,
+  type PagingState,
+} from "@/hooks/use-async-paged-result";
 import { useStableValue } from "@/hooks/use-stable-value";
 
 const PAGE_SIZE = 30;
@@ -39,16 +43,19 @@ function CardSummariesData({
   criteria,
 }: CardSummariesDataProps) {
   const stableCriteria = useStableValue(criteria);
-  const { state, loadMore, refresh, reload } = useAsyncPagedResult<CardSummary>({
-    deps: [cardCounter, cardSummaryLister, stableCriteria],
-    loadMoreErrorMessage: "Could not load more cards.",
-    pageSize: PAGE_SIZE,
-    run: ({ limit, offset }, options) =>
+  const run = useCallback<PagedRun<CardSummary>>(
+    ({ limit, offset }, options) =>
       listCardSummaries(
         { ...stableCriteria, limit, offset },
         { cardCounter, cardSummaryLister },
         options,
       ),
+    [cardCounter, cardSummaryLister, stableCriteria],
+  );
+  const { state, loadMore, refresh, reload } = useAsyncPagedResult<CardSummary>({
+    loadMoreErrorMessage: "Could not load more cards.",
+    pageSize: PAGE_SIZE,
+    run,
   });
 
   return match(state)

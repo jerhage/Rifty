@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { ErrorState } from "@/components/ui/atoms/error-state";
@@ -7,8 +7,7 @@ import type { Card } from "@/features/card/card";
 import type { CardFinder } from "@/features/card/card-finder";
 import { findCard, type FindCardResult } from "@/features/card/use-cases/find-card";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
-import { type AsyncResult, useAsyncResult } from "@/hooks/use-async-result";
-import type { ReadOptions } from "@/shared/read-options";
+import { type AsyncResult, type AsyncRun, useAsyncResult } from "@/hooks/use-async-result";
 
 type CardDetailDataContent = AsyncResult<FindCardResult>;
 
@@ -19,10 +18,11 @@ interface CardDetailDataProps {
 }
 
 function CardDetailData({ cardFinder, cardId, children }: CardDetailDataProps) {
-  const { result } = useAsyncResult<FindCardResult>(
-    (options: ReadOptions) => findCard(cardId, { cardFinder }, options),
+  const run = useCallback<AsyncRun<FindCardResult>>(
+    (options) => findCard(cardId, { cardFinder }, options),
     [cardFinder, cardId],
   );
+  const { result } = useAsyncResult(run);
 
   return match(result)
     .with({ type: "loading" }, () => <LoadingState />)

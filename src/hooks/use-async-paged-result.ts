@@ -13,6 +13,8 @@ type PagedRead<T> =
   | { readonly type: "success"; readonly page: Page<T>; readonly total: number }
   | { readonly type: "listFailed" };
 
+type PagedRun<T> = (request: PageRequest, options: ReadOptions) => Promise<PagedRead<T>>;
+
 type PagingState =
   | { readonly type: "idle" }
   | { readonly type: "loadingMore" }
@@ -29,11 +31,16 @@ type AsyncPagedResultState<T> =
       readonly paging: PagingState;
     };
 
+interface PagedQuery<T> {
+  readonly attempt: number;
+  readonly pageSize: number;
+  readonly run: PagedRun<T>;
+}
+
 interface AsyncPagedResultOptions<T> {
-  readonly deps: readonly unknown[];
   readonly loadMoreErrorMessage: string;
   readonly pageSize: number;
-  run(request: PageRequest, options: ReadOptions): Promise<PagedRead<T>>;
+  readonly run: PagedRun<T>;
 }
 
 interface AsyncPagedResult<T> {
@@ -44,28 +51,24 @@ interface AsyncPagedResult<T> {
 }
 
 const IDLE_PAGING: PagingState = { type: "idle" };
+const LOADING = { type: "loading" } as const;
 
 function useAsyncPagedResult<T>({
-  deps,
   loadMoreErrorMessage,
   pageSize,
   run,
 }: AsyncPagedResultOptions<T>): AsyncPagedResult<T> {
-  const [state, setState] = useState<AsyncPagedResultState<T>>({ type: "loading" });
-  const [reloadToken, setReloadToken] = useState(0);
-  const runRef = useRef(run);
-  const pageSizeRef = useRef(pageSize);
-  const loadMoreErrorRef = useRef(loadMoreErrorMessage);
+  const [state, setState] = useState<AsyncPagedResultState<T>>(LOADING);
+  const [query, setQuery] = useState<PagedQuery<T>>({ attempt: 0, pageSize, run });
   const firstPageController = useRef<AbortController | null>(null);
   const loadMoreController = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    runRef.current = run;
-    pageSizeRef.current = pageSize;
-    loadMoreErrorRef.current = loadMoreErrorMessage;
-  });
+  if (query.pageSize !== pageSize || query.run !== run) {
+    setQuery({ attempt: query.attempt, pageSize, run });
+    setState(LOADING);
+  }
 
-  const startFirstPage = useCallback(() => {
+  const startFirstPage = useCallback((pagedQuery: PagedQuery<T>) => {
     firstPageController.current?.abort();
     loadMoreController.current?.abort();
     const controller = new AbortController();
@@ -73,16 +76,15 @@ function useAsyncPagedResult<T>({
 
     return {
       controller,
-      request: runRef.current(
-        { limit: pageSizeRef.current, offset: 0 },
+      request: pagedQuery.run(
+        { limit: pagedQuery.pageSize, offset: 0 },
         { signal: controller.signal },
       ),
     };
   }, []);
 
   useEffect(() => {
-    setState({ type: "loading" });
-    const { controller, request } = startFirstPage();
+    const { controller, request } = startFirstPage(query);
 
     void request.then((read) => {
       if (controller.signal.aborted) return;
@@ -101,7 +103,7 @@ function useAsyncPagedResult<T>({
     });
 
     return () => controller.abort();
-  }, [...deps, reloadToken, startFirstPage]);
+  }, [query, startFirstPage]);
 
   useEffect(
     () => () => {
@@ -112,11 +114,12 @@ function useAsyncPagedResult<T>({
   );
 
   const reload = useCallback(() => {
-    setReloadToken((token) => token + 1);
+    setState(LOADING);
+    setQuery((current) => ({ ...current, attempt: current.attempt + 1 }));
   }, []);
 
   const refresh = useCallback(() => {
-    const { controller, request } = startFirstPage();
+    const { controller, request } = startFirstPage(query);
 
     setState((current) =>
       match(current)
@@ -147,7 +150,7 @@ function useAsyncPagedResult<T>({
         )
         .exhaustive();
     });
-  }, [startFirstPage]);
+  }, [query, startFirstPage]);
 
   const paging = match(state)
     .with({ type: "success" }, (successful) => successful.paging)
@@ -165,11 +168,8 @@ function useAsyncPagedResult<T>({
         const controller = new AbortController();
         loadMoreController.current = controller;
 
-        void runRef
-          .current(
-            { limit: pageSizeRef.current, offset: loadedCount },
-            { signal: controller.signal },
-          )
+        void query
+          .run({ limit: query.pageSize, offset: loadedCount }, { signal: controller.signal })
           .then((read) => {
             if (controller.signal.aborted) return;
             setState((current) =>
@@ -184,7 +184,7 @@ function useAsyncPagedResult<T>({
                     }))
                     .with({ type: "listFailed" }, () => ({
                       ...successful,
-                      paging: { type: "failed" as const, message: loadMoreErrorRef.current },
+                      paging: { type: "failed" as const, message: loadMoreErrorMessage },
                     }))
                     .exhaustive(),
                 )
@@ -195,7 +195,7 @@ function useAsyncPagedResult<T>({
       })
       .with({ type: "idle" }, { type: "failed" }, () => undefined)
       .exhaustive();
-  }, [paging, loadedCount]);
+  }, [loadMoreErrorMessage, loadedCount, paging, query]);
 
   const loadMore = useCallback(() => {
     setState((current) =>
@@ -217,4 +217,4 @@ function useAsyncPagedResult<T>({
 }
 
 export { useAsyncPagedResult };
-export type { AsyncPagedResultState, PagingState };
+export type { PagedRun, PagingState };

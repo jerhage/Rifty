@@ -1,31 +1,29 @@
-import { type DependencyList, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { ReadOptions } from "@/shared/read-options";
 
 type AsyncResult<Result> = { readonly type: "loading" } | Result;
+
+type AsyncRun<Result> = (options: ReadOptions) => Promise<Result>;
 
 interface AsyncResultHandle<Result> {
   readonly result: AsyncResult<Result>;
   reload(): void;
 }
 
-function useAsyncResult<Result extends { readonly type: string }>(
-  run: (options: ReadOptions) => Promise<Result>,
-  deps: DependencyList,
-): AsyncResultHandle<Result> {
-  const runRef = useRef(run);
-  const [reloadToken, setReloadToken] = useState(0);
-  const [result, setResult] = useState<AsyncResult<Result>>({ type: "loading" });
+const LOADING = { type: "loading" } as const;
 
-  useEffect(() => {
-    runRef.current = run;
-  });
+function useAsyncResult<Result extends { readonly type: string }>(
+  run: AsyncRun<Result>,
+): AsyncResultHandle<Result> {
+  const [reloadToken, setReloadToken] = useState(0);
+  const [result, setResult] = useState<AsyncResult<Result>>(LOADING);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    setResult((current) => (current.type === "loading" ? current : { type: "loading" }));
-    void runRef.current({ signal: controller.signal }).then(
+    setResult((current) => (current.type === "loading" ? current : LOADING));
+    void run({ signal: controller.signal }).then(
       (next) => {
         if (!controller.signal.aborted) setResult(next);
       },
@@ -35,7 +33,7 @@ function useAsyncResult<Result extends { readonly type: string }>(
     return () => {
       controller.abort();
     };
-  }, [...deps, reloadToken]);
+  }, [reloadToken, run]);
 
   const reload = useCallback(() => setReloadToken((token) => token + 1), []);
 
@@ -43,4 +41,4 @@ function useAsyncResult<Result extends { readonly type: string }>(
 }
 
 export { useAsyncResult };
-export type { AsyncResult, AsyncResultHandle };
+export type { AsyncResult, AsyncRun };

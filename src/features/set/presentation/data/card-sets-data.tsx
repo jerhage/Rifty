@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { ErrorState } from "@/components/ui/atoms/error-state";
@@ -6,8 +6,7 @@ import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { CardSet } from "@/features/set/card-set";
 import type { SetLister } from "@/features/set/set-lister";
 import { listSets, type ListSetsResult } from "@/features/set/use-cases/list-sets";
-import { useAsyncResult } from "@/hooks/use-async-result";
-import type { ReadOptions } from "@/shared/read-options";
+import { type AsyncRun, useAsyncResult } from "@/hooks/use-async-result";
 
 interface CardSetsDataProps {
   readonly children: (cardSets: readonly CardSet[]) => ReactNode;
@@ -15,10 +14,11 @@ interface CardSetsDataProps {
 }
 
 function CardSetsData({ children, setLister }: CardSetsDataProps) {
-  const { result } = useAsyncResult<ListSetsResult>(
-    (options: ReadOptions) => listSets({ setLister }, options),
+  const run = useCallback<AsyncRun<ListSetsResult>>(
+    (options) => listSets({ setLister }, options),
     [setLister],
   );
+  const { result } = useAsyncResult(run);
 
   return match(result)
     .with({ type: "loading" }, () => <LoadingState />)

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
@@ -7,8 +7,7 @@ import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
 import { listDecks, type ListDecksResult } from "@/features/deck/deck/use-cases/list-decks";
-import { useAsyncResult } from "@/hooks/use-async-result";
-import type { ReadOptions } from "@/shared/read-options";
+import { type AsyncRun, useAsyncResult } from "@/hooks/use-async-result";
 
 interface DecksDataContent {
   readonly decks: readonly Deck[];
@@ -21,10 +20,11 @@ interface DecksDataProps {
 }
 
 function DecksData({ children, deckLister }: DecksDataProps) {
-  const { reload, result } = useAsyncResult<ListDecksResult>(
-    (options: ReadOptions) => listDecks({ deckLister }, options),
+  const run = useCallback<AsyncRun<ListDecksResult>>(
+    (options) => listDecks({ deckLister }, options),
     [deckLister],
   );
+  const { reload, result } = useAsyncResult(run);
 
   return match(result)
     .with({ type: "loading" }, () => <LoadingState />)

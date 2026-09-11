@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { Button } from "@/components/ui/atoms/button";
@@ -9,8 +9,8 @@ import type { CardLister } from "@/features/card/card-lister";
 import type { Deck, DeckId } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
 import { findDeck } from "@/features/deck/deck/use-cases/find-deck";
-import { useAsyncResult } from "@/hooks/use-async-result";
-import { type ReadOptions, throwIfAborted } from "@/shared/read-options";
+import { type AsyncRun, useAsyncResult } from "@/hooks/use-async-result";
+import { throwIfAborted } from "@/shared/read-options";
 
 const CARD_LOOKUP_LIMIT = 100;
 
@@ -36,8 +36,8 @@ function DeckDetailData({
   readonly deckFinder: DeckFinder;
   readonly deckId: DeckId;
 }) {
-  const { reload, result } = useAsyncResult<DeckDetailOutcome>(
-    async (options: ReadOptions) => {
+  const run = useCallback<AsyncRun<DeckDetailOutcome>>(
+    async (options) => {
       const found = await findDeck(deckId, { deckFinder }, options);
 
       return match(found)
@@ -62,6 +62,7 @@ function DeckDetailData({
     },
     [cardLister, deckFinder, deckId],
   );
+  const { reload, result } = useAsyncResult(run);
 
   return match(result)
     .with({ type: "loading" }, () => <LoadingState />)

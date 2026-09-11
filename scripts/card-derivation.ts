@@ -1,5 +1,7 @@
 import { match } from "ts-pattern";
 
+import type { PrintingFinish } from "../src/features/card/value-objects/printing-finish";
+
 type CardSpeed = "normal" | "action" | "reaction";
 type KeywordTargetKind =
   | "self"
@@ -54,9 +56,20 @@ interface KeywordOccurrence extends OwnedKeyword {
 
 interface PrintingIdentity {
   readonly poolCode: string | null;
-  readonly collectorNumber: number | null;
-  readonly isOvernumbered: boolean;
-  readonly isSignature: boolean;
+  readonly collectorNumber: string | null;
+}
+
+interface PrintingRelease {
+  readonly setCode: string;
+  readonly collectorNumber: string;
+  readonly poolCode: string | null;
+  readonly finish: PrintingFinish;
+}
+
+interface FeedFinishFlags {
+  readonly alternateArt: boolean;
+  readonly overnumbered: boolean;
+  readonly signature: boolean;
 }
 
 const LEADING_RUN = /^\s*(?:\[[^\]]+\]\s*(?:\([^)]*\)\s*)?)+/;
@@ -76,6 +89,34 @@ const NAME_SEPARATOR = /\s+-\s+|,\s+/;
 const ELIDED_APOSTROPHE = /(?<=[\p{L}\p{N}])'(?=[\p{L}\p{N}])/gu;
 const SEPARATOR_RUN = /(?:(?<![\p{L}\p{N}])[^\p{L}\p{N}]|[^\p{L}\p{N}](?![\p{L}\p{N}]))+/gu;
 const NAME_QUALIFIER = /\s*\([^)]*\)\s*$/;
+const TRAILING_PARENTHETICAL = /\(([^()]*)\)\s*$/;
+const FINISH_BY_LABEL: Readonly<Record<string, PrintingFinish>> = {
+  "Alternate Art": "alternateArt",
+  Overnumbered: "overnumbered",
+  Signature: "signature",
+  Metal: "metal",
+  "Metal Deluxe": "metalDeluxe",
+  "Summoner Circle": "summonerCircle",
+  Champion: "champion",
+  Starter: "starter",
+  "Launch Exclusive": "launchExclusive",
+  Ultimate: "ultimate",
+  NX: "nx",
+};
+const FINISH_ID_SEGMENTS: Readonly<Record<PrintingFinish, readonly string[]>> = {
+  standard: [],
+  alternateArt: ["alternate-art"],
+  overnumbered: ["overnumbered"],
+  signature: ["signature"],
+  metal: ["metal"],
+  metalDeluxe: ["metal-deluxe"],
+  summonerCircle: ["summoner-circle"],
+  champion: ["champion"],
+  starter: ["starter"],
+  launchExclusive: ["launch-exclusive"],
+  ultimate: ["ultimate"],
+  nx: ["nx"],
+};
 const CANONICAL_SEPARATOR = ", ";
 const APOSTROPHE_VARIANT = /[\u2018\u2019\u02bc\u2032]/g;
 const QUOTE_VARIANT = /[\u201c\u201d\u2033]/g;
@@ -538,21 +579,46 @@ function cleanName(name: string): string {
 }
 
 function printingIdentity(riftboundId: string): PrintingIdentity {
-  const segments = riftboundId.split("-");
-  const poolCode = segments.length >= 3 ? (segments.at(-1) ?? null) : null;
-  const numberSegment = (poolCode === null ? segments.at(-1) : segments.at(-2)) ?? "";
-  const isSignature = numberSegment.includes("*");
-  const digits = /(\d+)/.exec(numberSegment);
-  const collectorNumber = digits ? Number(digits[1]) : null;
-  const poolSize = poolCode !== null && /^\d+$/.test(poolCode) ? Number(poolCode) : null;
+  const [, ...segments] = riftboundId.split("-");
+  const withoutFinish =
+    segments.length > 1 && !DIGITS_ONLY.test(segments.at(-1) ?? "")
+      ? segments.slice(0, -1)
+      : segments;
+  const hasPool = withoutFinish.length > 1 && DIGITS_ONLY.test(withoutFinish.at(-1) ?? "");
+  const poolCode = hasPool ? (withoutFinish.at(-1) ?? null) : null;
+  const numberSegments = hasPool ? withoutFinish.slice(0, -1) : withoutFinish;
 
   return {
     poolCode,
-    collectorNumber,
-    isOvernumbered:
-      collectorNumber !== null && poolSize !== null ? collectorNumber > poolSize : false,
-    isSignature,
+    collectorNumber: numberSegments.length > 0 ? numberSegments.join("-") : null,
   };
+}
+
+function printingFinish(printedName: string, flags: FeedFinishFlags): PrintingFinish {
+  const label = TRAILING_PARENTHETICAL.exec(printedName)?.[1]?.trim();
+
+  if (label !== undefined && label.length > 0 && !DIGITS_ONLY.test(label)) {
+    const named = FINISH_BY_LABEL[label];
+    if (named === undefined)
+      throw new Error(`Unknown printing finish "${label}" in the printed name "${printedName}".`);
+
+    return named;
+  }
+
+  if (flags.signature) return "signature";
+  if (flags.overnumbered) return "overnumbered";
+  if (flags.alternateArt) return "alternateArt";
+
+  return "standard";
+}
+
+function printingId(release: PrintingRelease): string {
+  return [
+    release.setCode.toLowerCase(),
+    release.collectorNumber,
+    ...(release.poolCode === null ? [] : [release.poolCode]),
+    ...FINISH_ID_SEGMENTS[release.finish],
+  ].join("-");
 }
 
 export {
@@ -572,12 +638,15 @@ export {
   leadingTokens,
   normalizedPunctuation,
   ownedKeywords,
+  printingFinish,
+  printingId,
   printingIdentity,
   withMagnitudeDefaults,
 };
 export type {
   CardSpeed,
   ChampionCandidate,
+  FeedFinishFlags,
   KeywordAllegiance,
   KeywordOccurrence,
   KeywordTarget,
@@ -585,4 +654,5 @@ export type {
   KeywordTargeting,
   OwnedKeyword,
   PrintingIdentity,
+  PrintingRelease,
 };

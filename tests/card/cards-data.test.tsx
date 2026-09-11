@@ -16,7 +16,7 @@ const STORE_FAILURE = new Error("The store is unavailable.");
 const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
 const catalog: readonly Card[] = Array.from({ length: 31 }, (_, index) =>
   card(`card-${index + 1}`, unleashed.code, {
-    collectorNumber: index + 1,
+    collectorNumber: String(index + 1),
     name: `Card ${index + 1}`,
   }),
 );

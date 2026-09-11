@@ -16,15 +16,15 @@ function set(code: string, publishedOn: string = ORIGINS): RawSet {
   };
 }
 
-function printing(id: string, overrides: Partial<NormalizedCard> = {}): NormalizedCard {
+function printing(sourceId: string, overrides: Partial<NormalizedCard> = {}): NormalizedCard {
   return {
-    id,
+    sourceId,
     isPrimaryFeed: true,
-    riftboundId: `OGN-${id}`,
+    riftboundId: `OGN-${sourceId}`,
     setCode: "OGN",
-    collectorNumber: 1,
-    name: `Card ${id}`,
-    cleanName: `Card ${id}`,
+    collectorNumber: sourceId,
+    name: `Card ${sourceId}`,
+    cleanName: `Card ${sourceId}`,
     energy: 3,
     might: 2,
     power: null,
@@ -32,12 +32,10 @@ function printing(id: string, overrides: Partial<NormalizedCard> = {}): Normaliz
     rulesTextPlain: "Play effect.",
     flavourText: null,
     orientation: "portrait",
-    isAlternateArt: false,
-    isOvernumbered: false,
-    isSignature: false,
+    finish: "standard",
     poolCode: null,
     championName: null,
-    identityName: `Card ${id}`,
+    identityName: `Card ${sourceId}`,
     sourceUpdatedAt: "2026-07-10T22:45:08.861364+00:00",
     typeId: "Unit",
     supertypeId: null,
@@ -45,7 +43,7 @@ function printing(id: string, overrides: Partial<NormalizedCard> = {}): Normaliz
     domainIds: ["Chaos"],
     tagIds: [],
     regions: [],
-    imageSources: [`https://cards.example/${id}.webp`],
+    imageSources: [`https://cards.example/${sourceId}.webp`],
     artist: null,
     accessibilityText: null,
     marketplaceReferences: [],
@@ -54,7 +52,7 @@ function printing(id: string, overrides: Partial<NormalizedCard> = {}): Normaliz
 }
 
 function imagesFor(printings: readonly NormalizedCard[]): ReadonlyMap<string, string> {
-  return new Map(printings.map((entry) => [entry.id, `${entry.id}.webp`]));
+  return new Map(printings.map((entry) => [entry.sourceId, `${entry.sourceId}.webp`]));
 }
 
 describe("catalog seed", () => {
@@ -69,9 +67,9 @@ describe("catalog seed", () => {
 
     expect(seed.cards.map((row) => row.id)).toEqual(["Card c", "Sett, Brawler"]);
     expect(seed.cardPrintings.map((row) => [row.id, row.cardId])).toEqual([
-      ["c", "Card c"],
-      ["a", "Sett, Brawler"],
-      ["b", "Sett, Brawler"],
+      ["ogn-c", "Card c"],
+      ["ogn-a", "Sett, Brawler"],
+      ["ogn-b", "Sett, Brawler"],
     ]);
     expect(seed.cards.map((row) => row.cleanName)).toEqual(["Card c", "Sett Brawler"]);
     expect(() => assertValid(seed)).not.toThrow();
@@ -80,17 +78,101 @@ describe("catalog seed", () => {
   it("should keep every printing and name one of them for each Riftbound ID", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", { riftboundId: "OGN-001" }),
-      printing("b", { riftboundId: "OGN-001", isAlternateArt: true }),
+      printing("b", { riftboundId: "OGN-001", finish: "alternateArt" }),
       printing("c", { riftboundId: "OGN-002" }),
     ];
 
     const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
 
-    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["a", "b", "c"]);
-    expect(seed.cardPrintings.filter((row) => row.isCanonical).map((row) => row.id)).toEqual([
-      "a",
-      "c",
+    expect(seed.cardPrintings.map((row) => row.id)).toEqual([
+      "ogn-a",
+      "ogn-b-alternate-art",
+      "ogn-c",
     ]);
+    expect(seed.cardPrintings.filter((row) => row.isCanonical).map((row) => row.id)).toEqual([
+      "ogn-a",
+      "ogn-c",
+    ]);
+  });
+
+  it("should drop a printing whose pool the feed left out when a pooled printing prints it", () => {
+    const printings: readonly NormalizedCard[] = [
+      printing("a", {
+        identityName: "Vilemaw",
+        riftboundId: "OGN-055-166",
+        collectorNumber: "055",
+        poolCode: "166",
+      }),
+      printing("b", { identityName: "Vilemaw", riftboundId: "OGN-055", collectorNumber: "055" }),
+    ];
+
+    const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
+
+    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["ogn-055-166"]);
+    expect(() => assertValid(seed)).not.toThrow();
+  });
+
+  it("should keep a printing the feed gives no pool when nothing else prints it", () => {
+    const printings: readonly NormalizedCard[] = [
+      printing("a", {
+        identityName: "Vilemaw",
+        riftboundId: "OGN-055-166",
+        collectorNumber: "055",
+        poolCode: "166",
+      }),
+      printing("b", { identityName: "Vilemaw", riftboundId: "OGN-056", collectorNumber: "056" }),
+    ];
+
+    const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
+
+    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["ogn-055-166", "ogn-056"]);
+  });
+
+  it("should keep the newest row when the feed reissues a printing under a second key", () => {
+    const printings: readonly NormalizedCard[] = [
+      printing("a", {
+        identityName: "Vilemaw",
+        riftboundId: "OGN-055-166",
+        collectorNumber: "055",
+        poolCode: "166",
+        flavourText: null,
+        sourceUpdatedAt: "2026-07-10T22:45:22.382210+00:00",
+      }),
+      printing("b", {
+        identityName: "Vilemaw",
+        riftboundId: "OGN-055-166",
+        collectorNumber: "055",
+        poolCode: "166",
+        flavourText: "It waits.",
+        sourceUpdatedAt: "2026-09-08T21:33:43.253Z",
+      }),
+    ];
+
+    const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
+
+    expect(seed.cardPrintings).toHaveLength(1);
+    expect(seed.cardPrintings[0]).toMatchObject({
+      id: "ogn-055-166",
+      flavourText: "It waits.",
+      isCanonical: true,
+    });
+    expect(seed.cardMedia.map((row) => row.imageFile)).toEqual(["b.webp"]);
+  });
+
+  it("should keep two finishes the feed prints under one Riftbound ID", () => {
+    const printings: readonly NormalizedCard[] = [
+      printing("a", { identityName: "Vilemaw", riftboundId: "OGN-055", collectorNumber: "055" }),
+      printing("b", {
+        identityName: "Vilemaw",
+        riftboundId: "OGN-055",
+        collectorNumber: "055",
+        finish: "metal",
+      }),
+    ];
+
+    const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
+
+    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["ogn-055", "ogn-055-metal"]);
   });
 
   it("should give every printing a media row so none drops out of the catalog", () => {
@@ -98,7 +180,7 @@ describe("catalog seed", () => {
 
     const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
 
-    expect(seed.cardMedia.map((row) => row.printingId)).toEqual(["a", "b", "c"]);
+    expect(seed.cardMedia.map((row) => row.printingId)).toEqual(["ogn-a", "ogn-b", "ogn-c"]);
     expect(() => assertValid(seed)).not.toThrow();
   });
 
@@ -137,7 +219,7 @@ describe("catalog seed", () => {
     const printings: readonly NormalizedCard[] = [
       printing("a", {
         identityName: "Master Yi, Tempered",
-        isAlternateArt: true,
+        finish: "alternateArt",
         rulesTextPlain: "[Hunt 2]",
         rulesTextRich: "<p>[Hunt 2]</p>",
       }),
@@ -151,7 +233,7 @@ describe("catalog seed", () => {
     const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
 
     expect(seed.cards[0]?.rulesTextPlain).toBe("[Hunt 2] (When I conquer or hold, gain 2 XP.)");
-    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["b", "a"]);
+    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["ogn-b", "ogn-a-alternate-art"]);
   });
 
   it("should take the union of the lists its printings carry", () => {
@@ -277,7 +359,7 @@ describe("catalog seed", () => {
     });
     expect(seed.cardDomains.map((row) => row.domainId)).toEqual(["Calm", "Body"]);
     expect(seed.cardTags.map((row) => row.tagId)).toEqual(["Master Yi"]);
-    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["a", "b"]);
+    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["ogn-a", "sfd-b"]);
   });
 
   it("should record a keyword once per target it is printed at", () => {
@@ -359,8 +441,8 @@ describe("catalog seed", () => {
 
     const { seed, skipped } = buildSeed(printings, [set("OGN")], imagesFor(printings));
 
-    expect(skipped.map((row) => row.id)).toEqual(["b"]);
-    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["a"]);
+    expect(skipped.map((row) => row.sourceId)).toEqual(["b"]);
+    expect(seed.cardPrintings.map((row) => row.id)).toEqual(["ogn-a"]);
   });
 
   it("should reunite a promo that dropped its champion prefix with the card it reprints", () => {
@@ -435,7 +517,20 @@ describe("catalog seed", () => {
 
     const { seed } = buildSeed(printings, [set("OGN")], imagesFor([printing("a")]));
 
-    expect(() => assertValid(seed)).toThrow(/no media row: b/);
+    expect(() => assertValid(seed)).toThrow(/no media row: ogn-b/);
+  });
+
+  it("should fail generation when two printings share a set, collector number, pool and finish", () => {
+    const printings: readonly NormalizedCard[] = [
+      printing("a", { riftboundId: "OGN-001", collectorNumber: "055" }),
+      printing("b", { riftboundId: "OGN-002", collectorNumber: "055" }),
+    ];
+
+    const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
+
+    expect(() => assertValid(seed)).toThrow(
+      /printing set code, collector number, pool code and finish: OGN 055 no pool standard/,
+    );
   });
 
   it("should fail generation when a Riftbound ID has no canonical printing", () => {

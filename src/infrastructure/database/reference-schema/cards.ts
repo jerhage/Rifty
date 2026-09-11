@@ -3,6 +3,7 @@ import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlit
 import { z } from "zod/v4";
 
 import { cardSpeedSchema } from "../../../features/card/value-objects/card-speed";
+import { printingFinishSchema } from "../../../features/card/value-objects/printing-finish";
 
 import { cardSets, marketplaceSchema } from "./sets";
 import { cardSupertypes, cardTypes, domains, rarities, tags } from "./taxonomy";
@@ -46,15 +47,13 @@ const cardPrintings = sqliteTable(
     setCode: text("set_code")
       .notNull()
       .references(() => cardSets.code),
-    collectorNumber: integer("collector_number").notNull(),
+    collectorNumber: text("collector_number").notNull(),
     poolCode: text("pool_code"),
     rarityId: text("rarity_id")
       .notNull()
       .references(() => rarities.id),
     printedName: text("printed_name").notNull(),
-    isAlternateArt: integer("is_alternate_art", { mode: "boolean" }).notNull(),
-    isOvernumbered: integer("is_overnumbered", { mode: "boolean" }).notNull(),
-    isSignature: integer("is_signature", { mode: "boolean" }).notNull(),
+    finish: text().notNull(),
     flavourText: text("flavour_text"),
     sourceUpdatedAt: text("source_updated_at").notNull(),
     isCanonical: integer("is_canonical", { mode: "boolean" }).notNull().default(true),
@@ -161,14 +160,17 @@ const cardInsertSchema = createInsertSchema(cards, {
   supertypeId: (schema) => schema.trim().min(1).nullable(),
 });
 
-const cardPrintingSelectSchema = createSelectSchema(cardPrintings);
+const cardPrintingSelectSchema = createSelectSchema(cardPrintings, {
+  finish: printingFinishSchema,
+});
 const cardPrintingInsertSchema = createInsertSchema(cardPrintings, {
   id: (schema) => schema.trim().min(1),
   cardId: (schema) => schema.trim().min(1),
   riftboundId: (schema) => schema.trim().min(1),
   rarityId: (schema) => schema.trim().min(1),
   printedName: (schema) => schema.trim().min(1),
-  collectorNumber: (schema) => schema.int().nonnegative(),
+  collectorNumber: (schema) => schema.trim().min(1),
+  finish: printingFinishSchema,
 });
 
 const cardMarketplaceReferenceSelectSchema = createSelectSchema(cardMarketplaceReferences, {

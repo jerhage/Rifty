@@ -9,6 +9,8 @@ import {
   keywordsWithMagnitude,
   leadingTokens,
   ownedKeywords,
+  printingFinish,
+  printingId,
   printingIdentity,
   withMagnitudeDefaults,
 } from "../../scripts/card-derivation";
@@ -369,33 +371,137 @@ describe("card derivation", () => {
     expect(cleanName("Ol' Poro")).toBe("Ol Poro");
   });
 
-  it("should read the pool, the collector number, and both printing marks from the id", () => {
-    expect(printingIdentity("ogn-042-298")).toEqual({
+  it("should read the pool and the collector number from the id", () => {
+    expect(printingIdentity("ogn-119-298")).toEqual({
       poolCode: "298",
-      collectorNumber: 42,
-      isOvernumbered: false,
-      isSignature: false,
+      collectorNumber: "119",
     });
-    expect(printingIdentity("unl-233*-219")).toEqual({
-      poolCode: "219",
-      collectorNumber: 233,
-      isOvernumbered: true,
-      isSignature: true,
+    expect(printingIdentity("ogn-299*-298")).toEqual({
+      poolCode: "298",
+      collectorNumber: "299*",
     });
-    expect(printingIdentity("unl-051a-219")).toEqual({
+  });
+
+  it("should keep the sub-code the printed collector number carries", () => {
+    expect(printingIdentity("ogn-119a-298")).toEqual({
+      poolCode: "298",
+      collectorNumber: "119a",
+    });
+    expect(printingIdentity("opp-r04b-219")).toEqual({
       poolCode: "219",
-      collectorNumber: 51,
-      isOvernumbered: false,
-      isSignature: false,
+      collectorNumber: "r04b",
+    });
+    expect(printingIdentity("VEN-084a")).toEqual({
+      poolCode: null,
+      collectorNumber: "084a",
+    });
+    expect(printingIdentity("sfd-t03")).toEqual({
+      poolCode: null,
+      collectorNumber: "t03",
+    });
+  });
+
+  it("should drop a trailing finish code rather than read it as the pool", () => {
+    expect(printingIdentity("opp-255-298-md")).toEqual({
+      poolCode: "298",
+      collectorNumber: "255",
+    });
+  });
+
+  it("should keep every segment between the set and the pool in the collector number", () => {
+    expect(printingIdentity("pr-t1a-001-005")).toEqual({
+      poolCode: "005",
+      collectorNumber: "t1a-001",
+    });
+    expect(printingIdentity("pr-t1s-001-005")).toEqual({
+      poolCode: "005",
+      collectorNumber: "t1s-001",
     });
   });
 
   it("should leave the newer id format without a pool rather than guessing one", () => {
-    expect(printingIdentity("VEN-001")).toEqual({
+    expect(printingIdentity("VEN-150")).toEqual({
       poolCode: null,
-      collectorNumber: 1,
-      isOvernumbered: false,
-      isSignature: false,
+      collectorNumber: "150",
     });
+  });
+});
+
+describe("printingId", () => {
+  const release = {
+    setCode: "OGN",
+    collectorNumber: "119",
+    poolCode: "298",
+    finish: "standard",
+  } as const;
+
+  it("should join the set, the collector number and the pool", () => {
+    expect(printingId(release)).toBe("ogn-119-298");
+  });
+
+  it("should leave out the pool the newer ids do not carry", () => {
+    expect(printingId({ ...release, setCode: "VEN", collectorNumber: "150", poolCode: null })).toBe(
+      "ven-150",
+    );
+  });
+
+  it("should name every finish but the plain one", () => {
+    expect(printingId({ ...release, finish: "alternateArt" })).toBe("ogn-119-298-alternate-art");
+    expect(printingId({ ...release, finish: "summonerCircle" })).toBe(
+      "ogn-119-298-summoner-circle",
+    );
+    expect(printingId({ ...release, finish: "nx" })).toBe("ogn-119-298-nx");
+  });
+
+  it("should keep the sub-code and the asterisk the collector number prints", () => {
+    expect(
+      printingId({ ...release, setCode: "PR", collectorNumber: "t1a-001", poolCode: "005" }),
+    ).toBe("pr-t1a-001-005");
+    expect(printingId({ ...release, collectorNumber: "299*", finish: "signature" })).toBe(
+      "ogn-299*-298-signature",
+    );
+  });
+});
+
+describe("printingFinish", () => {
+  const noFlags = { alternateArt: false, overnumbered: false, signature: false };
+
+  it("should name the finish the trailing parenthetical carries", () => {
+    expect(printingFinish("Dark Child - Starter (Metal)", noFlags)).toBe("metal");
+    expect(printingFinish("Yasuo - Remorseful (Alternate Art)", noFlags)).toBe("alternateArt");
+    expect(printingFinish("Mind Rune (Metal Deluxe)", noFlags)).toBe("metalDeluxe");
+    expect(printingFinish("Jinx - Loose Cannon (Summoner Circle)", noFlags)).toBe("summonerCircle");
+    expect(printingFinish("Anivia (NX)", noFlags)).toBe("nx");
+  });
+
+  it("should let the parenthetical outrank a feed flag that disagrees", () => {
+    expect(
+      printingFinish("Jinx - Loose Cannon (Summoner Circle)", { ...noFlags, alternateArt: true }),
+    ).toBe("summonerCircle");
+  });
+
+  it("should read the feed flags in precedence when the name names no finish", () => {
+    expect(
+      printingFinish("Mind Rune", { alternateArt: true, overnumbered: true, signature: true }),
+    ).toBe("signature");
+    expect(
+      printingFinish("Mind Rune", { alternateArt: true, overnumbered: true, signature: false }),
+    ).toBe("overnumbered");
+    expect(printingFinish("Mind Rune", { ...noFlags, alternateArt: true })).toBe("alternateArt");
+  });
+
+  it("should treat an all-digit parenthetical as part of the name rather than a finish", () => {
+    expect(printingFinish("Recruit (271)", noFlags)).toBe("standard");
+    expect(printingFinish("Recruit (271)", { ...noFlags, signature: true })).toBe("signature");
+  });
+
+  it("should fall to the plain finish when nothing names one", () => {
+    expect(printingFinish("Mind Rune", noFlags)).toBe("standard");
+  });
+
+  it("should throw on a parenthetical the closed table does not name", () => {
+    expect(() => printingFinish("Mind Rune (Holographic)", noFlags)).toThrow(
+      'Unknown printing finish "Holographic"',
+    );
   });
 });

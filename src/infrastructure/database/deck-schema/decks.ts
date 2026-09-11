@@ -3,6 +3,7 @@ import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import { check, index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { deckNameSchema, deckSectionSchema } from "@/features/deck/deck/deck";
+import { cardPrintings, cards } from "@/infrastructure/database/reference-schema/cards";
 
 /** Locally-created deck metadata. Accounts and ownership are intentionally out of scope. */
 const decks = sqliteTable(
@@ -13,16 +14,14 @@ const decks = sqliteTable(
     notes: text().notNull().default(""),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
-    chosenChampionCardId: text("chosen_champion_card_id"),
+    chosenChampionCardId: text("chosen_champion_card_id").references(() => cards.id, {
+      onDelete: "restrict",
+    }),
   },
   (table) => [index("deck_updated_at").on(table.updatedAt)],
 );
 
-/**
- * Aggregates a printing's quantity within one deck section. `cardId` and `printingId` are
- * intentionally not foreign keys: catalog reseeds may replace catalog rows, but must never alter
- * saved deck entries.
- */
+/** Aggregates a printing's quantity within one deck section. */
 const deckCards = sqliteTable(
   "deck_card",
   {
@@ -30,8 +29,12 @@ const deckCards = sqliteTable(
       .notNull()
       .references(() => decks.id, { onDelete: "cascade" }),
     section: text().notNull(),
-    cardId: text("card_id").notNull(),
-    printingId: text("printing_id").notNull(),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => cards.id, { onDelete: "restrict" }),
+    printingId: text("printing_id")
+      .notNull()
+      .references(() => cardPrintings.id, { onDelete: "restrict" }),
     quantity: integer().notNull(),
   },
   (table) => [

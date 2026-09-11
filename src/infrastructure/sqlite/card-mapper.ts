@@ -71,9 +71,7 @@ function toDomainCard({
       flavour: persistedPrinting.flavourText,
     },
     orientation: persistedCard.orientation,
-    isAlternateArt: persistedPrinting.isAlternateArt,
-    isOvernumbered: persistedPrinting.isOvernumbered,
-    isSignature: persistedPrinting.isSignature,
+    finish: persistedPrinting.finish,
     sourceUpdatedAt: persistedPrinting.sourceUpdatedAt,
     classification: {
       typeId: persistedCard.typeId,

@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { marketplaceReferenceSchema } from "@/features/set/value-objects/marketplace-reference";
 import { cardDomainSchema } from "@/features/card/value-objects/card-domain";
 import { cardIdSchema } from "@/features/card/value-objects/card-id";
+import { printingFinishSchema } from "@/features/card/value-objects/printing-finish";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import { cardSpeedSchema } from "@/features/card/value-objects/card-speed";
 import { cardTypeSchema } from "@/features/card/value-objects/card-type";
@@ -38,7 +39,7 @@ const cardSchema = z.object({
   cardId: cardIdSchema,
   riftboundId: z.string().trim().min(1),
   setCode: setCodeSchema,
-  collectorNumber: z.number().int().nonnegative(),
+  collectorNumber: z.string().trim().min(1),
   name: z.string().trim().min(1),
   cleanName: z.string().trim().min(1),
   attributes: cardAttributesSchema,
@@ -48,9 +49,7 @@ const cardSchema = z.object({
     flavour: z.string().nullable(),
   }),
   orientation: cardOrientationSchema,
-  isAlternateArt: z.boolean(),
-  isOvernumbered: z.boolean(),
-  isSignature: z.boolean(),
+  finish: printingFinishSchema,
   sourceUpdatedAt: z.string().trim().min(1),
   classification: cardClassificationSchema,
   domainIds: z.array(cardDomainSchema),

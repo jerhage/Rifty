@@ -12,10 +12,13 @@ import {
   keywordsWithMagnitude,
   normalizedPunctuation,
   ownedKeywords,
+  printingFinish,
+  printingId,
   printingIdentity,
   withMagnitudeDefaults,
 } from "./card-derivation";
 import type { CardSpeed, KeywordOccurrence, KeywordTarget } from "./card-derivation";
+import type { PrintingFinish } from "../src/features/card/value-objects/printing-finish";
 import { imageSourcesOf } from "./card-image-file";
 import type { SourcedCard } from "./card-image-file";
 
@@ -89,7 +92,6 @@ const rawCardSchema = z.object({
   id: z.string(),
   name: z.string(),
   riftbound_id: z.string(),
-  collector_number: z.number().int(),
   tcgplayer_id: marketplaceId,
   cardmarket_id: marketplaceId,
   attributes: z.object({
@@ -152,7 +154,7 @@ const rawImageSchema = z.object({ media: z.object({ image_url: nullableString })
 const RARITY_ORDER = ["Common", "Uncommon", "Rare", "Epic", "Showcase", "Promo"];
 const KEYWORD_REMINDER = /\[([^\]]+)\]\s*_?\(([^)]*)\)/g;
 const DERIVED_SOURCE = "derived";
-const LEADING_DIGITS = /(\d+)/;
+const LEADING_DIGITS = /^\d+/;
 const MARKUP = /<[^>]*>/g;
 const PLACEHOLDER_TEXT = /^\[\s*no\s+text\s*\]$/i;
 const REPORTED_SAMPLE = 5;
@@ -164,11 +166,11 @@ type Taxonomy = typeof cardTypes.$inferInsert;
 type Marketplace = "cardmarket" | "tcgplayer";
 type MarketplaceReference = { marketplace: Marketplace; externalId: string };
 type NormalizedCard = {
-  id: string;
+  sourceId: string;
   isPrimaryFeed: boolean;
   riftboundId: string;
   setCode: string;
-  collectorNumber: number;
+  collectorNumber: string;
   name: string;
   cleanName: string;
   energy: number | null;
@@ -178,9 +180,7 @@ type NormalizedCard = {
   rulesTextPlain: string;
   flavourText: string | null;
   orientation: z.output<typeof orientationSchema>;
-  isAlternateArt: boolean;
-  isOvernumbered: boolean;
-  isSignature: boolean;
+  finish: PrintingFinish;
   poolCode: string | null;
   championName: string | null;
   identityName: string;
@@ -201,15 +201,13 @@ type CardCore = Omit<
   | "championName"
   | "cleanName"
   | "collectorNumber"
-  | "id"
   | "identityName"
   | "imageSources"
-  | "isOvernumbered"
   | "isPrimaryFeed"
-  | "isSignature"
   | "poolCode"
   | "regions"
   | "riftboundId"
+  | "sourceId"
 >;
 type Seed = {
   cardSets: (typeof cardSets.$inferInsert)[];
@@ -300,11 +298,9 @@ function normalize({ card, fetchedAt }: FetchedCard): NormalizedCard {
 
   return {
     ...core,
-    id: card.id,
+    sourceId: card.id,
     isPrimaryFeed: raw.success,
     riftboundId: card.riftboundId,
-    isOvernumbered: identity.isOvernumbered,
-    isSignature: identity.isSignature,
     poolCode: identity.poolCode,
     championName: championName({
       name: card.name,
@@ -316,16 +312,16 @@ function normalize({ card, fetchedAt }: FetchedCard): NormalizedCard {
     identityName: identityName(core.name),
     regions: card.regions,
     imageSources: imageSourcesOf(imageCardOf(card)),
-    collectorNumber: raw.success
-      ? raw.data.collector_number
-      : (collectorNumber(card.number) ?? identity.collectorNumber ?? 0),
+    collectorNumber: identity.collectorNumber ?? card.number,
   };
 }
 
 function fromRaw(card: RawCard): CardCore {
+  const name = normalizedPunctuation(card.name);
+
   return {
     setCode: card.set.set_id,
-    name: normalizedPunctuation(card.name),
+    name,
     energy: card.attributes.energy,
     might: card.attributes.might,
     power: card.attributes.power,
@@ -333,7 +329,11 @@ function fromRaw(card: RawCard): CardCore {
     rulesTextPlain: card.text.plain,
     flavourText: card.text.flavour ?? null,
     orientation: card.orientation,
-    isAlternateArt: card.metadata.alternate_art,
+    finish: printingFinish(name, {
+      alternateArt: card.metadata.alternate_art,
+      overnumbered: card.metadata.overnumbered,
+      signature: card.metadata.signature,
+    }),
     sourceUpdatedAt: card.metadata.updated_on,
     typeId: card.classification.type,
     supertypeId: card.classification.supertype ?? null,
@@ -350,9 +350,11 @@ function fromRaw(card: RawCard): CardCore {
 }
 
 function fromFlat(card: ApiCard, fetchedAt: string): CardCore {
+  const name = normalizedPunctuation(card.name);
+
   return {
     setCode: card.setCode,
-    name: normalizedPunctuation(card.name),
+    name,
     energy: card.cost ?? null,
     might: card.might ?? null,
     power: card.power ?? null,
@@ -360,7 +362,11 @@ function fromFlat(card: ApiCard, fetchedAt: string): CardCore {
     rulesTextPlain: card.text ?? "",
     flavourText: card.flavor ?? null,
     orientation: card.orientation,
-    isAlternateArt: card.alternateArt,
+    finish: printingFinish(name, {
+      alternateArt: card.alternateArt,
+      overnumbered: false,
+      signature: card.signature,
+    }),
     sourceUpdatedAt: fetchedAt,
     typeId: card.cardType,
     supertypeId: card.supertype ?? null,
@@ -371,12 +377,6 @@ function fromFlat(card: ApiCard, fetchedAt: string): CardCore {
     accessibilityText: null,
     marketplaceReferences: [],
   };
-}
-
-function collectorNumber(printed: string): number | null {
-  const digits = LEADING_DIGITS.exec(printed);
-
-  return digits ? Number(digits[1]) : null;
 }
 
 function buildSeed(
@@ -398,14 +398,15 @@ function buildSeed(
     }))
     .sort((left, right) => left.code.localeCompare(right.code));
   const publishedOn = new Map(sets.map((value) => [value.set_id, value.published_on] as const));
-  const ordered = [...kept].sort((left, right) => left.id.localeCompare(right.id));
-  const canonicalIds = canonicalCardIds(ordered);
+  const ordered = [...kept].sort((left, right) => left.sourceId.localeCompare(right.sourceId));
   const identities = reconciledIdentities(ordered);
-  const groups = cardGroups(ordered, identities.repaired, publishedOn, canonicalIds);
+  const current = currentPrintings(ordered, identities.repaired);
+  const canonicalIds = canonicalCardIds(current);
+  const groups = cardGroups(current, identities.repaired, publishedOn, canonicalIds);
   const derived = groups.flatMap((group) => printedPrintings(group.trusted));
   const magnitudeIds = keywordsWithMagnitude(derived.map((printing) => printing.rulesTextPlain));
   const remindersByPrinting = new Map(
-    derived.map((printing) => [printing.id, remindersIn(printing.rulesTextPlain)] as const),
+    derived.map((printing) => [printing.sourceId, remindersIn(printing.rulesTextPlain)] as const),
   );
   const keywordNames = new Map<string, string>();
   const championNames = new Set(
@@ -437,37 +438,39 @@ function buildSeed(
     if (card.supertypeId) add(supertypes, card.supertypeId);
     cardRows.push(card);
     for (const printing of group.printings) {
-      add(rarities, printing.rarityId);
-      cardPrintingRows.push({
-        id: printing.id,
-        cardId: group.id,
-        riftboundId: printing.riftboundId,
+      const release = {
         setCode: printing.setCode,
         collectorNumber: printing.collectorNumber,
         poolCode: printing.poolCode,
+        finish: printing.finish,
+      };
+      const id = printingId(release);
+      add(rarities, printing.rarityId);
+      cardPrintingRows.push({
+        id,
+        cardId: group.id,
+        riftboundId: printing.riftboundId,
+        ...release,
         rarityId: printing.rarityId,
         printedName: printing.name,
-        isAlternateArt: printing.isAlternateArt,
-        isOvernumbered: printing.isOvernumbered,
-        isSignature: printing.isSignature,
         flavourText: printing.flavourText,
         sourceUpdatedAt: printing.sourceUpdatedAt,
-        isCanonical: canonicalIds.has(printing.id),
+        isCanonical: canonicalIds.has(printing.sourceId),
       });
-      const imageFile = imageFiles.get(printing.id);
+      const imageFile = imageFiles.get(printing.sourceId);
       if (imageFile !== undefined) {
         cardMedia.push({
-          printingId: printing.id,
+          printingId: id,
           imageFile,
           artist: printing.artist,
           accessibilityText: printing.accessibilityText,
         });
       }
       for (const [priority, url] of printing.imageSources.entries())
-        cardImageSources.push({ printingId: printing.id, url, priority });
+        cardImageSources.push({ printingId: id, url, priority });
       cardMarketplaceReferences.push(
         ...printing.marketplaceReferences.map((reference) => ({
-          printingId: printing.id,
+          printingId: id,
           ...reference,
         })),
       );
@@ -549,6 +552,66 @@ function buildSeed(
   };
 }
 
+function currentPrintings(
+  printings: readonly NormalizedCard[],
+  repaired: ReadonlyMap<string, string>,
+): readonly NormalizedCard[] {
+  return newestOfReissued(withoutPoollessDuplicates(printings, repaired));
+}
+
+function withoutPoollessDuplicates(
+  printings: readonly NormalizedCard[],
+  repaired: ReadonlyMap<string, string>,
+): readonly NormalizedCard[] {
+  const pooled = new Set(
+    printings
+      .filter((printing) => printing.poolCode !== null)
+      .map((printing) => releaseKey(printing, repaired)),
+  );
+
+  return printings.filter(
+    (printing) => printing.poolCode !== null || !pooled.has(releaseKey(printing, repaired)),
+  );
+}
+
+function newestOfReissued(printings: readonly NormalizedCard[]): readonly NormalizedCard[] {
+  const newest = new Map<string, NormalizedCard>();
+
+  for (const printing of printings) {
+    const key = feedKey(printing);
+    const held = newest.get(key);
+    if (held === undefined || reissueOrder(printing, held) < 0) newest.set(key, printing);
+  }
+
+  const current = new Set([...newest.values()].map((printing) => printing.sourceId));
+
+  return printings.filter((printing) => current.has(printing.sourceId));
+}
+
+function reissueOrder(left: NormalizedCard, right: NormalizedCard): number {
+  return (
+    Date.parse(right.sourceUpdatedAt) - Date.parse(left.sourceUpdatedAt) ||
+    left.sourceId.localeCompare(right.sourceId)
+  );
+}
+
+function feedKey(printing: NormalizedCard): string {
+  return [printing.riftboundId, printing.finish].join("\u0000");
+}
+
+function releaseKey(printing: NormalizedCard, repaired: ReadonlyMap<string, string>): string {
+  return [
+    cardIdOf(printing, repaired),
+    printing.setCode,
+    printing.collectorNumber,
+    printing.finish,
+  ].join("\u0000");
+}
+
+function cardIdOf(printing: NormalizedCard, repaired: ReadonlyMap<string, string>): string {
+  return repaired.get(printing.identityName) ?? printing.identityName;
+}
+
 function cardGroups(
   printings: readonly NormalizedCard[],
   repaired: ReadonlyMap<string, string>,
@@ -558,7 +621,7 @@ function cardGroups(
   const grouped = new Map<string, NormalizedCard[]>();
 
   for (const printing of printings) {
-    const id = repaired.get(printing.identityName) ?? printing.identityName;
+    const id = cardIdOf(printing, repaired);
     const held = grouped.get(id);
     if (held === undefined) grouped.set(id, [printing]);
     else held.push(printing);
@@ -585,17 +648,22 @@ function printingOrder(
   return (
     ahead(left.isPrimaryFeed) - ahead(right.isPrimaryFeed) ||
     (publishedOn.get(right.setCode) ?? "").localeCompare(publishedOn.get(left.setCode) ?? "") ||
-    ahead(canonicalIds.has(left.id)) - ahead(canonicalIds.has(right.id)) ||
-    ahead(!left.isAlternateArt) - ahead(!right.isAlternateArt) ||
-    ahead(!left.isSignature) - ahead(!right.isSignature) ||
-    ahead(!left.isOvernumbered) - ahead(!right.isOvernumbered) ||
-    left.collectorNumber - right.collectorNumber ||
-    left.id.localeCompare(right.id)
+    ahead(canonicalIds.has(left.sourceId)) - ahead(canonicalIds.has(right.sourceId)) ||
+    ahead(left.finish === "standard") - ahead(right.finish === "standard") ||
+    collectorPosition(left.collectorNumber) - collectorPosition(right.collectorNumber) ||
+    left.collectorNumber.localeCompare(right.collectorNumber) ||
+    left.sourceId.localeCompare(right.sourceId)
   );
 }
 
 function ahead(preferred: boolean): number {
   return preferred ? 0 : 1;
+}
+
+function collectorPosition(collectorNumber: string): number {
+  const digits = LEADING_DIGITS.exec(collectorNumber);
+
+  return digits ? Number(digits[0]) : 0;
 }
 
 function resolvedCard(group: CardGroup): Seed["cards"][number] {
@@ -650,12 +718,12 @@ function groupKeywords(
   const held = new Map<string, GroupKeyword>();
 
   for (const printing of printedPrintings(group.trusted)) {
-    const reminders = remindersByPrinting.get(printing.id) ?? new Map<string, string>();
+    const reminders = remindersByPrinting.get(printing.sourceId) ?? new Map<string, string>();
     for (const occurrence of withMagnitudeDefaults(
       keywordOccurrences(printing.rulesTextPlain),
       magnitudeIds,
     )) {
-      const targets = keywordTargets(printing.id, occurrence);
+      const targets = keywordTargets(printing.sourceId, occurrence);
       const printed = reminders.get(occurrence.id) ?? null;
       const reminder = printed === reminderTexts.get(occurrence.id) ? null : printed;
       const key = [
@@ -823,14 +891,14 @@ function canonicalCardIds(cards: readonly NormalizedCard[]): ReadonlySet<string>
     if (held === undefined || outranks(card, held)) chosen.set(card.riftboundId, card);
   }
 
-  return new Set([...chosen.values()].map((card) => card.id));
+  return new Set([...chosen.values()].map((card) => card.sourceId));
 }
 
 function outranks(card: NormalizedCard, held: NormalizedCard): boolean {
-  if (card.isAlternateArt !== held.isAlternateArt) return !card.isAlternateArt;
-  if (card.isSignature !== held.isSignature) return !card.isSignature;
+  const standard = card.finish === "standard";
+  if (standard !== (held.finish === "standard")) return standard;
 
-  return card.id < held.id;
+  return card.sourceId < held.sourceId;
 }
 
 function tagKind(
@@ -900,11 +968,20 @@ function assertValid(seed: Seed): void {
   seed.cardKeywordTargets.forEach((row) => cardKeywordTargetInsertSchema.parse(row));
   seed.cardSpeeds.forEach((row) => cardSpeedInsertSchema.parse(row));
   assertUnique(seed.cards, (row) => row.id, "card ID");
+  assertOnePrintingPerRelease(seed);
   assertUnique(seed.cardPrintings, (row) => row.id, "printing ID");
   assertEveryPrintingHasMedia(seed);
   assertOneCanonicalPrintingPerFace(seed);
   assertEveryCardIsPrinted(seed);
   assertNothingIsOrphaned(seed);
+}
+
+function assertOnePrintingPerRelease(seed: Seed): void {
+  assertUnique(
+    seed.cardPrintings,
+    (row) => `${row.setCode} ${row.collectorNumber} ${row.poolCode ?? "no pool"} ${row.finish}`,
+    "printing set code, collector number, pool code and finish",
+  );
 }
 
 function assertEveryPrintingHasMedia(seed: Seed): void {

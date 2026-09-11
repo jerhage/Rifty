@@ -6,6 +6,8 @@ CREATE TABLE `deck_card` (
 	`quantity` integer NOT NULL,
 	CONSTRAINT `deck_card_pk` PRIMARY KEY(`deck_id`, `section`, `card_id`, `printing_id`),
 	CONSTRAINT `fk_deck_card_deck_id_deck_id_fk` FOREIGN KEY (`deck_id`) REFERENCES `deck`(`id`) ON DELETE CASCADE,
+	CONSTRAINT `fk_deck_card_card_id_card_id_fk` FOREIGN KEY (`card_id`) REFERENCES `card`(`id`) ON DELETE RESTRICT,
+	CONSTRAINT `fk_deck_card_printing_id_card_printing_id_fk` FOREIGN KEY (`printing_id`) REFERENCES `card_printing`(`id`) ON DELETE RESTRICT,
 	CONSTRAINT "deck_card_quantity_positive" CHECK("quantity" > 0)
 );
 --> statement-breakpoint
@@ -15,7 +17,8 @@ CREATE TABLE `deck` (
 	`notes` text DEFAULT '' NOT NULL,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL,
-	`chosen_champion_card_id` text
+	`chosen_champion_card_id` text,
+	CONSTRAINT `fk_deck_chosen_champion_card_id_card_id_fk` FOREIGN KEY (`chosen_champion_card_id`) REFERENCES `card`(`id`) ON DELETE RESTRICT
 );
 --> statement-breakpoint
 CREATE TABLE `card_domain` (
@@ -55,13 +58,11 @@ CREATE TABLE `card_printing` (
 	`card_id` text NOT NULL,
 	`riftbound_id` text NOT NULL,
 	`set_code` text NOT NULL,
-	`collector_number` integer NOT NULL,
+	`collector_number` text NOT NULL,
 	`pool_code` text,
 	`rarity_id` text NOT NULL,
 	`printed_name` text NOT NULL,
-	`is_alternate_art` integer NOT NULL,
-	`is_overnumbered` integer NOT NULL,
-	`is_signature` integer NOT NULL,
+	`finish` text NOT NULL,
 	`flavour_text` text,
 	`source_updated_at` text NOT NULL,
 	`is_canonical` integer DEFAULT true NOT NULL,

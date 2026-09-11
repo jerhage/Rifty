@@ -69,10 +69,10 @@ function deckIdentity(
       notes: "",
       createdAt: clock.now(),
     }))
-    .with({ type: "edit" }, ({ deck }) => ({
-      id: deck.id,
-      notes: deck.notes,
-      createdAt: deck.createdAt,
+    .with({ type: "edit" }, ({ resolvedDeck }) => ({
+      id: resolvedDeck.deck.id,
+      notes: resolvedDeck.deck.notes,
+      createdAt: resolvedDeck.deck.createdAt,
     }))
     .exhaustive();
 }

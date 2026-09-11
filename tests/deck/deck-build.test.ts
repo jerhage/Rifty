@@ -9,7 +9,7 @@ import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build"
 import { card } from "../card/fixtures";
 import { createTestWrapper } from "../test-wrapper";
 
-import { deck, fixedClock, sequentialIds } from "./fixtures";
+import { cardId, deck, fixedClock, resolvedDeck, sequentialIds } from "./fixtures";
 
 const legend = card("legend", "OGN", {
   name: "Volibear",
@@ -25,6 +25,44 @@ const champion = card("champion", "OGN", {
   name: "Yasuo",
   classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
 });
+
+const savedLegend = card("ogn-003", "OGN", {
+  name: "Ember Legend",
+  cardId: cardId("Ember Legend"),
+  classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
+});
+const savedMainCard = card("ogn-001", "OGN", { name: "Card 001", cardId: cardId("Card 001") });
+const savedRune = card("ogn-rune", "OGN", { name: "Fury Rune", cardId: cardId("Fury Rune") });
+const savedBattlefield = card("ogn-100", "OGN", {
+  name: "Ember Field",
+  cardId: cardId("Ember Field"),
+});
+const savedSideboardCard = card("ogn-050", "OGN", {
+  name: "Ember Answer",
+  cardId: cardId("Ember Answer"),
+});
+const unseatedChampion = card("ogn-hero", "OGN", {
+  name: "Ember Hero",
+  cardId: cardId("Ember Hero"),
+  classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+});
+
+const savedDeck = deck("deck-2", {
+  chosenChampionCardId: "Ember Hero",
+  entries: [
+    { section: "legend", cardId: "Ember Legend", printingId: "ogn-003", quantity: 1 },
+    { section: "mainDeck", cardId: "Card 001", printingId: "ogn-001", quantity: 4 },
+    { section: "runeDeck", cardId: "Fury Rune", printingId: "ogn-rune", quantity: 12 },
+    { section: "battlefield", cardId: "Ember Field", printingId: "ogn-100", quantity: 3 },
+    { section: "sideboard", cardId: "Ember Answer", printingId: "ogn-050", quantity: 2 },
+  ],
+});
+
+const savedEdit = resolvedDeck(
+  savedDeck,
+  [savedLegend, savedMainCard, savedRune, savedBattlefield, savedSideboardCard],
+  unseatedChampion,
+);
 
 async function buildFor(start: DeckBuildStart, exits: { onExit: () => void; onSaved: () => void }) {
   const saves = jest.fn(async () => undefined);
@@ -56,9 +94,26 @@ describe("deck build", () => {
   it("should open a new deck on the first step and an edit on the zones step", async () => {
     expect((await renderBuild()).result.current.steps.step.id).toBe("legend");
 
-    const editing = await renderBuild({ type: "edit", cards: [], deck: deck("deck-1") });
+    const editing = await renderBuild({ type: "edit", resolvedDeck: savedEdit });
 
     expect(editing.result.current.steps.step.id).toBe("zones");
+  });
+
+  it("should keep every entry of the edited deck in the opening draft", async () => {
+    const { result } = await renderBuild({ type: "edit", resolvedDeck: savedEdit });
+
+    expect(result.current.draft.entries).toHaveLength(savedDeck.entries.length);
+    expect(result.current.draft.entries).toEqual(expect.arrayContaining([...savedDeck.entries]));
+    expect(result.current.draft.draft.legend).toEqual(savedLegend);
+  });
+
+  it("should keep a chosen champion the main deck does not seat", async () => {
+    const { result } = await renderBuild({ type: "edit", resolvedDeck: savedEdit });
+
+    expect(savedDeck.entries).not.toContainEqual(
+      expect.objectContaining({ section: "mainDeck", cardId: unseatedChampion.cardId }),
+    );
+    expect(result.current.draft.draft.chosenChampion).toEqual(unseatedChampion);
   });
 
   it("should leave the builder when back is pressed on the first step", async () => {

@@ -1,9 +1,8 @@
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
-import type { Card } from "@/features/card/card";
-import type { Deck } from "@/features/deck/deck/deck";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
 import type { DeckSaver } from "@/features/deck/deck/deck-saver";
+import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 
 interface DeckBuildCapabilities {
   readonly clock: Clock;
@@ -14,7 +13,7 @@ interface DeckBuildCapabilities {
 
 type DeckBuildStart =
   | { readonly type: "new" }
-  | { readonly type: "edit"; readonly deck: Deck; readonly cards: readonly Card[] };
+  | { readonly type: "edit"; readonly resolvedDeck: ResolvedDeck };
 
 type DeckBuildMode = DeckBuildStart["type"];
 

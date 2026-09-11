@@ -46,11 +46,7 @@ function DeckBuildRoute() {
                 onExit={goBack}
                 onOpenCard={openCard}
                 onSaved={goBack}
-                start={{
-                  type: "edit",
-                  cards: resolvedDeck.entries.map((entry) => entry.card),
-                  deck: resolvedDeck.deck,
-                }}
+                start={{ type: "edit", resolvedDeck }}
               />
             )}
           </DeckDetailData>

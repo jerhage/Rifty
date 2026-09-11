@@ -1,12 +1,8 @@
 import type { Card } from "@/features/card/card";
 import type { CardId } from "@/features/card/value-objects/card-id";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
-import {
-  DECK_SECTIONS,
-  type Deck,
-  type DeckEntry,
-  type DeckSection,
-} from "@/features/deck/deck/deck";
+import { DECK_SECTIONS, type DeckEntry, type DeckSection } from "@/features/deck/deck/deck";
+import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 
 type DeckBuildStepId = "legend" | "chosenChampion" | "zones";
 
@@ -124,48 +120,24 @@ function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
   return entries;
 }
 
-function draftFromDeck(deck: Deck, cards: readonly Card[]): DeckBuildDraft {
-  const byPrintingId = new Map(cards.map((card) => [card.printingId, card]));
-  const cardFor = (section: DeckSection) => {
-    const entry = deck.entries.find((candidate) => candidate.section === section);
-
-    return entry ? (byPrintingId.get(entry.printingId) ?? null) : null;
-  };
-
+function draftFromDeck({ chosenChampionCard, deck, entries }: ResolvedDeck): DeckBuildDraft {
   let draft: DeckBuildDraft = {
     ...EMPTY_DRAFT,
     name: deck.name,
-    legend: cardFor("legend"),
-    chosenChampion:
-      deck.chosenChampionCardId === null ? null : (championPrinting(deck, byPrintingId) ?? null),
+    legend: entries.find((entry) => entry.section === "legend")?.card ?? null,
+    chosenChampion: chosenChampionCard,
   };
 
-  for (const entry of deck.entries) {
+  for (const entry of entries) {
     if (entry.section === "legend") continue;
 
-    const card = byPrintingId.get(entry.printingId);
-    if (!card) continue;
-
-    draft = withZoneCard(draft, entry.section, entry.printingId, {
-      card,
+    draft = withZoneCard(draft, entry.section, entry.card.printingId, {
+      card: entry.card,
       quantity: entry.quantity,
     });
   }
 
   return draft;
-}
-
-function championPrinting(
-  deck: Deck,
-  byPrintingId: ReadonlyMap<PrintingId, Card>,
-): Card | undefined {
-  const seated = deck.entries.find(
-    (entry) => entry.section === "mainDeck" && entry.cardId === deck.chosenChampionCardId,
-  );
-
-  if (!seated) return undefined;
-
-  return byPrintingId.get(seated.printingId);
 }
 
 interface PlacedCard {

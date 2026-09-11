@@ -2,9 +2,11 @@ import type { z } from "zod/v4";
 
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
+import type { Card } from "@/features/card/card";
 import { cardIdSchema, type CardId } from "@/features/card/value-objects/card-id";
 import { printingIdSchema, type PrintingId } from "@/features/card/value-objects/printing-id";
 import { deckSchema, parseDeck, type Deck } from "@/features/deck/deck/deck";
+import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 
 import { card, cardSet } from "../card/fixtures";
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
@@ -68,6 +70,26 @@ function deck(id: string, options: Partial<Omit<DeckInput, "id">> = {}): Deck {
   });
 }
 
+/** Pairs every entry of a deck with the card fixture whose printing it names. */
+function resolvedDeck(
+  source: Deck,
+  cards: readonly Card[],
+  chosenChampionCard: Card | null = null,
+): ResolvedDeck {
+  const byPrintingId = new Map(cards.map((held) => [held.printingId, held]));
+
+  return {
+    deck: source,
+    entries: source.entries.map((entry) => {
+      const held = byPrintingId.get(entry.printingId);
+      if (!held) throw new Error(`No card fixture for printing ${entry.printingId}.`);
+
+      return { section: entry.section, card: held, quantity: entry.quantity };
+    }),
+    chosenChampionCard,
+  };
+}
+
 /** Hands out the given instants in order, repeating the last one once they run out. */
 function fixedClock(...instants: readonly string[]): Clock {
   let index = 0;
@@ -83,5 +105,5 @@ function sequentialIds(prefix = "deck"): IdGenerator {
   return { next: () => `${prefix}-${++index}` };
 }
 
-export { cardId, deck, deckScenarioStore, fixedClock, printingId, sequentialIds };
+export { cardId, deck, deckScenarioStore, fixedClock, printingId, resolvedDeck, sequentialIds };
 export type { DeckEntryInput };

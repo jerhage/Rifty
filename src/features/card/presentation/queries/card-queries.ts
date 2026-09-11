@@ -18,7 +18,7 @@ const PAGE_SIZE = 30;
 const LOOKUP_LIMIT = 100;
 const REFERENCE_STALE_TIME_MS = 60 * 60 * 1000;
 
-function cardDetailQuery(printingId: PrintingId, capabilities: FindCardCapabilities) {
+function getCardQuery(printingId: PrintingId, capabilities: FindCardCapabilities) {
   return queryOptions({
     queryKey: cardKeys.detail(printingId),
     queryFn: ({ signal }) => findCard(printingId, capabilities, { signal }),
@@ -26,7 +26,7 @@ function cardDetailQuery(printingId: PrintingId, capabilities: FindCardCapabilit
   });
 }
 
-function cardsQuery(criteria: CardListKeyCriteria, capabilities: ListCardsCapabilities) {
+function listCardsPagedQuery(criteria: CardListKeyCriteria, capabilities: ListCardsCapabilities) {
   return infiniteQueryOptions({
     queryKey: cardKeys.list(criteria),
     queryFn: ({ pageParam, signal }) =>
@@ -37,7 +37,10 @@ function cardsQuery(criteria: CardListKeyCriteria, capabilities: ListCardsCapabi
   });
 }
 
-function cardLookupQuery(printingIds: readonly PrintingId[], capabilities: ListCardsCapabilities) {
+function listCardsByPrintingIdsQuery(
+  printingIds: readonly PrintingId[],
+  capabilities: ListCardsCapabilities,
+) {
   return queryOptions({
     queryKey: cardKeys.lookup(printingIds),
     queryFn: ({ signal }) =>
@@ -46,7 +49,7 @@ function cardLookupQuery(printingIds: readonly PrintingId[], capabilities: ListC
   });
 }
 
-function cardSummariesQuery(
+function listCardSummariesPagedQuery(
   criteria: CardListKeyCriteria,
   capabilities: ListCardSummariesCapabilities,
 ) {
@@ -62,7 +65,7 @@ function cardSummariesQuery(
   });
 }
 
-function keywordsQuery(capabilities: ListKeywordsCapabilities) {
+function listKeywordsQuery(capabilities: ListKeywordsCapabilities) {
   return queryOptions({
     queryKey: cardKeys.keywords(),
     queryFn: ({ signal }) => listKeywords(capabilities, { signal }),
@@ -70,4 +73,10 @@ function keywordsQuery(capabilities: ListKeywordsCapabilities) {
   });
 }
 
-export { cardDetailQuery, cardLookupQuery, cardsQuery, cardSummariesQuery, keywordsQuery };
+export {
+  getCardQuery,
+  listCardsByPrintingIdsQuery,
+  listCardsPagedQuery,
+  listCardSummariesPagedQuery,
+  listKeywordsQuery,
+};

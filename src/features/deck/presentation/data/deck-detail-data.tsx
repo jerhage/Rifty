@@ -7,13 +7,13 @@ import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Card } from "@/features/card/card";
 import type { CardCounter } from "@/features/card/card-counter";
 import type { CardLister } from "@/features/card/card-lister";
-import { cardLookupQuery } from "@/features/card/presentation/queries/card-queries";
+import { listCardsByPrintingIdsQuery } from "@/features/card/presentation/queries/card-queries";
 import type { ListCardsResult } from "@/features/card/use-cases/list-cards";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import type { Deck, DeckId } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
 import type { FindDeckResult } from "@/features/deck/deck/use-cases/find-deck";
-import { deckDetailQuery } from "@/features/deck/presentation/queries/deck-queries";
+import { getDeckQuery } from "@/features/deck/presentation/queries/deck-queries";
 import { useReadState, type ReadState } from "@/hooks/use-read-state";
 
 interface DeckDetailContent {
@@ -42,11 +42,11 @@ function DeckDetailData({
   readonly deckId: DeckId;
 }) {
   const { reload: reloadDeck, state: deckState } = useReadState(
-    deckDetailQuery(deckId, { deckFinder }),
+    getDeckQuery(deckId, { deckFinder }),
   );
   const printingIds = seatedPrintingIds(deckState);
   const { reload: reloadCards, state: cardsState } = useReadState({
-    ...cardLookupQuery(printingIds, { cardCounter, cardLister }),
+    ...listCardsByPrintingIdsQuery(printingIds, { cardCounter, cardLister }),
     enabled: printingIds.length > 0,
   });
 

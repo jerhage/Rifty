@@ -5,7 +5,7 @@ import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Card } from "@/features/card/card";
 import type { CardFinder } from "@/features/card/card-finder";
-import { cardDetailQuery } from "@/features/card/presentation/queries/card-queries";
+import { getCardQuery } from "@/features/card/presentation/queries/card-queries";
 import type { FindCardResult } from "@/features/card/use-cases/find-card";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import { useReadState, type ReadState } from "@/hooks/use-read-state";
@@ -19,7 +19,7 @@ interface CardDetailDataProps {
 }
 
 function CardDetailData({ cardFinder, cardId, children }: CardDetailDataProps) {
-  const { state } = useReadState(cardDetailQuery(cardId, { cardFinder }));
+  const { state } = useReadState(getCardQuery(cardId, { cardFinder }));
 
   return match(state)
     .with({ type: "loading" }, () => <LoadingState />)

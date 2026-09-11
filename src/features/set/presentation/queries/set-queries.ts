@@ -6,7 +6,7 @@ import { setKeys } from "./set-keys";
 
 const REFERENCE_STALE_TIME_MS = 60 * 60 * 1000;
 
-function cardSetsQuery(capabilities: ListSetsCapabilities) {
+function listCardSetsQuery(capabilities: ListSetsCapabilities) {
   return queryOptions({
     queryKey: setKeys.list(),
     queryFn: ({ signal }) => listSets(capabilities, { signal }),
@@ -14,4 +14,4 @@ function cardSetsQuery(capabilities: ListSetsCapabilities) {
   });
 }
 
-export { cardSetsQuery };
+export { listCardSetsQuery };

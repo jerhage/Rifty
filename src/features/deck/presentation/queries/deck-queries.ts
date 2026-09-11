@@ -13,7 +13,7 @@ import { deckKeys } from "./deck-keys";
 
 const DECK_STALE_TIME_MS = 0;
 
-function deckDetailQuery(deckId: DeckId, capabilities: FindDeckCapabilities) {
+function getDeckQuery(deckId: DeckId, capabilities: FindDeckCapabilities) {
   return queryOptions({
     queryKey: deckKeys.detail(deckId),
     queryFn: ({ signal }) => findDeck(deckId, capabilities, { signal }),
@@ -21,7 +21,7 @@ function deckDetailQuery(deckId: DeckId, capabilities: FindDeckCapabilities) {
   });
 }
 
-function decksQuery(capabilities: ListDecksCapabilities) {
+function listDecksQuery(capabilities: ListDecksCapabilities) {
   return queryOptions({
     queryKey: deckKeys.lists(),
     queryFn: ({ signal }) => listDecks(capabilities, { signal }),
@@ -35,4 +35,4 @@ function saveDeckMutation(capabilities: SaveDeckCapabilities) {
   });
 }
 
-export { deckDetailQuery, decksQuery, saveDeckMutation };
+export { getDeckQuery, listDecksQuery, saveDeckMutation };

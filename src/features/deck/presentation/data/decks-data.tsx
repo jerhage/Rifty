@@ -6,7 +6,7 @@ import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
-import { decksQuery } from "@/features/deck/presentation/queries/deck-queries";
+import { listDecksQuery } from "@/features/deck/presentation/queries/deck-queries";
 import { useReadState } from "@/hooks/use-read-state";
 
 interface DecksDataContent {
@@ -20,7 +20,7 @@ interface DecksDataProps {
 }
 
 function DecksData({ children, deckLister }: DecksDataProps) {
-  const { reload, state } = useReadState(decksQuery({ deckLister }));
+  const { reload, state } = useReadState(listDecksQuery({ deckLister }));
 
   return match(state)
     .with({ type: "loading" }, () => <LoadingState />)

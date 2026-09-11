@@ -7,7 +7,7 @@ import {
   useDeckSave,
   type DeckSaveRequest,
 } from "@/features/deck/presentation/hooks/use-deck-save";
-import { decksQuery } from "@/features/deck/presentation/queries/deck-queries";
+import { listDecksQuery } from "@/features/deck/presentation/queries/deck-queries";
 import { useReadState } from "@/hooks/use-read-state";
 
 import { createTestWrapper } from "../test-wrapper";
@@ -54,7 +54,7 @@ async function renderDeckSave(store: DeckStore) {
   const onSaved = jest.fn();
   const rendered = await renderHook(
     () => ({
-      decks: useReadState(decksQuery(store.listing)),
+      decks: useReadState(listDecksQuery(store.listing)),
       saving: useDeckSave({ type: "new" }, store.capabilities, { onSaved }),
     }),
     { wrapper: createTestWrapper() },

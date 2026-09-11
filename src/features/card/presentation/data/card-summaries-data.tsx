@@ -8,7 +8,7 @@ import type { CardCounter } from "@/features/card/card-counter";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { CardSummaryLister } from "@/features/card/card-summary-lister";
 import type { CardListKeyCriteria } from "@/features/card/presentation/queries/card-keys";
-import { cardSummariesQuery } from "@/features/card/presentation/queries/card-queries";
+import { listCardSummariesPagedQuery } from "@/features/card/presentation/queries/card-queries";
 import { usePagedReadState, type PagingState } from "@/hooks/use-paged-read-state";
 
 interface CardSummariesDataContent {
@@ -36,7 +36,7 @@ function CardSummariesData({
   criteria,
 }: CardSummariesDataProps) {
   const { state, loadMore, refresh, reload } = usePagedReadState(
-    cardSummariesQuery(criteria, { cardCounter, cardSummaryLister }),
+    listCardSummariesPagedQuery(criteria, { cardCounter, cardSummaryLister }),
     { loadMoreErrorMessage: "Could not load more cards." },
   );
 

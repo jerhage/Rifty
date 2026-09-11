@@ -23,7 +23,7 @@ function getDeckQuery(deckId: DeckId, capabilities: FindDeckCapabilities) {
 
 function listDecksQuery(capabilities: ListDecksCapabilities) {
   return queryOptions({
-    queryKey: deckKeys.lists(),
+    queryKey: deckKeys.list(),
     queryFn: ({ signal }) => listDecks(capabilities, { signal }),
     staleTime: DECK_STALE_TIME_MS,
   });

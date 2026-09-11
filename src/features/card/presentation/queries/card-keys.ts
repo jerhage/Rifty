@@ -5,15 +5,12 @@ type CardListKeyCriteria = Omit<CardListCriteria, "limit" | "offset">;
 
 const cardKeys = {
   all: () => ["card"] as const,
-  details: () => [...cardKeys.all(), "detail"] as const,
-  detail: (printingId: PrintingId) => [...cardKeys.details(), printingId] as const,
+  byPrintingIds: (printingIds: readonly PrintingId[]) =>
+    [...cardKeys.all(), "byPrintingIds", printingIds] as const,
+  detail: (printingId: PrintingId) => [...cardKeys.all(), "detail", printingId] as const,
   keywords: () => [...cardKeys.all(), "keyword"] as const,
-  lists: () => [...cardKeys.all(), "list"] as const,
-  list: (criteria: CardListKeyCriteria) => [...cardKeys.lists(), criteria] as const,
-  lookups: () => [...cardKeys.all(), "lookup"] as const,
-  lookup: (printingIds: readonly PrintingId[]) => [...cardKeys.lookups(), printingIds] as const,
-  summaries: () => [...cardKeys.all(), "summary"] as const,
-  summaryList: (criteria: CardListKeyCriteria) => [...cardKeys.summaries(), criteria] as const,
+  list: (criteria: CardListKeyCriteria) => [...cardKeys.all(), "list", criteria] as const,
+  summaryList: (criteria: CardListKeyCriteria) => [...cardKeys.all(), "summary", criteria] as const,
 };
 
 export { cardKeys };

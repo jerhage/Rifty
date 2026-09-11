@@ -42,7 +42,7 @@ function listCardsByPrintingIdsQuery(
   capabilities: ListCardsCapabilities,
 ) {
   return queryOptions({
-    queryKey: cardKeys.lookup(printingIds),
+    queryKey: cardKeys.byPrintingIds(printingIds),
     queryFn: ({ signal }) =>
       listCards({ printingIds: [...printingIds], limit: LOOKUP_LIMIT }, capabilities, { signal }),
     staleTime: REFERENCE_STALE_TIME_MS,

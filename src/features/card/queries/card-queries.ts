@@ -7,10 +7,6 @@ import {
 } from "@/features/card/use-cases/list-card-summaries";
 import { listCards, type ListCardsCapabilities } from "@/features/card/use-cases/list-cards";
 import {
-  listCardsByPrintingIds,
-  type ListCardsByPrintingIdsCapabilities,
-} from "@/features/card/use-cases/list-cards-by-printing-ids";
-import {
   listKeywords,
   type ListKeywordsCapabilities,
 } from "@/features/card/use-cases/list-keywords";
@@ -40,17 +36,6 @@ function listCardsPagedQuery(criteria: CardListKeyCriteria, capabilities: ListCa
   });
 }
 
-function listCardsByPrintingIdsQuery(
-  printingIds: readonly PrintingId[],
-  capabilities: ListCardsByPrintingIdsCapabilities,
-) {
-  return queryOptions({
-    queryKey: cardKeys.byPrintingIds(printingIds),
-    queryFn: ({ signal }) => listCardsByPrintingIds(printingIds, capabilities, { signal }),
-    staleTime: REFERENCE_STALE_TIME_MS,
-  });
-}
-
 function listCardSummariesPagedQuery(
   criteria: CardListKeyCriteria,
   capabilities: ListCardSummariesCapabilities,
@@ -75,10 +60,4 @@ function listKeywordsQuery(capabilities: ListKeywordsCapabilities) {
   });
 }
 
-export {
-  getCardQuery,
-  listCardsByPrintingIdsQuery,
-  listCardsPagedQuery,
-  listCardSummariesPagedQuery,
-  listKeywordsQuery,
-};
+export { getCardQuery, listCardsPagedQuery, listCardSummariesPagedQuery, listKeywordsQuery };

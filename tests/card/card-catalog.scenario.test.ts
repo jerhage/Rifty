@@ -1,7 +1,6 @@
 import { findCard } from "@/features/card/use-cases/find-card";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import { listCards } from "@/features/card/use-cases/list-cards";
-import { listCardsByPrintingIds } from "@/features/card/use-cases/list-cards-by-printing-ids";
 import { Page } from "@/shared/page";
 
 import { card, cardSet, carriedKeyword, grantedKeyword } from "./fixtures";
@@ -188,7 +187,10 @@ describe("card catalog scenarios", () => {
     store.seedSet(unleashed);
     const calm = card("calm", unleashed.code, { collectorNumber: "1", domainIds: ["Calm"] });
     const mind = card("mind", unleashed.code, { collectorNumber: "2", domainIds: ["Mind"] });
-    const both = card("both", unleashed.code, { collectorNumber: "3", domainIds: ["Calm", "Mind"] });
+    const both = card("both", unleashed.code, {
+      collectorNumber: "3",
+      domainIds: ["Calm", "Mind"],
+    });
     const fury = card("fury", unleashed.code, { collectorNumber: "4", domainIds: ["Fury"] });
     for (const seeded of [calm, mind, both, fury]) store.seedCard(seeded);
 
@@ -682,14 +684,9 @@ describe("card catalog scenarios", () => {
     for (const each of seeded) store.seedCard(each);
     const requested = seeded.map((each) => each.printingId);
 
-    const resolved = await listCardsByPrintingIds(requested, {
-      cardsByPrintingIdsFinder: store.cards,
-    });
+    const resolved = await store.cards.getAllByPrintingIds(requested);
 
-    expect(resolved.type).toBe("success");
-    expect([...resolved.cards].map((found) => found.printingId).sort()).toEqual(
-      [...requested].sort(),
-    );
+    expect([...resolved].map((found) => found.printingId).sort()).toEqual([...requested].sort());
     store.close();
   });
 });

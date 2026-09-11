@@ -5,8 +5,6 @@ type CardListKeyCriteria = Omit<CardListCriteria, "limit" | "offset">;
 
 const cardKeys = {
   all: () => ["card"] as const,
-  byPrintingIds: (printingIds: readonly PrintingId[]) =>
-    [...cardKeys.all(), "byPrintingIds", printingIds] as const,
   detail: (printingId: PrintingId) => [...cardKeys.all(), "detail", printingId] as const,
   keywords: () => [...cardKeys.all(), "keyword"] as const,
   list: (criteria: CardListKeyCriteria) => [...cardKeys.all(), "list", criteria] as const,

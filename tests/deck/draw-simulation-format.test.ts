@@ -1,40 +1,11 @@
 import { MULLIGAN_LIMIT } from "@/features/analysis/draw-simulation";
 import {
   handLabel,
-  mulliganAction,
   mulliganActionLabel,
   mulliganCounterLabel,
   mulliganDisabled,
   mulliganStatusMessage,
 } from "@/features/deck/presentation/draw-simulation-format";
-
-const available = { type: "available" } as const;
-const spent = (replaced: number) => ({ type: "spent", replaced }) as const;
-
-describe("mulligan action", () => {
-  it("should await a selection while the mulligan is unused and nothing is chosen", () => {
-    expect(mulliganAction(available, 0)).toEqual({ type: "awaitingSelection" });
-  });
-
-  it("should be ready as soon as one card is chosen", () => {
-    expect(mulliganAction(available, 1)).toEqual({ type: "ready", count: 1 });
-  });
-
-  it("should be ready on the last permitted selection", () => {
-    expect(mulliganAction(available, MULLIGAN_LIMIT)).toEqual({
-      type: "ready",
-      count: MULLIGAN_LIMIT,
-    });
-  });
-
-  it("should carry how many cards a spent mulligan replaced", () => {
-    expect(mulliganAction(spent(2), 0)).toEqual({ type: "spent", replaced: 2 });
-  });
-
-  it("should stay spent even if cards are still selected", () => {
-    expect(mulliganAction(spent(1), 2)).toEqual({ type: "spent", replaced: 1 });
-  });
-});
 
 describe("hand label", () => {
   it("should name the hand number while the mulligan is unused", () => {

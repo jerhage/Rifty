@@ -2,25 +2,11 @@ import { match } from "ts-pattern";
 
 import { MULLIGAN_LIMIT } from "@/features/analysis/draw-simulation";
 
-import type { DrawNotice, MulliganState } from "./hooks/use-draw-simulation";
-
-type MulliganAction =
-  | { readonly type: "spent"; readonly replaced: number }
-  | { readonly type: "awaitingSelection" }
-  | { readonly type: "ready"; readonly count: number };
+import type { DrawNotice, MulliganAction } from "./hooks/use-draw-simulation";
 
 type MulliganStatusMessage =
   | { readonly type: "note"; readonly text: string }
   | { readonly type: "warning"; readonly text: string };
-
-function mulliganAction(mulligan: MulliganState, selectedCount: number): MulliganAction {
-  return match<MulliganState, MulliganAction>(mulligan)
-    .with({ type: "spent" }, ({ replaced }) => ({ type: "spent", replaced }))
-    .with({ type: "available" }, () =>
-      selectedCount === 0 ? { type: "awaitingSelection" } : { type: "ready", count: selectedCount },
-    )
-    .exhaustive();
-}
 
 function handLabel(action: MulliganAction, handNumber: number): string {
   return match(action)
@@ -87,10 +73,9 @@ function mulliganStatusMessage(action: MulliganAction, notice: DrawNotice): Mull
 
 export {
   handLabel,
-  mulliganAction,
   mulliganActionLabel,
   mulliganCounterLabel,
   mulliganDisabled,
   mulliganStatusMessage,
 };
-export type { MulliganAction, MulliganStatusMessage };
+export type { MulliganStatusMessage };

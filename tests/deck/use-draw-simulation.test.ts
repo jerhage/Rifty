@@ -57,7 +57,7 @@ describe("draw simulation", () => {
     expect(printings(result.current.hand)).toEqual(["one", "two", "three", "four"]);
     expect(result.current.handNumber).toBe(1);
     expect(result.current.selected).toEqual([]);
-    expect(result.current.mulligan).toEqual({ type: "available" });
+    expect(result.current.mulligan).toEqual({ type: "awaitingSelection" });
     expect(result.current.notice).toEqual({ type: "none" });
   });
 
@@ -82,11 +82,13 @@ describe("draw simulation", () => {
     await act(() => result.current.toggleSelection(2));
 
     expect(result.current.selected).toEqual([2]);
+    expect(result.current.mulligan).toEqual({ type: "ready", count: 1 });
     expect(result.current.notice).toEqual({ type: "none" });
 
     await act(() => result.current.toggleSelection(2));
 
     expect(result.current.selected).toEqual([]);
+    expect(result.current.mulligan).toEqual({ type: "awaitingSelection" });
   });
 
   it("should warn and keep the selection when the limit is reached", async () => {
@@ -98,6 +100,7 @@ describe("draw simulation", () => {
 
     expect(result.current.selected).toEqual([0, 1]);
     expect(result.current.selected).toHaveLength(MULLIGAN_LIMIT);
+    expect(result.current.mulligan).toEqual({ type: "ready", count: MULLIGAN_LIMIT });
     expect(result.current.notice).toEqual({ type: "selectionLimit" });
   });
 
@@ -143,7 +146,7 @@ describe("draw simulation", () => {
     await act(() => result.current.takeMulligan());
 
     expect(printings(result.current.hand)).toEqual(["one", "two", "three", "four"]);
-    expect(result.current.mulligan).toEqual({ type: "available" });
+    expect(result.current.mulligan).toEqual({ type: "awaitingSelection" });
     expect(result.current.notice).toEqual({ type: "none" });
   });
 
@@ -178,7 +181,7 @@ describe("draw simulation", () => {
     await act(() => result.current.takeMulligan());
     await act(() => result.current.dealFreshHand());
 
-    expect(result.current.mulligan).toEqual({ type: "available" });
+    expect(result.current.mulligan).toEqual({ type: "awaitingSelection" });
     expect(result.current.notice).toEqual({ type: "none" });
     expect(result.current.selected).toEqual([]);
     expect(result.current.handNumber).toBe(2);

@@ -13,9 +13,10 @@ import type { Card } from "@/features/card/card";
 
 type ShuffleCards = <Item>(items: readonly Item[]) => readonly Item[];
 
-type MulliganState =
-  | { readonly type: "available" }
-  | { readonly type: "spent"; readonly replaced: number };
+type MulliganAction =
+  | { readonly type: "spent"; readonly replaced: number }
+  | { readonly type: "awaitingSelection" }
+  | { readonly type: "ready"; readonly count: number };
 
 type NoNotice = { readonly type: "none" };
 type SelectionLimitNotice = { readonly type: "selectionLimit" };
@@ -52,7 +53,7 @@ interface DrawSimulationDeal {
 interface DrawSimulation {
   readonly hand: readonly Card[];
   readonly handNumber: number;
-  readonly mulligan: MulliganState;
+  readonly mulligan: MulliganAction;
   readonly notice: DrawNotice;
   readonly selected: readonly number[];
   dealFreshHand(): void;
@@ -142,13 +143,19 @@ function useDrawSimulation(
     dispatch({ type: "tookMulligan" });
   }, []);
 
-  const { mulligan, selected } = match(state)
+  const { mulligan, selected } = match<
+    DrawSimulationState,
+    Pick<DrawSimulation, "mulligan" | "selected">
+  >(state)
     .with({ type: "choosing" }, (choosing) => ({
-      mulligan: { type: "available" } as const,
+      mulligan:
+        choosing.selected.length === 0
+          ? { type: "awaitingSelection" }
+          : { type: "ready", count: choosing.selected.length },
       selected: choosing.selected,
     }))
     .with({ type: "settled" }, ({ replaced }) => ({
-      mulligan: { type: "spent", replaced } as const,
+      mulligan: { type: "spent", replaced },
       selected: NO_SELECTION,
     }))
     .exhaustive();
@@ -166,4 +173,4 @@ function useDrawSimulation(
 }
 
 export { useDrawSimulation };
-export type { DrawNotice, DrawSimulation, MulliganState, ShuffleCards };
+export type { DrawNotice, MulliganAction, ShuffleCards };

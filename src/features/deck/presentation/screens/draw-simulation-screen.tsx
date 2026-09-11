@@ -20,7 +20,6 @@ import { MulliganStatusBar } from "../components/draw/mulligan-status-bar";
 import { MAIN_DECK_SECTIONS, chosenChampionCard, deckCards } from "../deck-contents";
 import {
   handLabel,
-  mulliganAction,
   mulliganActionLabel,
   mulliganCounterLabel,
   mulliganDisabled,
@@ -65,8 +64,6 @@ function DrawSimulationScreen({
     toggleSelection,
   } = useDrawSimulation(copies, shuffleCards);
 
-  const action = mulliganAction(mulligan, selected.length);
-
   return (
     <ThemedView style={styles.screen}>
       <View
@@ -92,7 +89,7 @@ function DrawSimulationScreen({
           <ThemedText type="small">←</ThemedText>
         </Pressable>
         <ThemedText themeColor="textSecondary" type="mono">
-          {handLabel(action, handNumber)}
+          {handLabel(mulligan, handNumber)}
         </ThemedText>
       </View>
 
@@ -128,8 +125,8 @@ function DrawSimulationScreen({
         ) : null}
 
         <MulliganStatusBar
-          counter={mulliganCounterLabel(action)}
-          message={mulliganStatusMessage(action, notice)}
+          counter={mulliganCounterLabel(mulligan)}
+          message={mulliganStatusMessage(mulligan, notice)}
         />
 
         <View style={styles.panels}>
@@ -152,8 +149,8 @@ function DrawSimulationScreen({
       >
         <View style={styles.primary}>
           <Button
-            disabled={mulliganDisabled(action)}
-            label={mulliganActionLabel(action)}
+            disabled={mulliganDisabled(mulligan)}
+            label={mulliganActionLabel(mulligan)}
             onPress={takeMulligan}
             variant="primary"
           />

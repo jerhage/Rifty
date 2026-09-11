@@ -26,18 +26,20 @@ function DeckBuilder({
   readonly onSaved: () => void;
   readonly start: DeckBuildStart;
 }) {
-  const build = useDeckBuild(start, capabilities, { onExit, onSaved });
+  const build = useDeckBuild(start, { onExit });
 
   return (
     <DeckBuildScreen
+      capabilities={capabilities}
       cardCounter={cardCounter}
       cardLister={cardLister}
       draft={build.draft}
       keywords={keywords}
       legends={build.legends}
       onOpenCard={onOpenCard}
+      onSaved={onSaved}
       pool={build.pool}
-      saving={build.saving}
+      start={start}
       steps={build.steps}
     />
   );

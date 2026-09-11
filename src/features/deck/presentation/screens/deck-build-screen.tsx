@@ -11,23 +11,25 @@ import { BuildProgressHeader } from "../components/build/build-progress-header";
 import { ChampionPane } from "../components/build/panes/champion-pane";
 import { LegendPane } from "../components/build/panes/legend-pane";
 import { ZonesPane } from "../components/build/panes/zones-pane";
+import type { DeckBuildCapabilities, DeckBuildStart } from "../deck-build-start";
 import type {
   DeckBuildStepsState,
   DeckDraftState,
-  DeckSaveState,
   LegendSearchState,
   ZonePoolState,
 } from "../hooks/use-deck-build";
 
 interface DeckBuildScreenProps {
+  readonly capabilities: DeckBuildCapabilities;
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
   readonly draft: DeckDraftState;
   readonly keywords: readonly Keyword[];
   readonly legends: LegendSearchState;
   readonly onOpenCard: (card: Card) => void;
+  readonly onSaved: () => void;
   readonly pool: ZonePoolState;
-  readonly saving: DeckSaveState;
+  readonly start: DeckBuildStart;
   readonly steps: DeckBuildStepsState;
 }
 
@@ -36,14 +38,16 @@ interface DeckBuildScreenProps {
  * never blocks a step the player is not looking at.
  */
 function DeckBuildScreen({
+  capabilities,
   cardCounter,
   cardLister,
   draft,
   keywords,
   legends,
   onOpenCard,
+  onSaved,
   pool,
-  saving,
+  start,
   steps,
 }: DeckBuildScreenProps) {
   return (
@@ -71,13 +75,15 @@ function DeckBuildScreen({
         ))
         .with("zones", () => (
           <ZonesPane
+            capabilities={capabilities}
             cardCounter={cardCounter}
             cardLister={cardLister}
             draft={draft}
             keywords={keywords}
             onOpenCard={onOpenCard}
+            onSaved={onSaved}
             pool={pool}
-            saving={saving}
+            start={start}
             steps={steps}
           />
         ))

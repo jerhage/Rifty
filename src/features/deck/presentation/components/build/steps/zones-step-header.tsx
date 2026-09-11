@@ -20,11 +20,13 @@ import { PoolViewTabs } from "../pool-view-tabs";
 import { ZoneSelector } from "../zone-selector";
 
 function ZonesStepHeader({
-  draft: { changeName, draft, verification },
+  draft: { draft, verification },
+  onChangeName,
   onEditStep,
   pool: { filters, layout, openFilters, query, setLayout, setQuery, setView, setZone, view, zone },
 }: {
   readonly draft: ZoneDraftViewState;
+  readonly onChangeName: (name: string) => void;
   readonly onEditStep: (id: DeckBuildStepId) => void;
   readonly pool: ZonePoolViewState;
 }) {
@@ -38,7 +40,7 @@ function ZonesStepHeader({
         <TextInput
           accessibilityLabel="Deck name"
           autoCapitalize="words"
-          onChangeText={changeName}
+          onChangeText={onChangeName}
           placeholder="Deck name"
           placeholderTextColor={theme.textTertiary}
           style={[styles.nameInput, { color: theme.text }]}

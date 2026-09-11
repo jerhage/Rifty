@@ -1,30 +1,17 @@
 import { act, renderHook } from "@testing-library/react-native";
 
 import { activePoolFilterCount, poolCriteria } from "@/features/deck/presentation/deck-zone-pool";
-import type {
-  DeckBuildCapabilities,
-  DeckBuildStart,
-} from "@/features/deck/presentation/deck-build-start";
+import type { DeckBuildStart } from "@/features/deck/presentation/deck-build-start";
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
 import { createTestWrapper } from "../test-wrapper";
 
-import { fixedClock, sequentialIds } from "./fixtures";
-
-const capabilities: DeckBuildCapabilities = {
-  clock: fixedClock("2026-09-01T10:00:00.000Z"),
-  deckLister: { getAll: async () => [] },
-  deckSaver: { save: async () => undefined },
-  idGenerator: sequentialIds(),
-};
-
 const start: DeckBuildStart = { type: "new" };
 
 async function renderBuild() {
-  return await renderHook(
-    () => useDeckBuild(start, capabilities, { onExit: () => undefined, onSaved: () => undefined }),
-    { wrapper: createTestWrapper() },
-  );
+  return await renderHook(() => useDeckBuild(start, { onExit: () => undefined }), {
+    wrapper: createTestWrapper(),
+  });
 }
 
 describe("deck build pool filters", () => {

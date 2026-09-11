@@ -11,7 +11,7 @@ import {
 
 import { deckKeys } from "./deck-keys";
 
-const DECK_STALE_TIME_MS = 0;
+const DECK_STALE_TIME_MS = 5 * 60 * 1000;
 
 function getDeckQuery(deckId: DeckId, capabilities: FindDeckCapabilities) {
   return queryOptions({

@@ -17,6 +17,7 @@ import {
 import { match } from "ts-pattern";
 
 import type { Card } from "@/features/card/card";
+import type { CardId } from "@/features/card/value-objects/card-id";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import type { CardSummary } from "@/features/card/card-summary";
 import type {
@@ -46,6 +47,8 @@ import {
 import { toDomainCard, toDomainCardSummary } from "./card-mapper";
 import type { SqliteDatabase } from "./sqlite-database";
 
+const PRINTING_ID_CHUNK_SIZE = 200;
+
 const PRINTED_CARD_COLUMNS = {
   card: getTableColumns(cards),
   printing: getTableColumns(cardPrintings),
@@ -74,6 +77,43 @@ class SqliteCardRepository implements CardRepository {
     if (!row) return null;
 
     return (await this.#toDomainCards([row], signal)).at(0) ?? null;
+  }
+
+  async getByCardId(cardId: CardId, { signal }: ReadOptions = {}): Promise<Card | null> {
+    throwIfAborted(signal);
+    const [row] = await this.db
+      .select(PRINTED_CARD_COLUMNS)
+      .from(cardPrintings)
+      .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
+      .where(eq(cardPrintings.cardId, cardId))
+      .orderBy(desc(cardPrintings.isCanonical), asc(cardPrintings.id))
+      .limit(1);
+    throwIfAborted(signal);
+    if (!row) return null;
+
+    return (await this.#toDomainCards([row], signal)).at(0) ?? null;
+  }
+
+  async getAllByPrintingIds(
+    printingIds: readonly PrintingId[],
+    { signal }: ReadOptions = {},
+  ): Promise<readonly Card[]> {
+    throwIfAborted(signal);
+    const uniqueIds = [...new Set(printingIds)];
+    const found: Card[] = [];
+
+    for (const chunk of chunked(uniqueIds, PRINTING_ID_CHUNK_SIZE)) {
+      const rows = await this.db
+        .select(PRINTED_CARD_COLUMNS)
+        .from(cardPrintings)
+        .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
+        .where(inArray(cardPrintings.id, chunk))
+        .orderBy(...this.#orderBy(undefined));
+      throwIfAborted(signal);
+      found.push(...(await this.#toDomainCards(rows, signal)));
+    }
+
+    return found;
   }
 
   async count(criteria?: CardListCriteria, { signal }: ReadOptions = {}): Promise<number> {
@@ -131,7 +171,7 @@ class SqliteCardRepository implements CardRepository {
       })
       .from(cardPrintings)
       .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
-      .innerJoin(cardMedia, eq(cardMedia.printingId, cardPrintings.id))
+      .leftJoin(cardMedia, eq(cardMedia.printingId, cardPrintings.id))
       .where(and(...this.#conditionsFor(criteria)))
       .orderBy(...this.#orderBy(criteria))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
@@ -145,13 +185,19 @@ class SqliteCardRepository implements CardRepository {
     );
 
     return Page.create(
-      pageRows.map((row) =>
-        toDomainCardSummary({
-          ...row,
-          domains: domainsByCardId.get(row.card.id) ?? [],
+      pageRows.map(({ card, media, printing }) => {
+        if (!media) {
+          throw new Error(`Catalog card ${printing.id} is missing required related data.`);
+        }
+
+        return toDomainCardSummary({
+          card,
+          printing,
+          media,
+          domains: domainsByCardId.get(card.id) ?? [],
           imageBaseUrl: this.imageBaseUrl,
-        }),
-      ),
+        });
+      }),
       rows.length > limit,
     );
   }
@@ -203,9 +249,6 @@ class SqliteCardRepository implements CardRepository {
     const conditions: SQL[] = [];
     if (criteria.setCodes?.length) {
       conditions.push(inArray(cardPrintings.setCode, criteria.setCodes));
-    }
-    if (criteria.printingIds?.length) {
-      conditions.push(inArray(cardPrintings.id, [...new Set(criteria.printingIds)]));
     }
     if (criteria.riftboundIds?.length) {
       conditions.push(inArray(cardPrintings.riftboundId, [...new Set(criteria.riftboundIds)]));
@@ -335,6 +378,7 @@ class SqliteCardRepository implements CardRepository {
   #orderBy(criteria: CardListCriteria | undefined): SQL[] {
     const catalogOrder = () => [
       asc(cardPrintings.setCode),
+      asc(sql`cast(${cardPrintings.collectorNumber} as integer)`),
       asc(cardPrintings.collectorNumber),
       asc(cardPrintings.id),
     ];
@@ -441,6 +485,15 @@ class SqliteCardRepository implements CardRepository {
       });
     });
   }
+}
+
+function chunked<Item>(items: readonly Item[], size: number): (readonly Item[])[] {
+  const chunks: Item[][] = [];
+  for (let start = 0; start < items.length; start += size) {
+    chunks.push(items.slice(start, start + size));
+  }
+
+  return chunks;
 }
 
 function groupBy<Row, Key>(rows: readonly Row[], keyOf: (row: Row) => Key): Map<Key, Row[]> {

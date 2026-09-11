@@ -7,6 +7,10 @@ import {
 } from "@/features/card/use-cases/list-card-summaries";
 import { listCards, type ListCardsCapabilities } from "@/features/card/use-cases/list-cards";
 import {
+  listCardsByPrintingIds,
+  type ListCardsByPrintingIdsCapabilities,
+} from "@/features/card/use-cases/list-cards-by-printing-ids";
+import {
   listKeywords,
   type ListKeywordsCapabilities,
 } from "@/features/card/use-cases/list-keywords";
@@ -15,7 +19,6 @@ import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import { cardKeys, type CardListKeyCriteria } from "./card-keys";
 
 const PAGE_SIZE = 30;
-const LOOKUP_LIMIT = 100;
 const REFERENCE_STALE_TIME_MS = 60 * 60 * 1000;
 
 function getCardQuery(printingId: PrintingId, capabilities: FindCardCapabilities) {
@@ -39,12 +42,11 @@ function listCardsPagedQuery(criteria: CardListKeyCriteria, capabilities: ListCa
 
 function listCardsByPrintingIdsQuery(
   printingIds: readonly PrintingId[],
-  capabilities: ListCardsCapabilities,
+  capabilities: ListCardsByPrintingIdsCapabilities,
 ) {
   return queryOptions({
     queryKey: cardKeys.byPrintingIds(printingIds),
-    queryFn: ({ signal }) =>
-      listCards({ printingIds: [...printingIds], limit: LOOKUP_LIMIT }, capabilities, { signal }),
+    queryFn: ({ signal }) => listCardsByPrintingIds(printingIds, capabilities, { signal }),
     staleTime: REFERENCE_STALE_TIME_MS,
   });
 }

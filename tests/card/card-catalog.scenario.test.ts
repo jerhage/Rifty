@@ -1,6 +1,7 @@
 import { findCard } from "@/features/card/use-cases/find-card";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import { listCards } from "@/features/card/use-cases/list-cards";
+import { listCardsByPrintingIds } from "@/features/card/use-cases/list-cards-by-printing-ids";
 import { Page } from "@/shared/page";
 
 import { card, cardSet, carriedKeyword, grantedKeyword } from "./fixtures";
@@ -11,7 +12,7 @@ describe("card catalog scenarios", () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00", "Unleashed");
     const vi = card("vi-signature", unleashed.code, {
-      collectorNumber: 229,
+      collectorNumber: "229",
       name: "Vi - Piltover Enforcer (Signature)",
       cleanName: "Vi Piltover Enforcer Signature",
       classification: { typeId: "Legend", supertypeId: "signature", rarityId: "rare" },
@@ -115,16 +116,19 @@ describe("card catalog scenarios", () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
-    for (let collectorNumber = 1; collectorNumber <= 11; collectorNumber += 1) {
+    const collectorNumbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "10a"];
+    for (const collectorNumber of collectorNumbers) {
       store.seedCard(card(`card-${collectorNumber}`, unleashed.code, { collectorNumber }));
     }
 
-    await expect(store.cards.getPage({ limit: 10, offset: 0 })).resolves.toMatchObject({
-      items: expect.arrayContaining([expect.objectContaining({ printingId: "card-1" })]),
-      hasMore: true,
-    });
+    const firstPage = await store.cards.getPage({ limit: 10, offset: 0 });
+
+    expect(firstPage.items.map((item) => item.printingId)).toEqual(
+      collectorNumbers.slice(0, 10).map((collectorNumber) => `card-${collectorNumber}`),
+    );
+    expect(firstPage.hasMore).toBe(true);
     await expect(store.cards.getPage({ limit: 10, offset: 10 })).resolves.toEqual(
-      Page.create([card("card-11", unleashed.code, { collectorNumber: 11 })], false),
+      Page.create([card("card-10a", unleashed.code, { collectorNumber: "10a" })], false),
     );
     store.close();
   });
@@ -133,8 +137,8 @@ describe("card catalog scenarios", () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
-    store.seedCard(card("vi", unleashed.code, { collectorNumber: 2, name: "Vi" }));
-    const jinx = card("jinx", unleashed.code, { collectorNumber: 1, name: "Jinx" });
+    store.seedCard(card("vi", unleashed.code, { collectorNumber: "2", name: "Vi" }));
+    const jinx = card("jinx", unleashed.code, { collectorNumber: "1", name: "Jinx" });
     store.seedCard(jinx);
 
     await expect(store.cards.getSummaryPage({ limit: 1, offset: 0 })).resolves.toEqual(
@@ -161,11 +165,11 @@ describe("card catalog scenarios", () => {
     store.seedSet(unleashed);
     const spire = card("contested-spire", unleashed.code, {
       classification: { typeId: "Battlefield", supertypeId: null, rarityId: "rare" },
-      collectorNumber: 1,
+      collectorNumber: "1",
       name: "Contested Spire",
       orientation: "landscape",
     });
-    const unit = card("novice", unleashed.code, { collectorNumber: 2, name: "Novice" });
+    const unit = card("novice", unleashed.code, { collectorNumber: "2", name: "Novice" });
     store.seedCard(spire);
     store.seedCard(unit);
 
@@ -182,10 +186,10 @@ describe("card catalog scenarios", () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
-    const calm = card("calm", unleashed.code, { collectorNumber: 1, domainIds: ["Calm"] });
-    const mind = card("mind", unleashed.code, { collectorNumber: 2, domainIds: ["Mind"] });
-    const both = card("both", unleashed.code, { collectorNumber: 3, domainIds: ["Calm", "Mind"] });
-    const fury = card("fury", unleashed.code, { collectorNumber: 4, domainIds: ["Fury"] });
+    const calm = card("calm", unleashed.code, { collectorNumber: "1", domainIds: ["Calm"] });
+    const mind = card("mind", unleashed.code, { collectorNumber: "2", domainIds: ["Mind"] });
+    const both = card("both", unleashed.code, { collectorNumber: "3", domainIds: ["Calm", "Mind"] });
+    const fury = card("fury", unleashed.code, { collectorNumber: "4", domainIds: ["Fury"] });
     for (const seeded of [calm, mind, both, fury]) store.seedCard(seeded);
 
     await expect(
@@ -204,20 +208,20 @@ describe("card catalog scenarios", () => {
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
     const carrier = card("carrier", unleashed.code, {
-      collectorNumber: 1,
+      collectorNumber: "1",
       keywords: [carriedKeyword("shield", "Shield", 1)],
     });
     const granter = card("granter", unleashed.code, {
-      collectorNumber: 2,
+      collectorNumber: "2",
       keywords: [grantedKeyword("shield", "Shield")],
     });
     const twice = card("twice", unleashed.code, {
-      collectorNumber: 3,
+      collectorNumber: "3",
       domainIds: ["Fury"],
       keywords: [carriedKeyword("shield", "Shield", 1), grantedKeyword("shield", "Shield", 2)],
     });
     const manyTargets = card("many-targets", unleashed.code, {
-      collectorNumber: 4,
+      collectorNumber: "4",
       keywords: [
         {
           id: "shield",
@@ -231,10 +235,10 @@ describe("card catalog scenarios", () => {
       ],
     });
     const tank = card("tank", unleashed.code, {
-      collectorNumber: 5,
+      collectorNumber: "5",
       keywords: [carriedKeyword("tank", "Tank")],
     });
-    const plain = card("plain", unleashed.code, { collectorNumber: 6 });
+    const plain = card("plain", unleashed.code, { collectorNumber: "6" });
     for (const seeded of [carrier, granter, twice, manyTargets, tank, plain]) {
       store.seedCard(seeded);
     }
@@ -286,8 +290,8 @@ describe("card catalog scenarios", () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
-    const kept = card("kept", unleashed.code, { collectorNumber: 1, name: "Kept" });
-    const other = card("other", unleashed.code, { collectorNumber: 2, name: "Other" });
+    const kept = card("kept", unleashed.code, { collectorNumber: "1", name: "Kept" });
+    const other = card("other", unleashed.code, { collectorNumber: "2", name: "Other" });
     store.seedCard(kept);
     store.seedCard(other);
 
@@ -351,7 +355,7 @@ describe("card catalog scenarios", () => {
     for (let collectorNumber = 1; collectorNumber <= 12; collectorNumber += 1) {
       store.seedCard(
         card(`card-${collectorNumber}`, unleashed.code, {
-          collectorNumber,
+          collectorNumber: String(collectorNumber),
           domainIds: collectorNumber % 2 === 0 ? ["Calm"] : ["Fury"],
         }),
       );
@@ -370,17 +374,17 @@ describe("card catalog scenarios", () => {
     store.seedSet(unleashed);
     const zeta = card("zeta", unleashed.code, {
       attributes: { energy: 3, might: null, power: null },
-      collectorNumber: 1,
+      collectorNumber: "1",
       name: "Zeta",
     });
     const alpha = card("alpha", unleashed.code, {
       attributes: { energy: 7, might: 2, power: 2 },
-      collectorNumber: 2,
+      collectorNumber: "2",
       name: "Alpha",
     });
     const beta = card("beta", unleashed.code, {
       attributes: { energy: 5, might: 4, power: 1 },
-      collectorNumber: 3,
+      collectorNumber: "3",
       name: "Beta",
     });
     store.seedCard(zeta);
@@ -425,22 +429,22 @@ describe("card catalog scenarios", () => {
     store.seedSet(origins);
     const novice = card("novice", unleashed.code, {
       attributes: { energy: 2, might: 1, power: null },
-      collectorNumber: 1,
+      collectorNumber: "1",
       domainIds: ["Order"],
     });
     const adept = card("adept", unleashed.code, {
       attributes: { energy: 4, might: 3, power: 1 },
-      collectorNumber: 2,
+      collectorNumber: "2",
       domainIds: ["Fury"],
     });
     const master = card("master", unleashed.code, {
       attributes: { energy: 6, might: 5, power: 2 },
-      collectorNumber: 3,
+      collectorNumber: "3",
       domainIds: ["Fury", "Order"],
     });
     const originsCard = card("origins-card", origins.code, {
       attributes: { energy: 9, might: 3, power: 1 },
-      collectorNumber: 1,
+      collectorNumber: "1",
       domainIds: ["Fury"],
     });
     store.seedCard(novice);
@@ -470,10 +474,10 @@ describe("card catalog scenarios", () => {
     store.seedSet(unleashed);
     const kaisa = card("kaisa", unleashed.code, {
       cleanName: "KaiSa Daughter of the Void",
-      collectorNumber: 1,
+      collectorNumber: "1",
       name: "Kai'Sa - Daughter of the Void",
     });
-    const jinx = card("jinx", unleashed.code, { collectorNumber: 2, name: "Jinx" });
+    const jinx = card("jinx", unleashed.code, { collectorNumber: "2", name: "Jinx" });
     store.seedCard(kaisa);
     store.seedCard(jinx);
 
@@ -506,13 +510,13 @@ describe("card catalog scenarios", () => {
     store.seedSet(unleashed);
     const kaisa = card("kaisa", unleashed.code, {
       cleanName: "KaiSa Daughter of the Void",
-      collectorNumber: 1,
+      collectorNumber: "1",
       name: "Kai'Sa - Daughter of the Void",
     });
     const alternate = card("kaisa-alt", unleashed.code, {
       cardId: kaisa.cardId,
       cleanName: "KaiSa Daughter of the Void",
-      collectorNumber: 2,
+      collectorNumber: "2",
       name: "Kai'Sa - Daughter of the Void (Alternate Art)",
     });
     store.seedCard(kaisa);
@@ -531,16 +535,16 @@ describe("card catalog scenarios", () => {
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
     const drawnName = card("drawn-name", unleashed.code, {
-      collectorNumber: 1,
+      collectorNumber: "1",
       name: "Drawn Name",
     });
     const drawSpell = card("draw-spell", unleashed.code, {
       cleanName: "Spell",
-      collectorNumber: 2,
+      collectorNumber: "2",
       name: "Spell",
       rulesText: { rich: "<p>Draw 2.</p>", plain: "Draw 2.", flavour: null },
     });
-    const otherCard = card("other", unleashed.code, { collectorNumber: 3 });
+    const otherCard = card("other", unleashed.code, { collectorNumber: "3" });
     store.seedCard(drawnName);
     store.seedCard(drawSpell);
     store.seedCard(otherCard);
@@ -611,12 +615,12 @@ describe("card catalog scenarios", () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
-    const fury = card("fury", unleashed.code, { collectorNumber: 1, domainIds: ["Fury"] });
+    const fury = card("fury", unleashed.code, { collectorNumber: "1", domainIds: ["Fury"] });
     const furyOrder = card("fury-order", unleashed.code, {
-      collectorNumber: 2,
+      collectorNumber: "2",
       domainIds: ["Fury", "Order"],
     });
-    const order = card("order", unleashed.code, { collectorNumber: 3, domainIds: ["Order"] });
+    const order = card("order", unleashed.code, { collectorNumber: "3", domainIds: ["Order"] });
     store.seedCard(fury);
     store.seedCard(furyOrder);
     store.seedCard(order);
@@ -641,6 +645,50 @@ describe("card catalog scenarios", () => {
         ],
         false,
       ),
+    );
+    store.close();
+  });
+
+  it("should refuse to answer with a printing whose media row is gone, in the grid as in the detail", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const kept = card("kept", unleashed.code, { collectorNumber: "1", name: "Kept" });
+    const stripped = card("stripped", unleashed.code, { collectorNumber: "2", name: "Stripped" });
+    store.seedCard(kept);
+    store.seedCard(stripped);
+    store.removeCardMedia(stripped.printingId);
+
+    await expect(store.cards.getSummaryPage()).rejects.toThrow(
+      "Catalog card stripped is missing required related data.",
+    );
+    await expect(findCard(stripped.printingId, { cardFinder: store.cards })).rejects.toThrow(
+      "Catalog card stripped is missing required related data.",
+    );
+    await expect(store.cards.count()).resolves.toBe(2);
+    store.close();
+  });
+
+  it("should resolve every printing a deck names, past the size of a catalog page", async () => {
+    const store = createSqliteScenarioStore();
+    const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
+    store.seedSet(unleashed);
+    const seeded = Array.from({ length: 250 }, (_, index) =>
+      card(`card-${index}`, unleashed.code, {
+        collectorNumber: `${index + 1}`,
+        name: `Card ${index}`,
+      }),
+    );
+    for (const each of seeded) store.seedCard(each);
+    const requested = seeded.map((each) => each.printingId);
+
+    const resolved = await listCardsByPrintingIds(requested, {
+      cardsByPrintingIdsFinder: store.cards,
+    });
+
+    expect(resolved.type).toBe("success");
+    expect([...resolved.cards].map((found) => found.printingId).sort()).toEqual(
+      [...requested].sort(),
     );
     store.close();
   });

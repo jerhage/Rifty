@@ -73,6 +73,28 @@ type DeckSaveState = DeckBuildState["saving"];
 type LegendSearchState = DeckBuildState["legends"];
 type ZonePoolState = DeckBuildState["pool"];
 
+type LegendSearchViewState = Pick<
+  LegendSearchState,
+  "domainIds" | "query" | "setQuery" | "toggleDomain"
+>;
+type ZoneDraftViewState = Pick<
+  DeckDraftState,
+  "changeName" | "draft" | "setQuantity" | "verification"
+>;
+type ZonePoolViewState = Pick<
+  ZonePoolState,
+  | "filters"
+  | "layout"
+  | "openFilters"
+  | "query"
+  | "setLayout"
+  | "setQuery"
+  | "setView"
+  | "setZone"
+  | "view"
+  | "zone"
+>;
+
 export { useDeckBuild };
 export type {
   DeckBuildState,
@@ -80,5 +102,8 @@ export type {
   DeckDraftState,
   DeckSaveState,
   LegendSearchState,
+  LegendSearchViewState,
+  ZoneDraftViewState,
   ZonePoolState,
+  ZonePoolViewState,
 };

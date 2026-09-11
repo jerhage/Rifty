@@ -37,15 +37,12 @@ function LegendPane({
       {(legendPool) => (
         <LegendStep
           legends={legendPool.cards}
-          onChangeQuery={legends.setQuery}
           onLoadMore={legendPool.loadMore}
           onNext={steps.next}
           onOpenCard={onOpenCard}
           onPick={draft.pickLegend}
-          onToggleDomain={legends.toggleDomain}
-          query={legends.query}
+          search={legends}
           selected={draft.draft.legend}
-          selectedDomainIds={legends.domainIds}
           step={steps.step}
         />
       )}

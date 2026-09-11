@@ -7,39 +7,34 @@ import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import { ORDERED_DOMAINS, type CardDomain } from "@/features/card/value-objects/card-domain";
+import { ORDERED_DOMAINS } from "@/features/card/value-objects/card-domain";
 import { useDomainColors } from "@/hooks/use-theme";
 
 import type { DeckBuildStep } from "../../../deck-build-steps";
+import type { LegendSearchViewState } from "../../../hooks/use-deck-build";
 import { BuildFooter } from "../build-footer";
 import { LegendPickTile } from "../legend-pick-tile";
 import { StepIntro } from "./step-intro";
 
 interface LegendStepProps {
   readonly legends: readonly Card[];
-  readonly onChangeQuery: (query: string) => void;
   readonly onLoadMore: () => void;
   readonly onNext: () => void;
   readonly onOpenCard: (card: Card) => void;
   readonly onPick: (card: Card) => void;
-  readonly onToggleDomain: (domainId: CardDomain) => void;
-  readonly query: string;
+  readonly search: LegendSearchViewState;
   readonly selected: Card | null;
-  readonly selectedDomainIds: readonly CardDomain[];
   readonly step: DeckBuildStep;
 }
 
 function LegendStep({
   legends,
-  onChangeQuery,
   onLoadMore,
   onNext,
   onOpenCard,
   onPick,
-  onToggleDomain,
-  query,
+  search: { domainIds, query, setQuery, toggleDomain },
   selected,
-  selectedDomainIds,
   step,
 }: LegendStepProps) {
   const domainColors = useDomainColors();
@@ -57,7 +52,7 @@ function LegendStep({
             <StepIntro step={step} />
             <SearchField
               hint="Search legends"
-              onChangeQuery={onChangeQuery}
+              onChangeQuery={setQuery}
               query={query}
               style={styles.search}
             />
@@ -68,8 +63,8 @@ function LegendStep({
                   key={domainId}
                   label={domainId}
                   labelType="body"
-                  onPress={() => onToggleDomain(domainId)}
-                  selected={selectedDomainIds.includes(domainId)}
+                  onPress={() => toggleDomain(domainId)}
+                  selected={domainIds.includes(domainId)}
                   tone="neutral"
                 />
               ))}

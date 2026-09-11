@@ -45,25 +45,13 @@ function ZonesPane({
       {(zonePool) => (
         <>
           <ZonesStep
-            draft={draft.draft}
-            onChangeName={draft.changeName}
-            onChangePoolQuery={pool.setQuery}
+            draft={draft}
             onEditStep={steps.goToStep}
             onLoadMorePool={zonePool.loadMore}
             onOpenCard={onOpenCard}
-            onOpenPoolFilters={pool.openFilters}
             onSave={() => void saving.save()}
-            onSelectPoolLayout={pool.setLayout}
-            onSelectPoolView={pool.setView}
-            onSelectZone={pool.setZone}
-            onSetQuantity={draft.setQuantity}
-            poolFilters={pool.filters}
-            poolLayout={pool.layout}
-            poolQuery={pool.query}
-            poolView={pool.view}
+            pool={pool}
             saveStatus={saving.status}
-            verification={draft.verification}
-            zone={pool.zone}
             zonePool={zonePool.cards}
           />
           <PoolFilterSheet

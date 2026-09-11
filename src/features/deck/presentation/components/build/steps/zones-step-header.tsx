@@ -2,26 +2,17 @@ import { StyleSheet, TextInput, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
-import type { DeckVerification } from "@/features/deck/deck/deck";
-import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 import { useTheme } from "@/hooks/use-theme";
 
 import {
   placedCardTotal,
   placedCards,
   zoneCounts,
-  type DeckBuildDraft,
   type DeckBuildStepId,
 } from "../../../deck-build-steps";
 import { completenessLabel, legalityColor } from "../../../deck-legality-format";
-import {
-  activePoolFilterCount,
-  searchHint,
-  zoneRuleSummary,
-  type ZonePoolFilters,
-  type ZonePoolLayout,
-  type ZonePoolView,
-} from "../../../deck-zone-pool";
+import { activePoolFilterCount, searchHint, zoneRuleSummary } from "../../../deck-zone-pool";
+import type { ZoneDraftViewState, ZonePoolViewState } from "../../../hooks/use-deck-build";
 import { BuildPickChip } from "../build-pick-chip";
 import { PoolLayoutToggle } from "../pool-layout-toggle";
 import { PoolSearchRow } from "../pool-search-row";
@@ -29,38 +20,16 @@ import { PoolViewTabs } from "../pool-view-tabs";
 import { ZoneSelector } from "../zone-selector";
 
 function ZonesStepHeader({
-  draft,
-  onChangeName,
-  onChangePoolQuery,
+  draft: { changeName, draft, verification },
   onEditStep,
-  onOpenPoolFilters,
-  onSelectPoolLayout,
-  onSelectPoolView,
-  onSelectZone,
-  poolFilters,
-  poolLayout,
-  poolQuery,
-  poolView,
-  verification,
-  zone,
+  pool: { filters, layout, openFilters, query, setLayout, setQuery, setView, setZone, view, zone },
 }: {
-  readonly draft: DeckBuildDraft;
-  readonly onChangeName: (name: string) => void;
-  readonly onChangePoolQuery: (query: string) => void;
+  readonly draft: ZoneDraftViewState;
   readonly onEditStep: (id: DeckBuildStepId) => void;
-  readonly onOpenPoolFilters: () => void;
-  readonly onSelectPoolLayout: (layout: ZonePoolLayout) => void;
-  readonly onSelectPoolView: (view: ZonePoolView) => void;
-  readonly onSelectZone: (section: ZoneSection) => void;
-  readonly poolFilters: ZonePoolFilters;
-  readonly poolLayout: ZonePoolLayout;
-  readonly poolQuery: string;
-  readonly poolView: ZonePoolView;
-  readonly verification: DeckVerification;
-  readonly zone: ZoneSection;
+  readonly pool: ZonePoolViewState;
 }) {
   const theme = useTheme();
-  const isPool = poolView === "pool";
+  const isPool = view === "pool";
   const placed = placedCards(draft, zone);
 
   return (
@@ -69,7 +38,7 @@ function ZonesStepHeader({
         <TextInput
           accessibilityLabel="Deck name"
           autoCapitalize="words"
-          onChangeText={onChangeName}
+          onChangeText={changeName}
           placeholder="Deck name"
           placeholderTextColor={theme.textTertiary}
           style={[styles.nameInput, { color: theme.text }]}
@@ -90,18 +59,14 @@ function ZonesStepHeader({
       </View>
 
       <View style={styles.zones}>
-        <ZoneSelector counts={zoneCounts(draft)} onSelect={onSelectZone} selected={zone} />
+        <ZoneSelector counts={zoneCounts(draft)} onSelect={setZone} selected={zone} />
       </View>
 
       <View style={styles.viewRow}>
         <View style={styles.tabs}>
-          <PoolViewTabs
-            deckCount={placedCardTotal(placed)}
-            onSelect={onSelectPoolView}
-            view={poolView}
-          />
+          <PoolViewTabs deckCount={placedCardTotal(placed)} onSelect={setView} view={view} />
         </View>
-        <PoolLayoutToggle layout={poolLayout} onSelect={onSelectPoolLayout} />
+        <PoolLayoutToggle layout={layout} onSelect={setLayout} />
       </View>
 
       <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.rule}>
@@ -110,11 +75,11 @@ function ZonesStepHeader({
 
       {isPool ? (
         <PoolSearchRow
-          filterCount={activePoolFilterCount(poolFilters)}
+          filterCount={activePoolFilterCount(filters)}
           hint={searchHint(zone)}
-          onChangeQuery={onChangePoolQuery}
-          onOpenFilters={onOpenPoolFilters}
-          query={poolQuery}
+          onChangeQuery={setQuery}
+          onOpenFilters={openFilters}
+          query={query}
         />
       ) : null}
     </View>

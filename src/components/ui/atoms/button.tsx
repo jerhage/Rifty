@@ -8,6 +8,16 @@ import { useTheme } from "@/hooks/use-theme";
 
 type ButtonVariant = "primary" | "secondary" | "link";
 
+const LINK_UNDERLINE_WIDTH = 1;
+const LINK_TEXT_HEIGHT = 20;
+const LINK_FACE_HEIGHT = LINK_TEXT_HEIGHT + Spacing.one + LINK_UNDERLINE_WIDTH;
+const LINK_HIT_SLOP = {
+  bottom: TouchTarget.slop(LINK_FACE_HEIGHT),
+  left: TouchTarget.slop(0),
+  right: TouchTarget.slop(0),
+  top: TouchTarget.slop(LINK_FACE_HEIGHT),
+};
+
 function Button({
   busy = false,
   disabled = false,
@@ -22,12 +32,17 @@ function Button({
   readonly variant: ButtonVariant;
 }) {
   const theme = useTheme();
+  const hitSlop = match(variant)
+    .with("link", () => LINK_HIT_SLOP)
+    .with("primary", "secondary", () => undefined)
+    .exhaustive();
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ busy, disabled }}
       disabled={disabled}
+      hitSlop={hitSlop}
       onPress={onPress}
       style={({ pressed }) => pressed && !disabled && styles.pressed}
     >
@@ -45,12 +60,10 @@ function Button({
           </ThemedView>
         ))
         .with("link", () => (
-          <View style={styles.linkTarget}>
-            <View style={[styles.link, { borderBottomColor: theme.accent }]}>
-              <ThemedText style={{ color: theme.accent }} type="smallBold">
-                {label}
-              </ThemedText>
-            </View>
+          <View style={[styles.link, { borderBottomColor: theme.accent }]}>
+            <ThemedText style={{ color: theme.accent }} type="smallBold">
+              {label}
+            </ThemedText>
           </View>
         ))
         .exhaustive()}
@@ -73,15 +86,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
   },
-  linkTarget: {
-    alignItems: "flex-start",
-    justifyContent: "center",
-    minHeight: TouchTarget.minimum,
-    minWidth: TouchTarget.minimum,
-  },
   link: {
     alignSelf: "flex-start",
-    borderBottomWidth: 1,
+    borderBottomWidth: LINK_UNDERLINE_WIDTH,
     paddingBottom: Spacing.one,
   },
   pressed: {

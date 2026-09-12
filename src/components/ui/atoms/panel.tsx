@@ -24,7 +24,12 @@ function Panel({
       ]}
     >
       <View style={styles.header}>
-        <ThemedText style={styles.title} themeColor="textTertiary" type="mono">
+        <ThemedText
+          accessibilityRole="header"
+          style={styles.title}
+          themeColor="textTertiary"
+          type="mono"
+        >
           {title}
         </ThemedText>
         {note}

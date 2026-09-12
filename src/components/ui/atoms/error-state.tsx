@@ -14,7 +14,9 @@ function ErrorState({
 }) {
   return (
     <ThemedView style={styles.pane}>
-      <ThemedText>{message}</ThemedText>
+      <ThemedText accessibilityLiveRegion="assertive" accessibilityRole="alert">
+        {message}
+      </ThemedText>
       {action}
     </ThemedView>
   );

@@ -13,7 +13,7 @@ function LabelledSection({
 }) {
   return (
     <View style={styles.section}>
-      <ThemedText themeColor="textTertiary" type="mono">
+      <ThemedText accessibilityRole="header" themeColor="textTertiary" type="mono">
         {label}
       </ThemedText>
       {children}

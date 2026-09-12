@@ -25,7 +25,7 @@ function SheetFace({
   return (
     <View style={styles.face}>
       <View style={styles.titleRow}>
-        <ThemedText type="display" style={styles.title}>
+        <ThemedText accessibilityRole="header" type="display" style={styles.title}>
           {title}
         </ThemedText>
         {action}

@@ -11,6 +11,11 @@ import type { CardListKeyCriteria } from "@/features/card/queries/card-keys";
 import { listCardsPagedQuery } from "@/features/card/queries/card-queries";
 import { usePagedReadState, type PagingState } from "@/hooks/use-paged-read-state";
 
+const CARD_PAGING = {
+  loadMoreErrorMessage: "Could not load more cards.",
+  loadedPageMessage: (shown: number, total: number) => `Showing ${shown} of ${total} cards.`,
+};
+
 interface CardsDataContent {
   readonly cards: readonly Card[];
   readonly hasMore: boolean;
@@ -29,7 +34,7 @@ interface CardsDataProps {
 function CardsData({ cardCounter, cardLister, children, criteria }: CardsDataProps) {
   const { state, loadMore, reload } = usePagedReadState(
     listCardsPagedQuery(criteria, { cardCounter, cardLister }),
-    { loadMoreErrorMessage: "Could not load more cards." },
+    CARD_PAGING,
   );
 
   return match(state)

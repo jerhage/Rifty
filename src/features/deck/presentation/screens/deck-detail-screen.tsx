@@ -52,7 +52,7 @@ function DeckDetailScreen({
         ]}
       >
         <View style={styles.titleRow}>
-          <ThemedText style={styles.title} type="display">
+          <ThemedText accessibilityRole="header" style={styles.title} type="display">
             {deck.name}
           </ThemedText>
           <Button label="Edit" onPress={onEdit} variant="link" />

@@ -24,7 +24,7 @@ function CatalogResultBar({
 }) {
   return (
     <View style={styles.bar}>
-      <ThemedText themeColor="textTertiary" type="mono">
+      <ThemedText accessibilityLiveRegion="polite" themeColor="textTertiary" type="mono">
         {countLabel(resultCount, total)}
       </ThemedText>
       <View style={styles.controls}>

@@ -2,15 +2,20 @@ import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 
 import { Radius } from "@/constants/theme";
+import { useReduceMotion } from "@/hooks/use-reduce-motion";
 import { useTheme } from "@/hooks/use-theme";
 
 const PULSE_DURATION_MS = 850;
+const STILL_OPACITY = 0.85;
 
 function Skeleton({ style }: { readonly style?: StyleProp<ViewStyle> }) {
   const theme = useTheme();
+  const isReduceMotion = useReduceMotion();
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (isReduceMotion) return;
+
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, {
@@ -28,7 +33,7 @@ function Skeleton({ style }: { readonly style?: StyleProp<ViewStyle> }) {
     animation.start();
 
     return () => animation.stop();
-  }, [pulse]);
+  }, [isReduceMotion, pulse]);
 
   return (
     <Animated.View
@@ -38,7 +43,9 @@ function Skeleton({ style }: { readonly style?: StyleProp<ViewStyle> }) {
         styles.skeleton,
         {
           backgroundColor: theme.backgroundElement,
-          opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.85] }),
+          opacity: isReduceMotion
+            ? STILL_OPACITY
+            : pulse.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.85] }),
         },
         style,
       ]}

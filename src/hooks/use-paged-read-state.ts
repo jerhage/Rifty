@@ -5,9 +5,10 @@ import {
   type QueryKey,
   type UseInfiniteQueryOptions,
 } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { match } from "ts-pattern";
 
+import { useAnnouncement, type AnnouncementUrgency } from "@/hooks/use-announcement";
 import type { Page } from "@/shared/page";
 
 type PagingState =
@@ -42,6 +43,7 @@ interface PagedReadStateHandle<Item> {
 
 interface PagedReadStateOptions {
   readonly loadMoreErrorMessage: string;
+  loadedPageMessage(shown: number, total: number): string;
 }
 
 interface LoadedFacts {
@@ -62,7 +64,7 @@ function usePagedReadState<Item, Key extends QueryKey, PageParam>(
     Key,
     PageParam
   >,
-  { loadMoreErrorMessage }: PagedReadStateOptions,
+  { loadMoreErrorMessage, loadedPageMessage }: PagedReadStateOptions,
 ): PagedReadStateHandle<Item> {
   const query = useInfiniteQuery(options);
   const {
@@ -73,10 +75,30 @@ function usePagedReadState<Item, Key extends QueryKey, PageParam>(
     isFetchNextPageError,
     refetch,
   } = query;
+  const announce = useAnnouncement();
+  const spoken = useRef("");
+
+  const announceOnce = useCallback(
+    (message: string, urgency: AnnouncementUrgency) => {
+      if (message === spoken.current) return;
+      spoken.current = message;
+      announce(message, urgency);
+    },
+    [announce],
+  );
 
   const loadMore = useCallback(() => {
-    void fetchNextPage({ cancelRefetch: false });
-  }, [fetchNextPage]);
+    if (!hasNextPage) return;
+
+    void fetchNextPage({ cancelRefetch: false }).then((settled) => {
+      if (settled.isFetchNextPageError) {
+        announceOnce(loadMoreErrorMessage, "interrupting");
+        return;
+      }
+      if (settled.data === undefined) return;
+      announceOnce(loadedPageMessage(itemCount(settled.data), totalOf(settled.data)), "queued");
+    });
+  }, [announceOnce, fetchNextPage, hasNextPage, loadMoreErrorMessage, loadedPageMessage]);
 
   const refresh = useCallback(() => {
     void refetch();
@@ -120,6 +142,14 @@ function pagingFor(
   return IDLE_PAGING;
 }
 
+function itemCount<Item>(data: InfiniteData<PagedResult<Item>>): number {
+  return data.pages.reduce((running, result) => running + result.page.items.length, 0);
+}
+
+function totalOf<Item>(data: InfiniteData<PagedResult<Item>>): number {
+  return data.pages.at(-1)?.total ?? 0;
+}
+
 function loadedState<Item>(
   data: InfiniteData<PagedResult<Item>>,
   { hasMore, isRefreshing, paging }: LoadedFacts,
@@ -130,7 +160,7 @@ function loadedState<Item>(
     isRefreshing,
     items: data.pages.flatMap((result) => result.page.items),
     paging,
-    total: data.pages.at(-1)?.total ?? 0,
+    total: totalOf(data),
   };
 }
 

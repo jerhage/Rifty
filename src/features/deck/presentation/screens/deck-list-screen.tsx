@@ -33,7 +33,9 @@ function DeckListScreen({ decks, now, onNewDeck, onOpenDeck }: DeckListScreenPro
           },
         ]}
       >
-        <ThemedText type="display">Decks</ThemedText>
+        <ThemedText accessibilityRole="header" type="display">
+          Decks
+        </ThemedText>
         <ThemedText themeColor="textSecondary" type="body" style={styles.subtitle}>
           {deckListLabel(decks.length)}
         </ThemedText>

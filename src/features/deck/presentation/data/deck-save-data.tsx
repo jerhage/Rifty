@@ -8,6 +8,7 @@ import type { DeckEntry, DeckVerification } from "@/features/deck/deck/deck";
 import type { DeckDraft, SaveDeckResult } from "@/features/deck/deck/use-cases/save-deck";
 import { deckKeys } from "@/features/deck/queries/deck-keys";
 import { saveDeckMutation } from "@/features/deck/queries/deck-queries";
+import { useAnnouncement } from "@/hooks/use-announcement";
 import { useWriteState, type WriteState } from "@/hooks/use-write-state";
 
 import { BuildFooter } from "../components/build/build-footer";
@@ -15,6 +16,11 @@ import type { DeckBuildCapabilities, DeckBuildStart } from "../deck-build-start"
 import { saveReadinessLabel } from "../deck-legality-format";
 
 type DeckSaveState = WriteState<SaveDeckResult>;
+
+type SaveRefusal = Exclude<SaveDeckResult, { readonly type: "success" }>;
+
+const SAVE_FAILED_MESSAGE = "Could not save the deck. Try again.";
+const SAVED_MESSAGE = "Deck saved.";
 
 type SaveFooterMessage =
   | { readonly type: "failure"; readonly message: string }
@@ -51,19 +57,22 @@ function DeckSaveData({
   readonly start: DeckBuildStart;
 }) {
   const queryClient = useQueryClient();
+  const announce = useAnnouncement();
   const { reset, state, submit } = useWriteState({
     ...saveDeckMutation(capabilities),
+    onError: () => announce(SAVE_FAILED_MESSAGE, "interrupting"),
     onSuccess: (result) =>
       match(result)
         .with({ type: "success" }, () => {
           void queryClient.invalidateQueries({ queryKey: deckKeys.all() });
+          announce(SAVED_MESSAGE);
           onSaved();
         })
         .with(
           { type: "nameMissing" },
           { type: "nameTaken" },
           { type: "copyLimitExceeded" },
-          () => undefined,
+          (refusal) => announce(refusalMessage(refusal), "interrupting"),
         )
         .exhaustive(),
   });
@@ -97,7 +106,13 @@ function DeckSaveData({
       <BuildFooter actionLabel={saveActionLabel(state)} onAction={save}>
         {match(footerMessage(state, verification))
           .with({ type: "failure" }, ({ message }) => (
-            <ThemedText numberOfLines={2} themeColor="negative" type="body">
+            <ThemedText
+              accessibilityLiveRegion="assertive"
+              accessibilityRole="alert"
+              numberOfLines={2}
+              themeColor="negative"
+              type="body"
+            >
               {message}
             </ThemedText>
           ))
@@ -145,24 +160,26 @@ function saveActionLabel(state: DeckSaveState): string {
     .exhaustive();
 }
 
+function refusalMessage(refusal: SaveRefusal): string {
+  return match(refusal)
+    .with({ type: "nameMissing" }, () => "Give the deck a name.")
+    .with({ type: "nameTaken" }, () => "You already have a deck with that name.")
+    .with(
+      { type: "copyLimitExceeded" },
+      ({ violations }) => violations[0]?.message ?? "Too many copies of a card.",
+    )
+    .exhaustive();
+}
+
 function footerMessage(state: DeckSaveState, verification: DeckVerification): SaveFooterMessage {
   return match<DeckSaveState, SaveFooterMessage>(state)
-    .with({ type: "failed" }, () => ({
-      type: "failure",
-      message: "Could not save the deck. Try again.",
-    }))
-    .with({ type: "nameMissing" }, () => ({
-      type: "failure",
-      message: "Give the deck a name.",
-    }))
-    .with({ type: "nameTaken" }, () => ({
-      type: "failure",
-      message: "You already have a deck with that name.",
-    }))
-    .with({ type: "copyLimitExceeded" }, ({ violations }) => ({
-      type: "failure",
-      message: violations[0]?.message ?? "Too many copies of a card.",
-    }))
+    .with({ type: "failed" }, () => ({ type: "failure", message: SAVE_FAILED_MESSAGE }))
+    .with(
+      { type: "nameMissing" },
+      { type: "nameTaken" },
+      { type: "copyLimitExceeded" },
+      (refusal) => ({ type: "failure", message: refusalMessage(refusal) }),
+    )
     .with({ type: "idle" }, { type: "saving" }, { type: "success" }, () => ({
       type: "readiness",
       message: saveReadinessLabel(verification),

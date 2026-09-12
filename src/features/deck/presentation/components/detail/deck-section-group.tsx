@@ -17,7 +17,9 @@ function DeckSectionGroup({
   return (
     <View style={styles.group}>
       <View style={styles.groupHeader}>
-        <ThemedText type="heading">{group.title}</ThemedText>
+        <ThemedText accessibilityRole="header" type="heading">
+          {group.title}
+        </ThemedText>
         <ThemedText themeColor="textTertiary" type="mono">
           {group.count}
         </ThemedText>

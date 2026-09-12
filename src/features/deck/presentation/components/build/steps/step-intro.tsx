@@ -8,7 +8,7 @@ import type { DeckBuildStep } from "../../../deck-build-steps";
 function StepIntro({ step }: { readonly step: DeckBuildStep }) {
   return (
     <View style={styles.intro}>
-      <ThemedText type="display" style={styles.title}>
+      <ThemedText accessibilityRole="header" type="display" style={styles.title}>
         {step.title}
       </ThemedText>
       <ThemedText themeColor="textSecondary" type="body" style={styles.blurb}>

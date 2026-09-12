@@ -15,6 +15,7 @@ import type { DeckBuildCapabilities } from "@/features/deck/presentation/deck-bu
 import { listDecksQuery } from "@/features/deck/queries/deck-queries";
 import { useReadState } from "@/hooks/use-read-state";
 
+import { recordAnnouncements, type Announcement } from "../announcements";
 import { createTestWrapper } from "../test-wrapper";
 
 import { deck, fixedClock, sequentialIds } from "./fixtures";
@@ -124,6 +125,16 @@ async function pressSave() {
 }
 
 describe("DeckSaveData", () => {
+  let announcements: Announcement[] = [];
+
+  beforeEach(() => {
+    announcements = recordAnnouncements();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it("should refetch the deck list when a save succeeds", async () => {
     const store = createDeckStore();
     const { onSaved } = await renderDeckSave(store);
@@ -212,5 +223,46 @@ describe("DeckSaveData", () => {
     const leafTakesNoLifecycleValue: [LeafLifecycleValue] extends [never] ? true : false = true;
 
     expect(leafTakesNoLifecycleValue).toBe(true);
+  });
+
+  it("should announce nothing before the save is pressed", async () => {
+    const store = createDeckStore();
+    await renderDeckSave(store);
+
+    expect(announcements).toEqual([]);
+  });
+
+  it("should announce a save that succeeded", async () => {
+    const store = createDeckStore();
+    await renderDeckSave(store);
+
+    await pressSave();
+    await screen.findByText("decks: [Storm]");
+
+    expect(announcements).toEqual([{ message: "Deck saved.", queued: true }]);
+  });
+
+  it("should announce a save that failed", async () => {
+    const store = createDeckStore([], SAVE_FAILURE);
+    await renderDeckSave(store);
+
+    await pressSave();
+    await screen.findByText("Could not save the deck. Try again.");
+
+    expect(announcements).toEqual([
+      { message: "Could not save the deck. Try again.", queued: false },
+    ]);
+  });
+
+  it("should announce the refusal when the name is already taken", async () => {
+    const store = createDeckStore([deck("storm", { name: "Storm" })]);
+    await renderDeckSave(store);
+
+    await pressSave();
+    await screen.findByText("You already have a deck with that name.");
+
+    expect(announcements).toEqual([
+      { message: "You already have a deck with that name.", queued: false },
+    ]);
   });
 });

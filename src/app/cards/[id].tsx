@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import { CardDetailData } from "@/features/card/presentation/data/card-detail-data";
@@ -11,7 +11,12 @@ function CardDetailRoute() {
 
   return (
     <CardDetailData cardFinder={cards.cardRepository} cardId={printingIdSchema.parse(id)}>
-      {(card) => <CardDetailScreen card={card} />}
+      {(card) => (
+        <>
+          <Stack.Screen options={{ title: card.name }} />
+          <CardDetailScreen card={card} />
+        </>
+      )}
     </CardDetailData>
   );
 }

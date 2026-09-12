@@ -92,7 +92,9 @@ function DrawSimulationScreen({
           },
         ]}
       >
-        <ThemedText type="display">Would you keep it?</ThemedText>
+        <ThemedText accessibilityRole="header" type="display">
+          Would you keep it?
+        </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.subtitle} type="body">
           {`Four off the top of ${odds.poolSize}. You may mulligan up to two and redraw them — once.`}
         </ThemedText>

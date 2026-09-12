@@ -34,7 +34,7 @@ function CardDetailScreen({ card }: { readonly card: Card }) {
       >
         <CardHero card={card} />
 
-        <ThemedText type="display" style={styles.name}>
+        <ThemedText accessibilityRole="header" type="display" style={styles.name}>
           {card.name}
         </ThemedText>
 

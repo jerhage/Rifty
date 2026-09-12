@@ -9,11 +9,13 @@ import {
 } from "@/hooks/use-paged-read-state";
 import { Page } from "@/shared/page";
 
+import { recordAnnouncements, type Announcement } from "../announcements";
 import { createTestWrapper } from "../test-wrapper";
 
 const PAGE_SIZE = 2;
 const TOTAL = 4;
 const LOAD_MORE_ERROR = "Could not load more.";
+const loadedPageMessage = (shown: number, total: number) => `Showing ${shown} of ${total}.`;
 const STORE_FAILURE = new Error("The store is unavailable.");
 
 interface RecordedRead {
@@ -46,7 +48,7 @@ async function renderPagedReadState(list: Lister) {
           getNextPageParam: (last, pages) =>
             last.page.hasMore ? pages.length * PAGE_SIZE : undefined,
         }),
-        { loadMoreErrorMessage: LOAD_MORE_ERROR },
+        { loadMoreErrorMessage: LOAD_MORE_ERROR, loadedPageMessage },
       ),
     { wrapper: createTestWrapper() },
   );
@@ -82,6 +84,16 @@ async function settlePage(
 }
 
 describe("usePagedReadState", () => {
+  let announcements: Announcement[] = [];
+
+  beforeEach(() => {
+    announcements = recordAnnouncements();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it("should be loading before the first page settles", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
@@ -246,5 +258,75 @@ describe("usePagedReadState", () => {
     expect(reads[1].offset).toBe(0);
 
     await settlePage(result, reads[1], pageOf(["a", "b"], true), ["a", "b"]);
+  });
+
+  it("should announce nothing while the first page loads and settles", async () => {
+    const { list, reads } = createLister();
+    const { result } = await renderPagedReadState(list);
+
+    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+
+    expect(announcements).toEqual([]);
+  });
+
+  it("should announce the running count when another page loads", async () => {
+    const { list, reads } = createLister();
+    const { result } = await renderPagedReadState(list);
+    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+
+    await act(async () => {
+      result.current.loadMore();
+    });
+    await waitFor(() => expect(reads).toHaveLength(2));
+    await settlePage(result, reads[1], pageOf(["c", "d"], false), ["a", "b", "c", "d"]);
+
+    await waitFor(() =>
+      expect(announcements).toEqual([{ message: "Showing 4 of 4.", queued: true }]),
+    );
+  });
+
+  it("should announce a load more that failed", async () => {
+    const { list, reads } = createLister();
+    const { result } = await renderPagedReadState(list);
+    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+
+    await act(async () => {
+      result.current.loadMore();
+    });
+    await waitFor(() => expect(reads).toHaveLength(2));
+    reads[1].fail(STORE_FAILURE);
+
+    await waitFor(() =>
+      expect(announcements).toEqual([{ message: LOAD_MORE_ERROR, queued: false }]),
+    );
+  });
+
+  it("should say nothing when load more is called with no further page", async () => {
+    const { list, reads } = createLister();
+    const { result } = await renderPagedReadState(list);
+    await settlePage(result, reads[0], pageOf(["a", "b"], false), ["a", "b"]);
+
+    await act(async () => {
+      result.current.loadMore();
+    });
+
+    expect(announcements).toEqual([]);
+  });
+
+  it("should announce once when load more fires twice before the next render", async () => {
+    const { list, reads } = createLister();
+    const { result } = await renderPagedReadState(list);
+    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+
+    await act(async () => {
+      result.current.loadMore();
+      result.current.loadMore();
+    });
+    await waitFor(() => expect(reads).toHaveLength(2));
+    await settlePage(result, reads[1], pageOf(["c", "d"], false), ["a", "b", "c", "d"]);
+
+    await waitFor(() =>
+      expect(announcements).toEqual([{ message: "Showing 4 of 4.", queued: true }]),
+    );
   });
 });

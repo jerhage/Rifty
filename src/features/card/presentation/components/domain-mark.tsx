@@ -1,4 +1,5 @@
 import { StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
@@ -8,11 +9,22 @@ import { useDomainColors, useTheme } from "@/hooks/use-theme";
 import { domainCode } from "../card-taxonomy-format";
 
 /**
- * One domain as its color *and* its letter, sized to stand beside a label. Several of the seven
- * domains are the same color under a common color vision deficiency, so the letter is what tells
- * them apart; it is drawn on the domain's own fill, which keeps it legible on any surface.
+ * Where a mark sits: `segment` shares a bar with its siblings, `tag` stands on its own beside text.
  */
-function DomainMark({ domainId }: { readonly domainId: CardDomain }) {
+type DomainMarkLayout = "segment" | "tag";
+
+/**
+ * One domain as its color *and* its letter. Several of the seven domains are the same color under a
+ * common color vision deficiency, so the letter is what tells them apart; it is drawn on the
+ * domain's own fill rather than on the card art, which keeps it legible over any image.
+ */
+function DomainMark({
+  domainId,
+  layout,
+}: {
+  readonly domainId: CardDomain;
+  readonly layout: DomainMarkLayout;
+}) {
   const theme = useTheme();
   const domainColors = useDomainColors();
 
@@ -20,7 +32,14 @@ function DomainMark({ domainId }: { readonly domainId: CardDomain }) {
     <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={[styles.mark, { backgroundColor: domainColors[domainId] }]}
+      style={[
+        styles.mark,
+        match(layout)
+          .with("segment", () => styles.segment)
+          .with("tag", () => styles.tag)
+          .exhaustive(),
+        { backgroundColor: domainColors[domainId] },
+      ]}
     >
       <ThemedText style={[styles.code, { color: theme.background }]} type="mono">
         {domainCode(domainId)}
@@ -36,19 +55,25 @@ function DomainMarks({ domainIds }: { readonly domainIds: readonly CardDomain[] 
   return (
     <View style={styles.marks}>
       {domainIds.map((domainId) => (
-        <DomainMark domainId={domainId} key={domainId} />
+        <DomainMark domainId={domainId} key={domainId} layout="tag" />
       ))}
     </View>
   );
 }
 
 export { DomainMark, DomainMarks };
+export type { DomainMarkLayout };
 
 const styles = StyleSheet.create({
   mark: {
     alignItems: "center",
-    borderRadius: 3,
     justifyContent: "center",
+  },
+  segment: {
+    flex: 1,
+  },
+  tag: {
+    borderRadius: 3,
     minWidth: 14,
     paddingHorizontal: Spacing.one - 1,
   },

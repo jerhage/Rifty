@@ -4,6 +4,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { domainAccent } from "@/features/card/presentation/card-taxonomy-format";
+import { DomainMarks } from "@/features/card/presentation/components/domain-mark";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 function BuildPickChip({
@@ -34,22 +35,13 @@ function BuildPickChip({
         pressed && styles.pressed,
       ]}
     >
-      <View style={styles.bar}>
-        {domains.length === 0 ? (
-          <View style={[styles.segment, { backgroundColor: accent }]} />
-        ) : (
-          domains.map((domain) => (
-            <View
-              key={domain}
-              style={[styles.segment, { backgroundColor: domainColors[domain] }]}
-            />
-          ))
-        )}
-      </View>
       <View style={styles.text}>
-        <ThemedText themeColor="textTertiary" type="mono">
-          {label}
-        </ThemedText>
+        <View style={styles.labelRow}>
+          <ThemedText themeColor="textTertiary" type="mono">
+            {label}
+          </ThemedText>
+          <DomainMarks domainIds={domains} />
+        </View>
         <ThemedText themeColor={card ? "text" : "textSecondary"} style={styles.name}>
           {card?.name ?? "Not picked"}
         </ThemedText>
@@ -69,20 +61,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexGrow: 1,
     flexShrink: 1,
-    gap: Spacing.two,
     minWidth: 0,
     paddingHorizontal: Spacing.two + 2,
     paddingVertical: Spacing.two,
   },
-  bar: {
-    borderRadius: 2,
-    height: 22,
-    overflow: "hidden",
-    width: 4,
-  },
-  segment: {
-    flex: 1,
-    width: "100%",
+  labelRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.one + 1,
   },
   text: {
     flex: 1,

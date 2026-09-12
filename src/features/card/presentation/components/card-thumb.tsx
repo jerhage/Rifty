@@ -5,8 +5,6 @@ import { CardImage } from "@/components/ui/atoms/card-image";
 import type { Card } from "@/features/card/card";
 import { useTheme } from "@/hooks/use-theme";
 
-import { DomainBar } from "./domain-bar";
-
 function CardThumb({
   card,
   contentFit,
@@ -26,7 +24,6 @@ function CardThumb({
         source={card.imageUrl}
         style={styles.image}
       />
-      <DomainBar domainIds={card.domainIds} height={2} />
     </View>
   );
 }

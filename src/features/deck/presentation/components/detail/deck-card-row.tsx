@@ -8,6 +8,7 @@ import {
   spokenCardTypeAndAttributes,
 } from "@/features/card/presentation/card-taxonomy-format";
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
+import { DomainMarks } from "@/features/card/presentation/components/domain-mark";
 import { useTheme } from "@/hooks/use-theme";
 
 function DeckCardRow({
@@ -37,9 +38,17 @@ function DeckCardRow({
         <ThemedText numberOfLines={1} style={styles.name} type="body">
           {card.name}
         </ThemedText>
-        <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.sub}>
-          {formatCardTypeAndAttributes(card)}
-        </ThemedText>
+        <View style={styles.sub}>
+          <DomainMarks domainIds={card.domainIds} />
+          <ThemedText
+            numberOfLines={1}
+            style={styles.subText}
+            themeColor="textTertiary"
+            type="mono"
+          >
+            {formatCardTypeAndAttributes(card)}
+          </ThemedText>
+        </View>
       </View>
       <ThemedText themeColor="textSecondary" type="monoValue">
         {quantity}
@@ -80,7 +89,13 @@ const styles = StyleSheet.create({
     fontWeight: 500,
   },
   sub: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: Spacing.one + 1,
     marginTop: Spacing.one,
+  },
+  subText: {
+    flexShrink: 1,
   },
   pressed: {
     opacity: 0.7,

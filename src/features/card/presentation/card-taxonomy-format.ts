@@ -11,6 +11,25 @@ function domainAccent(card: Card, domainColors: DomainPalette): string {
   return firstDomain === undefined ? domainColors.Colorless : domainColors[firstDomain];
 }
 
+/**
+ * A one-letter stand-in for each domain, so a domain is readable where its hue is not. Calm, Chaos
+ * and Colorless share an initial, so Chaos takes the X of its name and Colorless the N of neutral.
+ */
+const DOMAIN_CODES: Record<CardDomain, string> = {
+  Body: "B",
+  Calm: "C",
+  Chaos: "X",
+  Colorless: "N",
+  Fury: "F",
+  Mind: "M",
+  Order: "O",
+};
+
+/** The letter that stands for a domain wherever its color cannot be relied on. */
+function domainCode(domainId: CardDomain): string {
+  return DOMAIN_CODES[domainId];
+}
+
 /** The domains a card belongs to, one name per element, so a caller can choose its own separator. */
 function cardDomainNames(domainIds: readonly CardDomain[]): readonly string[] {
   return domainIds.length === 0 ? ["Colorless"] : [...domainIds];
@@ -59,6 +78,7 @@ export {
   cardAttributeParts,
   cardDomainNames,
   domainAccent,
+  domainCode,
   formatCardAttributes,
   formatCardTypeAndAttributes,
   formatDomains,

@@ -67,7 +67,7 @@ function LegendPickTile({
             </ThemedText>
           </View>
         ) : null}
-        <DomainBar domainIds={card.domainIds} height={2.5} />
+        <DomainBar domainIds={card.domainIds} />
       </View>
       <ThemedText numberOfLines={2} type="body" style={styles.name}>
         {card.name}

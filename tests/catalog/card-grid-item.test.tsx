@@ -20,6 +20,14 @@ describe("CardGridItem", () => {
     expect(screen.getByRole("button", { name: "Zed, Fury, Body" })).toBeTruthy();
   });
 
+  it("should letter each domain on the face, so the two hues are not the only signal", async () => {
+    await render(<CardGridItem card={ZED} onPress={() => undefined} width={null} />);
+
+    expect(screen.getByText("F", { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getByText("B", { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText("F")).toBeNull();
+  });
+
   it("should name a card with no domain colorless", async () => {
     await render(
       <CardGridItem card={{ ...ZED, domainIds: [] }} onPress={() => undefined} width={null} />,

@@ -12,7 +12,7 @@ import {
   formatDomains,
 } from "@/features/card/presentation/card-taxonomy-format";
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
-import { useOpenCardLongPress } from "@/hooks/use-open-card-long-press";
+import { useOpenCardHapticLongPress } from "@/hooks/use-open-card-haptic-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import { SHOW_FULL_CARD, SHOW_FULL_CARD_ACTIONS } from "../../show-full-card-action";
@@ -30,7 +30,7 @@ function ChampionPickRow({
 }) {
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
-  const openCard = useOpenCardLongPress(() => onOpenCard(card));
+  const openCard = useOpenCardHapticLongPress(() => onOpenCard(card));
 
   return (
     <Pressable

@@ -6,7 +6,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { DomainBar } from "@/features/card/presentation/components/domain-bar";
-import { useOpenCardLongPress } from "@/hooks/use-open-card-long-press";
+import { useOpenCardHapticLongPress } from "@/hooks/use-open-card-haptic-long-press";
 import { useTheme } from "@/hooks/use-theme";
 
 import { SHOW_FULL_CARD, SHOW_FULL_CARD_ACTIONS } from "../../show-full-card-action";
@@ -23,7 +23,7 @@ function HandCardTile({
   readonly selected: boolean;
 }) {
   const theme = useTheme();
-  const openCard = useOpenCardLongPress(() => onOpenCard(card));
+  const openCard = useOpenCardHapticLongPress(() => onOpenCard(card));
 
   return (
     <Pressable

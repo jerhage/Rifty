@@ -12,8 +12,8 @@ function useImpactLongPress(
   }, [onLongPress, style]);
 }
 
-function useOpenCardLongPress(open: () => void): () => void {
+function useOpenCardHapticLongPress(open: () => void): () => void {
   return useImpactLongPress(open, Haptics.ImpactFeedbackStyle.Medium);
 }
 
-export { useOpenCardLongPress };
+export { useOpenCardHapticLongPress };

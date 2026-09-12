@@ -43,7 +43,7 @@ function useDeckBuildSteps(
       .exhaustive();
   }, [goToStep, onExit, stepId]);
 
-  return { back, goToStep, mode: start.type, next, step: stepFor(stepId) };
+  return { back, exit: onExit, goToStep, mode: start.type, next, step: stepFor(stepId) };
 }
 
 function advanceFrom(id: DeckBuildStepId): StepAdvance {

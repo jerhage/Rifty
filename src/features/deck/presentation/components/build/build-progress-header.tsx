@@ -13,10 +13,12 @@ import type { DeckBuildMode } from "../../deck-build-start";
 function BuildProgressHeader({
   mode,
   onBack,
+  onClose,
   step,
 }: {
   readonly mode: DeckBuildMode;
   readonly onBack: () => void;
+  readonly onClose: () => void;
   readonly step: DeckBuildStep;
 }) {
   const insets = useSafeAreaInsets();
@@ -28,11 +30,13 @@ function BuildProgressHeader({
         <IconButton accessibilityLabel="Back" glyph="←" onPress={onBack} />
         <ThemedText
           accessibilityLabel={`${modeLabel(mode)}, step ${step.ordinal} of ${DECK_BUILD_STEPS.length}, ${step.label}`}
+          style={styles.label}
           themeColor="textSecondary"
           type="mono"
         >
           {`${modeLabel(mode)} · step ${step.ordinal} of ${DECK_BUILD_STEPS.length} · ${step.label}`}
         </ThemedText>
+        <IconButton accessibilityLabel="Close without saving" glyph="✕" onPress={onClose} />
       </View>
       <View
         accessibilityElementsHidden
@@ -74,6 +78,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: Spacing.three - 4,
+  },
+  label: {
+    flex: 1,
   },
   track: {
     flexDirection: "row",

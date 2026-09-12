@@ -29,7 +29,11 @@ function RootLayout() {
             />
             <Stack.Screen
               name="decks/build"
-              options={{ headerShown: false, presentation: "modal" }}
+              options={{
+                headerShown: false,
+                presentation: "fullScreenModal",
+                title: "Deck builder",
+              }}
             />
           </Stack>
         </QueryClientProvider>

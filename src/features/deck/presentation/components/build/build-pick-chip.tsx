@@ -23,7 +23,7 @@ function BuildPickChip({
 
   return (
     <Pressable
-      accessibilityLabel={card ? `${label}: ${card.name}. Change` : `Pick a ${label}`}
+      accessibilityLabel={card ? `${label}: ${card.cardId}. Change` : `Pick a ${label}`}
       accessibilityRole="button"
       onPress={onEdit}
       style={({ pressed }) => [
@@ -42,8 +42,12 @@ function BuildPickChip({
           </ThemedText>
           <DomainMarks domainIds={domains} />
         </View>
-        <ThemedText themeColor={card ? "text" : "textSecondary"} style={styles.name}>
-          {card?.name ?? "Not picked"}
+        <ThemedText
+          numberOfLines={1}
+          style={styles.name}
+          themeColor={card ? "text" : "textSecondary"}
+        >
+          {card?.cardId ?? "Not picked"}
         </ThemedText>
       </View>
     </Pressable>
@@ -54,7 +58,7 @@ export { BuildPickChip };
 
 const styles = StyleSheet.create({
   chip: {
-    alignItems: "center",
+    alignItems: "flex-start",
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     flexBasis: 132,

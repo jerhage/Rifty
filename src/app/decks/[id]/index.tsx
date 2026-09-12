@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import type { Card } from "@/features/card/card";
@@ -29,18 +29,21 @@ function DeckDetail({ resolvedDeck }: { readonly resolvedDeck: ResolvedDeck }) {
   const { deck } = resolvedDeck;
 
   return (
-    <DeckDetailScreen
-      now={clock.now()}
-      onDrawSimulation={() =>
-        router.push({ pathname: "/decks/[id]/draw", params: { id: deck.id } })
-      }
-      onEdit={() => router.push({ pathname: "/decks/build", params: { deckId: deck.id } })}
-      onOpenCard={(card: Card) =>
-        router.push({ pathname: "/cards/[id]", params: { id: card.printingId } })
-      }
-      resolvedDeck={resolvedDeck}
-      verification={verifyDeck(deck, RIFTBOUND_STANDARD)}
-    />
+    <>
+      <Stack.Screen options={{ title: deck.name }} />
+      <DeckDetailScreen
+        now={clock.now()}
+        onDrawSimulation={() =>
+          router.push({ pathname: "/decks/[id]/draw", params: { id: deck.id } })
+        }
+        onEdit={() => router.push({ pathname: "/decks/build", params: { deckId: deck.id } })}
+        onOpenCard={(card: Card) =>
+          router.push({ pathname: "/cards/[id]", params: { id: card.printingId } })
+        }
+        resolvedDeck={resolvedDeck}
+        verification={verifyDeck(deck, RIFTBOUND_STANDARD)}
+      />
+    </>
   );
 }
 

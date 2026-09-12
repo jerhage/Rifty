@@ -20,9 +20,13 @@ function RootLayout() {
       <AppDependenciesProvider>
         <QueryClientProvider client={queryClient}>
           <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Riftcards" }} />
             <Stack.Screen name="cards/[id]" options={{ title: "Card" }} />
-            <Stack.Screen name="decks/[id]/draw" options={{ headerShown: false }} />
+            <Stack.Screen name="decks/[id]/index" options={{ title: "Deck" }} />
+            <Stack.Screen
+              name="decks/[id]/draw"
+              options={{ headerShown: false, title: "Draw sim" }}
+            />
             <Stack.Screen
               name="decks/build"
               options={{ headerShown: false, presentation: "modal" }}

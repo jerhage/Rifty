@@ -9,11 +9,13 @@ import { useTheme } from "@/hooks/use-theme";
 function BuildFooter({
   actionLabel,
   children,
+  isActionBusy = false,
   isActionEnabled = true,
   onAction,
 }: {
   readonly actionLabel: string;
   readonly children: ReactNode;
+  readonly isActionBusy?: boolean;
   readonly isActionEnabled?: boolean;
   readonly onAction: () => void;
 }) {
@@ -29,6 +31,7 @@ function BuildFooter({
     >
       <View style={styles.info}>{children}</View>
       <Button
+        busy={isActionBusy}
         disabled={!isActionEnabled}
         label={actionLabel}
         onPress={onAction}

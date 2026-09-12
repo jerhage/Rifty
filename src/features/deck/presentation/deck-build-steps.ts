@@ -195,7 +195,6 @@ export {
   chooseChampion,
   DECK_BUILD_STEPS,
   draftComposition,
-  draftEntries,
   draftFromDeck,
   EMPTY_DRAFT,
   placedCardTotal,

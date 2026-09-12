@@ -1,12 +1,14 @@
 import { render, screen } from "@testing-library/react-native";
 
 import { PoolFilterSheet } from "@/features/deck/presentation/components/build/pool-filter-sheet";
-import { EMPTY_POOL_FILTERS } from "@/features/deck/presentation/deck-zone-pool";
+import type { ZonePoolFilters } from "@/features/deck/presentation/deck-zone-pool";
+
+const noFilters: ZonePoolFilters = { domainIds: [], keywordIds: [], typeIds: [] };
 
 async function renderSheet(isPresented: boolean) {
   await render(
     <PoolFilterSheet
-      filters={EMPTY_POOL_FILTERS}
+      filters={noFilters}
       isPresented={isPresented}
       keywords={[]}
       onApply={() => undefined}

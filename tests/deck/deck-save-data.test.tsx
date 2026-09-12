@@ -120,6 +120,15 @@ async function renderDeckSave(store: DeckStore, name = "Storm") {
   return { childProps, controls: () => controls, onChangeName, onSaved };
 }
 
+function createGatedDeckStore(): { release: () => void; store: DeckStore } {
+  const held: { release: () => void } = { release: () => undefined };
+  const gate = new Promise<void>((resolve) => {
+    held.release = resolve;
+  });
+
+  return { release: () => held.release(), store: createDeckStore([], null, gate) };
+}
+
 async function pressSave() {
   await fireEvent.press(screen.getByRole("button", { name: "Save deck" }));
 }
@@ -181,20 +190,51 @@ describe("DeckSaveData", () => {
   });
 
   it("should label the control while the write is in flight", async () => {
-    const held: { release: () => void } = { release: () => undefined };
-    const gate = new Promise<void>((resolve) => {
-      held.release = resolve;
-    });
-    const store = createDeckStore([], null, gate);
+    const { release, store } = createGatedDeckStore();
     await renderDeckSave(store);
 
     await pressSave();
 
     expect(await screen.findByRole("button", { name: "Saving…" })).toBeTruthy();
 
-    held.release();
+    release();
 
     expect(await screen.findByText("decks: [Storm]")).toBeTruthy();
+  });
+
+  it("should refuse a second press while the write is in flight", async () => {
+    const { release, store } = createGatedDeckStore();
+    await renderDeckSave(store);
+
+    await pressSave();
+    const inFlight = await screen.findByRole("button", { name: "Saving…" });
+
+    expect(inFlight.props.accessibilityState).toEqual({ busy: true, disabled: true });
+
+    await fireEvent.press(inFlight);
+
+    expect(store.writes()).toBe(1);
+
+    release();
+
+    expect(await screen.findByText("decks: [Storm]")).toBeTruthy();
+    expect(store.writes()).toBe(1);
+  });
+
+  it("should let the control take a press again once the write has failed", async () => {
+    const store = createDeckStore([], SAVE_FAILURE);
+    await renderDeckSave(store);
+
+    await pressSave();
+    await screen.findByText("Could not save the deck. Try again.");
+
+    const control = screen.getByRole("button", { name: "Save deck" });
+
+    expect(control.props.accessibilityState).toEqual({ busy: false, disabled: false });
+
+    await fireEvent.press(control);
+
+    expect(store.writes()).toBe(2);
   });
 
   it("should clear a name clash when the name is edited", async () => {

@@ -11,6 +11,7 @@ interface FindSetCapabilities {
   readonly setFinder: SetFinder;
 }
 
+/** Not in use. Waiting on a set-detail screen and the `getSetQuery` that would feed it. */
 async function findSet(
   code: SetCode,
   { setFinder }: FindSetCapabilities,

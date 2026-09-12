@@ -37,6 +37,7 @@ function energyCurve(copies: readonly CardCopy[]): readonly CurveBucket[] {
   ]);
 }
 
+/** Not in use. Waiting on a might-curve panel beside the energy curve in `DeckAnalysisPanels`. */
 function mightCurve(copies: readonly CardCopy[]): readonly CurveBucket[] {
   return curve(copies, (card) => card.attributes.might, [
     { label: "0-1", matches: (might) => might <= 1 },
@@ -48,6 +49,7 @@ function mightCurve(copies: readonly CardCopy[]): readonly CurveBucket[] {
   ]);
 }
 
+/** Not in use. Waiting on a total-power line in `DeckAnalysisPanels`. */
 function totalPower(copies: readonly CardCopy[]): number {
   return copies.reduce(
     (total, entry) => total + (entry.card.attributes.power ?? 0) * entry.quantity,

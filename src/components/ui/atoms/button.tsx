@@ -9,11 +9,13 @@ import { useTheme } from "@/hooks/use-theme";
 type ButtonVariant = "primary" | "secondary" | "link";
 
 function Button({
+  busy = false,
   disabled = false,
   label,
   onPress,
   variant,
 }: {
+  readonly busy?: boolean;
   readonly disabled?: boolean;
   readonly label: string;
   readonly onPress: () => void;
@@ -24,7 +26,7 @@ function Button({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
+      accessibilityState={{ busy, disabled }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => pressed && !disabled && styles.pressed}

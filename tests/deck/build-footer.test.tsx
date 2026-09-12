@@ -9,13 +9,14 @@ const METRICS = {
   insets: { bottom: 0, left: 0, right: 0, top: 0 },
 };
 
-async function renderFooter(isActionEnabled: boolean) {
+async function renderFooter(isActionEnabled: boolean, isActionBusy = false) {
   const actions: number[] = [];
 
   await render(
     <SafeAreaProvider initialMetrics={METRICS}>
       <BuildFooter
         actionLabel="Continue"
+        isActionBusy={isActionBusy}
         isActionEnabled={isActionEnabled}
         onAction={() => actions.push(1)}
       >
@@ -31,17 +32,23 @@ describe("BuildFooter", () => {
   it("should not run the action when the action is disabled", async () => {
     const { action, actions } = await renderFooter(false);
 
-    expect(action().props.accessibilityState).toEqual({ disabled: true });
+    expect(action().props.accessibilityState).toEqual({ busy: false, disabled: true });
 
     await fireEvent.press(action());
 
     expect(actions).toEqual([]);
   });
 
+  it("should report a busy action while the work it starts is in flight", async () => {
+    const { action } = await renderFooter(false, true);
+
+    expect(action().props.accessibilityState).toEqual({ busy: true, disabled: true });
+  });
+
   it("should run the action when the action is enabled", async () => {
     const { action, actions } = await renderFooter(true);
 
-    expect(action().props.accessibilityState).toEqual({ disabled: false });
+    expect(action().props.accessibilityState).toEqual({ busy: false, disabled: false });
 
     await fireEvent.press(action());
 

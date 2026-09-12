@@ -50,6 +50,7 @@ type MulliganSelection =
   | { readonly type: "selected"; readonly indexes: readonly number[] }
   | { readonly type: "atLimit" };
 
+/** The export has no caller. Kept for a panel that asks the odds of one chosen card. */
 function atLeastOneChance(poolSize: number, copies: number, draws: number): number {
   if (poolSize <= 0 || copies <= 0 || draws <= 0) return 0;
 

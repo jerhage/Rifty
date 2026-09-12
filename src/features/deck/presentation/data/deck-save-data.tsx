@@ -103,7 +103,12 @@ function DeckSaveData({
     <>
       {children({ changeName })}
 
-      <BuildFooter actionLabel={saveActionLabel(state)} onAction={save}>
+      <BuildFooter
+        actionLabel={saveActionLabel(state)}
+        isActionBusy={state.type === "saving"}
+        isActionEnabled={state.type !== "saving"}
+        onAction={save}
+      >
         {match(footerMessage(state, verification))
           .with({ type: "failure" }, ({ message }) => (
             <ThemedText

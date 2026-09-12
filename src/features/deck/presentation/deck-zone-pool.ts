@@ -99,7 +99,6 @@ export {
   activePoolFilterCount,
   allowsTypeChoice,
   defaultPoolFilters,
-  EMPTY_POOL_FILTERS,
   legendCriteria,
   poolCriteria,
   searchHint,

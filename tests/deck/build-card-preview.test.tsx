@@ -6,7 +6,7 @@ import { BuildCardRow } from "@/features/deck/presentation/components/build/buil
 import { BuildCardTile } from "@/features/deck/presentation/components/build/build-card-tile";
 import { ChampionPickRow } from "@/features/deck/presentation/components/build/champion-pick-row";
 import { LegendPickTile } from "@/features/deck/presentation/components/build/legend-pick-tile";
-import { SHOW_FULL_CARD } from "@/features/deck/presentation/components/build/show-full-card-action";
+import { SHOW_FULL_CARD } from "@/features/deck/presentation/show-full-card-action";
 
 import { card } from "../card/fixtures";
 

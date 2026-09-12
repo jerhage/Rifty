@@ -11,6 +11,7 @@ import type { RandomSource } from "@/application/ports/random-source";
 import { drawOdds, handStats } from "@/features/analysis/draw-simulation";
 import { DrawOddsPanel } from "@/features/analysis/presentation/components/draw-odds";
 import { HandStatsPanel } from "@/features/analysis/presentation/components/hand-stats";
+import type { Card } from "@/features/card/card";
 import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 import { useTheme } from "@/hooks/use-theme";
 import { shuffle } from "@/shared/shuffle";
@@ -30,6 +31,7 @@ import { useDrawSimulation } from "../hooks/use-draw-simulation";
 interface DrawSimulationScreenProps {
   readonly onBack: () => void;
   readonly onKeep: () => void;
+  readonly onOpenCard: (card: Card) => void;
   readonly randomSource: RandomSource;
   readonly resolvedDeck: ResolvedDeck;
 }
@@ -37,6 +39,7 @@ interface DrawSimulationScreenProps {
 function DrawSimulationScreen({
   onBack,
   onKeep,
+  onOpenCard,
   randomSource,
   resolvedDeck,
 }: DrawSimulationScreenProps) {
@@ -104,6 +107,7 @@ function DrawSimulationScreen({
             <HandCardTile
               card={card}
               key={`${index}-${card.printingId}`}
+              onOpenCard={onOpenCard}
               onToggleSelection={() => toggleSelection(index)}
               selected={selected.includes(index)}
             />

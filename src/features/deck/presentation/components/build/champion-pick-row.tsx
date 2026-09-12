@@ -15,7 +15,7 @@ import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
-import { SHOW_FULL_CARD, SHOW_FULL_CARD_ACTIONS } from "./show-full-card-action";
+import { SHOW_FULL_CARD, SHOW_FULL_CARD_ACTIONS } from "../../show-full-card-action";
 
 function ChampionPickRow({
   card,

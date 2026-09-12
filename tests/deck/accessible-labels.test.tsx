@@ -56,7 +56,14 @@ describe("DeckRow", () => {
 
 describe("HandCardTile", () => {
   it("should announce the cost badge and report the toggle as checked", async () => {
-    await render(<HandCardTile card={ZED} onToggleSelection={() => undefined} selected />);
+    await render(
+      <HandCardTile
+        card={ZED}
+        onOpenCard={() => undefined}
+        onToggleSelection={() => undefined}
+        selected
+      />,
+    );
 
     const tile = screen.getByRole("checkbox", { name: "Zed, 3 energy" });
     expect(tile.props.accessibilityState).toEqual({ checked: true });

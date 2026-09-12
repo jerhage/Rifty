@@ -1,28 +1,42 @@
 import { Pressable, StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { CardImage } from "@/components/ui/atoms/card-image";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { DomainBar } from "@/features/card/presentation/components/domain-bar";
+import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
 import { useTheme } from "@/hooks/use-theme";
+
+import { SHOW_FULL_CARD, SHOW_FULL_CARD_ACTIONS } from "../../show-full-card-action";
 
 function HandCardTile({
   card,
-  selected,
+  onOpenCard,
   onToggleSelection,
+  selected,
 }: {
   readonly card: Card;
-  readonly selected: boolean;
+  readonly onOpenCard: (card: Card) => void;
   readonly onToggleSelection: () => void;
+  readonly selected: boolean;
 }) {
   const theme = useTheme();
+  const openCard = useHapticLongPress(() => onOpenCard(card));
 
   return (
     <Pressable
+      accessibilityActions={SHOW_FULL_CARD_ACTIONS}
       accessibilityLabel={handCardLabel(card)}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
+      onAccessibilityAction={(event) =>
+        match(event.nativeEvent.actionName)
+          .with(SHOW_FULL_CARD, () => onOpenCard(card))
+          .otherwise(() => undefined)
+      }
+      onLongPress={openCard}
       onPress={onToggleSelection}
       style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
     >

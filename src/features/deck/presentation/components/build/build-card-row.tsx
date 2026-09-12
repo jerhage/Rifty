@@ -10,7 +10,7 @@ import {
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import { DomainMarks } from "@/features/card/presentation/components/domain-mark";
 import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
-import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
+import { useOpenCardLongPress } from "@/hooks/use-open-card-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import { buildCardLabel } from "../../build-card-format";
@@ -37,7 +37,7 @@ function BuildCardRow({
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
   const inDeck = quantity > 0;
-  const openCard = useHapticLongPress(() => onOpenCard(card));
+  const openCard = useOpenCardLongPress(() => onOpenCard(card));
 
   return (
     <View

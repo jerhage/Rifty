@@ -10,7 +10,7 @@ import {
 import { CARD_ASPECT_RATIO } from "@/features/card/presentation/components/card-art";
 import { CardFace } from "@/features/card/presentation/components/card-face";
 import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
-import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
+import { useOpenCardLongPress } from "@/hooks/use-open-card-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import { buildCardLabel } from "../../build-card-format";
@@ -36,7 +36,7 @@ function BuildCardTile({
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
   const inDeck = quantity > 0;
-  const openCard = useHapticLongPress(() => onOpenCard(card));
+  const openCard = useOpenCardLongPress(() => onOpenCard(card));
 
   return (
     <View style={[styles.tile, width === null ? undefined : { flexBasis: width, width }]}>

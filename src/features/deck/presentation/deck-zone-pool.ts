@@ -96,6 +96,7 @@ function activePoolFilterCount(filters: ZonePoolFilters): number {
 }
 
 export {
+  EMPTY_POOL_FILTERS,
   activePoolFilterCount,
   allowsTypeChoice,
   defaultPoolFilters,

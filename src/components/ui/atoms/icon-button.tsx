@@ -30,7 +30,9 @@ function IconButton({
         pressed && styles.pressed,
       ]}
     >
-      <ThemedText type="small">{glyph}</ThemedText>
+      <ThemedText maxFontSizeMultiplier={1.3} type="small">
+        {glyph}
+      </ThemedText>
     </Pressable>
   );
 }
@@ -41,9 +43,9 @@ const styles = StyleSheet.create({
   button: {
     alignItems: "center",
     borderRadius: Radius.medium,
-    height: FACE_SIZE,
     justifyContent: "center",
-    width: FACE_SIZE,
+    minHeight: FACE_SIZE,
+    minWidth: FACE_SIZE,
   },
   pressed: {
     opacity: 0.7,

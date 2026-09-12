@@ -56,7 +56,7 @@ function DrawOddsPanel({ odds }: { readonly odds: DrawOdds }) {
       <View style={styles.rows}>
         {rows.map((row) => (
           <View key={row.key} style={styles.row}>
-            <ThemedText numberOfLines={1} style={styles.label} type="body">
+            <ThemedText style={styles.label} type="body">
               {row.label}
             </ThemedText>
             <View style={[styles.track, { backgroundColor: theme.fill }]}>
@@ -92,17 +92,21 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.two + 2,
   },
   label: {
-    flexBasis: 96,
-    flexShrink: 0,
+    flexShrink: 1,
     fontWeight: 500,
+    minWidth: 96,
   },
   track: {
     borderRadius: 3,
-    flex: 1,
+    flexBasis: 64,
+    flexGrow: 1,
+    flexShrink: 1,
     height: 6,
+    minWidth: 48,
     overflow: "hidden",
   },
   bar: {
@@ -110,7 +114,7 @@ const styles = StyleSheet.create({
   },
   figures: {
     alignItems: "flex-end",
-    flexBasis: 76,
-    flexShrink: 0,
+    flexShrink: 1,
+    minWidth: 76,
   },
 });

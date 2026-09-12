@@ -44,6 +44,8 @@ const styles = StyleSheet.create({
   groupHeader: {
     alignItems: "baseline",
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.two,
     justifyContent: "space-between",
     marginBottom: Spacing.one,
   },

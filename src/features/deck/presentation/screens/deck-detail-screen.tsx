@@ -58,10 +58,13 @@ function DeckDetailScreen({
           <Button label="Edit" onPress={onEdit} variant="link" />
         </View>
         <View style={styles.metaRow}>
-          <ThemedText themeColor="textTertiary" type="mono">
+          <ThemedText style={styles.meta} themeColor="textTertiary" type="mono">
             {deckCountLabel(deck)} · {editedLabel(deck.updatedAt, now)}
           </ThemedText>
-          <ThemedText style={{ color: legalityColor(verification, theme) }} type="mono">
+          <ThemedText
+            style={[styles.meta, { color: legalityColor(verification, theme) }]}
+            type="mono"
+          >
             {outstandingFixesLabel(verification)}
           </ThemedText>
         </View>
@@ -105,18 +108,24 @@ const styles = StyleSheet.create({
   titleRow: {
     alignItems: "center",
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.three,
     justifyContent: "space-between",
   },
   title: {
     flexShrink: 1,
+    minWidth: 0,
   },
   metaRow: {
     alignItems: "baseline",
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.two + 2,
     justifyContent: "space-between",
     marginTop: Spacing.two - 1,
+  },
+  meta: {
+    flexShrink: 1,
   },
   notes: {
     marginTop: Spacing.two + 1,

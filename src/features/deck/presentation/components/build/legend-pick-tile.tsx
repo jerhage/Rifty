@@ -58,7 +58,11 @@ function LegendPickTile({
         />
         {selected ? (
           <View style={[styles.check, { backgroundColor: accent }]}>
-            <ThemedText style={[styles.checkMark, { color: theme.onAccent }]} type="mono">
+            <ThemedText
+              maxFontSizeMultiplier={1.2}
+              style={[styles.checkMark, { color: theme.onAccent }]}
+              type="mono"
+            >
               ✓
             </ThemedText>
           </View>
@@ -96,11 +100,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 999,
     bottom: Spacing.one + 2,
-    height: 18,
     justifyContent: "center",
+    minHeight: 18,
+    minWidth: 18,
+    paddingHorizontal: Spacing.half,
     position: "absolute",
     right: Spacing.one + 2,
-    width: 18,
   },
   checkMark: {
     fontWeight: 700,

@@ -50,11 +50,7 @@ function BuildPickChip({
         <ThemedText themeColor="textTertiary" type="mono">
           {label}
         </ThemedText>
-        <ThemedText
-          numberOfLines={1}
-          themeColor={card ? "text" : "textSecondary"}
-          style={styles.name}
-        >
+        <ThemedText themeColor={card ? "text" : "textSecondary"} style={styles.name}>
           {card?.name ?? "Not picked"}
         </ThemedText>
       </View>
@@ -69,8 +65,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
-    flex: 1,
+    flexBasis: 132,
     flexDirection: "row",
+    flexGrow: 1,
+    flexShrink: 1,
     gap: Spacing.two,
     minWidth: 0,
     paddingHorizontal: Spacing.two + 2,

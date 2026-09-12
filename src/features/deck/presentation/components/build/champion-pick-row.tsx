@@ -52,7 +52,7 @@ function ChampionPickRow({
 
       <View style={styles.text}>
         <View style={styles.titleRow}>
-          <ThemedText numberOfLines={1} style={styles.name} type="small">
+          <ThemedText style={styles.name} type="small">
             {card.name}
           </ThemedText>
           <ThemedText style={{ color: accent }} type="mono">
@@ -108,12 +108,14 @@ const styles = StyleSheet.create({
   titleRow: {
     alignItems: "baseline",
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.two - 1,
   },
   name: {
     flexShrink: 1,
     fontSize: 13.5,
     fontWeight: 600,
+    minWidth: 0,
   },
   stats: {
     marginTop: Spacing.one,

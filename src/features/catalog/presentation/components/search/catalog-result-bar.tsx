@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
   controls: {
     alignItems: "center",
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.two - 1,
   },
 });

@@ -51,7 +51,7 @@ function HandCardTile({
           <>
             <View style={[styles.scrim, { backgroundColor: theme.background }]} />
             <View style={[styles.badge, { backgroundColor: theme.accent }]}>
-              <ThemedText themeColor="onAccent" type="smallBold">
+              <ThemedText maxFontSizeMultiplier={1.2} themeColor="onAccent" type="smallBold">
                 ✓
               </ThemedText>
             </View>
@@ -110,12 +110,13 @@ const styles = StyleSheet.create({
   badge: {
     alignItems: "center",
     borderRadius: Radius.medium,
-    height: 20,
     justifyContent: "center",
+    minHeight: 20,
+    minWidth: 20,
+    paddingHorizontal: Spacing.half,
     position: "absolute",
     right: Spacing.one,
     top: Spacing.one,
-    width: 20,
   },
   caption: {
     bottom: Spacing.two,

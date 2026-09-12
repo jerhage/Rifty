@@ -100,6 +100,7 @@ function StepButton({
       style={({ pressed }) => [styles.step, pressed && styles.pressed]}
     >
       <ThemedText
+        maxFontSizeMultiplier={1.3}
         style={[styles.stepLabel, { color: disabled ? theme.border : theme.textSecondary }]}
       >
         {label}
@@ -122,17 +123,17 @@ const styles = StyleSheet.create({
   step: {
     alignItems: "center",
     borderRadius: Radius.medium,
-    height: STEP_SIZE,
     justifyContent: "center",
-    width: STEP_SIZE,
+    minHeight: STEP_SIZE,
+    minWidth: STEP_SIZE,
   },
   stepLabel: {
     fontSize: 16,
   },
   quantity: {
     fontSize: 13,
+    minWidth: 20,
     textAlign: "center",
-    width: 20,
   },
   pressed: {
     opacity: 0.5,

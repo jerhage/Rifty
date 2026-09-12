@@ -72,10 +72,12 @@ const styles = StyleSheet.create({
   },
   figures: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.four,
     marginTop: Spacing.three - 2,
   },
   figure: {
+    flexShrink: 1,
     minWidth: 0,
   },
   caption: {

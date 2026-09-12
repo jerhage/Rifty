@@ -46,7 +46,10 @@ function ZonesStepHeader({
           style={[styles.nameInput, { color: theme.text }]}
           value={draft.name}
         />
-        <ThemedText style={{ color: legalityColor(verification, theme) }} type="mono">
+        <ThemedText
+          style={[styles.completeness, { color: legalityColor(verification, theme) }]}
+          type="mono"
+        >
           {completenessLabel(verification)}
         </ThemedText>
       </View>
@@ -97,10 +100,13 @@ const styles = StyleSheet.create({
   nameRow: {
     alignItems: "center",
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.two + 2,
   },
   nameInput: {
-    flex: 1,
+    flexBasis: 160,
+    flexGrow: 1,
+    flexShrink: 1,
     fontSize: 21,
     fontWeight: 700,
     letterSpacing: -0.4,
@@ -109,8 +115,12 @@ const styles = StyleSheet.create({
     padding: 0,
     textAlignVertical: "center",
   },
+  completeness: {
+    flexShrink: 1,
+  },
   chips: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.two - 1,
     marginTop: Spacing.two + 1,
   },

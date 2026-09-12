@@ -61,22 +61,21 @@ export { AttributeCurve };
 
 const styles = StyleSheet.create({
   bars: {
-    alignItems: "flex-end",
+    alignItems: "stretch",
     flexDirection: "row",
     gap: Spacing.two + 1,
-    height: 88,
     marginTop: Spacing.three - 4,
+    minHeight: 88,
   },
   column: {
     alignItems: "center",
     flex: 1,
     gap: Spacing.one + 1,
-    height: "100%",
   },
   track: {
     flex: 1,
     justifyContent: "flex-end",
-    minHeight: 0,
+    minHeight: 32,
     width: "100%",
   },
   bar: {

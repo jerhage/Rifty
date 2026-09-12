@@ -35,11 +35,7 @@ function KeywordTally({
       <View style={styles.rows}>
         {keywords.map((keyword) => (
           <View key={keyword.id} style={styles.row}>
-            <ThemedText
-              numberOfLines={1}
-              style={[styles.name, { color: colorFor(keyword.id) }]}
-              type="body"
-            >
+            <ThemedText style={[styles.name, { color: colorFor(keyword.id) }]} type="body">
               {keyword.name}
             </ThemedText>
             <View style={[styles.track, { backgroundColor: theme.fill }]}>
@@ -73,23 +69,27 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.two + 2,
   },
   name: {
-    flexBasis: 108,
-    flexShrink: 0,
+    flexShrink: 1,
+    minWidth: 108,
   },
   track: {
     borderRadius: 3,
-    flex: 1,
+    flexBasis: 64,
+    flexGrow: 1,
+    flexShrink: 1,
     height: 6,
+    minWidth: 48,
     overflow: "hidden",
   },
   bar: {
     height: "100%",
   },
   count: {
+    minWidth: 22,
     textAlign: "right",
-    width: 22,
   },
 });

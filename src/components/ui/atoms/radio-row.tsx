@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 function RadioRow({
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
     flexDirection: "row",
     gap: Spacing.three - 4,
-    minHeight: 44,
+    minHeight: TouchTarget.minimum,
     padding: Spacing.three - 4,
   },
   marker: {

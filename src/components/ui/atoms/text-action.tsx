@@ -1,13 +1,14 @@
 import { Pressable, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { TouchTarget } from "@/constants/theme";
 
 function TextAction({ label, onPress }: { readonly label: string; readonly onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => pressed && styles.pressed}
+      style={({ pressed }) => [styles.action, pressed && styles.pressed]}
     >
       <ThemedText themeColor="accent" type="mono">
         {label}
@@ -19,6 +20,12 @@ function TextAction({ label, onPress }: { readonly label: string; readonly onPre
 export { TextAction };
 
 const styles = StyleSheet.create({
+  action: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: TouchTarget.minimum,
+    minWidth: TouchTarget.minimum,
+  },
   pressed: {
     opacity: 0.7,
   },

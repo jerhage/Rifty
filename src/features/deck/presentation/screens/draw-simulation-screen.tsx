@@ -1,11 +1,12 @@
 import { useCallback, useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/atoms/button";
+import { IconButton } from "@/components/ui/atoms/icon-button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { MaxContentWidth, Radius, Spacing } from "@/constants/theme";
+import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { RandomSource } from "@/application/ports/random-source";
 import { drawOdds, handStats } from "@/features/analysis/draw-simulation";
 import { DrawOddsPanel } from "@/features/analysis/presentation/components/draw-odds";
@@ -76,18 +77,7 @@ function DrawSimulationScreen({
           },
         ]}
       >
-        <Pressable
-          accessibilityLabel="Back"
-          accessibilityRole="button"
-          onPress={onBack}
-          style={({ pressed }) => [
-            styles.back,
-            { backgroundColor: theme.fill },
-            pressed && styles.pressed,
-          ]}
-        >
-          <ThemedText type="small">←</ThemedText>
-        </Pressable>
+        <IconButton accessibilityLabel="Back" glyph="←" onPress={onBack} />
         <ThemedText themeColor="textSecondary" type="mono">
           {handLabel(mulligan, handNumber)}
         </ThemedText>
@@ -178,13 +168,6 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.two + 2,
     width: "100%",
   },
-  back: {
-    alignItems: "center",
-    borderRadius: Radius.medium,
-    height: 32,
-    justifyContent: "center",
-    width: 32,
-  },
   page: {
     alignSelf: "center",
     flexGrow: 1,
@@ -219,8 +202,5 @@ const styles = StyleSheet.create({
   },
   primary: {
     flex: 1,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

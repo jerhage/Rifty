@@ -2,8 +2,12 @@ import { Pressable, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { FilterGlyph } from "@/components/ui/icons/filter-glyph";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
+
+const FACE_HEIGHT = 26;
+const OUTWARD_SLOP = TouchTarget.slop(FACE_HEIGHT);
+const CONTROL_SLOP = { bottom: OUTWARD_SLOP, top: OUTWARD_SLOP };
 
 function FilterControl({
   count,
@@ -19,6 +23,7 @@ function FilterControl({
     <Pressable
       accessibilityLabel={isFiltered ? `Advanced filters, ${count} active` : "Advanced filters"}
       accessibilityRole="button"
+      hitSlop={CONTROL_SLOP}
       onPress={onPress}
       style={({ pressed }) => [
         styles.control,
@@ -43,6 +48,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: Spacing.one + 1,
+    justifyContent: "center",
+    minHeight: FACE_HEIGHT,
+    minWidth: TouchTarget.minimum,
     paddingHorizontal: Spacing.two + 2,
     paddingVertical: Spacing.one + 2,
   },

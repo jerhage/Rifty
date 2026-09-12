@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Pressable, StyleSheet } from "react-native";
 
 import { ThemedText, type ThemedTextType } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 /**
@@ -71,6 +71,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: Spacing.one + 2,
+    justifyContent: "center",
+    minHeight: TouchTarget.minimum,
+    minWidth: TouchTarget.minimum,
     paddingHorizontal: Spacing.three - 5,
     paddingVertical: Spacing.two - 2,
   },

@@ -1,7 +1,7 @@
 import { StyleSheet, TextInput, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Spacing } from "@/constants/theme";
+import { Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 import {
@@ -104,8 +104,10 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: 700,
     letterSpacing: -0.4,
+    minHeight: TouchTarget.minimum,
     minWidth: 0,
     padding: 0,
+    textAlignVertical: "center",
   },
   chips: {
     flexDirection: "row",

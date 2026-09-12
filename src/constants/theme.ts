@@ -114,6 +114,17 @@ const Spacing = {
   six: 64,
 } as const;
 
+const MINIMUM_TOUCH_TARGET = Platform.select({ android: 48, default: 44 });
+
+/**
+ * The smallest square a control may offer a finger — 44pt from the iOS HIG, 48 from Material —
+ * with `slop` giving the `hitSlop` inset that grows a face of the given size out to it.
+ */
+const TouchTarget = {
+  minimum: MINIMUM_TOUCH_TARGET,
+  slop: (faceSize: number) => Math.max(0, Math.ceil((MINIMUM_TOUCH_TARGET - faceSize) / 2)),
+} as const;
+
 /** Corner radii used by the design: chips and buttons at 12, panels at 16, sheet lip at 22. */
 const Radius = {
   small: 6,
@@ -201,5 +212,6 @@ export {
   Radius,
   Spacing,
   SpeedColors,
+  TouchTarget,
 };
 export type { Theme, ThemeColor };

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 type SegmentedSize = "regular" | "compact";
@@ -107,11 +107,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   regularOption: {
-    minHeight: 44,
+    minHeight: TouchTarget.minimum,
     paddingHorizontal: Spacing.two,
   },
   compactOption: {
-    minHeight: 30,
+    minHeight: TouchTarget.minimum,
     paddingHorizontal: Spacing.one,
   },
   grow: {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   iconOption: {
-    width: 34,
+    width: TouchTarget.minimum,
   },
   compactLabel: {
     fontSize: 12.5,

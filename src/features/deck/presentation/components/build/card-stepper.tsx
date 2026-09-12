@@ -2,11 +2,13 @@ import { Pressable, StyleSheet, View, type AccessibilityValue } from "react-nati
 import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius } from "@/constants/theme";
+import { Radius, TouchTarget } from "@/constants/theme";
 import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
 import { useTheme } from "@/hooks/use-theme";
 
 type StepperSurface = "inline" | "overlay";
+
+const STEP_SIZE = 30;
 
 function CardStepper({
   allowance,
@@ -92,6 +94,7 @@ function StepButton({
     <Pressable
       accessibilityElementsHidden
       disabled={disabled}
+      hitSlop={TouchTarget.slop(STEP_SIZE)}
       importantForAccessibility="no-hide-descendants"
       onPress={onPress}
       style={({ pressed }) => [styles.step, pressed && styles.pressed]}
@@ -119,9 +122,9 @@ const styles = StyleSheet.create({
   step: {
     alignItems: "center",
     borderRadius: Radius.medium,
-    height: 30,
+    height: STEP_SIZE,
     justifyContent: "center",
-    width: 30,
+    width: STEP_SIZE,
   },
   stepLabel: {
     fontSize: 16,

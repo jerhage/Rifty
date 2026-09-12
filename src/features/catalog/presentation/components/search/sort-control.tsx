@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 import type { CatalogQueryCriteria } from "../../catalog-query-criteria";
@@ -11,6 +11,16 @@ import {
   sortOptionFor,
   sortOptionLabel,
 } from "../../catalog-sort-options";
+
+const FACE_HEIGHT = 30;
+const ARROW_WIDTH = 28;
+const OUTWARD_SLOP = TouchTarget.slop(FACE_HEIGHT);
+const LABEL_SLOP = { bottom: OUTWARD_SLOP, top: OUTWARD_SLOP };
+const ARROW_SLOP = {
+  bottom: OUTWARD_SLOP,
+  right: TouchTarget.minimum - ARROW_WIDTH,
+  top: OUTWARD_SLOP,
+};
 
 /**
  * Two targets in one shell: the label opens the sort sheet, while the arrow reverses the order in
@@ -35,6 +45,7 @@ function SortControl({
       <Pressable
         accessibilityLabel={`Sort by ${sortOptionLabel(criteria.sort)}. Change ordering`}
         accessibilityRole="button"
+        hitSlop={LABEL_SLOP}
         onPress={onOpenSort}
         style={({ pressed }) => [styles.label, pressed && styles.pressed]}
       >
@@ -52,6 +63,7 @@ function SortControl({
                 : `Sorted ${option.ascendingLabel}. Switch to ${option.descendingLabel}`
             }
             accessibilityRole="button"
+            hitSlop={ARROW_SLOP}
             onPress={onToggleDirection}
             style={({ pressed }) => [styles.arrow, pressed && styles.pressed]}
           >
@@ -73,18 +85,22 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
-    overflow: "hidden",
+    minHeight: FACE_HEIGHT,
   },
   label: {
+    alignItems: "center",
+    alignSelf: "stretch",
     justifyContent: "center",
+    minWidth: TouchTarget.minimum,
     paddingHorizontal: Spacing.two + 1,
     paddingVertical: Spacing.one + 2,
   },
   arrow: {
     alignItems: "center",
+    alignSelf: "stretch",
     justifyContent: "center",
-    paddingHorizontal: Spacing.two + 1,
     paddingVertical: Spacing.one + 2,
+    width: ARROW_WIDTH,
   },
   divider: {
     alignSelf: "stretch",

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { FilterGlyph } from "@/components/ui/icons/filter-glyph";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 function PoolSearchRow({
@@ -66,7 +66,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: Spacing.one + 2,
-    height: 38,
+    justifyContent: "center",
+    minHeight: TouchTarget.minimum,
+    minWidth: TouchTarget.minimum,
     paddingHorizontal: Spacing.three - 5,
   },
   pressed: {

@@ -9,8 +9,14 @@ import {
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { SearchGlyph } from "@/components/ui/icons/search-glyph";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
+
+const CLEAR_FACE_WIDTH = 26;
+const CLEAR_SLOP = {
+  left: Spacing.two,
+  right: TouchTarget.minimum - CLEAR_FACE_WIDTH - Spacing.two,
+};
 
 function SearchField({
   accessibilityLabel,
@@ -44,8 +50,9 @@ function SearchField({
         <Pressable
           accessibilityLabel="Clear search"
           accessibilityRole="button"
+          hitSlop={CLEAR_SLOP}
           onPress={() => onChangeQuery("")}
-          style={({ pressed }) => pressed && styles.pressed}
+          style={({ pressed }) => [styles.clear, pressed && styles.pressed]}
         >
           <ThemedText themeColor="textSecondary" type="mono">
             Clr
@@ -65,9 +72,15 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: Spacing.two + 1,
-    height: 38,
+    minHeight: TouchTarget.minimum,
     minWidth: 0,
     paddingHorizontal: Spacing.three - 5,
+  },
+  clear: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    justifyContent: "center",
+    minWidth: CLEAR_FACE_WIDTH,
   },
   input: {
     alignSelf: "stretch",

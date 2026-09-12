@@ -1,7 +1,7 @@
 import { StyleSheet, TextInput, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 import {
@@ -52,15 +52,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: Spacing.two,
     justifyContent: "space-between",
-    minHeight: 44,
+    minHeight: TouchTarget.minimum,
   },
   input: {
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     fontSize: 14,
+    minHeight: TouchTarget.minimum,
     minWidth: 96,
     paddingHorizontal: Spacing.three - 4,
     paddingVertical: Spacing.two + 1,
     textAlign: "right",
+    textAlignVertical: "center",
   },
 });

@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 type ButtonVariant = "primary" | "secondary" | "link";
@@ -43,10 +43,12 @@ function Button({
           </ThemedView>
         ))
         .with("link", () => (
-          <View style={[styles.link, { borderBottomColor: theme.accent }]}>
-            <ThemedText style={{ color: theme.accent }} type="smallBold">
-              {label}
-            </ThemedText>
+          <View style={styles.linkTarget}>
+            <View style={[styles.link, { borderBottomColor: theme.accent }]}>
+              <ThemedText style={{ color: theme.accent }} type="smallBold">
+                {label}
+              </ThemedText>
+            </View>
           </View>
         ))
         .exhaustive()}
@@ -68,6 +70,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
+  },
+  linkTarget: {
+    alignItems: "flex-start",
+    justifyContent: "center",
+    minHeight: TouchTarget.minimum,
+    minWidth: TouchTarget.minimum,
   },
   link: {
     alignSelf: "flex-start",

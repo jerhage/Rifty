@@ -21,13 +21,24 @@ function CardArt({
   readonly width: number | null;
 }) {
   if (!isLandscape || width === null) {
-    return <Image contentFit="contain" source={image} style={styles.upright} transition={150} />;
+    return (
+      <Image
+        accessibilityElementsHidden
+        contentFit="contain"
+        importantForAccessibility="no-hide-descendants"
+        source={image}
+        style={styles.upright}
+        transition={150}
+      />
+    );
   }
 
   return (
     <View style={styles.rotatedFrame}>
       <Image
+        accessibilityElementsHidden
         contentFit="contain"
+        importantForAccessibility="no-hide-descendants"
         source={image}
         style={{
           height: width,

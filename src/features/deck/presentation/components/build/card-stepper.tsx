@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, type AccessibilityValue } from "react-native";
 import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
@@ -26,9 +26,38 @@ function CardStepper({
     .with({ type: "unlimited" }, () => false)
     .with({ type: "limited" }, ({ copies }) => quantity >= copies)
     .exhaustive();
+  const value = match(allowance)
+    .returnType<AccessibilityValue>()
+    .with({ type: "unlimited" }, () => ({ min: minQuantity, now: quantity }))
+    .with({ type: "limited" }, ({ copies }) => ({ min: minQuantity, max: copies, now: quantity }))
+    .exhaustive();
+  const atMinimum = quantity <= minQuantity;
+
+  function addCopy() {
+    if (!atAllowance) {
+      onChange(quantity + 1);
+    }
+  }
+
+  function removeCopy() {
+    if (!atMinimum) {
+      onChange(quantity - 1);
+    }
+  }
 
   return (
     <View
+      accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
+      accessibilityLabel="Copies"
+      accessibilityRole="adjustable"
+      accessibilityValue={value}
+      accessible
+      onAccessibilityAction={(event) =>
+        match(event.nativeEvent.actionName)
+          .with("increment", addCopy)
+          .with("decrement", removeCopy)
+          .otherwise(() => undefined)
+      }
       style={[
         styles.stepper,
         surface === "overlay"
@@ -36,18 +65,14 @@ function CardStepper({
           : { backgroundColor: theme.fill, borderColor: theme.border },
       ]}
     >
-      <StepButton
-        disabled={quantity <= minQuantity}
-        label="−"
-        onPress={() => onChange(Math.max(minQuantity, quantity - 1))}
-      />
+      <StepButton disabled={atMinimum} label="−" onPress={removeCopy} />
       <ThemedText
         style={[styles.quantity, { color: quantity > 0 ? theme.text : theme.textTertiary }]}
         type="monoValue"
       >
         {quantity}
       </ThemedText>
-      <StepButton disabled={atAllowance} label="+" onPress={() => onChange(quantity + 1)} />
+      <StepButton disabled={atAllowance} label="+" onPress={addCopy} />
     </View>
   );
 }
@@ -65,10 +90,9 @@ function StepButton({
 
   return (
     <Pressable
-      accessibilityLabel={label === "+" ? "Add a copy" : "Remove a copy"}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
+      accessibilityElementsHidden
       disabled={disabled}
+      importantForAccessibility="no-hide-descendants"
       onPress={onPress}
       style={({ pressed }) => [styles.step, pressed && styles.pressed]}
     >

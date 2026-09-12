@@ -48,10 +48,11 @@ function BuildCardRow({
       ]}
     >
       <Pressable
-        accessibilityHint="Press and hold to see the full card"
+        accessibilityHint="Opens the full card"
         accessibilityLabel={card.name}
         accessibilityRole="button"
         onLongPress={openCard}
+        onPress={() => onOpenCard(card)}
         style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       >
         <CardThumb card={card} contentFit="cover" style={styles.thumb} />

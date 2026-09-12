@@ -32,8 +32,8 @@ function Skeleton({ style }: { readonly style?: StyleProp<ViewStyle> }) {
 
   return (
     <Animated.View
-      accessibilityRole="image"
-      accessibilityLabel="Loading card art"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={[
         styles.skeleton,
         {

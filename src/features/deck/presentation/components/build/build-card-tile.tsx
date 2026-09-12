@@ -39,26 +39,29 @@ function BuildCardTile({
 
   return (
     <View style={[styles.tile, width === null ? undefined : { flexBasis: width, width }]}>
-      <Pressable
-        accessibilityHint="Press and hold to see the full card"
-        accessibilityLabel={card.name}
-        accessibilityRole="button"
-        onLongPress={openCard}
-        style={({ pressed }) => [
-          styles.frame,
-          {
-            backgroundColor: theme.backgroundElement,
-            borderColor: inDeck ? accent : theme.border,
-          },
-          pressed && styles.pressed,
-        ]}
-      >
-        <CardFace
-          domainIds={card.domainIds}
-          imageUrl={card.imageUrl}
-          orientation={card.orientation}
-          width={width}
-        />
+      <View>
+        <Pressable
+          accessibilityHint="Opens the full card"
+          accessibilityLabel={card.name}
+          accessibilityRole="button"
+          onLongPress={openCard}
+          onPress={() => onOpenCard(card)}
+          style={({ pressed }) => [
+            styles.frame,
+            {
+              backgroundColor: theme.backgroundElement,
+              borderColor: inDeck ? accent : theme.border,
+            },
+            pressed && styles.pressed,
+          ]}
+        >
+          <CardFace
+            domainIds={card.domainIds}
+            imageUrl={card.imageUrl}
+            orientation={card.orientation}
+            width={width}
+          />
+        </Pressable>
 
         <View style={styles.stepper}>
           <CardStepper
@@ -69,7 +72,7 @@ function BuildCardTile({
             surface="overlay"
           />
         </View>
-      </Pressable>
+      </View>
 
       <ThemedText numberOfLines={2} style={styles.name} type="body">
         {card.name}

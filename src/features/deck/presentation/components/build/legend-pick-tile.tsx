@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { CardImage } from "@/components/ui/atoms/card-image";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
@@ -8,6 +9,8 @@ import { domainAccent } from "@/features/card/presentation/card-taxonomy-format"
 import { DomainBar } from "@/features/card/presentation/components/domain-bar";
 import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
+
+import { SHOW_FULL_CARD, SHOW_FULL_CARD_ACTIONS } from "./show-full-card-action";
 
 function LegendPickTile({
   card,
@@ -26,10 +29,15 @@ function LegendPickTile({
 
   return (
     <Pressable
-      accessibilityHint="Press and hold to see the full card"
+      accessibilityActions={SHOW_FULL_CARD_ACTIONS}
       accessibilityLabel={`Choose ${card.name}`}
       accessibilityRole="button"
       accessibilityState={{ selected }}
+      onAccessibilityAction={(event) =>
+        match(event.nativeEvent.actionName)
+          .with(SHOW_FULL_CARD, () => onOpenCard(card))
+          .otherwise(() => undefined)
+      }
       onLongPress={openCard}
       onPress={() => onPick(card)}
       style={({ pressed }) => [
@@ -42,7 +50,12 @@ function LegendPickTile({
       ]}
     >
       <View style={[styles.art, { backgroundColor: theme.background }]}>
-        <CardImage contentFit="contain" source={card.imageUrl} style={styles.image} />
+        <CardImage
+          alternative={{ type: "decorative" }}
+          contentFit="contain"
+          source={card.imageUrl}
+          style={styles.image}
+        />
         {selected ? (
           <View style={[styles.check, { backgroundColor: accent }]}>
             <ThemedText style={[styles.checkMark, { color: theme.onAccent }]} type="mono">

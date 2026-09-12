@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
@@ -7,6 +8,8 @@ import { domainAccent, formatDomains } from "@/features/card/presentation/card-t
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
+
+import { SHOW_FULL_CARD, SHOW_FULL_CARD_ACTIONS } from "./show-full-card-action";
 
 function ChampionPickRow({
   card,
@@ -25,10 +28,15 @@ function ChampionPickRow({
 
   return (
     <Pressable
-      accessibilityHint="Press and hold to see the full card"
+      accessibilityActions={SHOW_FULL_CARD_ACTIONS}
       accessibilityLabel={`Choose ${card.name}`}
       accessibilityRole="radio"
       accessibilityState={{ selected }}
+      onAccessibilityAction={(event) =>
+        match(event.nativeEvent.actionName)
+          .with(SHOW_FULL_CARD, () => onOpenCard(card))
+          .otherwise(() => undefined)
+      }
       onLongPress={openCard}
       onPress={() => onPick(card)}
       style={({ pressed }) => [

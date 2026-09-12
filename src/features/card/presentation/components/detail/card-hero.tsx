@@ -21,7 +21,12 @@ function CardHero({ card }: { readonly card: Card }) {
         { aspectRatio, backgroundColor: theme.backgroundElement, borderColor: theme.border },
       ]}
     >
-      <CardImage contentFit="contain" source={card.imageUrl} style={styles.image} />
+      <CardImage
+        alternative={{ type: "described", label: `${card.name} card art` }}
+        contentFit="contain"
+        source={card.imageUrl}
+        style={styles.image}
+      />
     </View>
   );
 }

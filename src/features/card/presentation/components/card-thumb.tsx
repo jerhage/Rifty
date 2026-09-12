@@ -20,7 +20,12 @@ function CardThumb({
 
   return (
     <View style={[styles.thumb, { backgroundColor: theme.background }, style]}>
-      <CardImage contentFit={contentFit} source={card.imageUrl} style={styles.image} />
+      <CardImage
+        alternative={{ type: "decorative" }}
+        contentFit={contentFit}
+        source={card.imageUrl}
+        style={styles.image}
+      />
       <DomainBar domainIds={card.domainIds} height={2} />
     </View>
   );

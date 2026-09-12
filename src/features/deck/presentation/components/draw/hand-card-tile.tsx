@@ -36,7 +36,12 @@ function HandCardTile({
           },
         ]}
       >
-        <CardImage contentFit="cover" source={card.imageUrl} style={styles.image} />
+        <CardImage
+          alternative={{ type: "decorative" }}
+          contentFit="cover"
+          source={card.imageUrl}
+          style={styles.image}
+        />
         {card.attributes.energy === null ? null : (
           <View style={[styles.cost, { backgroundColor: theme.backgroundSheet }]}>
             <ThemedText type="mono">{`${card.attributes.energy}E`}</ThemedText>

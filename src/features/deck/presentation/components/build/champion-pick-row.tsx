@@ -4,7 +4,13 @@ import { match } from "ts-pattern";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import { domainAccent, formatDomains } from "@/features/card/presentation/card-taxonomy-format";
+import {
+  cardAttributeParts,
+  cardDomainNames,
+  domainAccent,
+  formatCardAttributes,
+  formatDomains,
+} from "@/features/card/presentation/card-taxonomy-format";
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
@@ -29,7 +35,7 @@ function ChampionPickRow({
   return (
     <Pressable
       accessibilityActions={SHOW_FULL_CARD_ACTIONS}
-      accessibilityLabel={`Choose ${card.name}`}
+      accessibilityLabel={championLabel(card)}
       accessibilityRole="radio"
       accessibilityState={{ selected }}
       onAccessibilityAction={(event) =>
@@ -60,7 +66,7 @@ function ChampionPickRow({
           </ThemedText>
         </View>
         <ThemedText themeColor="textTertiary" type="mono" style={styles.stats}>
-          {statsLabel(card)}
+          {formatCardAttributes(card)}
         </ThemedText>
       </View>
 
@@ -74,14 +80,10 @@ function ChampionPickRow({
   );
 }
 
-function statsLabel(card: Card): string {
-  return [
-    card.attributes.energy === null ? null : `${card.attributes.energy} energy`,
-    card.attributes.might === null ? null : `${card.attributes.might} might`,
-    card.attributes.power === null ? null : `${card.attributes.power} power`,
-  ]
-    .filter((part): part is string => part !== null)
-    .join(" · ");
+function championLabel(card: Card): string {
+  const described = [card.name, ...cardDomainNames(card.domainIds), ...cardAttributeParts(card)];
+
+  return `${described.join(", ")}. Choose`;
 }
 
 export { ChampionPickRow };

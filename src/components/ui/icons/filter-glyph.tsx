@@ -3,7 +3,11 @@ import { StyleSheet, View } from "react-native";
 /** The three-bar mark used for filters. */
 function FilterGlyph({ color }: { readonly color: string }) {
   return (
-    <View style={styles.glyph}>
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={styles.glyph}
+    >
       {[9, 6, 3].map((width) => (
         <View key={width} style={[styles.bar, { backgroundColor: color, width }]} />
       ))}

@@ -7,6 +7,8 @@ type TabGlyphShape = "square" | "diamond";
 function TabGlyph({ color, shape }: { readonly color: ColorValue; readonly shape: TabGlyphShape }) {
   return (
     <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={[
         styles.glyph,
         { backgroundColor: color },

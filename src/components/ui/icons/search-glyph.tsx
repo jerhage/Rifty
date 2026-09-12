@@ -4,7 +4,13 @@ import { Radius } from "@/constants/theme";
 
 /** The ring standing in for a magnifier in the search field. */
 function SearchGlyph({ color }: { readonly color: string }) {
-  return <View style={[styles.glyph, { borderColor: color }]} />;
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[styles.glyph, { borderColor: color }]}
+    />
+  );
 }
 
 export { SearchGlyph };

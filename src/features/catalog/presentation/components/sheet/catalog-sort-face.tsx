@@ -61,6 +61,7 @@ function CatalogSortFace({
                       sort: sortWithDirection(criteria.sort, "descending"),
                     })
                   }
+                  role="radio"
                   selected={direction === "descending"}
                 />
                 <SegmentedOption
@@ -72,6 +73,7 @@ function CatalogSortFace({
                       sort: sortWithDirection(criteria.sort, "ascending"),
                     })
                   }
+                  role="radio"
                   selected={direction === "ascending"}
                 />
               </SegmentedControl>

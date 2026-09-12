@@ -26,7 +26,7 @@ function ZoneSelector({
         return (
           <Pressable
             accessibilityLabel={`${rule.label}, ${count} of ${rule.requiredCount}`}
-            accessibilityRole="button"
+            accessibilityRole="tab"
             accessibilityState={{ selected: isSelected }}
             key={rule.section}
             onPress={() => onSelect(rule.section)}
@@ -54,7 +54,11 @@ function ZoneSelector({
                   /{rule.requiredCount}
                 </ThemedText>
               </View>
-              <View style={[styles.track, { backgroundColor: theme.fill }]}>
+              <View
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+                style={[styles.track, { backgroundColor: theme.fill }]}
+              >
                 <View
                   style={[
                     styles.fill,

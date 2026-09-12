@@ -2,7 +2,11 @@ import { StyleSheet, View } from "react-native";
 
 function RowsIcon({ color }: { readonly color: string }) {
   return (
-    <View style={styles.icon}>
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={styles.icon}
+    >
       <View style={[styles.bar, { backgroundColor: color }]} />
       <View style={[styles.bar, { backgroundColor: color }]} />
       <View style={[styles.bar, { backgroundColor: color }]} />

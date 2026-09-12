@@ -17,6 +17,8 @@ function ColorDot({
 }) {
   return (
     <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={[
         match(shape)
           .with("dot", () => styles.dot)

@@ -5,7 +5,12 @@ import { Radius, Spacing } from "@/constants/theme";
 import type { Deck } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 
-import { deckCountLabel, editedLabel } from "../deck-summary-format";
+import {
+  deckCountLabel,
+  deckCountParts,
+  editedLabel,
+  spokenEditedLabel,
+} from "../deck-summary-format";
 
 function DeckRow({
   deck,
@@ -20,7 +25,7 @@ function DeckRow({
 
   return (
     <Pressable
-      accessibilityLabel={`Open ${deck.name}`}
+      accessibilityLabel={deckLabel(deck, now)}
       accessibilityRole="button"
       onPress={() => onOpen(deck.id)}
       style={({ pressed }) => [
@@ -44,6 +49,10 @@ function DeckRow({
       </View>
     </Pressable>
   );
+}
+
+function deckLabel(deck: Deck, now: string): string {
+  return [deck.name, ...deckCountParts(deck), spokenEditedLabel(deck.updatedAt, now)].join(", ");
 }
 
 export { DeckRow };

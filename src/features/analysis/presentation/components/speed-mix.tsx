@@ -39,7 +39,11 @@ function SpeedMix({
       }
       title="Speed mix"
     >
-      <View style={[styles.bar, { backgroundColor: theme.fill }]}>
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={[styles.bar, { backgroundColor: theme.fill }]}
+      >
         {present.map((entry) => (
           <View
             key={entry.speed}
@@ -54,7 +58,12 @@ function SpeedMix({
 
       <View style={styles.rows}>
         {speeds.map((entry) => (
-          <View key={entry.speed} style={styles.row}>
+          <View
+            accessible
+            accessibilityLabel={speedLabel(entry)}
+            key={entry.speed}
+            style={styles.row}
+          >
             <ColorDot color={speedColors[entry.speed]} shape="diamond" size={9} />
             <View style={styles.label}>
               <ThemedText type="body" style={styles.name}>
@@ -88,6 +97,12 @@ function SpeedMix({
       ) : null}
     </Panel>
   );
+}
+
+function speedLabel(entry: SpeedShare): string {
+  const cards = entry.count === 1 ? "1 card" : `${entry.count} cards`;
+
+  return `${cardSpeedName(entry.speed)}, ${speedNote(entry.speed)}, ${Math.round(entry.share * 100)}%, ${cards}`;
 }
 
 export { SpeedMix };

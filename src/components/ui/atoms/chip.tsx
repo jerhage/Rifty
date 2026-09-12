@@ -44,8 +44,8 @@ function Chip({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.chip,

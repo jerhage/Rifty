@@ -32,11 +32,20 @@ function AttributeCurve({
     >
       <View style={styles.bars}>
         {buckets.map((bucket) => (
-          <View key={bucket.label} style={styles.column}>
+          <View
+            accessible
+            accessibilityLabel={bucketLabel(bucket)}
+            key={bucket.label}
+            style={styles.column}
+          >
             <ThemedText themeColor="textSecondary" type="mono">
               {bucket.count}
             </ThemedText>
-            <View style={styles.track}>
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={styles.track}
+            >
               <View
                 style={[
                   styles.bar,
@@ -55,6 +64,12 @@ function AttributeCurve({
       </View>
     </Panel>
   );
+}
+
+function bucketLabel(bucket: CurveBucket): string {
+  const cards = bucket.count === 1 ? "1 card" : `${bucket.count} cards`;
+
+  return `${bucket.label.replace("-", " to ")}, ${cards}`;
 }
 
 export { AttributeCurve };

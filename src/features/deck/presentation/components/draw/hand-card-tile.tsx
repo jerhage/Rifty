@@ -20,9 +20,9 @@ function HandCardTile({
 
   return (
     <Pressable
-      accessibilityLabel={card.name}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
+      accessibilityLabel={handCardLabel(card)}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
       onPress={onToggleSelection}
       style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
     >
@@ -72,6 +72,12 @@ function HandCardTile({
       </ThemedText>
     </Pressable>
   );
+}
+
+function handCardLabel(card: Card): string {
+  const energy = card.attributes.energy;
+
+  return energy === null ? card.name : `${card.name}, ${energy} energy`;
 }
 
 export { HandCardTile };

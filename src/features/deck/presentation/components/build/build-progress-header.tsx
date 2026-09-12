@@ -26,11 +26,19 @@ function BuildProgressHeader({
     <View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
       <View style={styles.titleRow}>
         <IconButton accessibilityLabel="Back" glyph="←" onPress={onBack} />
-        <ThemedText themeColor="textSecondary" type="mono">
+        <ThemedText
+          accessibilityLabel={`${modeLabel(mode)}, step ${step.ordinal} of ${DECK_BUILD_STEPS.length}, ${step.label}`}
+          themeColor="textSecondary"
+          type="mono"
+        >
           {`${modeLabel(mode)} · step ${step.ordinal} of ${DECK_BUILD_STEPS.length} · ${step.label}`}
         </ThemedText>
       </View>
-      <View style={styles.track}>
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={styles.track}
+      >
         {DECK_BUILD_STEPS.map((candidate) => (
           <View
             key={candidate.id}

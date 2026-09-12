@@ -4,6 +4,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
+import { cardDomainNames } from "@/features/card/presentation/card-taxonomy-format";
 import { CARD_ASPECT_RATIO } from "@/features/card/presentation/components/card-art";
 import { CardFace } from "@/features/card/presentation/components/card-face";
 import { useTheme } from "@/hooks/use-theme";
@@ -22,7 +23,7 @@ function CardGridItem({
 
   return (
     <Pressable
-      accessibilityLabel={`Open ${card.name}`}
+      accessibilityLabel={[card.name, ...cardDomainNames(card.domainIds)].join(", ")}
       accessibilityRole="button"
       onPress={() => onPress(card.printingId)}
       style={({ pressed }) => [

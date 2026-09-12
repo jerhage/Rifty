@@ -7,6 +7,12 @@ import { useTheme } from "@/hooks/use-theme";
 
 type SegmentedSize = "regular" | "compact";
 
+/**
+ * What activating an option does. `tab` swaps the pane below the control; `radio` picks one value
+ * out of a set. There is no default: the two announce differently and the caller knows which it is.
+ */
+type SegmentedOptionRole = "radio" | "tab";
+
 function SegmentedControl({
   children,
   size = "regular",
@@ -30,17 +36,22 @@ function SegmentedControl({
 }
 
 function SegmentedOption({
+  accessibilityLabel,
   glyph,
   icon,
   label,
   onPress,
+  role,
   selected,
   size = "regular",
 }: {
+  /** Spoken in place of the visible label, for a label whose punctuation reads badly. */
+  readonly accessibilityLabel?: string;
   readonly glyph?: string;
   readonly icon?: (color: string) => ReactNode;
   readonly label: string;
   readonly onPress: () => void;
+  readonly role: SegmentedOptionRole;
   readonly selected: boolean;
   readonly size?: SegmentedSize;
 }) {
@@ -49,8 +60,8 @@ function SegmentedOption({
 
   return (
     <Pressable
-      accessibilityLabel={label}
-      accessibilityRole="radio"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityRole={role}
       accessibilityState={{ selected }}
       onPress={onPress}
       style={({ pressed }) => [
@@ -85,7 +96,7 @@ function SegmentedOption({
 }
 
 export { SegmentedControl, SegmentedOption };
-export type { SegmentedSize };
+export type { SegmentedOptionRole, SegmentedSize };
 
 const styles = StyleSheet.create({
   control: {

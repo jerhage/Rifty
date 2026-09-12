@@ -17,6 +17,7 @@ function PoolLayoutToggle({
         icon={(color) => <RowsIcon color={color} />}
         label="List"
         onPress={() => onSelect("list")}
+        role="radio"
         selected={layout === "list"}
         size="compact"
       />
@@ -24,6 +25,7 @@ function PoolLayoutToggle({
         icon={(color) => <GridIcon color={color} />}
         label="Cards"
         onPress={() => onSelect("grid")}
+        role="radio"
         selected={layout === "grid"}
         size="compact"
       />

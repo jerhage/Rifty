@@ -45,7 +45,12 @@ function CardDetailScreen({ card }: { readonly card: Card }) {
         <CardKeywordRow keywords={card.keywords} />
         <CardRulesPanel rulesText={card.rulesText} />
 
-        <ThemedText themeColor="textTertiary" type="mono" style={styles.print}>
+        <ThemedText
+          accessibilityLabel={`Set ${card.setCode}, card number ${card.collectorNumber}`}
+          themeColor="textTertiary"
+          type="mono"
+          style={styles.print}
+        >
           {card.setCode} · #{card.collectorNumber}
         </ThemedText>
       </ScrollView>

@@ -2,7 +2,11 @@ import { StyleSheet, View } from "react-native";
 
 function GridIcon({ color }: { readonly color: string }) {
   return (
-    <View style={styles.icon}>
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={styles.icon}
+    >
       {[0, 1, 2, 3].map((cell) => (
         <View key={cell} style={[styles.cell, { backgroundColor: color }]} />
       ))}

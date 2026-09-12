@@ -11,6 +11,8 @@ import { SHOW_FULL_CARD } from "@/features/deck/presentation/components/build/sh
 import { card } from "../card/fixtures";
 
 const ZED: Card = card("ogn-001", "OGN", { name: "Zed" });
+const ZED_IN_BUILDER = "Zed, Unit, 3 energy, 2 might, 1 in deck";
+const CHOOSE_ZED = "Zed, Chaos, 3 energy, 2 might. Choose";
 
 async function showFullCard(name: string) {
   await fireEvent(screen.getByRole("radio", { name }), "accessibilityAction", {
@@ -33,7 +35,7 @@ describe("BuildCardTile", () => {
       />,
     );
 
-    await fireEvent.press(screen.getByRole("button", { name: "Zed" }));
+    await fireEvent.press(screen.getByRole("button", { name: ZED_IN_BUILDER }));
 
     expect(opened).toEqual([ZED]);
   });
@@ -52,7 +54,7 @@ describe("BuildCardTile", () => {
       />,
     );
 
-    const tile = screen.getByRole("button", { name: "Zed" });
+    const tile = screen.getByRole("button", { name: ZED_IN_BUILDER });
     expect(within(tile).queryByRole("adjustable")).toBeNull();
 
     await fireEvent(screen.getByRole("adjustable"), "accessibilityAction", {
@@ -77,7 +79,7 @@ describe("BuildCardRow", () => {
       />,
     );
 
-    await fireEvent.press(screen.getByRole("button", { name: "Zed" }));
+    await fireEvent.press(screen.getByRole("button", { name: ZED_IN_BUILDER }));
 
     expect(opened).toEqual([ZED]);
   });
@@ -95,7 +97,7 @@ describe("ChampionPickRow", () => {
       />,
     );
 
-    await fireEvent.press(screen.getByRole("radio", { name: "Choose Zed" }));
+    await fireEvent.press(screen.getByRole("radio", { name: CHOOSE_ZED }));
 
     expect(picked).toEqual([ZED]);
   });
@@ -111,7 +113,7 @@ describe("ChampionPickRow", () => {
       />,
     );
 
-    await showFullCard("Choose Zed");
+    await showFullCard(CHOOSE_ZED);
 
     expect(opened).toEqual([ZED]);
   });
@@ -129,7 +131,7 @@ describe("LegendPickTile", () => {
       />,
     );
 
-    await fireEvent.press(screen.getByRole("button", { name: "Choose Zed" }));
+    await fireEvent.press(screen.getByRole("radio", { name: "Choose Zed" }));
 
     expect(picked).toEqual([ZED]);
   });
@@ -145,7 +147,7 @@ describe("LegendPickTile", () => {
       />,
     );
 
-    await fireEvent(screen.getByRole("button", { name: "Choose Zed" }), "accessibilityAction", {
+    await fireEvent(screen.getByRole("radio", { name: "Choose Zed" }), "accessibilityAction", {
       nativeEvent: { actionName: SHOW_FULL_CARD },
     });
 

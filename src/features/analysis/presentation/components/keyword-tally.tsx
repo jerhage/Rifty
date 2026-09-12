@@ -5,7 +5,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import { useKeywordColors, useTheme } from "@/hooks/use-theme";
 
-import type { KeywordMix } from "../../card-metrics";
+import type { KeywordMix, KeywordShare } from "../../card-metrics";
 
 function KeywordTally({
   cardCount,
@@ -34,11 +34,20 @@ function KeywordTally({
     >
       <View style={styles.rows}>
         {keywords.map((keyword) => (
-          <View key={keyword.id} style={styles.row}>
+          <View
+            accessible
+            accessibilityLabel={keywordLabel(keyword)}
+            key={keyword.id}
+            style={styles.row}
+          >
             <ThemedText style={[styles.name, { color: colorFor(keyword.id) }]} type="body">
               {keyword.name}
             </ThemedText>
-            <View style={[styles.track, { backgroundColor: theme.fill }]}>
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={[styles.track, { backgroundColor: theme.fill }]}
+            >
               <View
                 style={[
                   styles.bar,
@@ -57,6 +66,10 @@ function KeywordTally({
       </View>
     </Panel>
   );
+}
+
+function keywordLabel(keyword: KeywordShare): string {
+  return `${keyword.name}, ${keyword.count === 1 ? "1 card" : `${keyword.count} cards`}`;
 }
 
 export { KeywordTally };

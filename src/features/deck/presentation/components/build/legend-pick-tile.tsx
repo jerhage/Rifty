@@ -31,7 +31,7 @@ function LegendPickTile({
     <Pressable
       accessibilityActions={SHOW_FULL_CARD_ACTIONS}
       accessibilityLabel={`Choose ${card.name}`}
-      accessibilityRole="button"
+      accessibilityRole="radio"
       accessibilityState={{ selected }}
       onAccessibilityAction={(event) =>
         match(event.nativeEvent.actionName)

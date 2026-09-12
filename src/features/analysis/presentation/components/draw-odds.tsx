@@ -55,11 +55,15 @@ function DrawOddsPanel({ odds }: { readonly odds: DrawOdds }) {
     >
       <View style={styles.rows}>
         {rows.map((row) => (
-          <View key={row.key} style={styles.row}>
+          <View accessible accessibilityLabel={oddsLabel(row)} key={row.key} style={styles.row}>
             <ThemedText style={styles.label} type="body">
               {row.label}
             </ThemedText>
-            <View style={[styles.track, { backgroundColor: theme.fill }]}>
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={[styles.track, { backgroundColor: theme.fill }]}
+            >
               <View
                 style={[
                   styles.bar,
@@ -80,6 +84,13 @@ function DrawOddsPanel({ odds }: { readonly odds: DrawOdds }) {
       </View>
     </Panel>
   );
+}
+
+function oddsLabel(row: OddsRow): string {
+  const opening = Math.round(row.opening * 100);
+  const byTurnThree = Math.round(row.byTurnThree * 100);
+
+  return `${row.label}, opening hand ${opening}%, by turn three ${byTurnThree}%`;
 }
 
 export { DrawOddsPanel };

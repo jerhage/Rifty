@@ -20,7 +20,11 @@ function DeckSectionGroup({
         <ThemedText accessibilityRole="header" type="heading">
           {group.title}
         </ThemedText>
-        <ThemedText themeColor="textTertiary" type="mono">
+        <ThemedText
+          accessibilityLabel={group.count === 1 ? "1 card" : `${group.count} cards`}
+          themeColor="textTertiary"
+          type="mono"
+        >
           {group.count}
         </ThemedText>
       </View>

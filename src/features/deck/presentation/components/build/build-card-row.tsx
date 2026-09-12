@@ -12,6 +12,7 @@ import type { CopyAllowance } from "@/features/deck/deck/deck-legality";
 import { useHapticLongPress } from "@/hooks/use-haptic-long-press";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
+import { buildCardLabel } from "../../build-card-format";
 import { CardStepper } from "./card-stepper";
 
 function BuildCardRow({
@@ -49,7 +50,7 @@ function BuildCardRow({
     >
       <Pressable
         accessibilityHint="Opens the full card"
-        accessibilityLabel={card.name}
+        accessibilityLabel={buildCardLabel(card, quantity)}
         accessibilityRole="button"
         onLongPress={openCard}
         onPress={() => onOpenCard(card)}

@@ -32,10 +32,20 @@ function AnimatedSplashOverlay() {
     },
   });
 
-  const image = <Image style={styles.image} source={require("@/assets/images/expo-logo.png")} />;
+  const image = (
+    <Image
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={styles.image}
+      source={require("@/assets/images/expo-logo.png")}
+    />
+  );
 
   return animate ? (
     <Animated.View
+      accessible
+      accessibilityLabel="Riftcards, starting up"
+      accessibilityViewIsModal
       entering={splashKeyframe.duration(DURATION).withCallback((finished) => {
         "worklet";
         if (finished) {
@@ -48,6 +58,9 @@ function AnimatedSplashOverlay() {
     </Animated.View>
   ) : (
     <View
+      accessible
+      accessibilityLabel="Riftcards, starting up"
+      accessibilityViewIsModal
       onLayout={() => {
         SplashScreen.hideAsync().finally(() => {
           setAnimate(true);

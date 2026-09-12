@@ -3,7 +3,10 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import { formatCardTypeAndAttributes } from "@/features/card/presentation/card-taxonomy-format";
+import {
+  formatCardTypeAndAttributes,
+  spokenCardTypeAndAttributes,
+} from "@/features/card/presentation/card-taxonomy-format";
 import { CardThumb } from "@/features/card/presentation/components/card-thumb";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -20,7 +23,7 @@ function DeckCardRow({
 
   return (
     <Pressable
-      accessibilityLabel={`${quantity} copies of ${card.name}`}
+      accessibilityLabel={heldCardLabel(card, quantity)}
       accessibilityRole="button"
       onPress={() => onOpenCard(card)}
       style={({ pressed }) => [
@@ -43,6 +46,12 @@ function DeckCardRow({
       </ThemedText>
     </Pressable>
   );
+}
+
+function heldCardLabel(card: Card, quantity: number): string {
+  const copies = quantity === 1 ? "1 copy" : `${quantity} copies`;
+
+  return `${card.name}, ${copies}, ${spokenCardTypeAndAttributes(card)}`;
 }
 
 export { DeckCardRow };

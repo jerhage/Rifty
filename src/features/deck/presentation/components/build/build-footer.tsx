@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Button } from "@/components/ui/atoms/button";
+import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 function BuildFooter({
@@ -28,19 +28,12 @@ function BuildFooter({
       ]}
     >
       <View style={styles.info}>{children}</View>
-      <Pressable
-        accessibilityRole="button"
+      <Button
+        disabled={!isActionEnabled}
+        label={actionLabel}
         onPress={onAction}
-        style={({ pressed }) => [
-          styles.action,
-          { backgroundColor: isActionEnabled ? theme.accent : theme.fill },
-          pressed && styles.pressed,
-        ]}
-      >
-        <ThemedText themeColor={isActionEnabled ? "onAccent" : "textSecondary"} type="smallBold">
-          {actionLabel}
-        </ThemedText>
-      </Pressable>
+        variant="primary"
+      />
     </View>
   );
 }
@@ -59,13 +52,5 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
     minWidth: 0,
-  },
-  action: {
-    borderRadius: Radius.medium,
-    paddingHorizontal: Spacing.four - 2,
-    paddingVertical: Spacing.three - 3,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

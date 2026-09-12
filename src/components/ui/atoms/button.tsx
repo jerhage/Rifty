@@ -61,6 +61,7 @@ const styles = StyleSheet.create({
   primary: {
     alignItems: "center",
     borderRadius: Radius.medium,
+    paddingHorizontal: Spacing.four - 2,
     paddingVertical: Spacing.three - 3,
   },
   secondary: {

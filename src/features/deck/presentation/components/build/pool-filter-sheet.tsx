@@ -1,3 +1,5 @@
+import { View } from "react-native";
+
 import { BottomSheetShell } from "@/components/ui/atoms/bottom-sheet-shell";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
@@ -32,16 +34,20 @@ function PoolFilterSheet({
 }) {
   return (
     <BottomSheetShell isPresented={isPresented} onDismiss={onDismiss}>
-      <PoolFilterFace
-        filters={filters}
-        keywords={keywords}
-        onApply={onApply}
-        onReset={onReset}
-        onToggleDomain={onToggleDomain}
-        onToggleKeyword={onToggleKeyword}
-        onToggleType={onToggleType}
-        zone={zone}
-      />
+      {isPresented ? (
+        <PoolFilterFace
+          filters={filters}
+          keywords={keywords}
+          onApply={onApply}
+          onReset={onReset}
+          onToggleDomain={onToggleDomain}
+          onToggleKeyword={onToggleKeyword}
+          onToggleType={onToggleType}
+          zone={zone}
+        />
+      ) : (
+        <View />
+      )}
     </BottomSheetShell>
   );
 }

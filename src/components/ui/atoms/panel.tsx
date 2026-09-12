@@ -24,7 +24,7 @@ function Panel({
       ]}
     >
       <View style={styles.header}>
-        <ThemedText themeColor="textTertiary" type="mono">
+        <ThemedText style={styles.title} themeColor="textTertiary" type="mono">
           {title}
         </ThemedText>
         {note}
@@ -45,7 +45,12 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.two,
     justifyContent: "space-between",
+  },
+  title: {
+    flexShrink: 1,
+    minWidth: 0,
   },
 });

@@ -39,34 +39,32 @@ function ZoneSelector({
               pressed && styles.pressed,
             ]}
           >
-            <ThemedText
-              numberOfLines={1}
-              themeColor={isSelected ? "text" : "textTertiary"}
-              type="mono"
-            >
+            <ThemedText themeColor={isSelected ? "text" : "textTertiary"} type="mono">
               {rule.label}
             </ThemedText>
-            <View style={styles.countRow}>
-              <ThemedText
-                style={[styles.count, { color: isComplete ? theme.positive : theme.text }]}
-                type="monoValue"
-              >
-                {count}
-              </ThemedText>
-              <ThemedText themeColor="textTertiary" type="mono">
-                /{rule.requiredCount}
-              </ThemedText>
-            </View>
-            <View style={[styles.track, { backgroundColor: theme.fill }]}>
-              <View
-                style={[
-                  styles.fill,
-                  {
-                    backgroundColor: isComplete ? theme.positive : theme.accent,
-                    width: `${Math.min(100, (count / rule.requiredCount) * 100)}%`,
-                  },
-                ]}
-              />
+            <View style={styles.measures}>
+              <View style={styles.countRow}>
+                <ThemedText
+                  style={[styles.count, { color: isComplete ? theme.positive : theme.text }]}
+                  type="monoValue"
+                >
+                  {count}
+                </ThemedText>
+                <ThemedText themeColor="textTertiary" type="mono">
+                  /{rule.requiredCount}
+                </ThemedText>
+              </View>
+              <View style={[styles.track, { backgroundColor: theme.fill }]}>
+                <View
+                  style={[
+                    styles.fill,
+                    {
+                      backgroundColor: isComplete ? theme.positive : theme.accent,
+                      width: `${Math.min(100, (count / rule.requiredCount) * 100)}%`,
+                    },
+                  ]}
+                />
+              </View>
             </View>
           </Pressable>
         );
@@ -90,11 +88,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.two - 1,
   },
+  measures: {
+    marginTop: "auto",
+    paddingTop: Spacing.one + 1,
+  },
   countRow: {
     alignItems: "baseline",
     flexDirection: "row",
     gap: 3,
-    marginTop: Spacing.one + 1,
   },
   count: {
     fontSize: 15,

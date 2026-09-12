@@ -70,10 +70,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three - 5,
   },
   input: {
+    alignSelf: "stretch",
     flex: 1,
     fontSize: 13.5,
     minWidth: 0,
     padding: 0,
+    textAlignVertical: "center",
   },
   pressed: {
     opacity: 0.7,

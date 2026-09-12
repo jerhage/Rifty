@@ -60,7 +60,7 @@ function HandCardTile({
             </ThemedText>
           </>
         ) : null}
-        <DomainBar domainIds={card.domainIds} />
+        <DomainBar domainIds={card.domainIds} height={2} />
       </View>
       <ThemedText
         numberOfLines={2}

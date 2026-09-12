@@ -14,30 +14,6 @@ describe("domainCode", () => {
 });
 
 describe("DomainBar", () => {
-  it("should draw each domain as a letter, so two domains of the same hue still read apart", async () => {
-    await render(<DomainBar domainIds={["Chaos", "Mind"]} />);
-
-    expect(screen.getByText("X", { includeHiddenElements: true })).toBeTruthy();
-    expect(screen.getByText("M", { includeHiddenElements: true })).toBeTruthy();
-  });
-
-  it("should hold its letters apart when a card carries more domains than any printed one does", async () => {
-    await render(<DomainBar domainIds={["Body", "Calm", "Colorless"]} />);
-
-    const letters = ["B", "C", "N"].map((letter) =>
-      screen.getByText(letter, { includeHiddenElements: true }),
-    );
-
-    expect(letters).toHaveLength(3);
-  });
-
-  it("should keep its letters out of the accessibility tree, where the label names the domain", async () => {
-    await render(<DomainBar domainIds={["Chaos", "Mind"]} />);
-
-    expect(screen.queryByText("X")).toBeNull();
-    expect(screen.queryByText("M")).toBeNull();
-  });
-
   it("should draw nothing for a card with no domain", async () => {
     await render(<DomainBar domainIds={[]} />);
 

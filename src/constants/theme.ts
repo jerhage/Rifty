@@ -203,12 +203,16 @@ const KeywordColors = {
 
 const MaxContentWidth = 800;
 
+/** The narrowest window that gets the tablet layout: the design's smallest tablet frame. */
+const MinTabletWidth = 800;
+
 export {
   Colors,
   DomainColors,
   Fonts,
   KeywordColors,
   MaxContentWidth,
+  MinTabletWidth,
   Radius,
   Spacing,
   SpeedColors,

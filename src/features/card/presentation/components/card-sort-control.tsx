@@ -2,15 +2,15 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing, TouchTarget } from "@/constants/theme";
+import type { CardSort } from "@/features/card/card-list-criteria";
 import { useTheme } from "@/hooks/use-theme";
 
-import type { CatalogQueryCriteria } from "../../catalog-query-criteria";
 import {
   sortDirectionArrow,
   sortDirectionOf,
   sortOptionFor,
   sortOptionLabel,
-} from "../../catalog-sort-options";
+} from "../card-sort-options";
 
 const FACE_HEIGHT = 30;
 const ARROW_WIDTH = 28;
@@ -26,31 +26,31 @@ const ARROW_SLOP = {
  * Two targets in one shell: the label opens the sort sheet, while the arrow reverses the order in
  * place. Catalog order has no direction, so it shows no arrow.
  */
-function SortControl({
-  criteria,
+function CardSortControl({
   onOpenSort,
   onToggleDirection,
+  sort,
 }: {
-  readonly criteria: CatalogQueryCriteria;
   readonly onOpenSort: () => void;
   readonly onToggleDirection: () => void;
+  readonly sort: CardSort | undefined;
 }) {
   const theme = useTheme();
-  const arrow = sortDirectionArrow(criteria.sort);
-  const option = sortOptionFor(criteria.sort);
-  const isDescending = sortDirectionOf(criteria.sort) === "descending";
+  const arrow = sortDirectionArrow(sort);
+  const option = sortOptionFor(sort);
+  const isDescending = sortDirectionOf(sort) === "descending";
 
   return (
     <View style={[styles.control, { backgroundColor: theme.fill, borderColor: theme.border }]}>
       <Pressable
-        accessibilityLabel={`Sort by ${sortOptionLabel(criteria.sort)}. Change ordering`}
+        accessibilityLabel={`Sort by ${sortOptionLabel(sort)}. Change ordering`}
         accessibilityRole="button"
         hitSlop={LABEL_SLOP}
         onPress={onOpenSort}
         style={({ pressed }) => [styles.label, pressed && styles.pressed]}
       >
         <ThemedText themeColor="accent" type="mono">
-          {sortOptionLabel(criteria.sort)}
+          {sortOptionLabel(sort)}
         </ThemedText>
       </Pressable>
       {arrow === null ? null : (
@@ -77,7 +77,7 @@ function SortControl({
   );
 }
 
-export { SortControl };
+export { CardSortControl };
 
 const styles = StyleSheet.create({
   control: {

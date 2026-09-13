@@ -1,11 +1,11 @@
 import { useCallback, useState } from "react";
 
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
+import { sortForId, toggledSort } from "@/features/card/presentation/card-sort-options";
 import type { CardType } from "@/features/card/value-objects/card-type";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 import type { CatalogQueryCriteria } from "../catalog-query-criteria";
-import { sortForId, toggledSort } from "../catalog-sort-options";
 
 const SEARCH_DEBOUNCE_MS = 300;
 

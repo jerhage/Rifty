@@ -5,45 +5,45 @@ import { SegmentedControl, SegmentedOption } from "@/components/ui/atoms/segment
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
 import { SheetFace } from "@/components/ui/atoms/sheet-face";
 import { Spacing } from "@/constants/theme";
+import type { CardSort } from "@/features/card/card-list-criteria";
 
-import type { CatalogQueryCriteria } from "../../catalog-query-criteria";
 import {
+  CARD_SORT_OPTIONS,
   sortDirectionOf,
   sortForId,
   sortIdOf,
   sortOptionFor,
-  SORT_OPTIONS,
   sortWithDirection,
-} from "../../catalog-sort-options";
+} from "../card-sort-options";
 
 /**
  * Attribute and direction are chosen separately, so each ordering appears once. The order control
  * is absent for catalog order, the one ordering with no direction to give.
  */
-function CatalogSortFace({
-  criteria,
+function CardSortFace({
   onApply,
-  onChangeCriteria,
+  onChangeSort,
+  sort,
 }: {
-  readonly criteria: CatalogQueryCriteria;
   readonly onApply: () => void;
-  readonly onChangeCriteria: (criteria: CatalogQueryCriteria) => void;
+  readonly onChangeSort: (sort: CardSort | undefined) => void;
+  readonly sort: CardSort | undefined;
 }) {
-  const selectedId = sortIdOf(criteria.sort);
-  const direction = sortDirectionOf(criteria.sort);
-  const option = sortOptionFor(criteria.sort);
+  const selectedId = sortIdOf(sort);
+  const direction = sortDirectionOf(sort);
+  const option = sortOptionFor(sort);
 
   return (
     <SheetFace
       body={
         <>
           <View style={styles.options}>
-            {SORT_OPTIONS.map(({ id, label, note }) => (
+            {CARD_SORT_OPTIONS.map(({ id, label, note }) => (
               <RadioRow
                 key={id}
                 label={label}
                 note={note}
-                onPress={() => onChangeCriteria({ ...criteria, sort: sortForId(id) })}
+                onPress={() => onChangeSort(sortForId(id))}
                 selected={selectedId === id}
               />
             ))}
@@ -55,24 +55,14 @@ function CatalogSortFace({
                 <SegmentedOption
                   glyph="↓"
                   label={option.descendingLabel}
-                  onPress={() =>
-                    onChangeCriteria({
-                      ...criteria,
-                      sort: sortWithDirection(criteria.sort, "descending"),
-                    })
-                  }
+                  onPress={() => onChangeSort(sortWithDirection(sort, "descending"))}
                   role="radio"
                   selected={direction === "descending"}
                 />
                 <SegmentedOption
                   glyph="↑"
                   label={option.ascendingLabel}
-                  onPress={() =>
-                    onChangeCriteria({
-                      ...criteria,
-                      sort: sortWithDirection(criteria.sort, "ascending"),
-                    })
-                  }
+                  onPress={() => onChangeSort(sortWithDirection(sort, "ascending"))}
                   role="radio"
                   selected={direction === "ascending"}
                 />
@@ -88,7 +78,7 @@ function CatalogSortFace({
   );
 }
 
-export { CatalogSortFace };
+export { CardSortFace };
 
 const styles = StyleSheet.create({
   options: {

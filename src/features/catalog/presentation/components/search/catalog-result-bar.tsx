@@ -2,10 +2,10 @@ import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
+import { CardSortControl } from "@/features/card/presentation/components/card-sort-control";
 
 import { activeFilterCount, type CatalogQueryCriteria } from "../../catalog-query-criteria";
 import { FilterControl } from "./filter-control";
-import { SortControl } from "./sort-control";
 
 function CatalogResultBar({
   criteria,
@@ -29,10 +29,10 @@ function CatalogResultBar({
       </ThemedText>
       <View style={styles.controls}>
         <FilterControl count={activeFilterCount(criteria)} onPress={onOpenFilters} />
-        <SortControl
-          criteria={criteria}
+        <CardSortControl
           onOpenSort={onOpenSort}
           onToggleDirection={onToggleSortDirection}
+          sort={criteria.sort}
         />
       </View>
     </View>

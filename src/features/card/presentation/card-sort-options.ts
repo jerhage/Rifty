@@ -4,10 +4,10 @@ import type { CardSort } from "@/features/card/card-list-criteria";
 
 /** Derived from the domain union so presentation never redeclares the direction vocabulary. */
 type CardSortDirection = Extract<CardSort, { direction: unknown }>["direction"];
-type CatalogSortId = CardSort["type"];
+type CardSortId = CardSort["type"];
 
-interface CatalogSortOption {
-  readonly id: CatalogSortId;
+interface CardSortOption {
+  readonly id: CardSortId;
   readonly label: string;
   readonly note: string;
   /**
@@ -20,7 +20,7 @@ interface CatalogSortOption {
   readonly ascendingLabel: string;
 }
 
-const SORT_OPTIONS_BY_ID: Readonly<Record<CatalogSortId, CatalogSortOption>> = {
+const CARD_SORT_OPTIONS_BY_ID: Readonly<Record<CardSortId, CardSortOption>> = {
   catalogOrder: {
     id: "catalogOrder",
     label: "Catalog order",
@@ -63,27 +63,27 @@ const SORT_OPTIONS_BY_ID: Readonly<Record<CatalogSortId, CatalogSortOption>> = {
   },
 };
 
-const SORT_OPTIONS: readonly CatalogSortOption[] = [
-  SORT_OPTIONS_BY_ID.catalogOrder,
-  SORT_OPTIONS_BY_ID.name,
-  SORT_OPTIONS_BY_ID.energy,
-  SORT_OPTIONS_BY_ID.might,
-  SORT_OPTIONS_BY_ID.power,
+const CARD_SORT_OPTIONS: readonly CardSortOption[] = [
+  CARD_SORT_OPTIONS_BY_ID.catalogOrder,
+  CARD_SORT_OPTIONS_BY_ID.name,
+  CARD_SORT_OPTIONS_BY_ID.energy,
+  CARD_SORT_OPTIONS_BY_ID.might,
+  CARD_SORT_OPTIONS_BY_ID.power,
 ];
 
-function sortOptionForId(id: CatalogSortId): CatalogSortOption {
-  return SORT_OPTIONS_BY_ID[id];
+function sortOptionForId(id: CardSortId): CardSortOption {
+  return CARD_SORT_OPTIONS_BY_ID[id];
 }
 
 /**
- * Catalog order is carried as an absent sort rather than an explicit one, which is how the catalog
+ * Catalog order is carried as an absent sort rather than an explicit one, which is how a card
  * query has always expressed "no ordering asked for".
  */
-function sortIdOf(sort: CardSort | undefined): CatalogSortId {
+function sortIdOf(sort: CardSort | undefined): CardSortId {
   return sort === undefined ? "catalogOrder" : sort.type;
 }
 
-function sortOptionFor(sort: CardSort | undefined): CatalogSortOption {
+function sortOptionFor(sort: CardSort | undefined): CardSortOption {
   return sortOptionForId(sortIdOf(sort));
 }
 
@@ -101,7 +101,7 @@ function sortDirectionOf(sort: CardSort | undefined): CardSortDirection | null {
     .exhaustive();
 }
 
-function buildSort(id: CatalogSortId, direction: CardSortDirection): CardSort | undefined {
+function buildSort(id: CardSortId, direction: CardSortDirection): CardSort | undefined {
   return match(id)
     .with("catalogOrder", () => undefined)
     .with("name", () => ({ type: "name", direction }) as const)
@@ -112,7 +112,7 @@ function buildSort(id: CatalogSortId, direction: CardSortDirection): CardSort | 
 }
 
 /** Choosing an attribute adopts its natural direction rather than keeping the previous one. */
-function sortForId(id: CatalogSortId): CardSort | undefined {
+function sortForId(id: CardSortId): CardSort | undefined {
   const { defaultDirection } = sortOptionForId(id);
 
   return defaultDirection === null ? undefined : buildSort(id, defaultDirection);
@@ -146,14 +146,14 @@ function sortDirectionArrow(sort: CardSort | undefined): string | null {
 }
 
 export {
+  CARD_SORT_OPTIONS,
   sortDirectionArrow,
   sortDirectionOf,
   sortForId,
   sortIdOf,
   sortOptionFor,
   sortOptionLabel,
-  SORT_OPTIONS,
   sortWithDirection,
   toggledSort,
 };
-export type { CardSortDirection, CatalogSortId, CatalogSortOption };
+export type { CardSortDirection, CardSortId, CardSortOption };

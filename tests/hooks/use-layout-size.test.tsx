@@ -10,6 +10,7 @@ import {
 } from "@/features/deck/presentation/components/build/zone-pool-list";
 import { CHAMPION_COLUMNS } from "@/features/deck/presentation/components/build/steps/champion-step";
 import { LEGEND_COLUMNS } from "@/features/deck/presentation/components/build/steps/legend-step";
+import { RailWidth } from "@/constants/theme";
 import {
   fitColumns,
   useColumnFit,
@@ -17,6 +18,7 @@ import {
   type ColumnFit,
   type ColumnSpec,
 } from "@/hooks/use-layout-size";
+import { UsableWidthProvider } from "@/hooks/use-usable-width";
 
 const TILES: ColumnSpec = { gap: 16, minimum: 150, sidePadding: 0 };
 
@@ -38,6 +40,18 @@ function insetWrapper(width: number, height: number, insets: EdgeInsets) {
       <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width, height }, insets }}>
         {children}
       </SafeAreaProvider>
+    );
+  };
+}
+
+function narrowedWrapper(width: number, height: number, narrowedWidth: number) {
+  const Inset = insetWrapper(width, height, NO_INSETS);
+
+  return function NarrowedWrapper({ children }: PropsWithChildren) {
+    return (
+      <Inset>
+        <UsableWidthProvider width={narrowedWidth}>{children}</UsableWidthProvider>
+      </Inset>
     );
   };
 }
@@ -206,5 +220,47 @@ describe("useColumnFit at phone landscape with a notch cutout", () => {
   it("should give the catalog four columns and the legend step its own three", async () => {
     expect((await columnFitOf(CATALOG_COLUMNS, 852, 393, LANDSCAPE_CUTOUT)).columns).toBe(4);
     expect((await columnFitOf(LEGEND_COLUMNS, 852, 393, LANDSCAPE_CUTOUT)).columns).toBe(3);
+  });
+});
+
+describe("a subtree handed a narrower usable width", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  async function behindTheRail(width: number, height: number) {
+    windowOf(width, height);
+    const { result } = await renderHook(
+      () => ({ fit: useColumnFit(CATALOG_COLUMNS), size: useLayoutSize() }),
+      { wrapper: narrowedWrapper(width, height, width - RailWidth) },
+    );
+
+    return result.current;
+  }
+
+  it("should report the width it was given rather than the whole window", async () => {
+    expect((await behindTheRail(1376, 1032)).size.usableWidth).toBe(1258);
+  });
+
+  it("should fit the catalog to the narrowed width, a column narrower at three frames", async () => {
+    const frames = [1376, 1280, 1032, 800];
+    const behind = [];
+    for (const width of frames) behind.push((await behindTheRail(width, 1032)).fit.columns);
+
+    expect(columnsAt(CATALOG_COLUMNS, frames)).toEqual([8, 7, 6, 4]);
+    expect(behind).toEqual([7, 6, 5, 4]);
+  });
+
+  it("should keep a tablet a tablet, however much of its width the rail takes", async () => {
+    expect((await behindTheRail(800, 1280)).size.layoutClass).toBe("tablet");
+  });
+
+  it("should classify by the window even when the width left is a phone's", async () => {
+    windowOf(800, 1280);
+    const { result } = await renderHook(() => useLayoutSize(), {
+      wrapper: narrowedWrapper(800, 1280, 402),
+    });
+
+    expect(result.current).toEqual({ layoutClass: "tablet", usableWidth: 402 });
   });
 });

@@ -207,6 +207,9 @@ const MaxReadingWidth = 800;
 /** The narrowest window that gets the tablet layout: the design's smallest tablet frame. */
 const MinTabletWidth = 800;
 
+/** The width of the navigation rail the tab bar becomes on a tablet, from the design. */
+const RailWidth = 118;
+
 export {
   Colors,
   DomainColors,
@@ -215,6 +218,7 @@ export {
   MaxReadingWidth,
   MinTabletWidth,
   Radius,
+  RailWidth,
   Spacing,
   SpeedColors,
   TouchTarget,

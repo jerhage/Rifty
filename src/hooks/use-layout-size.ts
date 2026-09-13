@@ -2,6 +2,7 @@ import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { MinTabletWidth } from "@/constants/theme";
+import { useUsableWidth } from "@/hooks/use-usable-width";
 
 type LayoutClass = "phone" | "tablet";
 
@@ -28,10 +29,11 @@ function layoutClassFor(width: number, height: number): LayoutClass {
 function useLayoutSize(): LayoutSize {
   const { height, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const usableWidth = useUsableWidth(width - insets.left - insets.right);
 
   return {
     layoutClass: layoutClassFor(width, height),
-    usableWidth: width - insets.left - insets.right,
+    usableWidth,
   };
 }
 

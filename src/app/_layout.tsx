@@ -29,7 +29,10 @@ function RootLayout() {
                 title: getFocusedRouteNameFromRoute(route) === "decks" ? "Decks" : "Cards",
               })}
             />
-            <Stack.Screen name="cards/[id]" options={{ title: "Card" }} />
+            <Stack.Screen
+              name="cards/[id]"
+              options={{ presentation: "modal", title: "Card" }}
+            />
             <Stack.Screen name="decks/[id]/index" options={{ title: "Deck" }} />
             <Stack.Screen
               name="decks/[id]/draw"

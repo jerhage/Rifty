@@ -30,18 +30,14 @@ function HomeScreen() {
   return (
     <>
       {match(opening)
-        .with({ type: "route" }, ({ openCard }) => (
-          <CardCatalog catalogQuery={catalogQuery} onOpenCard={openCard} />
+        .with({ type: "route" }, ({ open }) => (
+          <CardCatalog catalogQuery={catalogQuery} onOpenCard={open} />
         ))
-        .with({ type: "pane" }, ({ closeCard, openCard, shownCardId }) => (
+        .with({ type: "pane" }, ({ close, open, shownId }) => (
           <SplitLayout
-            primary={<CardCatalog catalogQuery={catalogQuery} onOpenCard={openCard} />}
+            primary={<CardCatalog catalogQuery={catalogQuery} onOpenCard={open} />}
             secondary={
-              <CardDetailPane
-                cardFinder={cards.cardRepository}
-                cardId={shownCardId}
-                onClose={closeCard}
-              />
+              <CardDetailPane cardFinder={cards.cardRepository} cardId={shownId} onClose={close} />
             }
           />
         ))

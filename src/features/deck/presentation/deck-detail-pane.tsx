@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { TextAction } from "@/components/ui/atoms/text-action";
+import { IconButton } from "@/components/ui/atoms/icon-button";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
@@ -33,10 +34,12 @@ function DeckDetailPane({
   readonly onEdit: (deckId: DeckId) => void;
   readonly onOpenCard: (card: Card) => void;
 }) {
+  const insets = useSafeAreaInsets();
+
   return (
     <ThemedView style={styles.pane}>
-      <View style={styles.closeRow}>
-        <TextAction accessibilityLabel="Close the deck" label="✕" onPress={onClose} />
+      <View style={[styles.closeRow, { paddingTop: insets.top + Spacing.two }]}>
+        <IconButton accessibilityLabel="Close the deck" glyph="✕" onPress={onClose} />
       </View>
       <DeckDetailData
         cardByCardIdFinder={cardByCardIdFinder}
@@ -67,6 +70,5 @@ const styles = StyleSheet.create({
   closeRow: {
     alignItems: "flex-end",
     paddingHorizontal: Spacing.two,
-    paddingTop: Spacing.two,
   },
 });

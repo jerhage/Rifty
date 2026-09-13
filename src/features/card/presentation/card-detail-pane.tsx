@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { TextAction } from "@/components/ui/atoms/text-action";
+import { IconButton } from "@/components/ui/atoms/icon-button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
@@ -18,12 +19,14 @@ function CardDetailPane({
   readonly cardId: PrintingId | null;
   readonly onClose: () => void;
 }) {
+  const insets = useSafeAreaInsets();
+
   if (cardId === null) return <IdleCardPane />;
 
   return (
     <ThemedView style={styles.pane}>
-      <View style={styles.closeRow}>
-        <TextAction accessibilityLabel="Close the card" label="✕" onPress={onClose} />
+      <View style={[styles.closeRow, { paddingTop: insets.top + Spacing.two }]}>
+        <IconButton accessibilityLabel="Close the card" glyph="✕" onPress={onClose} />
       </View>
       <CardDetailData cardFinder={cardFinder} cardId={cardId}>
         {(card) => <CardDetailScreen card={card} />}
@@ -54,7 +57,6 @@ const styles = StyleSheet.create({
   closeRow: {
     alignItems: "flex-end",
     paddingHorizontal: Spacing.two,
-    paddingTop: Spacing.two,
   },
   idle: {
     flex: 1,

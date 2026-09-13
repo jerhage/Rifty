@@ -2,48 +2,40 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import type { Card } from "@/features/card/card";
-import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
-import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 import { DeckDetailData } from "@/features/deck/presentation/data/deck-detail-data";
-import { DeckDetailScreen } from "@/features/deck/presentation/screens/deck-detail-screen";
+import { DeckDetail } from "@/features/deck/presentation/deck-detail";
 
 function DeckDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { cards: cardDependencies, decks } = useAppDependencies();
+  const { cards, clock, decks } = useAppDependencies();
+  const router = useRouter();
 
   return (
     <DeckDetailData
-      cardByCardIdFinder={cardDependencies.cardRepository}
-      cardsByPrintingIdsFinder={cardDependencies.cardRepository}
+      cardByCardIdFinder={cards.cardRepository}
+      cardsByPrintingIdsFinder={cards.cardRepository}
       deckFinder={decks.deckRepository}
       deckId={id}
     >
-      {({ resolvedDeck }) => <DeckDetail resolvedDeck={resolvedDeck} />}
+      {({ resolvedDeck }) => (
+        <>
+          <Stack.Screen options={{ title: resolvedDeck.deck.name }} />
+          <DeckDetail
+            now={clock.now()}
+            onDrawSimulation={() =>
+              router.push({ pathname: "/decks/[id]/draw", params: { id: resolvedDeck.deck.id } })
+            }
+            onEdit={() =>
+              router.push({ pathname: "/decks/build", params: { deckId: resolvedDeck.deck.id } })
+            }
+            onOpenCard={(card: Card) =>
+              router.push({ pathname: "/cards/[id]", params: { id: card.printingId } })
+            }
+            resolvedDeck={resolvedDeck}
+          />
+        </>
+      )}
     </DeckDetailData>
-  );
-}
-
-function DeckDetail({ resolvedDeck }: { readonly resolvedDeck: ResolvedDeck }) {
-  const router = useRouter();
-  const { clock } = useAppDependencies();
-  const { deck } = resolvedDeck;
-
-  return (
-    <>
-      <Stack.Screen options={{ title: deck.name }} />
-      <DeckDetailScreen
-        now={clock.now()}
-        onDrawSimulation={() =>
-          router.push({ pathname: "/decks/[id]/draw", params: { id: deck.id } })
-        }
-        onEdit={() => router.push({ pathname: "/decks/build", params: { deckId: deck.id } })}
-        onOpenCard={(card: Card) =>
-          router.push({ pathname: "/cards/[id]", params: { id: card.printingId } })
-        }
-        resolvedDeck={resolvedDeck}
-        verification={verifyDeck(deck, RIFTBOUND_STANDARD)}
-      />
-    </>
   );
 }
 

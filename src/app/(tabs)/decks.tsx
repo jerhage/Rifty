@@ -1,31 +1,67 @@
 import { useRouter } from "expo-router";
+import { useCallback } from "react";
+import { match } from "ts-pattern";
 
+import { SplitLayout } from "@/components/app-shell/split-layout";
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
-import type { Deck } from "@/features/deck/deck/deck";
+import type { Card } from "@/features/card/card";
+import type { Deck, DeckId } from "@/features/deck/deck/deck";
 import { DecksData } from "@/features/deck/presentation/data/decks-data";
+import { DeckDetailPane } from "@/features/deck/presentation/deck-detail-pane";
+import { useDeckOpening } from "@/features/deck/presentation/hooks/use-deck-opening";
 import { DeckListScreen } from "@/features/deck/presentation/screens/deck-list-screen";
 
 function DecksRoute() {
-  const { decks } = useAppDependencies();
+  const { cards, clock, decks } = useAppDependencies();
+  const router = useRouter();
+  const pushDeckRoute = useCallback(
+    (deckId: DeckId) => router.push({ pathname: "/decks/[id]", params: { id: deckId } }),
+    [router],
+  );
+  const opening = useDeckOpening(pushDeckRoute);
+
+  return match(opening)
+    .with({ type: "route" }, ({ open }) => <DeckList onOpenDeck={open} />)
+    .with({ type: "pane" }, ({ close, open, shownId }) => (
+      <SplitLayout
+        primary={
+          <DeckDetailPane
+            cardByCardIdFinder={cards.cardRepository}
+            cardsByPrintingIdsFinder={cards.cardRepository}
+            deckFinder={decks.deckRepository}
+            deckId={shownId}
+            now={clock.now()}
+            onClose={close}
+            onDrawSimulation={(deckId) =>
+              router.push({ pathname: "/decks/[id]/draw", params: { id: deckId } })
+            }
+            onEdit={(deckId) => router.push({ pathname: "/decks/build", params: { deckId } })}
+            onOpenCard={(card: Card) =>
+              router.push({ pathname: "/cards/[id]", params: { id: card.printingId } })
+            }
+          />
+        }
+        secondary={<DeckList onOpenDeck={open} />}
+      />
+    ))
+    .exhaustive();
+}
+
+function DeckList({ onOpenDeck }: { readonly onOpenDeck: (deck: Deck) => void }) {
+  const { clock, decks } = useAppDependencies();
+  const router = useRouter();
 
   return (
     <DecksData deckLister={decks.deckRepository}>
-      {({ decks: savedDecks }) => <DeckList decks={savedDecks} />}
+      {({ decks: savedDecks }) => (
+        <DeckListScreen
+          decks={savedDecks}
+          now={clock.now()}
+          onNewDeck={() => router.push("/decks/build")}
+          onOpenDeck={onOpenDeck}
+        />
+      )}
     </DecksData>
-  );
-}
-
-function DeckList({ decks: savedDecks }: { readonly decks: readonly Deck[] }) {
-  const router = useRouter();
-  const { clock } = useAppDependencies();
-
-  return (
-    <DeckListScreen
-      decks={savedDecks}
-      now={clock.now()}
-      onNewDeck={() => router.push("/decks/build")}
-      onOpenDeck={(deckId) => router.push({ pathname: "/decks/[id]", params: { id: deckId } })}
-    />
   );
 }
 

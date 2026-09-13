@@ -19,7 +19,7 @@ function DeckRow({
 }: {
   readonly deck: Deck;
   readonly now: string;
-  readonly onOpen: (id: string) => void;
+  readonly onOpen: (deck: Deck) => void;
 }) {
   const theme = useTheme();
 
@@ -27,7 +27,7 @@ function DeckRow({
     <Pressable
       accessibilityLabel={deckLabel(deck, now)}
       accessibilityRole="button"
-      onPress={() => onOpen(deck.id)}
+      onPress={() => onOpen(deck)}
       style={({ pressed }) => [
         styles.row,
         { backgroundColor: theme.backgroundElement, borderColor: theme.border },

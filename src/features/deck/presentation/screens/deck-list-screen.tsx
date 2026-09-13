@@ -14,7 +14,7 @@ interface DeckListScreenProps {
   readonly decks: readonly Deck[];
   readonly now: string;
   readonly onNewDeck: () => void;
-  readonly onOpenDeck: (id: string) => void;
+  readonly onOpenDeck: (deck: Deck) => void;
 }
 
 function DeckListScreen({ decks, now, onNewDeck, onOpenDeck }: DeckListScreenProps) {

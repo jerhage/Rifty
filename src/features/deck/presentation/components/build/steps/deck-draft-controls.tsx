@@ -3,46 +3,30 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing, TouchTarget } from "@/constants/theme";
+import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 import { useTheme } from "@/hooks/use-theme";
 
-import {
-  placedCardTotal,
-  placedCards,
-  zoneCounts,
-  type DeckBuildStepId,
-} from "../../../deck-build-steps";
+import { zoneCounts, type DeckBuildStepId } from "../../../deck-build-steps";
 import { completenessLabel, legalityColor } from "../../../deck-legality-format";
-import {
-  activePoolFilterCount,
-  searchHint,
-  zoneRuleSummary,
-  type ZonePoolViewChoice,
-} from "../../../deck-zone-pool";
-import type { ZoneDraftViewState, ZonePoolViewState } from "../../../hooks/use-deck-build";
+import type { ZoneDraftViewState } from "../../../hooks/use-deck-build";
 import { BuildPickChip } from "../build-pick-chip";
-import { PoolLayoutToggle } from "../pool-layout-toggle";
-import { PoolSearchRow } from "../pool-search-row";
-import { PoolViewTabs } from "../pool-view-tabs";
 import { ZoneSelector } from "../zone-selector";
 
-function ZonesStepHeader({
+function DeckDraftControls({
   draft: { draft, verification },
   onChangeName,
   onEditStep,
-  pool: { filters, layout, openFilters, query, setLayout, setQuery, setView, setZone, zone },
-  viewChoice: { options, shown },
+  onSelectZone,
+  zone,
 }: {
   readonly draft: ZoneDraftViewState;
   readonly onChangeName: (name: string) => void;
   readonly onEditStep: (id: DeckBuildStepId) => void;
-  /** Without the stored view: which view is on screen is the caller's to derive, not the header's. */
-  readonly pool: Omit<ZonePoolViewState, "view">;
-  readonly viewChoice: ZonePoolViewChoice;
+  readonly onSelectZone: (section: ZoneSection) => void;
+  readonly zone: ZoneSection;
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const isPool = shown === "pool";
-  const placed = placedCards(draft, zone);
 
   return (
     <View
@@ -79,39 +63,13 @@ function ZonesStepHeader({
       </View>
 
       <View style={styles.zones}>
-        <ZoneSelector counts={zoneCounts(draft)} onSelect={setZone} selected={zone} />
+        <ZoneSelector counts={zoneCounts(draft)} onSelect={onSelectZone} selected={zone} />
       </View>
-
-      <View style={styles.viewRow}>
-        <View style={styles.tabs}>
-          <PoolViewTabs
-            deckCount={placedCardTotal(placed)}
-            onSelect={setView}
-            options={options}
-            view={shown}
-          />
-        </View>
-        <PoolLayoutToggle layout={layout} onSelect={setLayout} />
-      </View>
-
-      <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.rule}>
-        {zoneRuleSummary(zone)}
-      </ThemedText>
-
-      {isPool ? (
-        <PoolSearchRow
-          filterCount={activePoolFilterCount(filters)}
-          hint={searchHint(zone)}
-          onChangeQuery={setQuery}
-          onOpenFilters={openFilters}
-          query={query}
-        />
-      ) : null}
     </View>
   );
 }
 
-export { ZonesStepHeader };
+export { DeckDraftControls };
 
 const styles = StyleSheet.create({
   nameRow: {
@@ -143,18 +101,5 @@ const styles = StyleSheet.create({
   },
   zones: {
     marginTop: Spacing.three - 5,
-  },
-  viewRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: Spacing.two - 1,
-    marginTop: Spacing.two + 1,
-  },
-  tabs: {
-    flex: 1,
-    minWidth: 0,
-  },
-  rule: {
-    marginTop: Spacing.two + 1,
   },
 });

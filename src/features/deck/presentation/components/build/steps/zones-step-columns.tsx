@@ -11,7 +11,8 @@ import { placedCardTotal, placedCards, type DeckBuildStepId } from "../../../dec
 import type { ZonePoolViewChoice } from "../../../deck-zone-pool";
 import type { ZoneDraftViewState, ZonePoolViewState } from "../../../hooks/use-deck-build";
 import { ZonePoolList } from "../zone-pool-list";
-import { ZonesStepHeader } from "./zones-step-header";
+import { DeckDraftControls } from "./deck-draft-controls";
+import { ZonePoolControls } from "./zone-pool-controls";
 
 const PanelMaxWidth = 420;
 const PoolShare = 1.6;
@@ -53,6 +54,8 @@ function ZonesStepColumns({
     <View style={styles.columns}>
       <View style={[styles.pool, { borderEndColor: theme.border }]}>
         <UsableWidthProvider width={usableWidth - panelWidth}>
+          <ZonePoolControls draft={draft.draft} pool={pool} viewChoice={viewChoice} />
+
           <ZonePoolList
             draft={draft.draft}
             onLoadMorePool={onLoadMorePool}
@@ -68,12 +71,12 @@ function ZonesStepColumns({
 
       <View style={[styles.panel, { width: panelWidth }]}>
         <UsableWidthProvider width={panelWidth}>
-          <ZonesStepHeader
+          <DeckDraftControls
             draft={draft}
             onChangeName={onChangeName}
             onEditStep={onEditStep}
-            pool={pool}
-            viewChoice={viewChoice}
+            onSelectZone={pool.setZone}
+            zone={pool.zone}
           />
 
           <ThemedText

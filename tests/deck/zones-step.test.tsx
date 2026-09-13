@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react-native";
+import { render, screen, within } from "@testing-library/react-native";
 import type { PropsWithChildren } from "react";
 import { Dimensions } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -53,6 +53,30 @@ function poolState(view: ZonePoolViewState["view"]): ZonePoolViewState {
     view,
     zone: "mainDeck",
   };
+}
+
+type RenderedNode = ReturnType<typeof screen.getByText>;
+
+function ancestorsOf(node: RenderedNode): readonly RenderedNode[] {
+  const chain: RenderedNode[] = [];
+
+  for (let above = node.parent; above !== null; above = above.parent) {
+    chain.push(above);
+  }
+
+  return chain;
+}
+
+/** The nearest node holding both, which for two things in the same column is that column. */
+function columnHolding(one: RenderedNode, other: RenderedNode): RenderedNode {
+  const above = new Set(ancestorsOf(one));
+  const shared = ancestorsOf(other).find((node) => above.has(node));
+
+  if (shared === undefined) {
+    throw new Error("the two nodes stand in separate trees");
+  }
+
+  return shared;
 }
 
 function frameOf(width: number, height: number) {
@@ -133,12 +157,12 @@ describe("ZonesStep on a tablet", () => {
     await stepAt(1376, 1032, "roles");
 
     expect(screen.getAllByRole("tab").map((tab) => tab.props.accessibilityLabel)).toEqual([
+      "Pool",
+      "Roles",
       "Main deck, 2 of 40",
       "Rune deck, 0 of 12",
       "Battlefields, 0 of 3",
       "Sideboard, 0 of 10",
-      "Pool",
-      "Roles",
     ]);
     expect(screen.getByRole("tab", { name: "Roles" }).props.accessibilityState).toEqual({
       selected: true,
@@ -163,6 +187,18 @@ describe("ZonesStep on a tablet", () => {
     expect(screen.getByRole("button", { name: buildCardLabel(ZED, 2) }).parent).toHaveStyle({
       width: fitColumns(panelWidthFor(1376), POOL_ROW_COLUMNS).columnWidth,
     });
+  });
+
+  it("should hold the controls that govern the pool in the pool's own column", async () => {
+    await stepAt(1376, 1032, "pool");
+
+    const poolColumn = columnHolding(
+      screen.getByLabelText("Search main deck"),
+      screen.getByText("No cards available for this zone yet."),
+    );
+
+    expect(within(poolColumn).getByRole("tab", { name: "Pool" })).toBeTruthy();
+    expect(within(poolColumn).queryByLabelText("Deck name")).toBeNull();
   });
 
   it("should reach the pool before the panel beside it", async () => {

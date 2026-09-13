@@ -7,8 +7,9 @@ import type { DeckBuildStepId } from "../../../deck-build-steps";
 import { zonePoolViewChoice } from "../../../deck-zone-pool";
 import type { ZoneDraftViewState, ZonePoolViewState } from "../../../hooks/use-deck-build";
 import { ZonePoolList } from "../zone-pool-list";
+import { DeckDraftControls } from "./deck-draft-controls";
+import { ZonePoolControls } from "./zone-pool-controls";
 import { ZonesStepColumns } from "./zones-step-columns";
-import { ZonesStepHeader } from "./zones-step-header";
 
 interface ZonesStepProps {
   readonly draft: ZoneDraftViewState;
@@ -20,7 +21,7 @@ interface ZonesStepProps {
   readonly zonePool: readonly Card[];
 }
 
-/** The one place this step reads the layout class: the pool, the tiles and the header never do. */
+/** The one place this step reads the layout class: the pool, the tiles and the controls never do. */
 function ZonesStep({
   draft,
   onChangeName,
@@ -36,13 +37,15 @@ function ZonesStep({
   return match(layoutClass)
     .with("phone", () => (
       <>
-        <ZonesStepHeader
+        <DeckDraftControls
           draft={draft}
           onChangeName={onChangeName}
           onEditStep={onEditStep}
-          pool={pool}
-          viewChoice={viewChoice}
+          onSelectZone={pool.setZone}
+          zone={pool.zone}
         />
+
+        <ZonePoolControls draft={draft.draft} pool={pool} viewChoice={viewChoice} />
 
         <ZonePoolList
           draft={draft.draft}

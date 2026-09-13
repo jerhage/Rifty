@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import { SegmentedControl, SegmentedOption } from "@/components/ui/atoms/segmented-control";
 
 import type { ZonePoolView } from "../../deck-zone-pool";
@@ -5,37 +7,61 @@ import type { ZonePoolView } from "../../deck-zone-pool";
 function PoolViewTabs({
   deckCount,
   onSelect,
+  options,
   view,
 }: {
   readonly deckCount: number;
   readonly onSelect: (view: ZonePoolView) => void;
+  readonly options: readonly ZonePoolView[];
   readonly view: ZonePoolView;
 }) {
   return (
     <SegmentedControl size="compact">
-      <SegmentedOption
-        label="Pool"
-        onPress={() => onSelect("pool")}
-        role="tab"
-        selected={view === "pool"}
-        size="compact"
-      />
-      <SegmentedOption
-        accessibilityLabel={`In deck, ${deckCount}`}
-        label={`In deck · ${deckCount}`}
-        onPress={() => onSelect("inDeck")}
-        role="tab"
-        selected={view === "inDeck"}
-        size="compact"
-      />
-      <SegmentedOption
-        label="Roles"
-        onPress={() => onSelect("roles")}
-        role="tab"
-        selected={view === "roles"}
-        size="compact"
-      />
+      {options.map((option) => (
+        <PoolViewTab
+          deckCount={deckCount}
+          key={option}
+          onSelect={onSelect}
+          option={option}
+          selected={option === view}
+        />
+      ))}
     </SegmentedControl>
+  );
+}
+
+function PoolViewTab({
+  deckCount,
+  onSelect,
+  option,
+  selected,
+}: {
+  readonly deckCount: number;
+  readonly onSelect: (view: ZonePoolView) => void;
+  readonly option: ZonePoolView;
+  readonly selected: boolean;
+}) {
+  const { accessibilityLabel, label } = match<
+    ZonePoolView,
+    { readonly accessibilityLabel: string; readonly label: string }
+  >(option)
+    .with("pool", () => ({ accessibilityLabel: "Pool", label: "Pool" }))
+    .with("inDeck", () => ({
+      accessibilityLabel: `In deck, ${deckCount}`,
+      label: `In deck · ${deckCount}`,
+    }))
+    .with("roles", () => ({ accessibilityLabel: "Roles", label: "Roles" }))
+    .exhaustive();
+
+  return (
+    <SegmentedOption
+      accessibilityLabel={accessibilityLabel}
+      label={label}
+      onPress={() => onSelect(option)}
+      role="tab"
+      selected={selected}
+      size="compact"
+    />
   );
 }
 

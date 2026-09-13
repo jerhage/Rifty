@@ -2,6 +2,7 @@ import {
   defaultPoolFilters,
   legendCriteria,
   poolCriteria,
+  zonePoolViewChoice,
 } from "@/features/deck/presentation/deck-zone-pool";
 
 import { card } from "../card/fixtures";
@@ -69,5 +70,32 @@ describe("deck zone pool", () => {
       "Spell",
       "Gear",
     ]);
+  });
+});
+
+describe("the views the zone pool offers", () => {
+  it("should offer all three views when the pool is stacked above nothing", () => {
+    expect(zonePoolViewChoice("pool", "phone").options).toEqual(["pool", "inDeck", "roles"]);
+    expect(zonePoolViewChoice("inDeck", "phone").shown).toBe("inDeck");
+  });
+
+  it("should drop the in-deck tab once the deck stands in its own column", () => {
+    expect(zonePoolViewChoice("pool", "tablet").options).toEqual(["pool", "roles"]);
+  });
+
+  it("should show a view that is still offered when the stored one is not", () => {
+    expect(zonePoolViewChoice("inDeck", "tablet").shown).toBe("pool");
+  });
+
+  it("should leave a view the columns still offer exactly where it was", () => {
+    expect(zonePoolViewChoice("roles", "tablet").shown).toBe("roles");
+    expect(zonePoolViewChoice("pool", "tablet").shown).toBe("pool");
+  });
+
+  it("should hand back the stored view when the columns give way to one again", () => {
+    const stored = "inDeck";
+
+    expect(zonePoolViewChoice(stored, "tablet").shown).toBe("pool");
+    expect(zonePoolViewChoice(stored, "phone").shown).toBe("inDeck");
   });
 });

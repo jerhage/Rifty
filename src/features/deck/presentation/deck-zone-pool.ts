@@ -5,6 +5,7 @@ import type { CardListCriteria } from "@/features/card/card-list-criteria";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
 import { zoneRule, type ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { LayoutClass } from "@/hooks/use-layout-size";
 
 interface ZonePoolFilters {
   readonly domainIds: readonly CardDomain[];
@@ -25,6 +26,32 @@ const PLAYABLE_ZONE_TYPES: readonly CardType[] = ["Unit", "Spell", "Gear"];
 type ZonePoolLayout = "list" | "grid";
 
 type ZonePoolView = "pool" | "inDeck" | "roles";
+
+const STACKED_POOL_VIEWS: readonly ZonePoolView[] = ["pool", "inDeck", "roles"];
+const COLUMN_POOL_VIEWS: readonly ZonePoolView[] = ["pool", "roles"];
+
+interface ZonePoolViewChoice {
+  readonly options: readonly ZonePoolView[];
+  readonly shown: ZonePoolView;
+}
+
+/**
+ * Two columns keep the deck's contents on screen, so "in deck" stops being somewhere to switch to.
+ * The stored view is read rather than rewritten, so one column gets it back exactly as it was left.
+ */
+function zonePoolViewChoice(view: ZonePoolView, layoutClass: LayoutClass): ZonePoolViewChoice {
+  return match(layoutClass)
+    .with("phone", () => ({ options: STACKED_POOL_VIEWS, shown: view }))
+    .with("tablet", () => ({ options: COLUMN_POOL_VIEWS, shown: viewBesideTheDeck(view) }))
+    .exhaustive();
+}
+
+function viewBesideTheDeck(view: ZonePoolView): ZonePoolView {
+  return match<ZonePoolView, ZonePoolView>(view)
+    .with("inDeck", () => "pool")
+    .with("pool", "roles", (kept) => kept)
+    .exhaustive();
+}
 
 /** A deck plays within its legend's domains, so the pool starts narrowed to them. */
 function defaultPoolFilters(legend: Card | null): ZonePoolFilters {
@@ -104,6 +131,7 @@ export {
   poolCriteria,
   searchHint,
   zoneCardTypes,
+  zonePoolViewChoice,
   zoneRuleSummary,
 };
-export type { ZonePoolFilters, ZonePoolLayout, ZonePoolView };
+export type { ZonePoolFilters, ZonePoolLayout, ZonePoolView, ZonePoolViewChoice };

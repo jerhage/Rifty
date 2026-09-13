@@ -12,7 +12,12 @@ import {
   type DeckBuildStepId,
 } from "../../../deck-build-steps";
 import { completenessLabel, legalityColor } from "../../../deck-legality-format";
-import { activePoolFilterCount, searchHint, zoneRuleSummary } from "../../../deck-zone-pool";
+import {
+  activePoolFilterCount,
+  searchHint,
+  zoneRuleSummary,
+  type ZonePoolViewChoice,
+} from "../../../deck-zone-pool";
 import type { ZoneDraftViewState, ZonePoolViewState } from "../../../hooks/use-deck-build";
 import { BuildPickChip } from "../build-pick-chip";
 import { PoolLayoutToggle } from "../pool-layout-toggle";
@@ -24,16 +29,19 @@ function ZonesStepHeader({
   draft: { draft, verification },
   onChangeName,
   onEditStep,
-  pool: { filters, layout, openFilters, query, setLayout, setQuery, setView, setZone, view, zone },
+  pool: { filters, layout, openFilters, query, setLayout, setQuery, setView, setZone, zone },
+  viewChoice: { options, shown },
 }: {
   readonly draft: ZoneDraftViewState;
   readonly onChangeName: (name: string) => void;
   readonly onEditStep: (id: DeckBuildStepId) => void;
-  readonly pool: ZonePoolViewState;
+  /** Without the stored view: which view is on screen is the caller's to derive, not the header's. */
+  readonly pool: Omit<ZonePoolViewState, "view">;
+  readonly viewChoice: ZonePoolViewChoice;
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const isPool = view === "pool";
+  const isPool = shown === "pool";
   const placed = placedCards(draft, zone);
 
   return (
@@ -76,7 +84,12 @@ function ZonesStepHeader({
 
       <View style={styles.viewRow}>
         <View style={styles.tabs}>
-          <PoolViewTabs deckCount={placedCardTotal(placed)} onSelect={setView} view={view} />
+          <PoolViewTabs
+            deckCount={placedCardTotal(placed)}
+            onSelect={setView}
+            options={options}
+            view={shown}
+          />
         </View>
         <PoolLayoutToggle layout={layout} onSelect={setLayout} />
       </View>

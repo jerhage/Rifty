@@ -82,7 +82,7 @@ function ZonesStepColumns({
           <ThemedText
             accessibilityLabel={`In deck, ${held}`}
             accessibilityRole="header"
-            style={styles.held}
+            style={[styles.held, { borderBottomColor: theme.border }]}
             themeColor="textTertiary"
             type="mono"
           >
@@ -122,6 +122,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   held: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingBottom: Spacing.three - 4,
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.three - 4,
   },

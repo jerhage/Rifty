@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
 import { placedCardTotal, placedCards, type DeckBuildDraft } from "../../../deck-build-steps";
 import {
@@ -27,15 +28,20 @@ function ZonePoolControls({
   readonly viewChoice: ZonePoolViewChoice;
 }) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const isPool = shown === "pool";
   const placed = placedCards(draft, zone);
 
   return (
     <View
-      style={{
-        paddingLeft: insets.left + Spacing.three,
-        paddingRight: insets.right + Spacing.three,
-      }}
+      style={[
+        styles.controls,
+        {
+          borderBottomColor: theme.border,
+          paddingLeft: insets.left + Spacing.three,
+          paddingRight: insets.right + Spacing.three,
+        },
+      ]}
     >
       <View style={styles.viewRow}>
         <View style={styles.tabs}>
@@ -69,6 +75,10 @@ function ZonePoolControls({
 export { ZonePoolControls };
 
 const styles = StyleSheet.create({
+  controls: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingBottom: Spacing.three - 4,
+  },
   viewRow: {
     alignItems: "center",
     flexDirection: "row",

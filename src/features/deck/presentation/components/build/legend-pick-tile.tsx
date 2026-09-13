@@ -17,11 +17,13 @@ function LegendPickTile({
   onOpenCard,
   onPick,
   selected,
+  width,
 }: {
   readonly card: Card;
   readonly onOpenCard: (card: Card) => void;
   readonly onPick: (card: Card) => void;
   readonly selected: boolean;
+  readonly width: number;
 }) {
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
@@ -45,6 +47,8 @@ function LegendPickTile({
         {
           backgroundColor: selected ? theme.backgroundSelected : theme.backgroundElement,
           borderColor: selected ? accent : theme.border,
+          flexBasis: width,
+          width,
         },
         pressed && styles.pressed,
       ]}
@@ -82,8 +86,9 @@ const styles = StyleSheet.create({
   tile: {
     borderRadius: Radius.large - 2,
     borderWidth: 1.5,
-    flexBasis: "47%",
-    flexGrow: 1,
+    flexGrow: 0,
+    flexShrink: 0,
+    marginBottom: Spacing.three - 5,
     padding: Spacing.two + 1,
   },
   art: {

@@ -8,6 +8,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { ORDERED_DOMAINS } from "@/features/card/value-objects/card-domain";
+import { fitColumns, useLayoutSize, type ColumnSpec } from "@/hooks/use-layout-size";
 import { useDomainColors } from "@/hooks/use-theme";
 
 import type { DeckBuildStep } from "../../../deck-build-steps";
@@ -27,6 +28,8 @@ interface LegendStepProps {
   readonly step: DeckBuildStep;
 }
 
+const LEGEND_COLUMNS: ColumnSpec = { gap: Spacing.three - 5, minimum: 170 };
+
 function LegendStep({
   legends,
   onLoadMore,
@@ -38,17 +41,24 @@ function LegendStep({
   step,
 }: LegendStepProps) {
   const domainColors = useDomainColors();
+  const { width } = useLayoutSize();
+  const { columns, columnWidth } = fitColumns(
+    Math.min(width, MaxContentWidth) - Spacing.three * 2,
+    LEGEND_COLUMNS,
+  );
+
   return (
     <>
       <FlatList
-        columnWrapperStyle={styles.row}
+        columnWrapperStyle={columns > 1 ? styles.row : undefined}
         contentContainerStyle={styles.content}
         data={legends}
+        key={columns}
         keyExtractor={(card) => card.printingId}
         onEndReached={onLoadMore}
         onEndReachedThreshold={0.5}
         ListHeaderComponent={
-          <View style={styles.header}>
+          <View>
             <StepIntro step={step} />
             <SearchField
               hint="Search legends"
@@ -71,13 +81,14 @@ function LegendStep({
             </HorizontalScroller>
           </View>
         }
-        numColumns={2}
+        numColumns={columns}
         renderItem={({ item }) => (
           <LegendPickTile
             card={item}
             onOpenCard={onOpenCard}
             onPick={onPick}
             selected={selected?.printingId === item.printingId}
+            width={columnWidth}
           />
         )}
         style={styles.list}
@@ -91,7 +102,7 @@ function LegendStep({
   );
 }
 
-export { LegendStep };
+export { LEGEND_COLUMNS, LegendStep };
 export type { LegendStepProps };
 
 const styles = StyleSheet.create({
@@ -102,10 +113,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     maxWidth: MaxContentWidth,
     paddingBottom: Spacing.four,
-    width: "100%",
-  },
-  header: {
     paddingHorizontal: Spacing.three,
+    width: "100%",
   },
   search: {
     marginBottom: Spacing.two + 1,
@@ -115,7 +124,5 @@ const styles = StyleSheet.create({
   },
   row: {
     gap: Spacing.three - 5,
-    marginBottom: Spacing.three - 5,
-    paddingHorizontal: Spacing.three,
   },
 });

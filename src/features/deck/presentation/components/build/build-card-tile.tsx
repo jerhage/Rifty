@@ -31,7 +31,7 @@ function BuildCardTile({
   readonly onChange: (quantity: number) => void;
   readonly onOpenCard: (card: Card) => void;
   readonly quantity: number;
-  readonly width: number | null;
+  readonly width: number;
 }) {
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
@@ -39,7 +39,7 @@ function BuildCardTile({
   const openCard = useOpenCardHapticLongPress(() => onOpenCard(card));
 
   return (
-    <View style={[styles.tile, width === null ? undefined : { flexBasis: width, width }]}>
+    <View style={[styles.tile, { flexBasis: width, width }]}>
       <View>
         <Pressable
           accessibilityHint="Opens the full card"
@@ -89,9 +89,9 @@ export { BuildCardTile };
 
 const styles = StyleSheet.create({
   tile: {
-    flexBasis: "50%",
     flexGrow: 0,
-    flexShrink: 1,
+    flexShrink: 0,
+    marginBottom: Spacing.three,
   },
   frame: {
     aspectRatio: CARD_ASPECT_RATIO,

@@ -22,11 +22,13 @@ function ChampionPickRow({
   onOpenCard,
   onPick,
   selected,
+  width,
 }: {
   readonly card: Card;
   readonly onOpenCard: (card: Card) => void;
   readonly onPick: (card: Card) => void;
   readonly selected: boolean;
+  readonly width: number;
 }) {
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
@@ -50,6 +52,8 @@ function ChampionPickRow({
         {
           backgroundColor: selected ? theme.backgroundSelected : theme.backgroundElement,
           borderColor: selected ? accent : theme.border,
+          flexBasis: width,
+          width,
         },
         pressed && styles.pressed,
       ]}

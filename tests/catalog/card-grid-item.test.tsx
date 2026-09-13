@@ -15,14 +15,14 @@ const ZED: CardSummary = {
 
 describe("CardGridItem", () => {
   it("should announce the domains the face shows rather than a bare open instruction", async () => {
-    await render(<CardGridItem card={ZED} onPress={() => undefined} width={null} />);
+    await render(<CardGridItem card={ZED} onPress={() => undefined} width={160} />);
 
     expect(screen.getByRole("button", { name: "Zed, Fury, Body" })).toBeTruthy();
   });
 
   it("should name a card with no domain colorless", async () => {
     await render(
-      <CardGridItem card={{ ...ZED, domainIds: [] }} onPress={() => undefined} width={null} />,
+      <CardGridItem card={{ ...ZED, domainIds: [] }} onPress={() => undefined} width={160} />,
     );
 
     expect(screen.getByRole("button", { name: "Zed, Colorless" })).toBeTruthy();

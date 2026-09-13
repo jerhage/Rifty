@@ -31,7 +31,7 @@ describe("BuildCardTile", () => {
         onChange={() => undefined}
         onOpenCard={(opening) => opened.push(opening)}
         quantity={1}
-        width={null}
+        width={160}
       />,
     );
 
@@ -50,7 +50,7 @@ describe("BuildCardTile", () => {
         onChange={(quantity) => changes.push(quantity)}
         quantity={1}
         onOpenCard={() => undefined}
-        width={null}
+        width={160}
       />,
     );
 
@@ -76,6 +76,7 @@ describe("BuildCardRow", () => {
         onChange={() => undefined}
         onOpenCard={(opening) => opened.push(opening)}
         quantity={1}
+        width={320}
       />,
     );
 
@@ -94,6 +95,7 @@ describe("ChampionPickRow", () => {
         onOpenCard={() => undefined}
         onPick={(picking) => picked.push(picking)}
         selected={false}
+        width={320}
       />,
     );
 
@@ -110,6 +112,7 @@ describe("ChampionPickRow", () => {
         onOpenCard={(opening) => opened.push(opening)}
         onPick={() => undefined}
         selected={false}
+        width={320}
       />,
     );
 
@@ -128,6 +131,7 @@ describe("LegendPickTile", () => {
         onOpenCard={() => undefined}
         onPick={(picking) => picked.push(picking)}
         selected={false}
+        width={320}
       />,
     );
 
@@ -144,6 +148,7 @@ describe("LegendPickTile", () => {
         onOpenCard={(opening) => opened.push(opening)}
         onPick={() => undefined}
         selected={false}
+        width={320}
       />,
     );
 

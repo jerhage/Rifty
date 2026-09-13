@@ -1,12 +1,12 @@
-import { useState } from "react";
 import type { ReactElement } from "react";
-import { FlatList, RefreshControl, StyleSheet, type LayoutChangeEvent } from "react-native";
+import { FlatList, RefreshControl, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
+import { fitColumns, useLayoutSize, type ColumnSpec } from "@/hooks/use-layout-size";
 
 import { CardGridItem } from "./card-grid-item";
 
@@ -21,6 +21,8 @@ interface CardSummaryGridProps {
   readonly onSelectCard: (id: PrintingId) => void;
 }
 
+const CATALOG_COLUMNS: ColumnSpec = { gap: Spacing.three, minimum: 150 };
+
 function CardSummaryGrid({
   cards,
   emptyMessage,
@@ -32,21 +34,15 @@ function CardSummaryGrid({
   onSelectCard,
 }: CardSummaryGridProps) {
   const insets = useSafeAreaInsets();
-  const [listWidth, setListWidth] = useState<number | null>(null);
-  const contentWidth = listWidth === null ? null : Math.min(listWidth, MaxContentWidth);
-  const cardWidth =
-    contentWidth === null
-      ? null
-      : (contentWidth - insets.left - insets.right - Spacing.three * 2 - Spacing.three) / 2;
-
-  const updateListWidth = ({ nativeEvent }: LayoutChangeEvent) => {
-    const width = nativeEvent.layout.width;
-    setListWidth((currentWidth) => (currentWidth === width ? currentWidth : width));
-  };
+  const { width } = useLayoutSize();
+  const { columns, columnWidth } = fitColumns(
+    Math.min(width, MaxContentWidth) - insets.left - insets.right - Spacing.three * 2,
+    CATALOG_COLUMNS,
+  );
 
   return (
     <FlatList
-      columnWrapperStyle={cards.length > 0 ? styles.cardRow : undefined}
+      columnWrapperStyle={columns > 1 && cards.length > 0 ? styles.cardRow : undefined}
       contentContainerStyle={[
         styles.content,
         {
@@ -57,24 +53,24 @@ function CardSummaryGrid({
         },
       ]}
       data={cards}
+      key={columns}
       keyExtractor={(card) => card.printingId}
       ListEmptyComponent={<EmptyState message={emptyMessage} />}
       ListFooterComponent={footer}
       ListHeaderComponent={header}
-      numColumns={2}
+      numColumns={columns}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
-      onLayout={updateListWidth}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
       renderItem={({ item }) => (
-        <CardGridItem card={item} onPress={onSelectCard} width={cardWidth} />
+        <CardGridItem card={item} onPress={onSelectCard} width={columnWidth} />
       )}
       style={styles.list}
     />
   );
 }
 
-export { CardSummaryGrid };
+export { CATALOG_COLUMNS, CardSummaryGrid };
 export type { CardSummaryGridProps };
 
 const styles = StyleSheet.create({
@@ -89,6 +85,5 @@ const styles = StyleSheet.create({
   cardRow: {
     gap: Spacing.three,
     justifyContent: "center",
-    marginBottom: Spacing.three,
   },
 });

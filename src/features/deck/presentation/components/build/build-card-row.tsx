@@ -23,6 +23,7 @@ function BuildCardRow({
   onChange,
   onOpenCard,
   quantity,
+  width,
 }: {
   /** The most this printing may hold here, sharing its allowance with other printings. */
   readonly allowance: CopyAllowance;
@@ -33,6 +34,7 @@ function BuildCardRow({
   /** What the row reads, which includes the champion's own slot. */
   /** Copies the stepper owns, on top of anything already held. */
   readonly quantity: number;
+  readonly width: number;
 }) {
   const theme = useTheme();
   const accent = domainAccent(card, useDomainColors());
@@ -46,6 +48,8 @@ function BuildCardRow({
         {
           backgroundColor: inDeck ? theme.backgroundSelected : theme.backgroundElement,
           borderColor: inDeck ? accent : theme.border,
+          flexBasis: width,
+          width,
         },
       ]}
     >

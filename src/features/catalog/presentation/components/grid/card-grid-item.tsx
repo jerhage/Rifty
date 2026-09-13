@@ -17,7 +17,7 @@ function CardGridItem({
 }: {
   readonly card: CardSummary;
   readonly onPress: (id: PrintingId) => void;
-  readonly width: number | null;
+  readonly width: number;
 }) {
   const theme = useTheme();
 
@@ -26,11 +26,7 @@ function CardGridItem({
       accessibilityLabel={[card.name, ...cardDomainNames(card.domainIds)].join(", ")}
       accessibilityRole="button"
       onPress={() => onPress(card.printingId)}
-      style={({ pressed }) => [
-        styles.card,
-        width === null ? undefined : { flexBasis: width, flexShrink: 0, width },
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.card, { flexBasis: width, width }, pressed && styles.pressed]}
     >
       <View
         style={[
@@ -56,9 +52,9 @@ export { CardGridItem };
 
 const styles = StyleSheet.create({
   card: {
-    flexBasis: "50%",
     flexGrow: 0,
-    flexShrink: 1,
+    flexShrink: 0,
+    marginBottom: Spacing.three,
   },
   frame: {
     aspectRatio: CARD_ASPECT_RATIO,

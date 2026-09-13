@@ -53,16 +53,22 @@ describe("fitColumns", () => {
 });
 
 describe("the grids each site derives", () => {
-  it("should give the catalog two columns on a phone and four once the content clamp is reached", () => {
-    expect(columnsAt(CATALOG_COLUMNS, [370, 650, 768])).toEqual([2, 4, 4]);
+  it("should widen the catalog to the frame rather than stopping at a reading column", () => {
+    expect(columnsAt(CATALOG_COLUMNS, [370, 650, 702, 768, 1000, 1248, 1344])).toEqual([
+      2, 4, 4, 4, 6, 7, 8,
+    ]);
   });
 
-  it("should give the legend step two columns on a phone rather than one wide tile", () => {
-    expect(columnsAt(LEGEND_COLUMNS, [370, 768])).toEqual([2, 4]);
+  it("should give the legend step two columns on a phone and seven on the widest tablet", () => {
+    expect(columnsAt(LEGEND_COLUMNS, [370, 768, 820, 1000, 1248, 1344])).toEqual([
+      2, 4, 4, 5, 6, 7,
+    ]);
   });
 
-  it("should keep the champion step single column on a phone and pair it up when clamped", () => {
-    expect(columnsAt(CHAMPION_COLUMNS, [370, 768])).toEqual([1, 2]);
+  it("should keep the champion step single column on a phone and widen it on a tablet", () => {
+    expect(columnsAt(CHAMPION_COLUMNS, [370, 768, 820, 1000, 1248, 1344])).toEqual([
+      1, 2, 2, 3, 4, 4,
+    ]);
   });
 
   it("should widen the unclamped pool grid all the way to the frame", () => {

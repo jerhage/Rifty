@@ -5,7 +5,7 @@ import { ColorDot } from "@/components/ui/atoms/color-dot";
 import { HorizontalScroller } from "@/components/ui/atoms/horizontal-scroller";
 import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { ORDERED_DOMAINS } from "@/features/card/value-objects/card-domain";
 import { fitColumns, useLayoutSize, type ColumnSpec } from "@/hooks/use-layout-size";
@@ -42,10 +42,7 @@ function LegendStep({
 }: LegendStepProps) {
   const domainColors = useDomainColors();
   const { width } = useLayoutSize();
-  const { columns, columnWidth } = fitColumns(
-    Math.min(width, MaxContentWidth) - Spacing.three * 2,
-    LEGEND_COLUMNS,
-  );
+  const { columns, columnWidth } = fitColumns(width - Spacing.three * 2, LEGEND_COLUMNS);
 
   return (
     <>
@@ -110,11 +107,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    alignSelf: "center",
-    maxWidth: MaxContentWidth,
     paddingBottom: Spacing.four,
     paddingHorizontal: Spacing.three,
-    width: "100%",
   },
   search: {
     marginBottom: Spacing.two + 1,

@@ -201,7 +201,8 @@ const KeywordColors = {
   },
 } as const;
 
-const MaxContentWidth = 800;
+/** The widest a reading pane gets: a column you read, never a grid you browse. */
+const MaxReadingWidth = 800;
 
 /** The narrowest window that gets the tablet layout: the design's smallest tablet frame. */
 const MinTabletWidth = 800;
@@ -211,7 +212,7 @@ export {
   DomainColors,
   Fonts,
   KeywordColors,
-  MaxContentWidth,
+  MaxReadingWidth,
   MinTabletWidth,
   Radius,
   Spacing,

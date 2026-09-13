@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { MaxReadingWidth, Spacing } from "@/constants/theme";
 import type { Deck } from "@/features/deck/deck/deck";
 
 import { DeckRow } from "../components/deck-row";
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     flexGrow: 1,
     gap: Spacing.three - 5,
-    maxWidth: MaxContentWidth,
+    maxWidth: MaxReadingWidth,
     width: "100%",
   },
   subtitle: {

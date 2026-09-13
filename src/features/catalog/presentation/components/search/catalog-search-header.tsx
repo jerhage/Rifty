@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Chip } from "@/components/ui/atoms/chip";
@@ -6,7 +6,7 @@ import { ColorDot } from "@/components/ui/atoms/color-dot";
 import { HorizontalScroller } from "@/components/ui/atoms/horizontal-scroller";
 import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { ORDERED_DOMAINS, type CardDomain } from "@/features/card/value-objects/card-domain";
 import { ORDERED_CARD_TYPES, type CardType } from "@/features/card/value-objects/card-type";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
@@ -52,54 +52,52 @@ function CatalogSearchHeader({
         },
       ]}
     >
-      <View style={styles.content}>
-        <SearchField
-          accessibilityLabel="Search cards by name or rules text"
-          hint="Search cards"
-          onChangeQuery={onChangeName}
-          query={name}
-        />
+      <SearchField
+        accessibilityLabel="Search cards by name or rules text"
+        hint="Search cards"
+        onChangeQuery={onChangeName}
+        query={name}
+      />
 
-        <HorizontalScroller style={styles.domainRow}>
+      <HorizontalScroller style={styles.domainRow}>
+        <Chip
+          adornment={<ColorDot color={theme.textSecondary} />}
+          label="All"
+          labelType="body"
+          onPress={onClearDomains}
+          selected={selectedDomains.length === 0}
+          tone="neutral"
+        />
+        {ORDERED_DOMAINS.map((domainId) => (
           <Chip
-            adornment={<ColorDot color={theme.textSecondary} />}
-            label="All"
+            adornment={<ColorDot color={domainColors[domainId]} />}
+            key={domainId}
+            label={domainId}
             labelType="body"
-            onPress={onClearDomains}
-            selected={selectedDomains.length === 0}
+            onPress={() => onToggleDomain(domainId)}
+            selected={selectedDomains.includes(domainId)}
             tone="neutral"
           />
-          {ORDERED_DOMAINS.map((domainId) => (
-            <Chip
-              adornment={<ColorDot color={domainColors[domainId]} />}
-              key={domainId}
-              label={domainId}
-              labelType="body"
-              onPress={() => onToggleDomain(domainId)}
-              selected={selectedDomains.includes(domainId)}
-              tone="neutral"
-            />
-          ))}
-        </HorizontalScroller>
+        ))}
+      </HorizontalScroller>
 
-        <HorizontalScroller gap={Spacing.two - 2} style={styles.typeRow}>
+      <HorizontalScroller gap={Spacing.two - 2} style={styles.typeRow}>
+        <Chip
+          label="All"
+          labelType="mono"
+          onPress={onClearTypes}
+          selected={selectedTypes.length === 0}
+        />
+        {ORDERED_CARD_TYPES.map((typeId) => (
           <Chip
-            label="All"
+            key={typeId}
+            label={typeId}
             labelType="mono"
-            onPress={onClearTypes}
-            selected={selectedTypes.length === 0}
+            onPress={() => onToggleType(typeId)}
+            selected={selectedTypes.includes(typeId)}
           />
-          {ORDERED_CARD_TYPES.map((typeId) => (
-            <Chip
-              key={typeId}
-              label={typeId}
-              labelType="mono"
-              onPress={() => onToggleType(typeId)}
-              selected={selectedTypes.includes(typeId)}
-            />
-          ))}
-        </HorizontalScroller>
-      </View>
+        ))}
+      </HorizontalScroller>
     </ThemedView>
   );
 }
@@ -111,11 +109,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingBottom: Spacing.three - 4,
     zIndex: 1,
-  },
-  content: {
-    alignSelf: "center",
-    maxWidth: MaxContentWidth,
-    width: "100%",
   },
   domainRow: {
     marginTop: Spacing.three - 5,

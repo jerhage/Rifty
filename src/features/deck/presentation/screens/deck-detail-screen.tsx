@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/atoms/button";
 import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { MaxReadingWidth, Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import type { DeckVerification } from "@/features/deck/deck/deck";
 import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   page: {
     alignSelf: "center",
     flexGrow: 1,
-    maxWidth: MaxContentWidth,
+    maxWidth: MaxReadingWidth,
     paddingTop: Spacing.three,
     width: "100%",
   },

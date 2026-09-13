@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/atoms/button";
 import { IconButton } from "@/components/ui/atoms/icon-button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { MaxReadingWidth, Spacing } from "@/constants/theme";
 import type { RandomSource } from "@/application/ports/random-source";
 import { drawOdds, handStats } from "@/features/analysis/draw-simulation";
 import { DrawOddsPanel } from "@/features/analysis/presentation/components/draw-odds";
@@ -170,14 +170,14 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     flexDirection: "row",
     gap: Spacing.three - 4,
-    maxWidth: MaxContentWidth,
+    maxWidth: MaxReadingWidth,
     paddingBottom: Spacing.two + 2,
     width: "100%",
   },
   page: {
     alignSelf: "center",
     flexGrow: 1,
-    maxWidth: MaxContentWidth,
+    maxWidth: MaxReadingWidth,
     paddingBottom: Spacing.five,
     width: "100%",
   },
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: Spacing.two + 2,
-    maxWidth: MaxContentWidth,
+    maxWidth: MaxReadingWidth,
     paddingTop: Spacing.three - 4,
     width: "100%",
   },

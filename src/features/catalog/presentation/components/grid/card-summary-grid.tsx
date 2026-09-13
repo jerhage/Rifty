@@ -3,7 +3,7 @@ import { FlatList, RefreshControl, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/components/ui/atoms/empty-state";
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import { fitColumns, useLayoutSize, type ColumnSpec } from "@/hooks/use-layout-size";
@@ -36,22 +36,19 @@ function CardSummaryGrid({
   const insets = useSafeAreaInsets();
   const { width } = useLayoutSize();
   const { columns, columnWidth } = fitColumns(
-    Math.min(width, MaxContentWidth) - insets.left - insets.right - Spacing.three * 2,
+    width - insets.left - insets.right - Spacing.three * 2,
     CATALOG_COLUMNS,
   );
 
   return (
     <FlatList
       columnWrapperStyle={columns > 1 && cards.length > 0 ? styles.cardRow : undefined}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingBottom: insets.bottom + Spacing.four,
-          paddingLeft: insets.left + Spacing.three,
-          paddingRight: insets.right + Spacing.three,
-          paddingTop: Spacing.three,
-        },
-      ]}
+      contentContainerStyle={{
+        paddingBottom: insets.bottom + Spacing.four,
+        paddingLeft: insets.left + Spacing.three,
+        paddingRight: insets.right + Spacing.three,
+        paddingTop: Spacing.three,
+      }}
       data={cards}
       key={columns}
       keyExtractor={(card) => card.printingId}
@@ -76,11 +73,6 @@ export type { CardSummaryGridProps };
 const styles = StyleSheet.create({
   list: {
     flex: 1,
-  },
-  content: {
-    alignSelf: "center",
-    maxWidth: MaxContentWidth,
-    width: "100%",
   },
   cardRow: {
     gap: Spacing.three,

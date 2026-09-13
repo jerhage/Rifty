@@ -2,7 +2,7 @@ import { FlatList, StyleSheet } from "react-native";
 
 import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { fitColumns, useLayoutSize, type ColumnSpec } from "@/hooks/use-layout-size";
 
@@ -35,10 +35,7 @@ function ChampionStep({
   step,
 }: ChampionStepProps) {
   const { width } = useLayoutSize();
-  const { columns, columnWidth } = fitColumns(
-    Math.min(width, MaxContentWidth) - Spacing.three * 2,
-    CHAMPION_COLUMNS,
-  );
+  const { columns, columnWidth } = fitColumns(width - Spacing.three * 2, CHAMPION_COLUMNS);
 
   return (
     <>
@@ -89,12 +86,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    alignSelf: "center",
     gap: Spacing.two,
-    maxWidth: MaxContentWidth,
     paddingBottom: Spacing.four,
     paddingHorizontal: Spacing.three,
-    width: "100%",
   },
   row: {
     gap: Spacing.two,

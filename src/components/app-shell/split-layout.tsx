@@ -34,7 +34,6 @@ function SplitLayout({
         style={[
           styles.secondary,
           {
-            backgroundColor: theme.backgroundElement,
             borderStartColor: theme.border,
             width: secondaryWidth,
           },

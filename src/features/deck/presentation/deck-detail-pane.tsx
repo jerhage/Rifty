@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
 import { TextAction } from "@/components/ui/atoms/text-action";
+import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import type { CardByCardIdFinder } from "@/features/card/card-by-card-id-finder";
@@ -33,7 +34,7 @@ function DeckDetailPane({
   readonly onOpenCard: (card: Card) => void;
 }) {
   return (
-    <View style={styles.pane}>
+    <ThemedView style={styles.pane}>
       <View style={styles.closeRow}>
         <TextAction accessibilityLabel="Close the deck" label="✕" onPress={onClose} />
       </View>
@@ -53,7 +54,7 @@ function DeckDetailPane({
           />
         )}
       </DeckDetailData>
-    </View>
+    </ThemedView>
   );
 }
 

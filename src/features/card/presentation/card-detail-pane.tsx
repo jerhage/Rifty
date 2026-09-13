@@ -2,6 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { TextAction } from "@/components/ui/atoms/text-action";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
+import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 import type { CardFinder } from "@/features/card/card-finder";
 import { CardDetailData } from "@/features/card/presentation/data/card-detail-data";
@@ -20,27 +21,27 @@ function CardDetailPane({
   if (cardId === null) return <IdleCardPane />;
 
   return (
-    <View style={styles.pane}>
+    <ThemedView style={styles.pane}>
       <View style={styles.closeRow}>
         <TextAction accessibilityLabel="Close the card" label="✕" onPress={onClose} />
       </View>
       <CardDetailData cardFinder={cardFinder} cardId={cardId}>
         {(card) => <CardDetailScreen card={card} />}
       </CardDetailData>
-    </View>
+    </ThemedView>
   );
 }
 
 function IdleCardPane() {
   return (
-    <View style={styles.idle}>
+    <ThemedView style={styles.idle}>
       <ThemedText accessibilityRole="header" type="heading">
         No card open
       </ThemedText>
       <ThemedText themeColor="textSecondary" type="body" style={styles.idleNote}>
         Pick a card from the grid and it opens here, without leaving the catalog.
       </ThemedText>
-    </View>
+    </ThemedView>
   );
 }
 

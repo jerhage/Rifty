@@ -18,6 +18,18 @@ function DecksRoute() {
     (deckId: DeckId) => router.push({ pathname: "/decks/[id]", params: { id: deckId } }),
     [router],
   );
+  const pushDrawSimulationRoute = useCallback(
+    (deckId: DeckId) => router.push({ pathname: "/decks/[id]/draw", params: { id: deckId } }),
+    [router],
+  );
+  const pushDeckBuildRoute = useCallback(
+    (deckId: DeckId) => router.push({ pathname: "/decks/build", params: { deckId } }),
+    [router],
+  );
+  const pushCardRoute = useCallback(
+    (card: Card) => router.push({ pathname: "/cards/[id]", params: { id: card.printingId } }),
+    [router],
+  );
   const opening = useDeckOpening(pushDeckRoute);
 
   return match(opening)
@@ -32,13 +44,9 @@ function DecksRoute() {
             deckId={shownId}
             now={clock.now()}
             onClose={close}
-            onDrawSimulation={(deckId) =>
-              router.push({ pathname: "/decks/[id]/draw", params: { id: deckId } })
-            }
-            onEdit={(deckId) => router.push({ pathname: "/decks/build", params: { deckId } })}
-            onOpenCard={(card: Card) =>
-              router.push({ pathname: "/cards/[id]", params: { id: card.printingId } })
-            }
+            onDrawSimulation={pushDrawSimulationRoute}
+            onEdit={pushDeckBuildRoute}
+            onOpenCard={pushCardRoute}
           />
         }
         secondary={<DeckList onOpenDeck={open} />}

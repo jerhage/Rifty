@@ -122,5 +122,7 @@ function searchCriteriaFor(name: string) {
   return text ? { type: "nameOrRulesText" as const, text } : undefined;
 }
 
+type CatalogQuery = ReturnType<typeof useCatalogQuery>;
+
 export { useCatalogQuery };
-export type { CatalogSheetState };
+export type { CatalogQuery, CatalogSheetState };

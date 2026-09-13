@@ -11,11 +11,12 @@ import { KeywordsData } from "@/features/card/presentation/data/keywords-data";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import { CardCatalogFilterSheet } from "@/features/catalog/presentation/components/sheet/card-catalog-filter-sheet";
 import { useCardOpening } from "@/features/catalog/presentation/hooks/use-card-opening";
-import { useCatalogQuery } from "@/features/catalog/presentation/hooks/use-catalog-query";
+import {
+  useCatalogQuery,
+  type CatalogQuery,
+} from "@/features/catalog/presentation/hooks/use-catalog-query";
 import { CardNameSearchScreen } from "@/features/catalog/presentation/screens/card-name-search-screen";
 import { CardSetsData } from "@/features/set/presentation/data/card-sets-data";
-
-type CatalogQuery = ReturnType<typeof useCatalogQuery>;
 
 function HomeScreen() {
   const { cards, sets } = useAppDependencies();

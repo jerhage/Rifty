@@ -1,4 +1,5 @@
 import { StyleSheet, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing, TouchTarget } from "@/constants/theme";
@@ -30,12 +31,18 @@ function ZonesStepHeader({
   readonly onEditStep: (id: DeckBuildStepId) => void;
   readonly pool: ZonePoolViewState;
 }) {
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const isPool = view === "pool";
   const placed = placedCards(draft, zone);
 
   return (
-    <View style={styles.header}>
+    <View
+      style={{
+        paddingLeft: insets.left + Spacing.three,
+        paddingRight: insets.right + Spacing.three,
+      }}
+    >
       <View style={styles.nameRow}>
         <TextInput
           accessibilityLabel="Deck name"
@@ -94,9 +101,6 @@ function ZonesStepHeader({
 export { ZonesStepHeader };
 
 const styles = StyleSheet.create({
-  header: {
-    paddingHorizontal: Spacing.three,
-  },
   nameRow: {
     alignItems: "center",
     flexDirection: "row",

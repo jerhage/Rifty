@@ -25,7 +25,16 @@ function BuildProgressHeader({
   const theme = useTheme();
 
   return (
-    <View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
+    <View
+      style={[
+        styles.header,
+        {
+          paddingLeft: insets.left + Spacing.three,
+          paddingRight: insets.right + Spacing.three,
+          paddingTop: insets.top + Spacing.two,
+        },
+      ]}
+    >
       <View style={styles.titleRow}>
         <IconButton accessibilityLabel="Back" glyph="←" onPress={onBack} />
         <ThemedText
@@ -71,7 +80,6 @@ export { BuildProgressHeader };
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two + 2,
   },
   titleRow: {

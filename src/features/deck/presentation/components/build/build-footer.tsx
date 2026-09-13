@@ -26,7 +26,12 @@ function BuildFooter({
     <View
       style={[
         styles.footer,
-        { borderTopColor: theme.border, paddingBottom: insets.bottom + Spacing.three },
+        {
+          borderTopColor: theme.border,
+          paddingBottom: insets.bottom + Spacing.three,
+          paddingLeft: insets.left + Spacing.three,
+          paddingRight: insets.right + Spacing.three,
+        },
       ]}
     >
       <View style={styles.info}>{children}</View>
@@ -49,7 +54,6 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
     gap: Spacing.three - 4,
-    paddingHorizontal: Spacing.three,
     paddingTop: Spacing.two + 2,
   },
   info: {

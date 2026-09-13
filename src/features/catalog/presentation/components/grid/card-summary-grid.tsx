@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
-import { fitColumns, useLayoutSize, type ColumnSpec } from "@/hooks/use-layout-size";
+import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 
 import { CardGridItem } from "./card-grid-item";
 
@@ -21,7 +21,11 @@ interface CardSummaryGridProps {
   readonly onSelectCard: (id: PrintingId) => void;
 }
 
-const CATALOG_COLUMNS: ColumnSpec = { gap: Spacing.three, minimum: 150 };
+const CATALOG_COLUMNS: ColumnSpec = {
+  gap: Spacing.three,
+  minimum: 150,
+  sidePadding: Spacing.three,
+};
 
 function CardSummaryGrid({
   cards,
@@ -34,19 +38,15 @@ function CardSummaryGrid({
   onSelectCard,
 }: CardSummaryGridProps) {
   const insets = useSafeAreaInsets();
-  const { width } = useLayoutSize();
-  const { columns, columnWidth } = fitColumns(
-    width - insets.left - insets.right - Spacing.three * 2,
-    CATALOG_COLUMNS,
-  );
+  const { columns, columnWidth } = useColumnFit(CATALOG_COLUMNS);
 
   return (
     <FlatList
       columnWrapperStyle={columns > 1 && cards.length > 0 ? styles.cardRow : undefined}
       contentContainerStyle={{
         paddingBottom: insets.bottom + Spacing.four,
-        paddingLeft: insets.left + Spacing.three,
-        paddingRight: insets.right + Spacing.three,
+        paddingLeft: insets.left + CATALOG_COLUMNS.sidePadding,
+        paddingRight: insets.right + CATALOG_COLUMNS.sidePadding,
         paddingTop: Spacing.three,
       }}
       data={cards}

@@ -1,4 +1,5 @@
 import { FlatList, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { match } from "ts-pattern";
 
@@ -6,7 +7,7 @@ import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import type { ZoneSection } from "@/features/deck/deck/deck-legality";
-import { fitColumns, useLayoutSize, type ColumnSpec } from "@/hooks/use-layout-size";
+import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 
 import { minimumForCard, remainingForCard } from "../../deck-build-allowance";
 import { placedCards, quantityOf, type DeckBuildDraft } from "../../deck-build-steps";
@@ -14,8 +15,16 @@ import type { ZonePoolLayout, ZonePoolView } from "../../deck-zone-pool";
 import { BuildCardRow } from "./build-card-row";
 import { BuildCardTile } from "./build-card-tile";
 
-const POOL_TILE_COLUMNS: ColumnSpec = { gap: Spacing.three, minimum: 158 };
-const POOL_ROW_COLUMNS: ColumnSpec = { gap: Spacing.two - 1, minimum: 300 };
+const POOL_TILE_COLUMNS: ColumnSpec = {
+  gap: Spacing.three,
+  minimum: 158,
+  sidePadding: Spacing.three,
+};
+const POOL_ROW_COLUMNS: ColumnSpec = {
+  gap: Spacing.two - 1,
+  minimum: 300,
+  sidePadding: Spacing.three,
+};
 
 function ZonePoolList({
   draft,
@@ -36,12 +45,10 @@ function ZonePoolList({
   readonly zone: ZoneSection;
   readonly zonePool: readonly Card[];
 }) {
-  const { width } = useLayoutSize();
+  const insets = useSafeAreaInsets();
   const isGrid = poolLayout === "grid";
-  const { columns, columnWidth } = fitColumns(
-    width - Spacing.three * 2,
-    isGrid ? POOL_TILE_COLUMNS : POOL_ROW_COLUMNS,
-  );
+  const spec = isGrid ? POOL_TILE_COLUMNS : POOL_ROW_COLUMNS;
+  const { columns, columnWidth } = useColumnFit(spec);
 
   const wrapperStyle = isGrid ? styles.tileRow : styles.rowRow;
 
@@ -58,7 +65,14 @@ function ZonePoolList({
     .with("pool", "inDeck", () => (
       <FlatList
         columnWrapperStyle={columns > 1 ? wrapperStyle : undefined}
-        contentContainerStyle={[styles.pool, !isGrid && styles.poolRows]}
+        contentContainerStyle={[
+          styles.pool,
+          !isGrid && styles.poolRows,
+          {
+            paddingLeft: insets.left + spec.sidePadding,
+            paddingRight: insets.right + spec.sidePadding,
+          },
+        ]}
         data={listed}
         key={`${poolLayout}-${columns}`}
         keyExtractor={(card) => card.printingId}
@@ -102,7 +116,6 @@ const styles = StyleSheet.create({
   },
   pool: {
     paddingBottom: Spacing.four,
-    paddingHorizontal: Spacing.three,
     paddingTop: Spacing.three - 4,
   },
   poolRows: {

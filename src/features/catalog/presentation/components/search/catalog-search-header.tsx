@@ -12,6 +12,7 @@ import { ORDERED_CARD_TYPES, type CardType } from "@/features/card/value-objects
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
 import type { CatalogQueryCriteria } from "../../catalog-query-criteria";
+import { CATALOG_COLUMNS } from "../grid/card-summary-grid";
 
 /**
  * The search field and quick chips stay pinned above the grid so filtering never requires scrolling
@@ -46,8 +47,8 @@ function CatalogSearchHeader({
         styles.header,
         {
           borderBottomColor: theme.border,
-          paddingLeft: insets.left + Spacing.three,
-          paddingRight: insets.right + Spacing.three,
+          paddingLeft: insets.left + CATALOG_COLUMNS.sidePadding,
+          paddingRight: insets.right + CATALOG_COLUMNS.sidePadding,
           paddingTop: insets.top + Spacing.two,
         },
       ]}

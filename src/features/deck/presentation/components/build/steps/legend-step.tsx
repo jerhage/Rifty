@@ -1,4 +1,5 @@
 import { FlatList, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Chip } from "@/components/ui/atoms/chip";
 import { ColorDot } from "@/components/ui/atoms/color-dot";
@@ -8,7 +9,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { ORDERED_DOMAINS } from "@/features/card/value-objects/card-domain";
-import { fitColumns, useLayoutSize, type ColumnSpec } from "@/hooks/use-layout-size";
+import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 import { useDomainColors } from "@/hooks/use-theme";
 
 import type { DeckBuildStep } from "../../../deck-build-steps";
@@ -28,7 +29,11 @@ interface LegendStepProps {
   readonly step: DeckBuildStep;
 }
 
-const LEGEND_COLUMNS: ColumnSpec = { gap: Spacing.three - 5, minimum: 170 };
+const LEGEND_COLUMNS: ColumnSpec = {
+  gap: Spacing.three - 5,
+  minimum: 170,
+  sidePadding: Spacing.three,
+};
 
 function LegendStep({
   legends,
@@ -41,14 +46,20 @@ function LegendStep({
   step,
 }: LegendStepProps) {
   const domainColors = useDomainColors();
-  const { width } = useLayoutSize();
-  const { columns, columnWidth } = fitColumns(width - Spacing.three * 2, LEGEND_COLUMNS);
+  const insets = useSafeAreaInsets();
+  const { columns, columnWidth } = useColumnFit(LEGEND_COLUMNS);
 
   return (
     <>
       <FlatList
         columnWrapperStyle={columns > 1 ? styles.row : undefined}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingLeft: insets.left + LEGEND_COLUMNS.sidePadding,
+            paddingRight: insets.right + LEGEND_COLUMNS.sidePadding,
+          },
+        ]}
         data={legends}
         key={columns}
         keyExtractor={(card) => card.printingId}
@@ -108,7 +119,6 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: Spacing.four,
-    paddingHorizontal: Spacing.three,
   },
   search: {
     marginBottom: Spacing.two + 1,

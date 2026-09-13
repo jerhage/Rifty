@@ -1,10 +1,11 @@
 import { FlatList, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import { fitColumns, useLayoutSize, type ColumnSpec } from "@/hooks/use-layout-size";
+import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 
 import type { DeckBuildStep } from "../../../deck-build-steps";
 import { BuildFooter } from "../build-footer";
@@ -22,7 +23,11 @@ interface ChampionStepProps {
   readonly step: DeckBuildStep;
 }
 
-const CHAMPION_COLUMNS: ColumnSpec = { gap: Spacing.two, minimum: 300 };
+const CHAMPION_COLUMNS: ColumnSpec = {
+  gap: Spacing.two,
+  minimum: 300,
+  sidePadding: Spacing.three,
+};
 
 function ChampionStep({
   champions,
@@ -34,14 +39,20 @@ function ChampionStep({
   selected,
   step,
 }: ChampionStepProps) {
-  const { width } = useLayoutSize();
-  const { columns, columnWidth } = fitColumns(width - Spacing.three * 2, CHAMPION_COLUMNS);
+  const insets = useSafeAreaInsets();
+  const { columns, columnWidth } = useColumnFit(CHAMPION_COLUMNS);
 
   return (
     <>
       <FlatList
         columnWrapperStyle={columns > 1 ? styles.row : undefined}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingLeft: insets.left + CHAMPION_COLUMNS.sidePadding,
+            paddingRight: insets.right + CHAMPION_COLUMNS.sidePadding,
+          },
+        ]}
         data={champions}
         key={columns}
         keyExtractor={(card) => card.printingId}
@@ -88,7 +99,6 @@ const styles = StyleSheet.create({
   content: {
     gap: Spacing.two,
     paddingBottom: Spacing.four,
-    paddingHorizontal: Spacing.three,
   },
   row: {
     gap: Spacing.two,

@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
+import { CardSortControl } from "@/features/card/presentation/components/card-sort-control";
 import { useTheme } from "@/hooks/use-theme";
 
 import { placedCardTotal, placedCards, type DeckBuildDraft } from "../../../deck-build-steps";
@@ -19,7 +20,19 @@ import { PoolViewTabs } from "../pool-view-tabs";
 
 function ZonePoolControls({
   draft,
-  pool: { filters, layout, openFilters, query, setLayout, setQuery, setView, zone },
+  pool: {
+    filters,
+    layout,
+    openFilters,
+    openSort,
+    query,
+    setLayout,
+    setQuery,
+    setView,
+    sort,
+    toggleSortDirection,
+    zone,
+  },
   viewChoice: { options, shown },
 }: {
   readonly draft: DeckBuildDraft;
@@ -60,13 +73,23 @@ function ZonePoolControls({
       </ThemedText>
 
       {isPool ? (
-        <PoolSearchRow
-          filterCount={activePoolFilterCount(filters)}
-          hint={searchHint(zone)}
-          onChangeQuery={setQuery}
-          onOpenFilters={openFilters}
-          query={query}
-        />
+        <>
+          <PoolSearchRow
+            filterCount={activePoolFilterCount(filters)}
+            hint={searchHint(zone)}
+            onChangeQuery={setQuery}
+            onOpenFilters={openFilters}
+            query={query}
+          />
+
+          <View style={styles.sortRow}>
+            <CardSortControl
+              onOpenSort={openSort}
+              onToggleDirection={toggleSortDirection}
+              sort={sort}
+            />
+          </View>
+        </>
       ) : null}
     </View>
   );
@@ -90,6 +113,11 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   rule: {
+    marginTop: Spacing.two + 1,
+  },
+  sortRow: {
+    alignItems: "center",
+    flexDirection: "row",
     marginTop: Spacing.two + 1,
   },
 });

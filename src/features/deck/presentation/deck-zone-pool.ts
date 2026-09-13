@@ -1,8 +1,9 @@
 import { match } from "ts-pattern";
 
 import type { Card } from "@/features/card/card";
-import type { CardListCriteria } from "@/features/card/card-list-criteria";
+import type { CardListCriteria, CardSort } from "@/features/card/card-list-criteria";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
+import { sortForId } from "@/features/card/presentation/card-sort-options";
 import type { CardType } from "@/features/card/value-objects/card-type";
 import { zoneRule, type ZoneSection } from "@/features/deck/deck/deck-legality";
 import type { LayoutClass } from "@/hooks/use-layout-size";
@@ -53,6 +54,9 @@ function viewBesideTheDeck(view: ZonePoolView): ZonePoolView {
     .exhaustive();
 }
 
+/** The pool opens alphabetically, the order the catalog opens in and the one the deck lists in. */
+const DEFAULT_POOL_SORT: CardSort | undefined = sortForId("name");
+
 /** A deck plays within its legend's domains, so the pool starts narrowed to them. */
 function defaultPoolFilters(legend: Card | null): ZonePoolFilters {
   return { ...EMPTY_POOL_FILTERS, domainIds: legend ? [...legend.domainIds] : [] };
@@ -91,6 +95,7 @@ function poolCriteria(
   section: ZoneSection,
   filters: ZonePoolFilters,
   query: string,
+  sort: CardSort | undefined,
 ): Omit<CardListCriteria, "limit" | "offset"> {
   const text = query.trim();
   const chosenTypes = filters.typeIds.filter((type) => zoneCardTypes(section).includes(type));
@@ -101,6 +106,7 @@ function poolCriteria(
     anyDomainIds: filters.domainIds.length > 0 ? [...filters.domainIds] : undefined,
     keywordIds: filters.keywordIds.length > 0 ? [...filters.keywordIds] : undefined,
     search: text ? { type: "nameOrRulesText", text } : undefined,
+    sort,
   };
 }
 
@@ -123,6 +129,7 @@ function activePoolFilterCount(filters: ZonePoolFilters): number {
 }
 
 export {
+  DEFAULT_POOL_SORT,
   EMPTY_POOL_FILTERS,
   activePoolFilterCount,
   allowsTypeChoice,

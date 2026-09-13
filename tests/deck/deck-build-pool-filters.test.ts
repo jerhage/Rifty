@@ -37,6 +37,7 @@ describe("deck build pool filters", () => {
       result.current.pool.zone,
       result.current.pool.filters,
       result.current.pool.searchQuery,
+      result.current.pool.sort,
     );
     expect(criteria.keywordIds).toBeUndefined();
     expect(criteria.anyDomainIds).toBeUndefined();
@@ -51,12 +52,13 @@ describe("deck build pool filters", () => {
     await act(() => result.current.pool.applyFilters());
 
     expect(result.current.pool.filters.keywordIds).toEqual(["shield"]);
-    expect(result.current.pool.isFilterOpen).toBe(false);
+    expect(result.current.pool.sheet).toEqual({ type: "hidden" });
     expect(
       poolCriteria(
         result.current.pool.zone,
         result.current.pool.filters,
         result.current.pool.searchQuery,
+        result.current.pool.sort,
       ).keywordIds,
     ).toEqual(["shield"]);
   });
@@ -71,7 +73,7 @@ describe("deck build pool filters", () => {
     await act(() => result.current.pool.openFilters());
     await act(() => result.current.pool.toggleKeyword("tank"));
     await act(() => result.current.pool.toggleDomain("Calm"));
-    await act(() => result.current.pool.dismissFilters());
+    await act(() => result.current.pool.dismissSheet());
 
     expect(result.current.pool.filters.keywordIds).toEqual(["shield"]);
     expect(result.current.pool.filters.domainIds).toEqual([]);
@@ -84,7 +86,7 @@ describe("deck build pool filters", () => {
 
     await act(() => result.current.pool.openFilters());
     await act(() => result.current.pool.toggleType("Gear"));
-    await act(() => result.current.pool.dismissFilters());
+    await act(() => result.current.pool.dismissSheet());
     await act(() => result.current.pool.openFilters());
 
     expect(result.current.pool.draftFilters.typeIds).toEqual([]);
@@ -181,6 +183,7 @@ describe("deck build pool filters", () => {
         result.current.pool.zone,
         result.current.pool.filters,
         result.current.pool.searchQuery,
+        result.current.pool.sort,
       ).search,
     ).toEqual({
       type: "nameOrRulesText",

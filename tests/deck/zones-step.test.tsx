@@ -20,7 +20,7 @@ import {
   EMPTY_DRAFT,
   withZoneCard,
 } from "@/features/deck/presentation/deck-build-steps";
-import { EMPTY_POOL_FILTERS } from "@/features/deck/presentation/deck-zone-pool";
+import { DEFAULT_POOL_SORT, EMPTY_POOL_FILTERS } from "@/features/deck/presentation/deck-zone-pool";
 import type {
   ZoneDraftViewState,
   ZonePoolViewState,
@@ -45,11 +45,14 @@ function poolState(view: ZonePoolViewState["view"]): ZonePoolViewState {
     filters: EMPTY_POOL_FILTERS,
     layout: "list",
     openFilters: () => undefined,
+    openSort: () => undefined,
     query: "",
     setLayout: () => undefined,
     setQuery: () => undefined,
     setView: () => undefined,
     setZone: () => undefined,
+    sort: DEFAULT_POOL_SORT,
+    toggleSortDirection: () => undefined,
     view,
     zone: "mainDeck",
   };
@@ -138,6 +141,35 @@ describe("ZonesStep on a phone", () => {
     expect(screen.getByRole("tab", { name: "In deck, 2" }).props.accessibilityState).toEqual({
       selected: true,
     });
+  });
+});
+
+describe("the pool's ordering control", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("should stand beside the search and the filters while the pool is showing", async () => {
+    await stepAt(402, 874, "pool");
+
+    expect(screen.getByRole("button", { name: "Sort by Name. Change ordering" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sorted A → Z. Switch to Z → A" })).toBeTruthy();
+  });
+
+  it.each(["inDeck", "roles"] as const)(
+    "should be absent in the %s view, which no query orders",
+    async (view) => {
+      await stepAt(402, 874, view);
+
+      expect(screen.queryByRole("button", { name: "Sort by Name. Change ordering" })).toBeNull();
+      expect(screen.queryByLabelText("Search main deck")).toBeNull();
+    },
+  );
+
+  it("should stand in the pool's own column on a tablet", async () => {
+    await stepAt(800, 1200, "pool");
+
+    expect(screen.getByRole("button", { name: "Sort by Name. Change ordering" })).toBeTruthy();
   });
 });
 

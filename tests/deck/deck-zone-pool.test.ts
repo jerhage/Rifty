@@ -1,4 +1,5 @@
 import {
+  DEFAULT_POOL_SORT,
   defaultPoolFilters,
   legendCriteria,
   poolCriteria,
@@ -16,8 +17,13 @@ describe("deck zone pool", () => {
   });
 
   it("should ask the query for any of the chosen domains, never all of them", () => {
-    const one = poolCriteria("mainDeck", { domainIds: ["Fury"], keywordIds: [], typeIds: [] }, "");
-    const two = poolCriteria("mainDeck", defaultPoolFilters(legend), "");
+    const one = poolCriteria(
+      "mainDeck",
+      { domainIds: ["Fury"], keywordIds: [], typeIds: [] },
+      "",
+      undefined,
+    );
+    const two = poolCriteria("mainDeck", defaultPoolFilters(legend), "", undefined);
 
     expect(one.anyDomainIds).toEqual(["Fury"]);
     expect(two.anyDomainIds).toEqual(["Fury", "Order"]);
@@ -46,26 +52,43 @@ describe("deck zone pool", () => {
   it("should ask the query for any of the chosen keywords", () => {
     const filters = { ...defaultPoolFilters(legend), keywordIds: ["shield", "tank"] };
 
-    expect(poolCriteria("mainDeck", filters, "").keywordIds).toEqual(["shield", "tank"]);
-    expect(poolCriteria("mainDeck", defaultPoolFilters(legend), "").keywordIds).toBeUndefined();
+    expect(poolCriteria("mainDeck", filters, "", undefined).keywordIds).toEqual(["shield", "tank"]);
+    expect(
+      poolCriteria("mainDeck", defaultPoolFilters(legend), "", undefined).keywordIds,
+    ).toBeUndefined();
   });
 
   it("should search the pool by name or rules text, apart from the filters", () => {
     const filters = defaultPoolFilters(legend);
 
-    expect(poolCriteria("mainDeck", filters, "  volibear  ").search).toEqual({
+    expect(poolCriteria("mainDeck", filters, "  volibear  ", undefined).search).toEqual({
       type: "nameOrRulesText",
       text: "volibear",
     });
-    expect(poolCriteria("mainDeck", filters, "   ").search).toBeUndefined();
+    expect(poolCriteria("mainDeck", filters, "   ", undefined).search).toBeUndefined();
+  });
+
+  it("should carry the ordering the pool was given into the query", () => {
+    const filters = defaultPoolFilters(legend);
+
+    expect(
+      poolCriteria("mainDeck", filters, "", { type: "energy", direction: "ascending" }).sort,
+    ).toEqual({ type: "energy", direction: "ascending" });
+    expect(poolCriteria("mainDeck", filters, "", undefined).sort).toBeUndefined();
+  });
+
+  it("should open the pool in the same order the catalog opens in", () => {
+    expect(DEFAULT_POOL_SORT).toEqual({ type: "name", direction: "ascending" });
   });
 
   it("should limit each zone to the card types it accepts", () => {
-    expect(poolCriteria("runeDeck", defaultPoolFilters(null), "").typeIds).toEqual(["Rune"]);
-    expect(poolCriteria("battlefield", defaultPoolFilters(null), "").typeIds).toEqual([
+    expect(poolCriteria("runeDeck", defaultPoolFilters(null), "", undefined).typeIds).toEqual([
+      "Rune",
+    ]);
+    expect(poolCriteria("battlefield", defaultPoolFilters(null), "", undefined).typeIds).toEqual([
       "Battlefield",
     ]);
-    expect(poolCriteria("mainDeck", defaultPoolFilters(null), "").typeIds).toEqual([
+    expect(poolCriteria("mainDeck", defaultPoolFilters(null), "", undefined).typeIds).toEqual([
       "Unit",
       "Spell",
       "Gear",

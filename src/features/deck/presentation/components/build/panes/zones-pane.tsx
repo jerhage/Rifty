@@ -11,7 +11,7 @@ import type {
   DeckDraftState,
   ZonePoolState,
 } from "../../../hooks/use-deck-build";
-import { PoolFilterSheet } from "../pool-filter-sheet";
+import { PoolSheet } from "../pool-sheet";
 import { ZonesStep } from "../steps/zones-step";
 
 interface ZonesPaneProps {
@@ -45,6 +45,7 @@ function ZonesPane({
       cardLister={cardLister}
       filters={pool.filters}
       query={pool.searchQuery}
+      sort={pool.sort}
       zone={pool.zone}
     >
       {(zonePool) => (
@@ -73,16 +74,19 @@ function ZonesPane({
               />
             )}
           </DeckSaveData>
-          <PoolFilterSheet
+          <PoolSheet
             filters={pool.draftFilters}
-            isPresented={pool.isFilterOpen}
             keywords={keywords}
-            onApply={pool.applyFilters}
-            onDismiss={pool.dismissFilters}
+            onApplyFilters={pool.applyFilters}
+            onApplySort={pool.applySort}
+            onChangeSort={pool.changeSort}
+            onDismiss={pool.dismissSheet}
             onReset={pool.resetFilters}
             onToggleDomain={pool.toggleDomain}
             onToggleKeyword={pool.toggleKeyword}
             onToggleType={pool.toggleType}
+            sheet={pool.sheet}
+            sort={pool.draftSort}
             zone={pool.zone}
           />
         </>

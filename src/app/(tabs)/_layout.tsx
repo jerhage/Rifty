@@ -42,6 +42,7 @@ function CatalogLayout() {
         <Tabs.Screen
           name="index"
           options={{
+            tabBarItemStyle: isRail ? { marginTop: "auto" } : undefined,
             title: "Cards",
             tabBarIcon: ({ color }) => <TabGlyph color={color} shape="square" />,
           }}
@@ -49,6 +50,7 @@ function CatalogLayout() {
         <Tabs.Screen
           name="decks"
           options={{
+            tabBarItemStyle: isRail ? { marginBottom: "auto" } : undefined,
             title: "Decks",
             tabBarIcon: ({ color }) => <TabGlyph color={color} shape="diamond" />,
           }}

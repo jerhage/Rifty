@@ -80,7 +80,7 @@ function DrawSimulationScreen({
           },
         ]}
       >
-        <IconButton accessibilityLabel="Back" glyph="←" onPress={onBack} />
+        <IconButton accessibilityLabel="Back to the deck" glyph="←" onPress={onBack} />
         <ThemedText themeColor="textSecondary" type="mono">
           {handLabel(mulligan, handNumber)}
         </ThemedText>

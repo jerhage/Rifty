@@ -1,8 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
 import { TextAction } from "@/components/ui/atoms/text-action";
-import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import type { CardByCardIdFinder } from "@/features/card/card-by-card-id-finder";
@@ -27,15 +25,13 @@ function DeckDetailPane({
   readonly cardByCardIdFinder: CardByCardIdFinder;
   readonly cardsByPrintingIdsFinder: CardsByPrintingIdsFinder;
   readonly deckFinder: DeckFinder;
-  readonly deckId: DeckId | null;
+  readonly deckId: DeckId;
   readonly now: string;
   readonly onClose: () => void;
   readonly onDrawSimulation: (deckId: DeckId) => void;
   readonly onEdit: (deckId: DeckId) => void;
   readonly onOpenCard: (card: Card) => void;
 }) {
-  if (deckId === null) return <IdleDeckPane />;
-
   return (
     <View style={styles.pane}>
       <View style={styles.closeRow}>
@@ -61,19 +57,6 @@ function DeckDetailPane({
   );
 }
 
-function IdleDeckPane() {
-  return (
-    <ThemedView style={styles.idle}>
-      <ThemedText accessibilityRole="header" type="heading">
-        No deck open
-      </ThemedText>
-      <ThemedText themeColor="textSecondary" type="body" style={styles.idleNote}>
-        Pick a deck from the list and it opens here, without leaving your decks.
-      </ThemedText>
-    </ThemedView>
-  );
-}
-
 export { DeckDetailPane };
 
 const styles = StyleSheet.create({
@@ -84,13 +67,5 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     paddingHorizontal: Spacing.two,
     paddingTop: Spacing.two,
-  },
-  idle: {
-    flex: 1,
-    justifyContent: "center",
-    padding: Spacing.four,
-  },
-  idleNote: {
-    marginTop: Spacing.two,
   },
 });

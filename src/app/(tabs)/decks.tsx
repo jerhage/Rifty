@@ -7,19 +7,15 @@ import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import type { Card } from "@/features/card/card";
 import type { Deck, DeckId } from "@/features/deck/deck/deck";
 import { DecksData } from "@/features/deck/presentation/data/decks-data";
-import { DeckDetailPane } from "@/features/deck/presentation/deck-detail-pane";
+import { DeckPrimaryPane } from "@/features/deck/presentation/deck-primary-pane";
 import { useDeckOpening } from "@/features/deck/presentation/hooks/use-deck-opening";
 import { DeckListScreen } from "@/features/deck/presentation/screens/deck-list-screen";
 
 function DecksRoute() {
-  const { cards, clock, decks } = useAppDependencies();
+  const { cards, clock, decks, randomSource } = useAppDependencies();
   const router = useRouter();
   const pushDeckRoute = useCallback(
     (deckId: DeckId) => router.push({ pathname: "/decks/[id]", params: { id: deckId } }),
-    [router],
-  );
-  const pushDrawSimulationRoute = useCallback(
-    (deckId: DeckId) => router.push({ pathname: "/decks/[id]/draw", params: { id: deckId } }),
     [router],
   );
   const pushDeckBuildRoute = useCallback(
@@ -34,19 +30,21 @@ function DecksRoute() {
 
   return match(opening)
     .with({ type: "route" }, ({ open }) => <DeckList onOpenDeck={open} />)
-    .with({ type: "pane" }, ({ close, open, shownId }) => (
+    .with({ type: "pane" }, ({ close, open, openDrawSimulation, returnToDetail, shown }) => (
       <SplitLayout
         primary={
-          <DeckDetailPane
+          <DeckPrimaryPane
             cardByCardIdFinder={cards.cardRepository}
             cardsByPrintingIdsFinder={cards.cardRepository}
             deckFinder={decks.deckRepository}
-            deckId={shownId}
             now={clock.now()}
             onClose={close}
-            onDrawSimulation={pushDrawSimulationRoute}
             onEdit={pushDeckBuildRoute}
             onOpenCard={pushCardRoute}
+            onOpenDrawSimulation={openDrawSimulation}
+            onReturnToDetail={returnToDetail}
+            randomSource={randomSource}
+            shown={shown}
           />
         }
         secondary={<DeckList onOpenDeck={open} />}

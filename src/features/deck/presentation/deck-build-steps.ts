@@ -8,7 +8,6 @@ import {
   type DeckEntry,
   type DeckSection,
 } from "@/features/deck/deck/deck";
-import { isChampionUnit } from "@/features/deck/deck/deck-legality";
 import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 
 type DeckBuildStepId = "legend" | "chosenChampion" | "zones";
@@ -180,21 +179,15 @@ function placedCardTotal(placed: readonly PlacedCard[]): number {
   return placed.reduce((total, entry) => total + entry.quantity, 0);
 }
 
-type ChampionChoice =
-  | { readonly type: "chosen"; readonly draft: DeckBuildDraft }
-  | { readonly type: "notChampionUnit" };
-
 /** The champion is a main deck card, so choosing one puts a copy there if none is held yet. */
-function chooseChampion(draft: DeckBuildDraft, champion: Card): ChampionChoice {
-  if (!isChampionUnit(chosenChampionOf(champion))) return { type: "notChampionUnit" };
-
+function chooseChampion(draft: DeckBuildDraft, champion: Card): DeckBuildDraft {
   const held = quantityOf(draft, "mainDeck", champion.printingId);
   const seated = withZoneCard(draft, "mainDeck", champion.printingId, {
     card: champion,
     quantity: Math.max(1, held),
   });
 
-  return { type: "chosen", draft: { ...seated, chosenChampion: champion } };
+  return { ...seated, chosenChampion: champion };
 }
 
 function zoneCounts(draft: DeckBuildDraft): Record<string, number> {
@@ -218,11 +211,4 @@ export {
   withZoneCard,
   zoneCounts,
 };
-export type {
-  ChampionChoice,
-  DeckBuildDraft,
-  DeckBuildStep,
-  DeckBuildStepId,
-  DraftZoneCard,
-  PlacedCard,
-};
+export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId, DraftZoneCard, PlacedCard };

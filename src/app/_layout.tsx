@@ -1,5 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+// `route.state` is untyped on RouteProp; this helper is where React Navigation encapsulates it.
+import { getFocusedRouteNameFromRoute } from "expo-router/build/react-navigation/core";
 import * as SplashScreen from "expo-splash-screen";
 import { useState } from "react";
 import { useColorScheme } from "react-native";
@@ -20,7 +22,13 @@ function RootLayout() {
       <AppDependenciesProvider>
         <QueryClientProvider client={queryClient}>
           <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Riftcards" }} />
+            <Stack.Screen
+              name="(tabs)"
+              options={({ route }) => ({
+                headerShown: false,
+                title: getFocusedRouteNameFromRoute(route) === "decks" ? "Decks" : "Cards",
+              })}
+            />
             <Stack.Screen name="cards/[id]" options={{ title: "Card" }} />
             <Stack.Screen name="decks/[id]/index" options={{ title: "Deck" }} />
             <Stack.Screen

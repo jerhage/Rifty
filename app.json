@@ -3,13 +3,14 @@
     "name": "riftcards",
     "slug": "riftcards",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "riftcards",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.anonymous.riftcards"
+      "bundleIdentifier": "com.anonymous.riftcards",
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {

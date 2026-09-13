@@ -3,9 +3,18 @@ import { Pressable, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { TouchTarget } from "@/constants/theme";
 
-function TextAction({ label, onPress }: { readonly label: string; readonly onPress: () => void }) {
+function TextAction({
+  accessibilityLabel,
+  label,
+  onPress,
+}: {
+  readonly accessibilityLabel?: string;
+  readonly label: string;
+  readonly onPress: () => void;
+}) {
   return (
     <Pressable
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.action, pressed && styles.pressed]}

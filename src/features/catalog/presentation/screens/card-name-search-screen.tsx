@@ -3,8 +3,8 @@ import { StyleSheet } from "react-native";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardSummariesDataContent } from "@/features/card/presentation/data/card-summaries-data";
+import type { CardSummary } from "@/features/card/card-summary";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import type { PrintingId } from "@/features/card/value-objects/printing-id";
 
 import type { CatalogQueryCriteria } from "../catalog-query-criteria";
 import { CardSummaryGrid } from "../components/grid/card-summary-grid";
@@ -18,9 +18,9 @@ interface CardNameSearchScreenProps extends CardSummariesDataContent {
   readonly onChangeName: (name: string) => void;
   readonly onClearDomains: () => void;
   readonly onClearTypes: () => void;
+  readonly onOpenCard: (card: CardSummary) => void;
   readonly onOpenFilters: () => void;
   readonly onOpenSort: () => void;
-  readonly onSelectCard: (id: PrintingId) => void;
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleSortDirection: () => void;
   readonly onToggleType: (typeId: CardType) => void;
@@ -35,9 +35,9 @@ function CardNameSearchScreen({
   onChangeName,
   onClearDomains,
   onClearTypes,
+  onOpenCard,
   onOpenFilters,
   onOpenSort,
-  onSelectCard,
   onToggleDomain,
   onToggleSortDirection,
   onToggleType,
@@ -75,8 +75,8 @@ function CardNameSearchScreen({
         }
         isRefreshing={isRefreshing}
         onEndReached={loadMore}
+        onOpenCard={onOpenCard}
         onRefresh={refresh}
-        onSelectCard={onSelectCard}
       />
     </ThemedView>
   );

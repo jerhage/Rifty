@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { CardSummary } from "@/features/card/card-summary";
-import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import { cardDomainNames } from "@/features/card/presentation/card-taxonomy-format";
 import { CARD_ASPECT_RATIO } from "@/features/card/presentation/components/card-art";
 import { CardFace } from "@/features/card/presentation/components/card-face";
@@ -16,7 +15,7 @@ function CardGridItem({
   width,
 }: {
   readonly card: CardSummary;
-  readonly onPress: (id: PrintingId) => void;
+  readonly onPress: (card: CardSummary) => void;
   readonly width: number;
 }) {
   const theme = useTheme();
@@ -25,7 +24,7 @@ function CardGridItem({
     <Pressable
       accessibilityLabel={[card.name, ...cardDomainNames(card.domainIds)].join(", ")}
       accessibilityRole="button"
-      onPress={() => onPress(card.printingId)}
+      onPress={() => onPress(card)}
       style={({ pressed }) => [styles.card, { flexBasis: width, width }, pressed && styles.pressed]}
     >
       <View

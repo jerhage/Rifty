@@ -52,7 +52,7 @@ function ZonesPane({
           <DeckSaveData
             capabilities={capabilities}
             draft={{
-              chosenChampionCardId: draft.draft.chosenChampion?.cardId ?? null,
+              chosenChampion: draft.chosenChampion,
               entries: draft.entries,
               name: draft.draft.name,
               verification: draft.verification,

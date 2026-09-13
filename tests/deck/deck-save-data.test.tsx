@@ -99,7 +99,7 @@ async function renderDeckSave(store: DeckStore, name = "Storm") {
       <DeckListProbe listing={store.listing} />
       <DeckSaveData
         capabilities={store.capabilities}
-        draft={{ chosenChampionCardId: null, entries: [], name, verification: LEGAL }}
+        draft={{ chosenChampion: null, entries: [], name, verification: LEGAL }}
         onChangeName={onChangeName}
         onSaved={onSaved}
         start={{ type: "new" }}

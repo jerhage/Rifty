@@ -11,7 +11,7 @@ import {
   type ZoneSection,
 } from "@/features/deck/deck/deck-legality";
 
-import { draftComposition, quantityOf, zoneCounts, type DeckBuildDraft } from "./deck-build-steps";
+import { draftEntries, quantityOf, zoneCounts, type DeckBuildDraft } from "./deck-build-steps";
 
 /**
  * The rune deck is the one zone the builder will not let you overfill, because runes are
@@ -36,7 +36,7 @@ function copiesTheBuilderWillAdd(
 
 function remainingForCard(draft: DeckBuildDraft, section: ZoneSection, card: Card): CopyAllowance {
   return narrowerAllowance(
-    remainingCopies(draftComposition(draft), section, card.cardId, card.printingId),
+    remainingCopies(draftEntries(draft), section, card.cardId, card.printingId),
     copiesTheBuilderWillAdd(draft, section, card),
   );
 }

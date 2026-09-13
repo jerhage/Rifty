@@ -1,6 +1,6 @@
 import type { Card } from "@/features/card/card";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
-import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
+import { resolvedComposition, type ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 
 import { DeckDetailScreen } from "./screens/deck-detail-screen";
 
@@ -24,7 +24,7 @@ function DeckDetail({
       onEdit={onEdit}
       onOpenCard={onOpenCard}
       resolvedDeck={resolvedDeck}
-      verification={verifyDeck(resolvedDeck.deck, RIFTBOUND_STANDARD)}
+      verification={verifyDeck(resolvedComposition(resolvedDeck), RIFTBOUND_STANDARD)}
     />
   );
 }

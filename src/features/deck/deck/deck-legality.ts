@@ -2,12 +2,16 @@ import { match, P } from "ts-pattern";
 import { z } from "zod/v4";
 
 import type { CardId } from "@/features/card/value-objects/card-id";
+import type { CardType } from "@/features/card/value-objects/card-type";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
+import type { TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
 
 import {
   deckSectionSchema,
   parseDeckVerification,
+  type ChosenChampion,
   type DeckComposition,
+  type DeckEntry,
   type DeckLegalityViolation,
   type DeckSection,
   type DeckVerification,
@@ -112,6 +116,21 @@ const SHARED_COPY_SECTIONS: readonly DeckSection[] = ["mainDeck", "sideboard"];
 
 const LEGEND_ALLOWANCE: CopyAllowance = { type: "limited", copies: 1 };
 
+/**
+ * A Chosen Champion is a champion unit. The supertype alone does not settle it: legends carry it
+ * too, so the card pool that offers champions and the rule that judges one read this same pair.
+ */
+const CHAMPION_UNIT: { readonly typeId: CardType; readonly supertypeId: TaxonomyId } = {
+  typeId: "Unit",
+  supertypeId: "Champion",
+};
+
+function isChampionUnit(champion: ChosenChampion): boolean {
+  return (
+    champion.typeId === CHAMPION_UNIT.typeId && champion.supertypeId === CHAMPION_UNIT.supertypeId
+  );
+}
+
 const RIFTBOUND_STANDARD: TournamentRuleset = {
   id: "riftbound-standard",
   format: "Standard",
@@ -136,14 +155,14 @@ function copyAllowance(section: DeckSection): CopyAllowance {
 
 /** Copies of a card already held in the sections that share this one's allowance. */
 function copiesHeldElsewhere(
-  composition: DeckComposition,
+  entries: readonly DeckEntry[],
   section: DeckSection,
   cardId: CardId,
   printingId: PrintingId,
 ): number {
   const sharing = sectionsSharingAllowance(section);
 
-  return composition.entries
+  return entries
     .filter(
       (entry) =>
         entry.cardId === cardId &&
@@ -154,14 +173,14 @@ function copiesHeldElsewhere(
 }
 
 function remainingCopies(
-  composition: DeckComposition,
+  entries: readonly DeckEntry[],
   section: DeckSection,
   cardId: CardId,
   printingId: PrintingId,
 ): CopyAllowance {
   return remainingAllowance(
     copyAllowance(section),
-    copiesHeldElsewhere(composition, section, cardId, printingId),
+    copiesHeldElsewhere(entries, section, cardId, printingId),
   );
 }
 
@@ -218,11 +237,10 @@ function singletonViolations(
   ];
 }
 
-/** The chosen champion is a main deck card, so the deck has to actually hold a copy of it. */
 function championViolations(composition: DeckComposition): readonly DeckLegalityViolation[] {
-  const cardId = composition.chosenChampionCardId;
+  const champion = composition.chosenChampion;
 
-  if (cardId === null) {
+  if (champion === null) {
     return [
       {
         type: "deckConstraint",
@@ -232,8 +250,30 @@ function championViolations(composition: DeckComposition): readonly DeckLegality
     ];
   }
 
+  return [...championKindViolations(champion), ...championSeatViolations(composition, champion)];
+}
+
+function championKindViolations(champion: ChosenChampion): readonly DeckLegalityViolation[] {
+  return isChampionUnit(champion)
+    ? []
+    : [
+        {
+          type: "cardConstraint",
+          cardId: champion.cardId,
+          printingIds: [],
+          rule: { kind: "championIsChampionUnit" },
+          message: "Your Chosen Champion has to be a champion unit.",
+        },
+      ];
+}
+
+/** The chosen champion is a main deck card, so the deck has to actually hold a copy of it. */
+function championSeatViolations(
+  composition: DeckComposition,
+  champion: ChosenChampion,
+): readonly DeckLegalityViolation[] {
   const held = composition.entries.some(
-    (entry) => entry.section === "mainDeck" && entry.cardId === cardId,
+    (entry) => entry.section === "mainDeck" && entry.cardId === champion.cardId,
   );
 
   return held
@@ -241,7 +281,7 @@ function championViolations(composition: DeckComposition): readonly DeckLegality
     : [
         {
           type: "cardConstraint",
-          cardId,
+          cardId: champion.cardId,
           printingIds: [],
           rule: { kind: "championInMainDeck" },
           message: "Your Chosen Champion has to be one of the main deck's cards.",
@@ -320,6 +360,8 @@ function copiesLabel(limit: number): string {
 }
 
 export {
+  CHAMPION_UNIT,
+  isChampionUnit,
   limitedCopies,
   narrowerAllowance,
   remainingCopies,

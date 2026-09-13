@@ -1,6 +1,7 @@
 import type { Card } from "@/features/card/card";
 
-import type { Deck, DeckSection } from "./deck";
+import { chosenChampionOf } from "./chosen-champion";
+import type { Deck, DeckComposition, DeckSection } from "./deck";
 
 /** A deck entry whose printing has been resolved to the card the catalog holds for it. */
 interface ResolvedDeckEntry {
@@ -16,4 +17,13 @@ interface ResolvedDeck {
   readonly chosenChampionCard: Card | null;
 }
 
+/** The saved deck reduced to the shape the deck's own rules read. */
+function resolvedComposition({ chosenChampionCard, deck }: ResolvedDeck): DeckComposition {
+  return {
+    entries: deck.entries,
+    chosenChampion: chosenChampionCard === null ? null : chosenChampionOf(chosenChampionCard),
+  };
+}
+
+export { resolvedComposition };
 export type { ResolvedDeck, ResolvedDeckEntry };

@@ -31,11 +31,18 @@ function useDeckDraft(start: DeckBuildStart) {
     );
   }, []);
 
+  /**
+   * The pool only offers champion units, so `notChampionUnit` keeps the draft as it stands rather
+   * than reaching for a message surface no press can raise.
+   */
   const pickChampion = useCallback((champion: Card) => {
     setDraft((current) =>
       current.chosenChampion?.printingId === champion.printingId
         ? { ...current, chosenChampion: null }
-        : chooseChampion(current, champion),
+        : match(chooseChampion(current, champion))
+            .with({ type: "chosen" }, ({ draft: chosen }) => chosen)
+            .with({ type: "notChampionUnit" }, () => current)
+            .exhaustive(),
     );
   }, []);
 
@@ -58,6 +65,7 @@ function useDeckDraft(start: DeckBuildStart) {
 
   return {
     changeName,
+    chosenChampion: composition.chosenChampion,
     draft,
     entries: composition.entries,
     pickChampion,

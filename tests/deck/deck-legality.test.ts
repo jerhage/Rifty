@@ -1,11 +1,20 @@
 import { match } from "ts-pattern";
 
-import type { Deck, DeckComposition, DeckLegalityRule } from "@/features/deck/deck/deck";
+import type { ChosenChampion, DeckComposition, DeckLegalityRule } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 
 import { cardId, deck, printingId, type DeckEntryInput } from "./fixtures";
 
 const CHAMPION = "ogn-champion";
+const CHAMPION_UNIT_KIND = { typeId: "Unit", supertypeId: "Champion" } as const;
+const LEGEND_KIND = { typeId: "Legend", supertypeId: "Champion" } as const;
+
+function champion(
+  name: string,
+  kind: Pick<ChosenChampion, "supertypeId" | "typeId"> = CHAMPION_UNIT_KIND,
+): ChosenChampion {
+  return { cardId: cardId(name), ...kind };
+}
 
 function entry(
   section: DeckEntryInput["section"],
@@ -42,13 +51,19 @@ function legalEntries(): DeckEntryInput[] {
   ];
 }
 
-function withEntries(entries: DeckEntryInput[], champion: string | null = CHAMPION): Deck {
-  return deck("under-test", { entries, chosenChampionCardId: champion });
+/** Judges what a stored deck holds, so the entries pass through the deck schema on the way in. */
+function withEntries(
+  entries: DeckEntryInput[],
+  chosen: ChosenChampion | null = champion(CHAMPION),
+): DeckComposition {
+  const stored = deck("under-test", { entries, chosenChampionCardId: chosen?.cardId ?? null });
+
+  return { entries: stored.entries, chosenChampion: chosen };
 }
 
 function compositionOf(
   entries: DeckEntryInput[],
-  champion: string | null = CHAMPION,
+  chosen: ChosenChampion | null = champion(CHAMPION),
 ): DeckComposition {
   return {
     entries: entries.map((held) => ({
@@ -57,7 +72,7 @@ function compositionOf(
       printingId: printingId(held.printingId),
       quantity: held.quantity,
     })),
-    chosenChampionCardId: champion === null ? null : cardId(champion),
+    chosenChampion: chosen,
   };
 }
 
@@ -69,11 +84,15 @@ function ruleLabel(rule: DeckLegalityRule): string {
     .with({ kind: "sharedCopyLimit" }, () => "shared-copy-limit")
     .with({ kind: "championRequired" }, () => "chosenChampion-required")
     .with({ kind: "championInMainDeck" }, () => "chosenChampion-in-main-deck")
+    .with({ kind: "championIsChampionUnit" }, () => "chosenChampion-champion-unit")
     .exhaustive();
 }
 
-function rulesBroken(entries: DeckEntryInput[], champion: string | null = CHAMPION): string[] {
-  const verification = verifyDeck(withEntries(entries, champion), RIFTBOUND_STANDARD);
+function rulesBroken(
+  entries: DeckEntryInput[],
+  chosen: ChosenChampion | null = champion(CHAMPION),
+): string[] {
+  const verification = verifyDeck(withEntries(entries, chosen), RIFTBOUND_STANDARD);
 
   return verification.type === "illegal"
     ? verification.violations.map((violation) => ruleLabel(violation.rule)).sort()
@@ -119,6 +138,34 @@ describe("deck legality", () => {
     entries.push(entry("mainDeck", "ogn-swap", 3));
 
     expect(rulesBroken(entries)).toEqual(["chosenChampion-in-main-deck"]);
+  });
+
+  it("should reject a chosen champion that is not a champion unit", () => {
+    expect(rulesBroken(legalEntries(), champion(CHAMPION, LEGEND_KIND))).toEqual([
+      "chosenChampion-champion-unit",
+    ]);
+  });
+
+  it("should judge rather than refuse a deck whose champion is the legend it already holds", () => {
+    const entries = legalEntries().filter(
+      (held) => !(held.section === "mainDeck" && held.cardId === CHAMPION),
+    );
+    entries.push(entry("mainDeck", "ogn-swap", 3));
+    const verification = verifyDeck(
+      withEntries(entries, champion("ogn-legend", LEGEND_KIND)),
+      RIFTBOUND_STANDARD,
+    );
+
+    expect(verification).toMatchObject({
+      type: "illegal",
+      violations: expect.arrayContaining([
+        expect.objectContaining({
+          type: "cardConstraint",
+          cardId: "ogn-legend",
+          rule: { kind: "championIsChampionUnit" },
+        }),
+      ]),
+    });
   });
 
   it("should count the champion's copies against the shared limit like any other card", () => {

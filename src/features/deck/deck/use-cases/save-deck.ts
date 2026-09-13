@@ -1,12 +1,13 @@
 import { match } from "ts-pattern";
 
 import type { Clock } from "@/application/ports/clock";
-import type { CardId } from "@/features/card/value-objects/card-id";
 
 import {
   deckNameSchema,
   parseDeck,
+  type ChosenChampion,
   type Deck,
+  type DeckComposition,
   type DeckEntry,
   type DeckId,
   type DeckLegalityRule,
@@ -29,7 +30,7 @@ interface DeckDraft {
   readonly name: string;
   readonly notes: string;
   readonly createdAt: string;
-  readonly chosenChampionCardId: CardId | null;
+  readonly chosenChampion: ChosenChampion | null;
   readonly entries: readonly DeckEntry[];
 }
 
@@ -51,8 +52,17 @@ async function saveDeck(
     return { type: "nameTaken" };
   }
 
-  const deck = parseDeck({ ...draft, entries: [...draft.entries], name, updatedAt: clock.now() });
-  const violations = copyLimitViolations(deck);
+  const deck = parseDeck({
+    ...draft,
+    chosenChampionCardId: draft.chosenChampion?.cardId ?? null,
+    entries: [...draft.entries],
+    name,
+    updatedAt: clock.now(),
+  });
+  const violations = copyLimitViolations({
+    entries: deck.entries,
+    chosenChampion: draft.chosenChampion,
+  });
   if (violations.length > 0) return { type: "copyLimitExceeded", violations };
 
   await deckSaver.save(deck);
@@ -60,8 +70,8 @@ async function saveDeck(
   return { type: "success", deck };
 }
 
-function copyLimitViolations(deck: Deck): readonly DeckLegalityViolation[] {
-  const verification = verifyDeck(deck, RIFTBOUND_STANDARD);
+function copyLimitViolations(composition: DeckComposition): readonly DeckLegalityViolation[] {
+  const verification = verifyDeck(composition, RIFTBOUND_STANDARD);
 
   return match<DeckVerification, readonly DeckLegalityViolation[]>(verification)
     .with({ type: "illegal" }, ({ violations }) =>
@@ -79,6 +89,7 @@ function isCopyLimitRule(rule: DeckLegalityRule): boolean {
       { kind: "sectionSize" },
       { kind: "championRequired" },
       { kind: "championInMainDeck" },
+      { kind: "championIsChampionUnit" },
       () => false,
     )
     .exhaustive();

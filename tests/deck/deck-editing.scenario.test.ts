@@ -249,7 +249,7 @@ describe("deck editing scenarios", () => {
         name: "Ember Tempo",
         notes: "",
         createdAt: "2026-09-01T10:00:00.000Z",
-        chosenChampionCardId: null,
+        chosenChampion: null,
         entries: [
           {
             section: "mainDeck",
@@ -331,7 +331,7 @@ describe("deck editing scenarios", () => {
       name: "Ember Tempo",
       notes: "",
       createdAt: "2026-09-01T10:00:00.000Z",
-      chosenChampionCardId: null,
+      chosenChampion: null,
       entries: [
         {
           section: "mainDeck",
@@ -393,7 +393,7 @@ describe("deck editing scenarios", () => {
           name: "iron wall",
           notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
-          chosenChampionCardId: null,
+          chosenChampion: null,
           entries: [],
         },
         dependencies,
@@ -406,7 +406,7 @@ describe("deck editing scenarios", () => {
           name: "Ember Tempo",
           notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
-          chosenChampionCardId: null,
+          chosenChampion: null,
           entries: [],
         },
         dependencies,
@@ -425,7 +425,11 @@ describe("deck editing scenarios", () => {
         name: "Ember Tempo",
         notes: "",
         createdAt: "2026-09-01T10:00:00.000Z",
-        chosenChampionCardId: cardId("Ember Hero"),
+        chosenChampion: {
+          cardId: cardId("Ember Hero"),
+          typeId: "Unit",
+          supertypeId: "Champion",
+        },
         entries: [
           {
             section: "mainDeck",
@@ -460,7 +464,7 @@ describe("deck editing scenarios", () => {
           name: "Ember Tempo",
           notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
-          chosenChampionCardId: null,
+          chosenChampion: null,
           entries: [
             {
               section: "mainDeck",
@@ -473,6 +477,41 @@ describe("deck editing scenarios", () => {
         dependencies,
       ),
     ).resolves.toMatchObject({ type: "success" });
+    store.close();
+  });
+
+  it("should save a deck whose chosen champion is a legend rather than stranding it", async () => {
+    const store = deckScenarioStore();
+    const dependencies = capabilities(store.deckStore);
+
+    await expect(
+      saveDeck(
+        {
+          id: "ember",
+          name: "Ember Tempo",
+          notes: "",
+          createdAt: "2026-09-01T10:00:00.000Z",
+          chosenChampion: {
+            cardId: cardId("Ember Legend"),
+            typeId: "Legend",
+            supertypeId: "Champion",
+          },
+          entries: [
+            {
+              section: "legend",
+              cardId: cardId("Ember Legend"),
+              printingId: printingId("ogn-003"),
+              quantity: 1,
+            },
+          ],
+        },
+        dependencies,
+      ),
+    ).resolves.toMatchObject({ type: "success" });
+    await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
+      type: "success",
+      deck: { chosenChampionCardId: "Ember Legend" },
+    });
     store.close();
   });
 

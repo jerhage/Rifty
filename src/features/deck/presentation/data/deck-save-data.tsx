@@ -3,8 +3,7 @@ import { useCallback, type ReactNode } from "react";
 import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import type { CardId } from "@/features/card/value-objects/card-id";
-import type { DeckEntry, DeckVerification } from "@/features/deck/deck/deck";
+import type { ChosenChampion, DeckEntry, DeckVerification } from "@/features/deck/deck/deck";
 import type { DeckDraft, SaveDeckResult } from "@/features/deck/deck/use-cases/save-deck";
 import { deckKeys } from "@/features/deck/queries/deck-keys";
 import { saveDeckMutation } from "@/features/deck/queries/deck-queries";
@@ -27,7 +26,7 @@ type SaveFooterMessage =
   | { readonly type: "readiness"; readonly message: string };
 
 interface DeckSaveDraft {
-  readonly chosenChampionCardId: CardId | null;
+  readonly chosenChampion: ChosenChampion | null;
   readonly entries: readonly DeckEntry[];
   readonly name: string;
   readonly verification: DeckVerification;
@@ -94,10 +93,10 @@ function DeckSaveData({
     [onChangeName, reset, state],
   );
 
-  const { chosenChampionCardId, entries, name, verification } = draft;
+  const { chosenChampion, entries, name, verification } = draft;
   const save = useCallback(() => {
-    submit({ ...deckIdentity(start, capabilities), chosenChampionCardId, entries, name });
-  }, [capabilities, chosenChampionCardId, entries, name, start, submit]);
+    submit({ ...deckIdentity(start, capabilities), chosenChampion, entries, name });
+  }, [capabilities, chosenChampion, entries, name, start, submit]);
 
   return (
     <>

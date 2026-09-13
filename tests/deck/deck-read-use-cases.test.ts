@@ -1,9 +1,13 @@
+import { match } from "ts-pattern";
+
 import type { Card } from "@/features/card/card";
 import type { CardByCardIdFinder } from "@/features/card/card-by-card-id-finder";
 import type { CardsByPrintingIdsFinder } from "@/features/card/cards-by-printing-ids-finder";
-import type { Deck } from "@/features/deck/deck/deck";
+import type { Deck, DeckVerification } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
+import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 import type { DeckLister } from "@/features/deck/deck/deck-lister";
+import { resolvedComposition } from "@/features/deck/deck/resolved-deck";
 import { findDeck } from "@/features/deck/deck/use-cases/find-deck";
 import { findResolvedDeck } from "@/features/deck/deck/use-cases/find-resolved-deck";
 import { listDecks } from "@/features/deck/deck/use-cases/list-decks";
@@ -22,6 +26,11 @@ const alternateChampion = card("ogn-hero-alt", "OGN", {
   name: "Ember Hero (Alternate Art)",
 });
 const spark = card("ogn-1", "OGN", { cardId: cardId("Ember Spark"), name: "Ember Spark" });
+const legend = card("ogn-003", "OGN", {
+  cardId: cardId("Ember Legend"),
+  name: "Ember Legend",
+  classification: { typeId: "Legend", supertypeId: "Champion", rarityId: "rare" },
+});
 
 function finderFor(found: Deck | null): DeckFinder {
   return { get: () => Promise.resolve(found) };
@@ -151,6 +160,36 @@ describe("finding a resolved deck", () => {
     await expect(findResolvedDeck(unseated.id, capabilitiesFor(unseated, [spark]))).rejects.toThrow(
       "Deck ember names champion Ember Hero, which the catalog does not hold.",
     );
+  });
+
+  it("should open a saved deck whose chosen champion is a legend and report the violation", async () => {
+    const saved = deck("ember", {
+      chosenChampionCardId: "Ember Legend",
+      entries: [
+        { section: "legend", cardId: "Ember Legend", printingId: "ogn-003", quantity: 1 },
+        { section: "mainDeck", cardId: "Ember Spark", printingId: "ogn-1", quantity: 4 },
+      ],
+    });
+
+    const found = await findResolvedDeck(saved.id, capabilitiesFor(saved, [legend, spark], legend));
+    const verification = match(found)
+      .with({ type: "success" }, ({ resolvedDeck }) =>
+        verifyDeck(resolvedComposition(resolvedDeck), RIFTBOUND_STANDARD),
+      )
+      .with({ type: "notFound" }, (): DeckVerification => {
+        throw new Error("The saved deck did not resolve.");
+      })
+      .exhaustive();
+
+    expect(verification).toMatchObject({
+      type: "illegal",
+      violations: expect.arrayContaining([
+        expect.objectContaining({
+          cardId: "Ember Legend",
+          rule: { kind: "championIsChampionUnit" },
+        }),
+      ]),
+    });
   });
 
   it("should resolve a deck whose chosen champion is null", async () => {

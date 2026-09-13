@@ -2,7 +2,9 @@ import { z } from "zod/v4";
 
 /** Stable game-card identity retained by a deck even when catalog data is reseeded. */
 import { cardIdSchema, type CardId } from "@/features/card/value-objects/card-id";
+import type { CardType } from "@/features/card/value-objects/card-type";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
+import type { TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
 
 const deckIdSchema = z.string().trim().min(1);
 const deckNameSchema = z.string().trim().min(1);
@@ -60,6 +62,7 @@ const deckLegalityRuleSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("sharedCopyLimit") }),
   z.object({ kind: z.literal("championRequired") }),
   z.object({ kind: z.literal("championInMainDeck") }),
+  z.object({ kind: z.literal("championIsChampionUnit") }),
 ]);
 
 const deckLegalityViolationSchema = z.discriminatedUnion("type", [
@@ -108,9 +111,15 @@ type DeckName = z.output<typeof deckNameSchema>;
 type DeckSection = z.output<typeof deckSectionSchema>;
 type DeckEntry = z.output<typeof deckEntrySchema>;
 type Deck = z.output<typeof deckSchema>;
+/** The champion a deck names, carrying the kind of card it is because the rules judge that too. */
+interface ChosenChampion {
+  readonly cardId: CardId;
+  readonly typeId: CardType;
+  readonly supertypeId: TaxonomyId | null;
+}
 interface DeckComposition {
   readonly entries: readonly DeckEntry[];
-  readonly chosenChampionCardId: CardId | null;
+  readonly chosenChampion: ChosenChampion | null;
 }
 type TournamentRuleset = z.output<typeof tournamentRulesetSchema>;
 type DeckLegalityRule = z.output<typeof deckLegalityRuleSchema>;
@@ -134,6 +143,7 @@ export {
   tournamentRulesetSchema,
 };
 export type {
+  ChosenChampion,
   Deck,
   DeckComposition,
   DeckEntry,

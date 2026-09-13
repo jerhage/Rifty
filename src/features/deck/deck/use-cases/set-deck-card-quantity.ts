@@ -42,7 +42,7 @@ async function setDeckCardQuantity(
   const current = await deckFinder.get(id);
   if (!current) return { type: "notFound" };
 
-  return await match(remainingCopies(current, section, cardId, printingId))
+  return await match(remainingCopies(current.entries, section, cardId, printingId))
     .with(
       { type: "limited", copies: P.number.lt(quantity) },
       ({ copies }): SetDeckCardQuantityResult => ({ type: "copyLimitReached", allowed: copies }),

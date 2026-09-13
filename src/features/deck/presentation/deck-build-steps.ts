@@ -1,11 +1,14 @@
 import type { Card } from "@/features/card/card";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
+import { chosenChampionOf } from "@/features/deck/deck/chosen-champion";
 import {
   DECK_SECTIONS,
+  type ChosenChampion,
   type DeckComposition,
   type DeckEntry,
   type DeckSection,
 } from "@/features/deck/deck/deck";
+import { isChampionUnit } from "@/features/deck/deck/deck-legality";
 import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 
 type DeckBuildStepId = "legend" | "chosenChampion" | "zones";
@@ -124,11 +127,15 @@ function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
   return entries;
 }
 
+function draftChampion(draft: DeckBuildDraft): ChosenChampion | null {
+  return draft.chosenChampion === null ? null : chosenChampionOf(draft.chosenChampion);
+}
+
 /** The draft reduced to the shape the deck's own rules read. */
 function draftComposition(draft: DeckBuildDraft): DeckComposition {
   return {
     entries: draftEntries(draft),
-    chosenChampionCardId: draft.chosenChampion?.cardId ?? null,
+    chosenChampion: draftChampion(draft),
   };
 }
 
@@ -173,15 +180,21 @@ function placedCardTotal(placed: readonly PlacedCard[]): number {
   return placed.reduce((total, entry) => total + entry.quantity, 0);
 }
 
+type ChampionChoice =
+  | { readonly type: "chosen"; readonly draft: DeckBuildDraft }
+  | { readonly type: "notChampionUnit" };
+
 /** The champion is a main deck card, so choosing one puts a copy there if none is held yet. */
-function chooseChampion(draft: DeckBuildDraft, champion: Card): DeckBuildDraft {
+function chooseChampion(draft: DeckBuildDraft, champion: Card): ChampionChoice {
+  if (!isChampionUnit(chosenChampionOf(champion))) return { type: "notChampionUnit" };
+
   const held = quantityOf(draft, "mainDeck", champion.printingId);
   const seated = withZoneCard(draft, "mainDeck", champion.printingId, {
     card: champion,
     quantity: Math.max(1, held),
   });
 
-  return { ...seated, chosenChampion: champion };
+  return { type: "chosen", draft: { ...seated, chosenChampion: champion } };
 }
 
 function zoneCounts(draft: DeckBuildDraft): Record<string, number> {
@@ -195,6 +208,7 @@ export {
   chooseChampion,
   DECK_BUILD_STEPS,
   draftComposition,
+  draftEntries,
   draftFromDeck,
   EMPTY_DRAFT,
   placedCardTotal,
@@ -204,4 +218,11 @@ export {
   withZoneCard,
   zoneCounts,
 };
-export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId, DraftZoneCard, PlacedCard };
+export type {
+  ChampionChoice,
+  DeckBuildDraft,
+  DeckBuildStep,
+  DeckBuildStepId,
+  DraftZoneCard,
+  PlacedCard,
+};

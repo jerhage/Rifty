@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import type { Card } from "@/features/card/card";
 import type { ZoneSection } from "@/features/deck/deck/deck-legality";
 import {
@@ -15,8 +17,20 @@ import {
 
 import { card } from "../card/fixtures";
 
-const survivor = card("survivor", "OGN", { name: "Kai'Sa - Survivor" });
-const survivorAlt = card("survivor-alt", "OGN", { name: "Kai'Sa - Survivor (Alternate Art)" });
+const CHAMPION_CLASSIFICATION = {
+  typeId: "Unit",
+  supertypeId: "Champion",
+  rarityId: "rare",
+} as const;
+
+const survivor = card("survivor", "OGN", {
+  name: "Kai'Sa - Survivor",
+  classification: CHAMPION_CLASSIFICATION,
+});
+const survivorAlt = card("survivor-alt", "OGN", {
+  name: "Kai'Sa - Survivor (Alternate Art)",
+  classification: CHAMPION_CLASSIFICATION,
+});
 const evolutionary = card("evolutionary", "OGN", { name: "Kai'Sa - Evolutionary" });
 const rune = card("rune", "OGN", { name: "Fury Rune" });
 
@@ -28,6 +42,15 @@ function draftWith(...placements: readonly Placement[]): DeckBuildDraft {
       withZoneCard(draft, section, placed.printingId, { card: placed, quantity }),
     EMPTY_DRAFT,
   );
+}
+
+function championDraft(draft: DeckBuildDraft, champion: Card): DeckBuildDraft {
+  return match(chooseChampion(draft, champion))
+    .with({ type: "chosen" }, ({ draft: chosen }) => chosen)
+    .with({ type: "notChampionUnit" }, (): DeckBuildDraft => {
+      throw new Error(`${champion.name} was refused as a champion.`);
+    })
+    .exhaustive();
 }
 
 describe("deck build allowance", () => {
@@ -50,7 +73,7 @@ describe("deck build allowance", () => {
   });
 
   it("should seat the chosen champion in the main deck as an ordinary card", () => {
-    const draft = chooseChampion(EMPTY_DRAFT, survivor);
+    const draft = championDraft(EMPTY_DRAFT, survivor);
 
     expect(zoneCounts(draft).mainDeck).toBe(1);
     expect(quantityOf(draft, "mainDeck", survivor.printingId)).toBe(1);
@@ -58,13 +81,13 @@ describe("deck build allowance", () => {
   });
 
   it("should keep the copies already held when a card becomes the champion", () => {
-    const draft = chooseChampion(draftWith(["mainDeck", survivor, 3]), survivor);
+    const draft = championDraft(draftWith(["mainDeck", survivor, 3]), survivor);
 
     expect(quantityOf(draft, "mainDeck", survivor.printingId)).toBe(3);
   });
 
   it("should hold the chosen champion's own printing at one copy in the main deck", () => {
-    const draft = chooseChampion(EMPTY_DRAFT, survivor);
+    const draft = championDraft(EMPTY_DRAFT, survivor);
 
     expect(minimumForCard(draft, "mainDeck", survivor)).toBe(1);
     expect(minimumForCard(draft, "mainDeck", survivorAlt)).toBe(0);
@@ -73,12 +96,17 @@ describe("deck build allowance", () => {
   });
 
   it("should count the champion's seated copy against its other printings", () => {
-    const draft = chooseChampion(EMPTY_DRAFT, survivor);
+    const draft = championDraft(EMPTY_DRAFT, survivor);
 
     expect(remainingForCard(draft, "mainDeck", survivorAlt)).toEqual({
       type: "limited",
       copies: 2,
     });
+  });
+
+  it("should refuse a champion that is not a champion unit", () => {
+    expect(chooseChampion(EMPTY_DRAFT, rune)).toEqual({ type: "notChampionUnit" });
+    expect(chooseChampion(EMPTY_DRAFT, evolutionary)).toEqual({ type: "notChampionUnit" });
   });
 
   it("should count the sideboard against the main deck", () => {

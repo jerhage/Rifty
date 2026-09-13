@@ -31,7 +31,7 @@ function draft(overrides: Partial<DeckDraft> = {}): DeckDraft {
     name: "Ember Tempo",
     notes: "",
     createdAt: "2026-09-01T10:00:00.000Z",
-    chosenChampionCardId: null,
+    chosenChampion: null,
     entries: [
       {
         section: "mainDeck",

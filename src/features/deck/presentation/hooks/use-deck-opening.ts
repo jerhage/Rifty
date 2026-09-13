@@ -73,7 +73,10 @@ function useDeckOpening(pushDeckRoute: (deckId: DeckId) => void): DeckOpening {
       setSimulatedId(null);
       opening.close();
     },
-    open: opening.open,
+    open: (deck: Deck) => {
+      setSimulatedId(null);
+      opening.open(deck);
+    },
     openDrawSimulation,
     returnToDetail,
     shown: deckPaneContent(opening.shownId, simulatedId),

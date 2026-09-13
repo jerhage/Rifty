@@ -110,6 +110,17 @@ describe("useDeckOpening on a tablet", () => {
     expect(paneOf(result.current).shown).toEqual({ deckId: CONTROL.id, type: "detail" });
   });
 
+  it("should show the detail when a deck is picked again after its simulation was left open", async () => {
+    const { result } = await openingOn(1032, 1376);
+
+    await act(async () => result.current.open(AGGRO));
+    await act(async () => paneOf(result.current).openDrawSimulation(AGGRO.id));
+    await act(async () => result.current.open(CONTROL));
+    await act(async () => result.current.open(AGGRO));
+
+    expect(paneOf(result.current).shown).toEqual({ deckId: AGGRO.id, type: "detail" });
+  });
+
   it("should return to the detail of the same deck when the simulation is left", async () => {
     const { result } = await openingOn(1032, 1376);
 

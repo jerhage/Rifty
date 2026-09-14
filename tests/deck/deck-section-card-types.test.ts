@@ -2,13 +2,13 @@ import { match } from "ts-pattern";
 
 import type { CardType } from "@/features/card/value-objects/card-type";
 import { DECK_SECTIONS, type DeckSection } from "@/features/deck/deck/deck";
-import { ZONE_RULES } from "@/features/deck/deck/deck-legality";
+import { COUNTED_SECTION_RULES } from "@/features/deck/deck/deck-legality";
 import {
   EMPTY_POOL_FILTERS,
   legendCriteria,
   poolCriteria,
-  zoneCardTypes,
-} from "@/features/deck/presentation/deck-zone-pool";
+  sectionCardTypes,
+} from "@/features/deck/presentation/deck-section-pool";
 
 const NEVER_IN_A_DECK: readonly CardType[] = ["Other", "Token"];
 
@@ -20,7 +20,7 @@ function typesOffered(section: DeckSection): readonly CardType[] {
       "runeDeck",
       "battlefield",
       "sideboard",
-      (zone) => poolCriteria(zone, EMPTY_POOL_FILTERS, "", undefined).typeIds ?? [],
+      (filled) => poolCriteria(filled, EMPTY_POOL_FILTERS, "", undefined).typeIds ?? [],
     )
     .exhaustive();
 }
@@ -36,8 +36,8 @@ describe("card types that are never in a deck", () => {
     }
   });
 
-  it("should not reach a zone's query even when they are chosen as filters", () => {
-    for (const { section } of ZONE_RULES) {
+  it("should not reach a section's query even when they are chosen as filters", () => {
+    for (const { section } of COUNTED_SECTION_RULES) {
       const criteria = poolCriteria(
         section,
         { ...EMPTY_POOL_FILTERS, typeIds: NEVER_IN_A_DECK },
@@ -45,7 +45,7 @@ describe("card types that are never in a deck", () => {
         undefined,
       );
 
-      expect(criteria.typeIds).toEqual(zoneCardTypes(section));
+      expect(criteria.typeIds).toEqual(sectionCardTypes(section));
     }
   });
 });

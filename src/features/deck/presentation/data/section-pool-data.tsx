@@ -4,36 +4,36 @@ import type { CardCounter } from "@/features/card/card-counter";
 import type { CardSort } from "@/features/card/card-list-criteria";
 import type { CardLister } from "@/features/card/card-lister";
 import { CardsData, type CardsDataContent } from "@/features/card/presentation/data/cards-data";
-import type { ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
 
-import { poolCriteria, type ZonePoolFilters } from "../deck-zone-pool";
+import { poolCriteria, type SectionPoolFilters } from "../deck-section-pool";
 
-function ZonePoolData({
+function SectionPoolData({
   cardCounter,
   cardLister,
   children,
   filters,
   query,
   sort,
-  zone,
+  section,
 }: {
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
   readonly children: (pool: CardsDataContent) => ReactNode;
-  readonly filters: ZonePoolFilters;
+  readonly filters: SectionPoolFilters;
   readonly query: string;
   readonly sort: CardSort | undefined;
-  readonly zone: ZoneSection;
+  readonly section: DeckSection;
 }) {
   return (
     <CardsData
       cardCounter={cardCounter}
       cardLister={cardLister}
-      criteria={poolCriteria(zone, filters, query, sort)}
+      criteria={poolCriteria(section, filters, query, sort)}
     >
       {children}
     </CardsData>
   );
 }
 
-export { ZonePoolData };
+export { SectionPoolData };

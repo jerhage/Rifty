@@ -2,15 +2,18 @@ import { render, screen } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { PoolSheet } from "@/features/deck/presentation/components/build/pool-sheet";
-import { DEFAULT_POOL_SORT, EMPTY_POOL_FILTERS } from "@/features/deck/presentation/deck-zone-pool";
-import type { ZonePoolSheetState } from "@/features/deck/presentation/hooks/use-zone-pool";
+import {
+  DEFAULT_POOL_SORT,
+  EMPTY_POOL_FILTERS,
+} from "@/features/deck/presentation/deck-section-pool";
+import type { SectionPoolSheetState } from "@/features/deck/presentation/hooks/use-section-pool";
 
 const METRICS = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
   insets: { bottom: 0, left: 0, right: 0, top: 0 },
 };
 
-async function renderSheet(sheet: ZonePoolSheetState) {
+async function renderSheet(sheet: SectionPoolSheetState) {
   await render(
     <SafeAreaProvider initialMetrics={METRICS}>
       <PoolSheet
@@ -26,7 +29,7 @@ async function renderSheet(sheet: ZonePoolSheetState) {
         onToggleType={() => undefined}
         sheet={sheet}
         sort={DEFAULT_POOL_SORT}
-        zone="mainDeck"
+        section="mainDeck"
       />
     </SafeAreaProvider>,
   );

@@ -27,7 +27,7 @@ async function renderHeader(stepId: DeckBuildStepId) {
 }
 
 describe("BuildProgressHeader", () => {
-  it.each<DeckBuildStepId>(["legend", "chosenChampion", "zones"])(
+  it.each<DeckBuildStepId>(["legend", "chosenChampion", "sections"])(
     "should leave the builder in one press from the %s step",
     async (stepId) => {
       const { presses } = await renderHeader(stepId);
@@ -39,7 +39,7 @@ describe("BuildProgressHeader", () => {
   );
 
   it("should walk the steps rather than leave when the back arrow is pressed", async () => {
-    const { presses } = await renderHeader("zones");
+    const { presses } = await renderHeader("sections");
 
     await fireEvent.press(screen.getByRole("button", { name: "Back" }));
 

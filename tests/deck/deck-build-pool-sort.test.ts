@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react-native";
 
 import type { DeckBuildStart } from "@/features/deck/presentation/deck-build-start";
-import { poolCriteria } from "@/features/deck/presentation/deck-zone-pool";
+import { poolCriteria } from "@/features/deck/presentation/deck-section-pool";
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
 import { createTestWrapper } from "../test-wrapper";
@@ -18,9 +18,9 @@ function criteriaOf(pool: {
   readonly filters: Parameters<typeof poolCriteria>[1];
   readonly searchQuery: string;
   readonly sort: Parameters<typeof poolCriteria>[3];
-  readonly zone: Parameters<typeof poolCriteria>[0];
+  readonly section: Parameters<typeof poolCriteria>[0];
 }) {
-  return poolCriteria(pool.zone, pool.filters, pool.searchQuery, pool.sort);
+  return poolCriteria(pool.section, pool.filters, pool.searchQuery, pool.sort);
 }
 
 describe("deck build pool sort", () => {
@@ -93,14 +93,14 @@ describe("deck build pool sort", () => {
     expect(criteriaOf(result.current.pool).sort).toBeUndefined();
   });
 
-  it("should keep the chosen ordering when the zone changes, unlike the filters", async () => {
+  it("should keep the chosen ordering when the section changes, unlike the filters", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openSort());
     await act(() => result.current.pool.changeSort({ type: "energy", direction: "ascending" }));
     await act(() => result.current.pool.applySort());
 
-    await act(() => result.current.pool.setZone("runeDeck"));
+    await act(() => result.current.pool.setSection("runeDeck"));
 
     expect(criteriaOf(result.current.pool).sort).toEqual({
       type: "energy",

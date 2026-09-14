@@ -10,13 +10,13 @@ import type { Keyword } from "@/features/card/keyword/keyword";
 import { BuildProgressHeader } from "../components/build/build-progress-header";
 import { ChampionPane } from "../components/build/panes/champion-pane";
 import { LegendPane } from "../components/build/panes/legend-pane";
-import { ZonesPane } from "../components/build/panes/zones-pane";
+import { SectionsPane } from "../components/build/panes/sections-pane";
 import type { DeckBuildCapabilities, DeckBuildStart } from "../deck-build-start";
 import type {
   DeckBuildStepsState,
   DeckDraftState,
   LegendSearchState,
-  ZonePoolState,
+  SectionPoolState,
 } from "../hooks/use-deck-build";
 
 interface DeckBuildScreenProps {
@@ -28,7 +28,7 @@ interface DeckBuildScreenProps {
   readonly legends: LegendSearchState;
   readonly onOpenCard: (card: Card) => void;
   readonly onSaved: () => void;
-  readonly pool: ZonePoolState;
+  readonly pool: SectionPoolState;
   readonly start: DeckBuildStart;
   readonly steps: DeckBuildStepsState;
 }
@@ -78,8 +78,8 @@ function DeckBuildScreen({
             steps={steps}
           />
         ))
-        .with("zones", () => (
-          <ZonesPane
+        .with("sections", () => (
+          <SectionsPane
             capabilities={capabilities}
             cardCounter={cardCounter}
             cardLister={cardLister}

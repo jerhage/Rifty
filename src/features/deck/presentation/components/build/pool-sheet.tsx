@@ -7,13 +7,13 @@ import type { Keyword } from "@/features/card/keyword/keyword";
 import { CardSortFace } from "@/features/card/presentation/components/card-sort-face";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import type { ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
 
-import type { ZonePoolFilters } from "../../deck-zone-pool";
-import type { ZonePoolSheetState } from "../../hooks/use-zone-pool";
+import type { SectionPoolFilters } from "../../deck-section-pool";
+import type { SectionPoolSheetState } from "../../hooks/use-section-pool";
 import { PoolFilterFace } from "./pool-filter-face";
 
-/** One sheet with two faces, chosen by the state the zone pool holds. */
+/** One sheet with two faces, chosen by the state the section pool holds. */
 function PoolSheet({
   filters,
   keywords,
@@ -27,9 +27,9 @@ function PoolSheet({
   onToggleType,
   sheet,
   sort,
-  zone,
+  section,
 }: {
-  readonly filters: ZonePoolFilters;
+  readonly filters: SectionPoolFilters;
   readonly keywords: readonly Keyword[];
   readonly onApplyFilters: () => void;
   readonly onApplySort: () => void;
@@ -39,9 +39,9 @@ function PoolSheet({
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleKeyword: (keywordId: string) => void;
   readonly onToggleType: (typeId: CardType) => void;
-  readonly sheet: ZonePoolSheetState;
+  readonly sheet: SectionPoolSheetState;
   readonly sort: CardSort | undefined;
-  readonly zone: ZoneSection;
+  readonly section: DeckSection;
 }) {
   return (
     <BottomSheetShell isPresented={sheet.type !== "hidden"} onDismiss={onDismiss}>
@@ -59,7 +59,7 @@ function PoolSheet({
             onToggleDomain={onToggleDomain}
             onToggleKeyword={onToggleKeyword}
             onToggleType={onToggleType}
-            zone={zone}
+            section={section}
           />
         ))
         .exhaustive()}

@@ -2,23 +2,24 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
-import { ZONE_RULES, type ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
+import { COUNTED_SECTION_RULES } from "@/features/deck/deck/deck-legality";
 import { useTheme } from "@/hooks/use-theme";
 
-function ZoneSelector({
+function SectionSelector({
   counts,
   onSelect,
   selected,
 }: {
   readonly counts: Readonly<Record<string, number>>;
-  readonly onSelect: (section: ZoneSection) => void;
-  readonly selected: ZoneSection;
+  readonly onSelect: (section: DeckSection) => void;
+  readonly selected: DeckSection;
 }) {
   const theme = useTheme();
 
   return (
     <View style={styles.row}>
-      {ZONE_RULES.map((rule) => {
+      {COUNTED_SECTION_RULES.map((rule) => {
         const count = counts[rule.section] ?? 0;
         const isComplete = count === rule.requiredCount;
         const isSelected = rule.section === selected;
@@ -31,7 +32,7 @@ function ZoneSelector({
             key={rule.section}
             onPress={() => onSelect(rule.section)}
             style={({ pressed }) => [
-              styles.zone,
+              styles.section,
               {
                 backgroundColor: isSelected ? theme.backgroundSelected : theme.backgroundElement,
                 borderColor: isSelected ? theme.accent : theme.border,
@@ -77,14 +78,14 @@ function ZoneSelector({
   );
 }
 
-export { ZoneSelector };
+export { SectionSelector };
 
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     gap: Spacing.two - 2,
   },
-  zone: {
+  section: {
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     flex: 1,

@@ -37,7 +37,7 @@ interface DeckSaveControls {
 }
 
 /**
- * Owns the save's execution lifecycle and renders the save control, so the zones step below it
+ * Owns the save's execution lifecycle and renders the save control, so the sections step below it
  * receives a name-edit callback and never a write state.
  */
 function DeckSaveData({

@@ -49,7 +49,7 @@ const built: readonly ResolvedDeckEntry[] = [
 ];
 
 describe("deck contents", () => {
-  it("should split the main deck by card type and keep other zones apart", () => {
+  it("should split the main deck by card type and keep other sections apart", () => {
     expect(deckGroups(built).map((group) => [group.title, group.count])).toEqual([
       ["Legend", 1],
       ["Units", 4],

@@ -74,12 +74,12 @@ describe("deck build", () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it("should open a new deck on the first step and an edit on the zones step", async () => {
+  it("should open a new deck on the first step and an edit on the sections step", async () => {
     expect((await renderBuild()).result.current.steps.step.id).toBe("legend");
 
     const editing = await renderBuild({ type: "edit", resolvedDeck: savedEdit });
 
-    expect(editing.result.current.steps.step.id).toBe("zones");
+    expect(editing.result.current.steps.step.id).toBe("sections");
   });
 
   it("should keep every entry of the edited deck in the opening draft", async () => {
@@ -108,7 +108,7 @@ describe("deck build", () => {
     expect(result.current.steps.step.id).toBe("legend");
   });
 
-  it("should reset the pool to the legend's domains and clear the query on the zones step", async () => {
+  it("should reset the pool to the legend's domains and clear the query on the sections step", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.draft.pickLegend(legend));
@@ -119,26 +119,26 @@ describe("deck build", () => {
     await act(() => result.current.steps.next());
     await act(() => result.current.steps.next());
 
-    expect(result.current.steps.step.id).toBe("zones");
+    expect(result.current.steps.step.id).toBe("sections");
     expect(result.current.pool.filters.domainIds).toEqual(["Fury"]);
     expect(result.current.pool.filters.keywordIds).toEqual([]);
     expect(result.current.pool.query).toBe("");
   });
 
-  it("should reset the pool to the legend's domains when the zone changes", async () => {
+  it("should reset the pool to the legend's domains when the section changes", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.draft.pickLegend(legend));
-    await act(() => result.current.steps.goToStep("zones"));
+    await act(() => result.current.steps.goToStep("sections"));
     await act(() => result.current.pool.openFilters());
     await act(() => result.current.pool.toggleDomain("Fury"));
     await act(() => result.current.pool.applyFilters());
 
     expect(result.current.pool.filters.domainIds).toEqual([]);
 
-    await act(() => result.current.pool.setZone("runeDeck"));
+    await act(() => result.current.pool.setSection("runeDeck"));
 
-    expect(result.current.pool.zone).toBe("runeDeck");
+    expect(result.current.pool.section).toBe("runeDeck");
     expect(result.current.pool.filters.domainIds).toEqual(["Fury"]);
   });
 

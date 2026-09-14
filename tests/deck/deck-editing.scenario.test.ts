@@ -172,7 +172,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("should refuse a fourth copy across the zones that share an allowance", async () => {
+  it("should refuse a fourth copy across the sections that share an allowance", async () => {
     const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     store.seedDeck(
@@ -415,7 +415,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("should refuse a save that puts a fourth copy of a card in the shared zones", async () => {
+  it("should refuse a save that puts a fourth copy of a card in the shared sections", async () => {
     const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
 
@@ -453,7 +453,7 @@ describe("deck editing scenarios", () => {
     store.close();
   });
 
-  it("should save a deck whose zones are still the wrong size", async () => {
+  it("should save a deck whose sections are still the wrong size", async () => {
     const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
 

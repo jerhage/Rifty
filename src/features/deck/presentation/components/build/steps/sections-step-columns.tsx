@@ -8,11 +8,11 @@ import { useTheme } from "@/hooks/use-theme";
 import { UsableWidthProvider } from "@/hooks/use-usable-width";
 
 import { placedCardTotal, placedCards, type DeckBuildStepId } from "../../../deck-build-steps";
-import type { ZonePoolViewChoice } from "../../../deck-zone-pool";
-import type { ZoneDraftViewState, ZonePoolViewState } from "../../../hooks/use-deck-build";
-import { ZonePoolList } from "../zone-pool-list";
+import type { SectionPoolViewChoice } from "../../../deck-section-pool";
+import type { SectionDraftViewState, SectionPoolViewState } from "../../../hooks/use-deck-build";
+import { SectionPoolList } from "../section-pool-list";
 import { DeckDraftControls } from "./deck-draft-controls";
-import { ZonePoolControls } from "./zone-pool-controls";
+import { SectionPoolControls } from "./section-pool-controls";
 
 const PanelMaxWidth = 420;
 const PoolShare = 1.6;
@@ -26,7 +26,7 @@ function poolWidthFor(usableWidth: number): number {
   return usableWidth - panelWidthFor(usableWidth);
 }
 
-function ZonesStepColumns({
+function SectionsStepColumns({
   draft,
   onChangeName,
   onEditStep,
@@ -34,37 +34,37 @@ function ZonesStepColumns({
   onOpenCard,
   pool,
   viewChoice,
-  zonePool,
+  sectionPool,
 }: {
-  readonly draft: ZoneDraftViewState;
+  readonly draft: SectionDraftViewState;
   readonly onChangeName: (name: string) => void;
   readonly onEditStep: (id: DeckBuildStepId) => void;
   readonly onLoadMorePool: () => void;
   readonly onOpenCard: (card: Card) => void;
-  readonly pool: ZonePoolViewState;
-  readonly viewChoice: ZonePoolViewChoice;
-  readonly zonePool: readonly Card[];
+  readonly pool: SectionPoolViewState;
+  readonly viewChoice: SectionPoolViewChoice;
+  readonly sectionPool: readonly Card[];
 }) {
   const theme = useTheme();
   const { usableWidth } = useLayoutSize();
   const panelWidth = panelWidthFor(usableWidth);
-  const held = placedCardTotal(placedCards(draft.draft, pool.zone));
+  const held = placedCardTotal(placedCards(draft.draft, pool.section));
 
   return (
     <View style={styles.columns}>
       <View style={[styles.pool, { borderEndColor: theme.border }]}>
         <UsableWidthProvider width={usableWidth - panelWidth}>
-          <ZonePoolControls draft={draft.draft} pool={pool} viewChoice={viewChoice} />
+          <SectionPoolControls draft={draft.draft} pool={pool} viewChoice={viewChoice} />
 
-          <ZonePoolList
+          <SectionPoolList
             draft={draft.draft}
             onLoadMorePool={onLoadMorePool}
             onOpenCard={onOpenCard}
             onSetQuantity={draft.setQuantity}
             poolLayout={pool.layout}
             poolView={viewChoice.shown}
-            zone={pool.zone}
-            zonePool={zonePool}
+            section={pool.section}
+            sectionPool={sectionPool}
           />
         </UsableWidthProvider>
       </View>
@@ -75,8 +75,8 @@ function ZonesStepColumns({
             draft={draft}
             onChangeName={onChangeName}
             onEditStep={onEditStep}
-            onSelectZone={pool.setZone}
-            zone={pool.zone}
+            onSelectSection={pool.setSection}
+            section={pool.section}
           />
 
           <ThemedText
@@ -89,15 +89,15 @@ function ZonesStepColumns({
             {`In deck · ${held}`}
           </ThemedText>
 
-          <ZonePoolList
+          <SectionPoolList
             draft={draft.draft}
             onLoadMorePool={onLoadMorePool}
             onOpenCard={onOpenCard}
             onSetQuantity={draft.setQuantity}
             poolLayout="list"
             poolView="inDeck"
-            zone={pool.zone}
-            zonePool={zonePool}
+            section={pool.section}
+            sectionPool={sectionPool}
           />
         </UsableWidthProvider>
       </View>
@@ -105,7 +105,7 @@ function ZonesStepColumns({
   );
 }
 
-export { panelWidthFor, poolWidthFor, ZonesStepColumns };
+export { panelWidthFor, poolWidthFor, SectionsStepColumns };
 
 const styles = StyleSheet.create({
   columns: {

@@ -9,30 +9,33 @@ import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legali
 import {
   POOL_ROW_COLUMNS,
   POOL_TILE_COLUMNS,
-} from "@/features/deck/presentation/components/build/zone-pool-list";
+} from "@/features/deck/presentation/components/build/section-pool-list";
 import {
   panelWidthFor,
   poolWidthFor,
-} from "@/features/deck/presentation/components/build/steps/zones-step-columns";
-import { ZonesStep } from "@/features/deck/presentation/components/build/steps/zones-step";
+} from "@/features/deck/presentation/components/build/steps/sections-step-columns";
+import { SectionsStep } from "@/features/deck/presentation/components/build/steps/sections-step";
 import {
   draftComposition,
   EMPTY_DRAFT,
-  withZoneCard,
+  withSectionCard,
 } from "@/features/deck/presentation/deck-build-steps";
-import { DEFAULT_POOL_SORT, EMPTY_POOL_FILTERS } from "@/features/deck/presentation/deck-zone-pool";
+import {
+  DEFAULT_POOL_SORT,
+  EMPTY_POOL_FILTERS,
+} from "@/features/deck/presentation/deck-section-pool";
 import type {
-  ZoneDraftViewState,
-  ZonePoolViewState,
+  SectionDraftViewState,
+  SectionPoolViewState,
 } from "@/features/deck/presentation/hooks/use-deck-build";
 import { fitColumns } from "@/hooks/use-layout-size";
 
 import { card } from "../card/fixtures";
 
 const ZED: Card = card("ogn-001", "OGN", { name: "Zed" });
-const HELD = withZoneCard(EMPTY_DRAFT, "mainDeck", ZED.printingId, { card: ZED, quantity: 2 });
+const HELD = withSectionCard(EMPTY_DRAFT, "mainDeck", ZED.printingId, { card: ZED, quantity: 2 });
 
-function draftState(): ZoneDraftViewState {
+function draftState(): SectionDraftViewState {
   return {
     draft: HELD,
     setQuantity: () => undefined,
@@ -40,7 +43,7 @@ function draftState(): ZoneDraftViewState {
   };
 }
 
-function poolState(view: ZonePoolViewState["view"]): ZonePoolViewState {
+function poolState(view: SectionPoolViewState["view"]): SectionPoolViewState {
   return {
     filters: EMPTY_POOL_FILTERS,
     layout: "list",
@@ -50,11 +53,11 @@ function poolState(view: ZonePoolViewState["view"]): ZonePoolViewState {
     setLayout: () => undefined,
     setQuery: () => undefined,
     setView: () => undefined,
-    setZone: () => undefined,
+    setSection: () => undefined,
     sort: DEFAULT_POOL_SORT,
     toggleSortDirection: () => undefined,
     view,
-    zone: "mainDeck",
+    section: "mainDeck",
   };
 }
 
@@ -106,24 +109,24 @@ function frameOf(width: number, height: number) {
 async function stepAt(
   width: number,
   height: number,
-  view: ZonePoolViewState["view"],
-  zonePool: readonly Card[] = [],
+  view: SectionPoolViewState["view"],
+  sectionPool: readonly Card[] = [],
 ) {
   return await render(
-    <ZonesStep
+    <SectionsStep
       draft={draftState()}
       onChangeName={() => undefined}
       onEditStep={() => undefined}
       onLoadMorePool={() => undefined}
       onOpenCard={() => undefined}
       pool={poolState(view)}
-      zonePool={zonePool}
+      sectionPool={sectionPool}
     />,
     { wrapper: frameOf(width, height) },
   );
 }
 
-describe("ZonesStep on a phone", () => {
+describe("SectionsStep on a phone", () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -173,7 +176,7 @@ describe("the pool's ordering control", () => {
   });
 });
 
-describe("ZonesStep on a tablet", () => {
+describe("SectionsStep on a tablet", () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -226,7 +229,7 @@ describe("ZonesStep on a tablet", () => {
 
     const poolColumn = columnHolding(
       screen.getByLabelText("Search main deck"),
-      screen.getByText("No cards available for this zone yet."),
+      screen.getByText("No cards available for this section yet."),
     );
 
     expect(within(poolColumn).getByRole("tab", { name: "Pool" })).toBeTruthy();
@@ -237,10 +240,10 @@ describe("ZonesStep on a tablet", () => {
     await stepAt(1376, 1032, "pool");
 
     const spoken = screen
-      .getAllByText(/No cards available for this zone yet\.|In deck/)
+      .getAllByText(/No cards available for this section yet\.|In deck/)
       .map((node) => node.props.children);
 
-    expect(spoken).toEqual(["No cards available for this zone yet.", "In deck · 2"]);
+    expect(spoken).toEqual(["No cards available for this section yet.", "In deck · 2"]);
   });
 });
 

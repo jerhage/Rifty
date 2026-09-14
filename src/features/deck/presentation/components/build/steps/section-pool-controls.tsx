@@ -10,15 +10,15 @@ import { placedCardTotal, placedCards, type DeckBuildDraft } from "../../../deck
 import {
   activePoolFilterCount,
   searchHint,
-  zoneRuleSummary,
-  type ZonePoolViewChoice,
-} from "../../../deck-zone-pool";
-import type { ZonePoolViewState } from "../../../hooks/use-deck-build";
+  sectionRuleSummary,
+  type SectionPoolViewChoice,
+} from "../../../deck-section-pool";
+import type { SectionPoolViewState } from "../../../hooks/use-deck-build";
 import { PoolLayoutToggle } from "../pool-layout-toggle";
 import { PoolSearchRow } from "../pool-search-row";
 import { PoolViewTabs } from "../pool-view-tabs";
 
-function ZonePoolControls({
+function SectionPoolControls({
   draft,
   pool: {
     filters,
@@ -31,19 +31,19 @@ function ZonePoolControls({
     setView,
     sort,
     toggleSortDirection,
-    zone,
+    section,
   },
   viewChoice: { options, shown },
 }: {
   readonly draft: DeckBuildDraft;
-  /** Without the stored view or the zone's setter: both belong to the deck, not to the pool. */
-  readonly pool: Omit<ZonePoolViewState, "setZone" | "view">;
-  readonly viewChoice: ZonePoolViewChoice;
+  /** Without the stored view or the section's setter: both belong to the deck, not to the pool. */
+  readonly pool: Omit<SectionPoolViewState, "setSection" | "view">;
+  readonly viewChoice: SectionPoolViewChoice;
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const isPool = shown === "pool";
-  const placed = placedCards(draft, zone);
+  const placed = placedCards(draft, section);
 
   return (
     <View
@@ -69,14 +69,14 @@ function ZonePoolControls({
       </View>
 
       <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.rule}>
-        {zoneRuleSummary(zone)}
+        {sectionRuleSummary(section)}
       </ThemedText>
 
       {isPool ? (
         <>
           <PoolSearchRow
             filterCount={activePoolFilterCount(filters)}
-            hint={searchHint(zone)}
+            hint={searchHint(section)}
             onChangeQuery={setQuery}
             onOpenFilters={openFilters}
             query={query}
@@ -95,7 +95,7 @@ function ZonePoolControls({
   );
 }
 
-export { ZonePoolControls };
+export { SectionPoolControls };
 
 const styles = StyleSheet.create({
   controls: {

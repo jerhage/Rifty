@@ -7,7 +7,6 @@ import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import type { TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
 
 import {
-  deckSectionSchema,
   parseDeckVerification,
   type ChosenChampion,
   type DeckComposition,
@@ -23,15 +22,7 @@ const copyAllowanceSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("unlimited") }),
 ]);
 
-const zoneSectionSchema = deckSectionSchema.extract([
-  "mainDeck",
-  "runeDeck",
-  "battlefield",
-  "sideboard",
-]);
-
 type CopyAllowance = z.output<typeof copyAllowanceSchema>;
-type ZoneSection = z.output<typeof zoneSectionSchema>;
 
 const UNLIMITED_COPIES: CopyAllowance = { type: "unlimited" };
 
@@ -61,15 +52,21 @@ interface HeldCopies {
   readonly printingIds: PrintingId[];
 }
 
-/** How many cards a zone must hold, and how many copies of one card it will take. */
-interface ZoneRule {
-  readonly section: ZoneSection;
+/** How many cards a section must hold, and how many copies of one card it will take. */
+interface SectionRule {
+  readonly section: DeckSection;
   readonly label: string;
   readonly requiredCount: number;
   readonly copyAllowance: CopyAllowance;
 }
 
-const ZONE_RULES_BY_SECTION: Readonly<Record<ZoneSection, ZoneRule>> = {
+const SECTION_RULES_BY_SECTION: Readonly<Record<DeckSection, SectionRule>> = {
+  legend: {
+    section: "legend",
+    label: "Legend",
+    requiredCount: 1,
+    copyAllowance: { type: "limited", copies: 1 },
+  },
   mainDeck: {
     section: "mainDeck",
     label: "Main deck",
@@ -96,15 +93,16 @@ const ZONE_RULES_BY_SECTION: Readonly<Record<ZoneSection, ZoneRule>> = {
   },
 };
 
-const ZONE_RULES: readonly ZoneRule[] = [
-  ZONE_RULES_BY_SECTION.mainDeck,
-  ZONE_RULES_BY_SECTION.runeDeck,
-  ZONE_RULES_BY_SECTION.battlefield,
-  ZONE_RULES_BY_SECTION.sideboard,
+/** The sections a deck fills with a count of cards. The legend is one pick, verified on its own. */
+const COUNTED_SECTION_RULES: readonly SectionRule[] = [
+  SECTION_RULES_BY_SECTION.mainDeck,
+  SECTION_RULES_BY_SECTION.runeDeck,
+  SECTION_RULES_BY_SECTION.battlefield,
+  SECTION_RULES_BY_SECTION.sideboard,
 ];
 
-function zoneRule(section: ZoneSection): ZoneRule {
-  return ZONE_RULES_BY_SECTION[section];
+function sectionRule(section: DeckSection): SectionRule {
+  return SECTION_RULES_BY_SECTION[section];
 }
 
 /**
@@ -113,8 +111,6 @@ function zoneRule(section: ZoneSection): ZoneRule {
  */
 const SHARED_COPY_LIMIT = 3;
 const SHARED_COPY_SECTIONS: readonly DeckSection[] = ["mainDeck", "sideboard"];
-
-const LEGEND_ALLOWANCE: CopyAllowance = { type: "limited", copies: 1 };
 
 /**
  * A Chosen Champion is a champion unit. The supertype alone does not settle it: legends carry it
@@ -147,9 +143,8 @@ function sectionsSharingAllowance(section: DeckSection): readonly DeckSection[] 
 
 function copyAllowance(section: DeckSection): CopyAllowance {
   return match(section)
-    .with("legend", () => LEGEND_ALLOWANCE)
     .with("mainDeck", "sideboard", () => limitedCopies(SHARED_COPY_LIMIT))
-    .with("runeDeck", "battlefield", (zone) => zoneRule(zone).copyAllowance)
+    .with("legend", "runeDeck", "battlefield", (alone) => sectionRule(alone).copyAllowance)
     .exhaustive();
 }
 
@@ -209,7 +204,7 @@ function verifyDeck(composition: DeckComposition, ruleset: TournamentRuleset): D
   const violations = [
     ...singletonViolations(composition, "legend", "Legend"),
     ...championViolations(composition),
-    ...ZONE_RULES.flatMap((rule) => zoneViolations(composition, rule)),
+    ...COUNTED_SECTION_RULES.flatMap((rule) => sectionViolations(composition, rule)),
     ...sharedCopyViolations(composition),
   ];
 
@@ -289,9 +284,9 @@ function championSeatViolations(
       ];
 }
 
-function zoneViolations(
+function sectionViolations(
   composition: DeckComposition,
-  rule: ZoneRule,
+  rule: SectionRule,
 ): readonly DeckLegalityViolation[] {
   const violations: DeckLegalityViolation[] = [];
   const total = sectionTotal(composition, rule.section);
@@ -304,22 +299,22 @@ function zoneViolations(
     });
   }
 
-  return [...violations, ...zoneCopyViolations(composition, rule)];
+  return [...violations, ...sectionCopyViolations(composition, rule)];
 }
 
-function zoneCopyViolations(
+function sectionCopyViolations(
   composition: DeckComposition,
-  rule: ZoneRule,
+  rule: SectionRule,
 ): readonly DeckLegalityViolation[] {
   return match(rule.section)
-    .with("mainDeck", "sideboard", (): readonly DeckLegalityViolation[] => [])
-    .with("runeDeck", "battlefield", () => zoneAllowanceViolations(composition, rule))
+    .with("legend", "mainDeck", "sideboard", (): readonly DeckLegalityViolation[] => [])
+    .with("runeDeck", "battlefield", () => sectionAllowanceViolations(composition, rule))
     .exhaustive();
 }
 
-function zoneAllowanceViolations(
+function sectionAllowanceViolations(
   composition: DeckComposition,
-  rule: ZoneRule,
+  rule: SectionRule,
 ): readonly DeckLegalityViolation[] {
   return match(rule.copyAllowance)
     .with({ type: "unlimited" }, (): readonly DeckLegalityViolation[] => [])
@@ -361,14 +356,14 @@ function copiesLabel(limit: number): string {
 
 export {
   CHAMPION_UNIT,
+  COUNTED_SECTION_RULES,
   isChampionUnit,
   limitedCopies,
   narrowerAllowance,
   remainingCopies,
   RIFTBOUND_STANDARD,
+  sectionRule,
   UNLIMITED_COPIES,
   verifyDeck,
-  ZONE_RULES,
-  zoneRule,
 };
-export type { CopyAllowance, ZoneRule, ZoneSection };
+export type { CopyAllowance, SectionRule };

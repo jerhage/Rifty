@@ -100,7 +100,7 @@ function rulesBroken(
 }
 
 describe("deck legality", () => {
-  it("should accept a deck that satisfies every zone", () => {
+  it("should accept a deck that satisfies every section", () => {
     const verification = verifyDeck(withEntries(legalEntries()), RIFTBOUND_STANDARD);
 
     expect(verification).toEqual({ type: "legal", ruleset: RIFTBOUND_STANDARD });
@@ -120,7 +120,7 @@ describe("deck legality", () => {
     });
   });
 
-  it("should report every zone of an empty deck rather than stopping at the first", () => {
+  it("should report every section of an empty deck rather than stopping at the first", () => {
     expect(rulesBroken([], null)).toEqual([
       "battlefield-size",
       "chosenChampion-required",

@@ -1,6 +1,9 @@
 import { act, renderHook } from "@testing-library/react-native";
 
-import { activePoolFilterCount, poolCriteria } from "@/features/deck/presentation/deck-zone-pool";
+import {
+  activePoolFilterCount,
+  poolCriteria,
+} from "@/features/deck/presentation/deck-section-pool";
 import type { DeckBuildStart } from "@/features/deck/presentation/deck-build-start";
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
@@ -34,7 +37,7 @@ describe("deck build pool filters", () => {
     expect(result.current.pool.filters.typeIds).toEqual([]);
 
     const criteria = poolCriteria(
-      result.current.pool.zone,
+      result.current.pool.section,
       result.current.pool.filters,
       result.current.pool.searchQuery,
       result.current.pool.sort,
@@ -55,7 +58,7 @@ describe("deck build pool filters", () => {
     expect(result.current.pool.sheet).toEqual({ type: "hidden" });
     expect(
       poolCriteria(
-        result.current.pool.zone,
+        result.current.pool.section,
         result.current.pool.filters,
         result.current.pool.searchQuery,
         result.current.pool.sort,
@@ -133,7 +136,7 @@ describe("deck build pool filters", () => {
     expect(activePoolFilterCount(result.current.pool.filters)).toBe(2);
   });
 
-  it("should clear both the applied filters and the draft when the zone changes", async () => {
+  it("should clear both the applied filters and the draft when the section changes", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openFilters());
@@ -142,13 +145,13 @@ describe("deck build pool filters", () => {
     await act(() => result.current.pool.openFilters());
     await act(() => result.current.pool.toggleKeyword("tank"));
 
-    await act(() => result.current.pool.setZone("runeDeck"));
+    await act(() => result.current.pool.setSection("runeDeck"));
 
     expect(result.current.pool.filters.keywordIds).toEqual([]);
     expect(result.current.pool.draftFilters.keywordIds).toEqual([]);
   });
 
-  it("should clear the search text when the zone changes", async () => {
+  it("should clear the search text when the section changes", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.setQuery("volibear"));
@@ -156,7 +159,7 @@ describe("deck build pool filters", () => {
       jest.advanceTimersByTime(300);
     });
 
-    await act(() => result.current.pool.setZone("runeDeck"));
+    await act(() => result.current.pool.setSection("runeDeck"));
     await act(() => {
       jest.advanceTimersByTime(300);
     });
@@ -180,7 +183,7 @@ describe("deck build pool filters", () => {
     expect(result.current.pool.searchQuery).toBe("volibear");
     expect(
       poolCriteria(
-        result.current.pool.zone,
+        result.current.pool.section,
         result.current.pool.filters,
         result.current.pool.searchQuery,
         result.current.pool.sort,

@@ -5,50 +5,55 @@ import type { CardListCriteria, CardSort } from "@/features/card/card-list-crite
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import { sortForId } from "@/features/card/presentation/card-sort-options";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import { zoneRule, type ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
+import { sectionRule } from "@/features/deck/deck/deck-legality";
 import type { LayoutClass } from "@/hooks/use-layout-size";
 
-interface ZonePoolFilters {
+interface SectionPoolFilters {
   readonly domainIds: readonly CardDomain[];
   readonly keywordIds: readonly string[];
   readonly typeIds: readonly CardType[];
 }
 
-const EMPTY_POOL_FILTERS: ZonePoolFilters = {
+const EMPTY_POOL_FILTERS: SectionPoolFilters = {
   domainIds: [],
   keywordIds: [],
   typeIds: [],
 };
 
-const RUNE_ZONE_TYPES: readonly CardType[] = ["Rune"];
-const BATTLEFIELD_ZONE_TYPES: readonly CardType[] = ["Battlefield"];
-const PLAYABLE_ZONE_TYPES: readonly CardType[] = ["Unit", "Spell", "Gear"];
+const LEGEND_SECTION_TYPES: readonly CardType[] = ["Legend"];
+const RUNE_SECTION_TYPES: readonly CardType[] = ["Rune"];
+const BATTLEFIELD_SECTION_TYPES: readonly CardType[] = ["Battlefield"];
+const PLAYABLE_SECTION_TYPES: readonly CardType[] = ["Unit", "Spell", "Gear"];
 
-type ZonePoolLayout = "list" | "grid";
+type SectionPoolLayout = "list" | "grid";
 
-type ZonePoolView = "pool" | "inDeck" | "roles";
+type SectionPoolView = "pool" | "inDeck" | "roles";
 
-const STACKED_POOL_VIEWS: readonly ZonePoolView[] = ["pool", "inDeck", "roles"];
-const COLUMN_POOL_VIEWS: readonly ZonePoolView[] = ["pool", "roles"];
+const STACKED_POOL_VIEWS: readonly SectionPoolView[] = ["pool", "inDeck", "roles"];
+const COLUMN_POOL_VIEWS: readonly SectionPoolView[] = ["pool", "roles"];
 
-interface ZonePoolViewChoice {
-  readonly options: readonly ZonePoolView[];
-  readonly shown: ZonePoolView;
+interface SectionPoolViewChoice {
+  readonly options: readonly SectionPoolView[];
+  readonly shown: SectionPoolView;
 }
 
 /**
  * Two columns keep the deck's contents on screen, so "in deck" stops being somewhere to switch to.
  * The stored view is read rather than rewritten, so one column gets it back exactly as it was left.
  */
-function zonePoolViewChoice(view: ZonePoolView, layoutClass: LayoutClass): ZonePoolViewChoice {
+function sectionPoolViewChoice(
+  view: SectionPoolView,
+  layoutClass: LayoutClass,
+): SectionPoolViewChoice {
   return match(layoutClass)
     .with("phone", () => ({ options: STACKED_POOL_VIEWS, shown: view }))
     .with("tablet", () => ({ options: COLUMN_POOL_VIEWS, shown: viewBesideTheDeck(view) }))
     .exhaustive();
 }
 
-function viewBesideTheDeck(view: ZonePoolView): ZonePoolView {
-  return match<ZonePoolView, ZonePoolView>(view)
+function viewBesideTheDeck(view: SectionPoolView): SectionPoolView {
+  return match<SectionPoolView, SectionPoolView>(view)
     .with("inDeck", () => "pool")
     .with("pool", "roles", (kept) => kept)
     .exhaustive();
@@ -58,25 +63,26 @@ function viewBesideTheDeck(view: ZonePoolView): ZonePoolView {
 const DEFAULT_POOL_SORT: CardSort | undefined = sortForId("name");
 
 /** A deck plays within its legend's domains, so the pool starts narrowed to them. */
-function defaultPoolFilters(legend: Card | null): ZonePoolFilters {
+function defaultPoolFilters(legend: Card | null): SectionPoolFilters {
   return { ...EMPTY_POOL_FILTERS, domainIds: legend ? [...legend.domainIds] : [] };
 }
 
-/** Card types a zone will accept. Runes and battlefields take exactly one, so they offer no choice. */
-function zoneCardTypes(section: ZoneSection): readonly CardType[] {
+/** Card types a section will accept. A legend, a rune and a battlefield are each their own type. */
+function sectionCardTypes(section: DeckSection): readonly CardType[] {
   return match(section)
-    .with("runeDeck", () => RUNE_ZONE_TYPES)
-    .with("battlefield", () => BATTLEFIELD_ZONE_TYPES)
-    .with("mainDeck", "sideboard", () => PLAYABLE_ZONE_TYPES)
+    .with("legend", () => LEGEND_SECTION_TYPES)
+    .with("runeDeck", () => RUNE_SECTION_TYPES)
+    .with("battlefield", () => BATTLEFIELD_SECTION_TYPES)
+    .with("mainDeck", "sideboard", () => PLAYABLE_SECTION_TYPES)
     .exhaustive();
 }
 
-function allowsTypeChoice(section: ZoneSection): boolean {
-  return zoneCardTypes(section).length > 1;
+function allowsTypeChoice(section: DeckSection): boolean {
+  return sectionCardTypes(section).length > 1;
 }
 
-function zoneRuleSummary(section: ZoneSection): string {
-  const rule = zoneRule(section);
+function sectionRuleSummary(section: DeckSection): string {
+  const rule = sectionRule(section);
 
   const copies = match(rule.copyAllowance)
     .with({ type: "unlimited" }, () => "no copy limit")
@@ -87,21 +93,21 @@ function zoneRuleSummary(section: ZoneSection): string {
   return `${rule.requiredCount} cards · ${copies}`;
 }
 
-function searchHint(section: ZoneSection): string {
-  return `Search ${zoneRule(section).label.toLowerCase()}`;
+function searchHint(section: DeckSection): string {
+  return `Search ${sectionRule(section).label.toLowerCase()}`;
 }
 
 function poolCriteria(
-  section: ZoneSection,
-  filters: ZonePoolFilters,
+  section: DeckSection,
+  filters: SectionPoolFilters,
   query: string,
   sort: CardSort | undefined,
 ): Omit<CardListCriteria, "limit" | "offset"> {
   const text = query.trim();
-  const chosenTypes = filters.typeIds.filter((type) => zoneCardTypes(section).includes(type));
+  const chosenTypes = filters.typeIds.filter((type) => sectionCardTypes(section).includes(type));
 
   return {
-    typeIds: chosenTypes.length > 0 ? chosenTypes : [...zoneCardTypes(section)],
+    typeIds: chosenTypes.length > 0 ? chosenTypes : [...sectionCardTypes(section)],
     // A deck plays anything inside its legend's domains, so several domains mean any of them.
     anyDomainIds: filters.domainIds.length > 0 ? [...filters.domainIds] : undefined,
     keywordIds: filters.keywordIds.length > 0 ? [...filters.keywordIds] : undefined,
@@ -117,14 +123,14 @@ function legendCriteria(
   const text = query.trim();
 
   return {
-    typeIds: ["Legend"],
+    typeIds: [...LEGEND_SECTION_TYPES],
     // All of them: picking Calm and Mind asks for a legend that carries both, not either.
     domainIds: domainIds.length > 0 ? [...domainIds] : undefined,
     search: text ? { type: "nameOrRulesText", text } : undefined,
   };
 }
 
-function activePoolFilterCount(filters: ZonePoolFilters): number {
+function activePoolFilterCount(filters: SectionPoolFilters): number {
   return filters.domainIds.length + filters.keywordIds.length + filters.typeIds.length;
 }
 
@@ -137,8 +143,8 @@ export {
   legendCriteria,
   poolCriteria,
   searchHint,
-  zoneCardTypes,
-  zonePoolViewChoice,
-  zoneRuleSummary,
+  sectionCardTypes,
+  sectionPoolViewChoice,
+  sectionRuleSummary,
 };
-export type { ZonePoolFilters, ZonePoolLayout, ZonePoolView, ZonePoolViewChoice };
+export type { SectionPoolFilters, SectionPoolLayout, SectionPoolView, SectionPoolViewChoice };

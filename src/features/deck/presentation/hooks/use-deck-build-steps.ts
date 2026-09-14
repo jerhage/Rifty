@@ -49,8 +49,8 @@ function useDeckBuildSteps(
 function advanceFrom(id: DeckBuildStepId): StepAdvance {
   return match<DeckBuildStepId, StepAdvance>(id)
     .with("legend", () => ({ type: "step", id: "chosenChampion" }))
-    .with("chosenChampion", () => ({ type: "step", id: "zones" }))
-    .with("zones", () => ({ type: "finished" }))
+    .with("chosenChampion", () => ({ type: "step", id: "sections" }))
+    .with("sections", () => ({ type: "finished" }))
     .exhaustive();
 }
 
@@ -58,14 +58,14 @@ function retreatFrom(id: DeckBuildStepId): StepRetreat {
   return match<DeckBuildStepId, StepRetreat>(id)
     .with("legend", () => ({ type: "exit" }))
     .with("chosenChampion", () => ({ type: "step", id: "legend" }))
-    .with("zones", () => ({ type: "step", id: "chosenChampion" }))
+    .with("sections", () => ({ type: "step", id: "chosenChampion" }))
     .exhaustive();
 }
 
 function openingStepId(start: DeckBuildStart): DeckBuildStepId {
   return match<DeckBuildStart, DeckBuildStepId>(start)
     .with({ type: "new" }, () => "legend")
-    .with({ type: "edit" }, () => "zones")
+    .with({ type: "edit" }, () => "sections")
     .exhaustive();
 }
 

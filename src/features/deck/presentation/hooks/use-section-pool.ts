@@ -5,7 +5,7 @@ import type { CardSort } from "@/features/card/card-list-criteria";
 import { toggledSort } from "@/features/card/presentation/card-sort-options";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import type { ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useDraftSheet } from "@/hooks/use-draft-sheet";
 import { toggle } from "@/shared/toggle";
@@ -13,25 +13,25 @@ import { toggle } from "@/shared/toggle";
 import {
   DEFAULT_POOL_SORT,
   defaultPoolFilters,
-  type ZonePoolFilters,
-  type ZonePoolLayout,
-  type ZonePoolView,
-} from "../deck-zone-pool";
+  type SectionPoolFilters,
+  type SectionPoolLayout,
+  type SectionPoolView,
+} from "../deck-section-pool";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
 /** Which face of the pool's bottom sheet is showing, if any. */
-type ZonePoolSheetState =
+type SectionPoolSheetState =
   | { readonly type: "hidden" }
   | { readonly type: "filter" }
   | { readonly type: "sort" };
 
-function useZonePool(legend: Card | null) {
-  const [zone, setZone] = useState<ZoneSection>("mainDeck");
+function useSectionPool(legend: Card | null) {
+  const [section, setSection] = useState<DeckSection>("mainDeck");
   const [query, setQuery] = useState("");
-  const [layout, setLayout] = useState<ZonePoolLayout>("list");
-  const [view, setView] = useState<ZonePoolView>("pool");
-  const filterSheet = useDraftSheet<ZonePoolFilters>(() => defaultPoolFilters(legend));
+  const [layout, setLayout] = useState<SectionPoolLayout>("list");
+  const [view, setView] = useState<SectionPoolView>("pool");
+  const filterSheet = useDraftSheet<SectionPoolFilters>(() => defaultPoolFilters(legend));
   const sortSheet = useDraftSheet<CardSort | undefined>(() => DEFAULT_POOL_SORT);
   const { dismiss: dismissFilters, editDraft, settle } = filterSheet;
   const { dismiss: dismissSort, editDraft: editSortDraft, settle: settleSort } = sortSheet;
@@ -83,7 +83,7 @@ function useZonePool(legend: Card | null) {
     settleSort(toggledSort(appliedSort));
   }, [appliedSort, settleSort]);
 
-  /** Each zone draws from its own pool, so the filters and the search go; the ordering stays. */
+  /** Each section draws from its own pool, so the filters and the search go; the ordering stays. */
   const resetFor = useCallback(
     (subject: Card | null) => {
       settle(defaultPoolFilters(subject));
@@ -110,7 +110,7 @@ function useZonePool(legend: Card | null) {
     setLayout,
     setQuery,
     setView,
-    setZone,
+    setSection,
     sheet: poolSheetState(filterSheet.isOpen, sortSheet.isOpen),
     sort: appliedSort,
     toggleDomain,
@@ -118,16 +118,16 @@ function useZonePool(legend: Card | null) {
     toggleSortDirection,
     toggleType,
     view,
-    zone,
+    section,
   };
 }
 
-function poolSheetState(isFilterOpen: boolean, isSortOpen: boolean): ZonePoolSheetState {
+function poolSheetState(isFilterOpen: boolean, isSortOpen: boolean): SectionPoolSheetState {
   if (isFilterOpen) return { type: "filter" };
   if (isSortOpen) return { type: "sort" };
 
   return { type: "hidden" };
 }
 
-export { useZonePool };
-export type { ZonePoolSheetState };
+export { useSectionPool };
+export type { SectionPoolSheetState };

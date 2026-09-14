@@ -4,17 +4,17 @@ import type { CardLister } from "@/features/card/card-lister";
 import type { Keyword } from "@/features/card/keyword/keyword";
 
 import { DeckSaveData } from "../../../data/deck-save-data";
-import { ZonePoolData } from "../../../data/zone-pool-data";
+import { SectionPoolData } from "../../../data/section-pool-data";
 import type { DeckBuildCapabilities, DeckBuildStart } from "../../../deck-build-start";
 import type {
   DeckBuildStepsState,
   DeckDraftState,
-  ZonePoolState,
+  SectionPoolState,
 } from "../../../hooks/use-deck-build";
 import { PoolSheet } from "../pool-sheet";
-import { ZonesStep } from "../steps/zones-step";
+import { SectionsStep } from "../steps/sections-step";
 
-interface ZonesPaneProps {
+interface SectionsPaneProps {
   readonly capabilities: DeckBuildCapabilities;
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
@@ -22,12 +22,12 @@ interface ZonesPaneProps {
   readonly keywords: readonly Keyword[];
   readonly onOpenCard: (card: Card) => void;
   readonly onSaved: () => void;
-  readonly pool: ZonePoolState;
+  readonly pool: SectionPoolState;
   readonly start: DeckBuildStart;
   readonly steps: DeckBuildStepsState;
 }
 
-function ZonesPane({
+function SectionsPane({
   capabilities,
   cardCounter,
   cardLister,
@@ -38,17 +38,17 @@ function ZonesPane({
   pool,
   start,
   steps,
-}: ZonesPaneProps) {
+}: SectionsPaneProps) {
   return (
-    <ZonePoolData
+    <SectionPoolData
       cardCounter={cardCounter}
       cardLister={cardLister}
       filters={pool.filters}
       query={pool.searchQuery}
       sort={pool.sort}
-      zone={pool.zone}
+      section={pool.section}
     >
-      {(zonePool) => (
+      {(sectionPool) => (
         <>
           <DeckSaveData
             capabilities={capabilities}
@@ -63,14 +63,14 @@ function ZonesPane({
             start={start}
           >
             {({ changeName }) => (
-              <ZonesStep
+              <SectionsStep
                 draft={draft}
                 onChangeName={changeName}
                 onEditStep={steps.goToStep}
-                onLoadMorePool={zonePool.loadMore}
+                onLoadMorePool={sectionPool.loadMore}
                 onOpenCard={onOpenCard}
                 pool={pool}
-                zonePool={zonePool.cards}
+                sectionPool={sectionPool.cards}
               />
             )}
           </DeckSaveData>
@@ -87,13 +87,13 @@ function ZonesPane({
             onToggleType={pool.toggleType}
             sheet={pool.sheet}
             sort={pool.draftSort}
-            zone={pool.zone}
+            section={pool.section}
           />
         </>
       )}
-    </ZonePoolData>
+    </SectionPoolData>
   );
 }
 
-export { ZonesPane };
-export type { ZonesPaneProps };
+export { SectionsPane };
+export type { SectionsPaneProps };

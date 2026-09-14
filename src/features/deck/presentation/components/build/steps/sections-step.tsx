@@ -4,35 +4,35 @@ import type { Card } from "@/features/card/card";
 import { useLayoutSize } from "@/hooks/use-layout-size";
 
 import type { DeckBuildStepId } from "../../../deck-build-steps";
-import { zonePoolViewChoice } from "../../../deck-zone-pool";
-import type { ZoneDraftViewState, ZonePoolViewState } from "../../../hooks/use-deck-build";
-import { ZonePoolList } from "../zone-pool-list";
+import { sectionPoolViewChoice } from "../../../deck-section-pool";
+import type { SectionDraftViewState, SectionPoolViewState } from "../../../hooks/use-deck-build";
+import { SectionPoolList } from "../section-pool-list";
 import { DeckDraftControls } from "./deck-draft-controls";
-import { ZonePoolControls } from "./zone-pool-controls";
-import { ZonesStepColumns } from "./zones-step-columns";
+import { SectionPoolControls } from "./section-pool-controls";
+import { SectionsStepColumns } from "./sections-step-columns";
 
-interface ZonesStepProps {
-  readonly draft: ZoneDraftViewState;
+interface SectionsStepProps {
+  readonly draft: SectionDraftViewState;
   readonly onChangeName: (name: string) => void;
   readonly onEditStep: (id: DeckBuildStepId) => void;
   readonly onLoadMorePool: () => void;
   readonly onOpenCard: (card: Card) => void;
-  readonly pool: ZonePoolViewState;
-  readonly zonePool: readonly Card[];
+  readonly pool: SectionPoolViewState;
+  readonly sectionPool: readonly Card[];
 }
 
 /** The one place this step reads the layout class: the pool, the tiles and the controls never do. */
-function ZonesStep({
+function SectionsStep({
   draft,
   onChangeName,
   onEditStep,
   onLoadMorePool,
   onOpenCard,
   pool,
-  zonePool,
-}: ZonesStepProps) {
+  sectionPool,
+}: SectionsStepProps) {
   const { layoutClass } = useLayoutSize();
-  const viewChoice = zonePoolViewChoice(pool.view, layoutClass);
+  const viewChoice = sectionPoolViewChoice(pool.view, layoutClass);
 
   return match(layoutClass)
     .with("phone", () => (
@@ -41,26 +41,26 @@ function ZonesStep({
           draft={draft}
           onChangeName={onChangeName}
           onEditStep={onEditStep}
-          onSelectZone={pool.setZone}
-          zone={pool.zone}
+          onSelectSection={pool.setSection}
+          section={pool.section}
         />
 
-        <ZonePoolControls draft={draft.draft} pool={pool} viewChoice={viewChoice} />
+        <SectionPoolControls draft={draft.draft} pool={pool} viewChoice={viewChoice} />
 
-        <ZonePoolList
+        <SectionPoolList
           draft={draft.draft}
           onLoadMorePool={onLoadMorePool}
           onOpenCard={onOpenCard}
           onSetQuantity={draft.setQuantity}
           poolLayout={pool.layout}
           poolView={viewChoice.shown}
-          zone={pool.zone}
-          zonePool={zonePool}
+          section={pool.section}
+          sectionPool={sectionPool}
         />
       </>
     ))
     .with("tablet", () => (
-      <ZonesStepColumns
+      <SectionsStepColumns
         draft={draft}
         onChangeName={onChangeName}
         onEditStep={onEditStep}
@@ -68,11 +68,11 @@ function ZonesStep({
         onOpenCard={onOpenCard}
         pool={pool}
         viewChoice={viewChoice}
-        zonePool={zonePool}
+        sectionPool={sectionPool}
       />
     ))
     .exhaustive();
 }
 
-export { ZonesStep };
-export type { ZonesStepProps };
+export { SectionsStep };
+export type { SectionsStepProps };

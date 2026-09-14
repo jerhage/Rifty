@@ -2,14 +2,14 @@ import { GridIcon } from "@/components/ui/atoms/grid-icon";
 import { RowsIcon } from "@/components/ui/atoms/rows-icon";
 import { SegmentedControl, SegmentedOption } from "@/components/ui/atoms/segmented-control";
 
-import type { ZonePoolLayout } from "../../deck-zone-pool";
+import type { SectionPoolLayout } from "../../deck-section-pool";
 
 function PoolLayoutToggle({
   layout,
   onSelect,
 }: {
-  readonly layout: ZonePoolLayout;
-  readonly onSelect: (layout: ZonePoolLayout) => void;
+  readonly layout: SectionPoolLayout;
+  readonly onSelect: (layout: SectionPoolLayout) => void;
 }) {
   return (
     <SegmentedControl size="compact">

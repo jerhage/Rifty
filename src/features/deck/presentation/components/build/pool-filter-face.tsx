@@ -11,15 +11,15 @@ import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import { ORDERED_DOMAINS, type CardDomain } from "@/features/card/value-objects/card-domain";
 import type { CardType } from "@/features/card/value-objects/card-type";
-import type { ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
 import { useDomainColors, useKeywordColor } from "@/hooks/use-theme";
 
 import {
   allowsTypeChoice,
-  zoneCardTypes,
-  zoneRuleSummary,
-  type ZonePoolFilters,
-} from "../../deck-zone-pool";
+  sectionCardTypes,
+  sectionRuleSummary,
+  type SectionPoolFilters,
+} from "../../deck-section-pool";
 
 function PoolFilterFace({
   filters,
@@ -29,16 +29,16 @@ function PoolFilterFace({
   onToggleDomain,
   onToggleKeyword,
   onToggleType,
-  zone,
+  section,
 }: {
-  readonly filters: ZonePoolFilters;
+  readonly filters: SectionPoolFilters;
   readonly keywords: readonly Keyword[];
   readonly onApply: () => void;
   readonly onReset: () => void;
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleKeyword: (keywordId: string) => void;
   readonly onToggleType: (typeId: CardType) => void;
-  readonly zone: ZoneSection;
+  readonly section: DeckSection;
 }) {
   const keywordColor = useKeywordColor();
   const domainColors = useDomainColors();
@@ -63,10 +63,10 @@ function PoolFilterFace({
             </View>
           </LabelledSection>
 
-          {allowsTypeChoice(zone) ? (
+          {allowsTypeChoice(section) ? (
             <LabelledSection label="Card type">
               <View style={styles.chips}>
-                {zoneCardTypes(zone).map((typeId) => (
+                {sectionCardTypes(section).map((typeId) => (
                   <Chip
                     key={typeId}
                     label={typeId}
@@ -90,7 +90,7 @@ function PoolFilterFace({
           </LabelledSection>
 
           <ThemedText themeColor="textTertiary" type="body">
-            {zoneRuleSummary(zone)}
+            {sectionRuleSummary(section)}
           </ThemedText>
         </>
       }

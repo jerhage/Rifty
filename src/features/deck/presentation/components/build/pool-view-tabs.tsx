@@ -2,7 +2,7 @@ import { match } from "ts-pattern";
 
 import { SegmentedControl, SegmentedOption } from "@/components/ui/atoms/segmented-control";
 
-import type { ZonePoolView } from "../../deck-zone-pool";
+import type { SectionPoolView } from "../../deck-section-pool";
 
 function PoolViewTabs({
   deckCount,
@@ -11,9 +11,9 @@ function PoolViewTabs({
   view,
 }: {
   readonly deckCount: number;
-  readonly onSelect: (view: ZonePoolView) => void;
-  readonly options: readonly ZonePoolView[];
-  readonly view: ZonePoolView;
+  readonly onSelect: (view: SectionPoolView) => void;
+  readonly options: readonly SectionPoolView[];
+  readonly view: SectionPoolView;
 }) {
   return (
     <SegmentedControl size="compact">
@@ -37,12 +37,12 @@ function PoolViewTab({
   selected,
 }: {
   readonly deckCount: number;
-  readonly onSelect: (view: ZonePoolView) => void;
-  readonly option: ZonePoolView;
+  readonly onSelect: (view: SectionPoolView) => void;
+  readonly option: SectionPoolView;
   readonly selected: boolean;
 }) {
   const { accessibilityLabel, label } = match<
-    ZonePoolView,
+    SectionPoolView,
     { readonly accessibilityLabel: string; readonly label: string }
   >(option)
     .with("pool", () => ({ accessibilityLabel: "Pool", label: "Pool" }))

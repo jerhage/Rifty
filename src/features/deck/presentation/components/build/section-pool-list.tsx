@@ -6,12 +6,12 @@ import { match } from "ts-pattern";
 import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
-import type { ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
 import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 
 import { minimumForCard, remainingForCard } from "../../deck-build-allowance";
 import { placedCards, quantityOf, type DeckBuildDraft } from "../../deck-build-steps";
-import type { ZonePoolLayout, ZonePoolView } from "../../deck-zone-pool";
+import type { SectionPoolLayout, SectionPoolView } from "../../deck-section-pool";
 import { BuildCardRow } from "./build-card-row";
 import { BuildCardTile } from "./build-card-tile";
 
@@ -26,24 +26,24 @@ const POOL_ROW_COLUMNS: ColumnSpec = {
   sidePadding: Spacing.three,
 };
 
-function ZonePoolList({
+function SectionPoolList({
   draft,
   onLoadMorePool,
   onOpenCard,
   onSetQuantity,
   poolLayout,
   poolView,
-  zone,
-  zonePool,
+  section,
+  sectionPool,
 }: {
   readonly draft: DeckBuildDraft;
   readonly onLoadMorePool: () => void;
   readonly onOpenCard: (card: Card) => void;
-  readonly onSetQuantity: (section: ZoneSection, card: Card, quantity: number) => void;
-  readonly poolLayout: ZonePoolLayout;
-  readonly poolView: ZonePoolView;
-  readonly zone: ZoneSection;
-  readonly zonePool: readonly Card[];
+  readonly onSetQuantity: (section: DeckSection, card: Card, quantity: number) => void;
+  readonly poolLayout: SectionPoolLayout;
+  readonly poolView: SectionPoolView;
+  readonly section: DeckSection;
+  readonly sectionPool: readonly Card[];
 }) {
   const insets = useSafeAreaInsets();
   const isGrid = poolLayout === "grid";
@@ -53,8 +53,8 @@ function ZonePoolList({
   const wrapperStyle = isGrid ? styles.tileRow : styles.rowRow;
 
   const isPool = poolView === "pool";
-  const placed = placedCards(draft, zone);
-  const listed = isPool ? zonePool : placed.map((entry) => entry.card);
+  const placed = placedCards(draft, section);
+  const listed = isPool ? sectionPool : placed.map((entry) => entry.card);
 
   return match(poolView)
     .with("roles", () => (
@@ -79,7 +79,9 @@ function ZonePoolList({
         ListEmptyComponent={
           <EmptyState
             message={
-              isPool ? "No cards available for this zone yet." : "Nothing added to this zone yet."
+              isPool
+                ? "No cards available for this section yet."
+                : "Nothing added to this section yet."
             }
           />
         }
@@ -88,12 +90,12 @@ function ZonePoolList({
         onEndReachedThreshold={0.5}
         renderItem={({ item }) => {
           const placement = {
-            allowance: remainingForCard(draft, zone, item),
+            allowance: remainingForCard(draft, section, item),
             card: item,
-            minQuantity: minimumForCard(draft, zone, item),
-            onChange: (quantity: number) => onSetQuantity(zone, item, quantity),
+            minQuantity: minimumForCard(draft, section, item),
+            onChange: (quantity: number) => onSetQuantity(section, item, quantity),
             onOpenCard,
-            quantity: quantityOf(draft, zone, item.printingId),
+            quantity: quantityOf(draft, section, item.printingId),
           };
 
           return isGrid ? (
@@ -108,7 +110,7 @@ function ZonePoolList({
     .exhaustive();
 }
 
-export { POOL_ROW_COLUMNS, POOL_TILE_COLUMNS, ZonePoolList };
+export { POOL_ROW_COLUMNS, POOL_TILE_COLUMNS, SectionPoolList };
 
 const styles = StyleSheet.create({
   poolList: {

@@ -29,7 +29,7 @@ interface SetDeckCardQuantityCapabilities {
 }
 
 /**
- * Copy limits are enforced here, unlike zone sizes: a deck is allowed to sit at 38 of 40 while you
+ * Copy limits are enforced here, unlike section sizes: a deck is allowed to sit at 38 of 40 while you
  * work on it, but a fourth copy of a card is never a legal position to pass through.
  */
 async function setDeckCardQuantity(

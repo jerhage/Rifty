@@ -16,7 +16,7 @@ Another planned feature is multiple language support to make providing translati
     <td align="center"><img src="docs/screenshots/card-name-search.webp" alt="Card browser filtered by domain and type" width="200"></td>
     <td align="center"><img src="docs/screenshots/deck-list.webp" alt="Deck list" width="200"></td>
     <td align="center"><img src="docs/screenshots/deck-detail.webp" alt="Deck detail showing energy curve, speed mix and keyword panels" width="200"></td>
-    <td align="center"><img src="docs/screenshots/deck-build.webp" alt="Deck builder step three, adding cards to a zone" width="200"></td>
+    <td align="center"><img src="docs/screenshots/deck-build.webp" alt="Deck builder step three, adding cards to a section" width="200"></td>
   </tr>
   <tr>
     <td align="center">Browsing cards</td>

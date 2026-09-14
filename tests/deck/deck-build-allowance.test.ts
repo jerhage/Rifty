@@ -1,5 +1,5 @@
 import type { Card } from "@/features/card/card";
-import type { ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
 import {
   minimumForCard,
   remainingForCard,
@@ -8,8 +8,8 @@ import {
   chooseChampion,
   EMPTY_DRAFT,
   quantityOf,
-  withZoneCard,
-  zoneCounts,
+  withSectionCard,
+  sectionCounts,
   type DeckBuildDraft,
 } from "@/features/deck/presentation/deck-build-steps";
 
@@ -32,12 +32,12 @@ const survivorAlt = card("survivor-alt", "OGN", {
 const evolutionary = card("evolutionary", "OGN", { name: "Kai'Sa - Evolutionary" });
 const rune = card("rune", "OGN", { name: "Fury Rune" });
 
-type Placement = readonly [ZoneSection, Card, number];
+type Placement = readonly [DeckSection, Card, number];
 
 function draftWith(...placements: readonly Placement[]): DeckBuildDraft {
   return placements.reduce<DeckBuildDraft>(
     (draft, [section, placed, quantity]) =>
-      withZoneCard(draft, section, placed.printingId, { card: placed, quantity }),
+      withSectionCard(draft, section, placed.printingId, { card: placed, quantity }),
     EMPTY_DRAFT,
   );
 }
@@ -64,7 +64,7 @@ describe("deck build allowance", () => {
   it("should seat the chosen champion in the main deck as an ordinary card", () => {
     const draft = chooseChampion(EMPTY_DRAFT, survivor);
 
-    expect(zoneCounts(draft).mainDeck).toBe(1);
+    expect(sectionCounts(draft).mainDeck).toBe(1);
     expect(quantityOf(draft, "mainDeck", survivor.printingId)).toBe(1);
     expect(quantityOf(draft, "mainDeck", survivorAlt.printingId)).toBe(0);
   });
@@ -119,7 +119,7 @@ describe("deck build allowance", () => {
     ).toEqual({ type: "limited", copies: 0 });
   });
 
-  it("should ignore the zone's own copies, which the stepper already owns", () => {
+  it("should ignore the section's own copies, which the stepper already owns", () => {
     const draft = draftWith(["mainDeck", survivor, 2]);
 
     expect(remainingForCard(draft, "mainDeck", survivor)).toEqual({ type: "limited", copies: 3 });

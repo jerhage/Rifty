@@ -1,43 +1,43 @@
 import { useCallback } from "react";
 
-import type { ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
 
 import type { DeckBuildStart } from "../deck-build-start";
 
 import { useDeckBuildSteps } from "./use-deck-build-steps";
 import { useDeckDraft } from "./use-deck-draft";
 import { useLegendSearch } from "./use-legend-search";
-import { useZonePool } from "./use-zone-pool";
+import { useSectionPool } from "./use-section-pool";
 
 function useDeckBuild(start: DeckBuildStart, { onExit }: { readonly onExit: () => void }) {
   const draft = useDeckDraft(start);
   const legend = draft.draft.legend;
-  const pool = useZonePool(legend);
+  const pool = useSectionPool(legend);
   const legends = useLegendSearch();
 
-  const { resetFor, setZone } = pool;
+  const { resetFor, setSection } = pool;
 
   const steps = useDeckBuildSteps(start, {
-    /** The zones step opens on the legend's own domains rather than the whole catalog. */
+    /** The sections step opens on the legend's own domains rather than the whole catalog. */
     onEnterStep: (step) => {
-      if (step.id === "zones") resetFor(legend);
+      if (step.id === "sections") resetFor(legend);
     },
     onExit,
   });
 
-  /** Each zone draws from a different pool, so its filters do not carry across. */
-  const selectZone = useCallback(
-    (section: ZoneSection) => {
-      setZone(section);
+  /** Each section draws from a different pool, so its filters do not carry across. */
+  const selectSection = useCallback(
+    (section: DeckSection) => {
+      setSection(section);
       resetFor(legend);
     },
-    [legend, resetFor, setZone],
+    [legend, resetFor, setSection],
   );
 
   return {
     draft,
     legends,
-    pool: { ...pool, setZone: selectZone },
+    pool: { ...pool, setSection: selectSection },
     steps,
   };
 }
@@ -46,15 +46,15 @@ type DeckBuildState = ReturnType<typeof useDeckBuild>;
 type DeckDraftState = DeckBuildState["draft"];
 type DeckBuildStepsState = DeckBuildState["steps"];
 type LegendSearchState = DeckBuildState["legends"];
-type ZonePoolState = DeckBuildState["pool"];
+type SectionPoolState = DeckBuildState["pool"];
 
 type LegendSearchViewState = Pick<
   LegendSearchState,
   "domainIds" | "query" | "setQuery" | "toggleDomain"
 >;
-type ZoneDraftViewState = Pick<DeckDraftState, "draft" | "setQuantity" | "verification">;
-type ZonePoolViewState = Pick<
-  ZonePoolState,
+type SectionDraftViewState = Pick<DeckDraftState, "draft" | "setQuantity" | "verification">;
+type SectionPoolViewState = Pick<
+  SectionPoolState,
   | "filters"
   | "layout"
   | "openFilters"
@@ -63,11 +63,11 @@ type ZonePoolViewState = Pick<
   | "setLayout"
   | "setQuery"
   | "setView"
-  | "setZone"
+  | "setSection"
   | "sort"
   | "toggleSortDirection"
   | "view"
-  | "zone"
+  | "section"
 >;
 
 export { useDeckBuild };
@@ -77,7 +77,7 @@ export type {
   DeckDraftState,
   LegendSearchState,
   LegendSearchViewState,
-  ZoneDraftViewState,
-  ZonePoolState,
-  ZonePoolViewState,
+  SectionDraftViewState,
+  SectionPoolState,
+  SectionPoolViewState,
 };

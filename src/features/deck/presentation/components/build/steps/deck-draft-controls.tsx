@@ -3,27 +3,27 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing, TouchTarget } from "@/constants/theme";
-import type { ZoneSection } from "@/features/deck/deck/deck-legality";
+import type { DeckSection } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 
-import { zoneCounts, type DeckBuildStepId } from "../../../deck-build-steps";
+import { sectionCounts, type DeckBuildStepId } from "../../../deck-build-steps";
 import { completenessLabel, legalityColor } from "../../../deck-legality-format";
-import type { ZoneDraftViewState } from "../../../hooks/use-deck-build";
+import type { SectionDraftViewState } from "../../../hooks/use-deck-build";
 import { BuildPickChip } from "../build-pick-chip";
-import { ZoneSelector } from "../zone-selector";
+import { SectionSelector } from "../section-selector";
 
 function DeckDraftControls({
   draft: { draft, verification },
   onChangeName,
   onEditStep,
-  onSelectZone,
-  zone,
+  onSelectSection,
+  section,
 }: {
-  readonly draft: ZoneDraftViewState;
+  readonly draft: SectionDraftViewState;
   readonly onChangeName: (name: string) => void;
   readonly onEditStep: (id: DeckBuildStepId) => void;
-  readonly onSelectZone: (section: ZoneSection) => void;
-  readonly zone: ZoneSection;
+  readonly onSelectSection: (section: DeckSection) => void;
+  readonly section: DeckSection;
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
@@ -62,8 +62,12 @@ function DeckDraftControls({
         />
       </View>
 
-      <View style={styles.zones}>
-        <ZoneSelector counts={zoneCounts(draft)} onSelect={onSelectZone} selected={zone} />
+      <View style={styles.sections}>
+        <SectionSelector
+          counts={sectionCounts(draft)}
+          onSelect={onSelectSection}
+          selected={section}
+        />
       </View>
     </View>
   );
@@ -99,7 +103,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two - 1,
     marginTop: Spacing.two + 1,
   },
-  zones: {
+  sections: {
     marginTop: Spacing.three - 5,
   },
 });

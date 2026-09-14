@@ -6,7 +6,7 @@ import { match } from "ts-pattern";
 import type { Deck, DeckVerification } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD } from "@/features/deck/deck/deck-legality";
 import type { ListDecksCapabilities } from "@/features/deck/deck/use-cases/list-decks";
-import type { ZonesStepProps } from "@/features/deck/presentation/components/build/steps/zones-step";
+import type { SectionsStepProps } from "@/features/deck/presentation/components/build/steps/sections-step";
 import {
   DeckSaveData,
   type DeckSaveControls,
@@ -27,8 +27,11 @@ const METRICS = {
   insets: { bottom: 0, left: 0, right: 0, top: 0 },
 };
 
-/** Every value a leaf receives from the zones boundary, narrowed to lifecycle-shaped ones. */
-type LeafLifecycleValue = Extract<ZonesStepProps[keyof ZonesStepProps], { readonly type: string }>;
+/** Every value a leaf receives from the sections boundary, narrowed to lifecycle-shaped ones. */
+type LeafLifecycleValue = Extract<
+  SectionsStepProps[keyof SectionsStepProps],
+  { readonly type: string }
+>;
 
 interface DeckStore {
   readonly capabilities: DeckBuildCapabilities;
@@ -108,7 +111,7 @@ async function renderDeckSave(store: DeckStore, name = "Storm") {
           childProps.push(Object.keys(received));
           controls = received;
 
-          return <Text>zone pool</Text>;
+          return <Text>section pool</Text>;
         }}
       </DeckSaveData>
     </SafeAreaProvider>,

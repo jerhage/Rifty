@@ -5,7 +5,7 @@ import type { CardLister } from "@/features/card/card-lister";
 import { CardsData, type CardsDataContent } from "@/features/card/presentation/data/cards-data";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 
-import { legendCriteria } from "../deck-zone-pool";
+import { legendCriteria } from "../deck-section-pool";
 
 function LegendPoolData({
   cardCounter,

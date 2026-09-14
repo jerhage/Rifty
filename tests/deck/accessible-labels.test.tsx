@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react-native";
 
 import type { Card } from "@/features/card/card";
-import { ZONE_RULES } from "@/features/deck/deck/deck-legality";
-import { ZoneSelector } from "@/features/deck/presentation/components/build/zone-selector";
+import { COUNTED_SECTION_RULES } from "@/features/deck/deck/deck-legality";
+import { SectionSelector } from "@/features/deck/presentation/components/build/section-selector";
 import { DeckRow } from "@/features/deck/presentation/components/deck-row";
 import { DeckCardRow } from "@/features/deck/presentation/components/detail/deck-card-row";
 import { HandCardTile } from "@/features/deck/presentation/components/draw/hand-card-tile";
@@ -70,15 +70,15 @@ describe("HandCardTile", () => {
   });
 });
 
-describe("ZoneSelector", () => {
-  it("should announce each zone as a tab rather than a plain button", async () => {
-    const [firstZone] = ZONE_RULES;
-    if (firstZone === undefined) throw new Error("No zone rules to select between.");
+describe("SectionSelector", () => {
+  it("should announce each section as a tab rather than a plain button", async () => {
+    const [firstSection] = COUNTED_SECTION_RULES;
+    if (firstSection === undefined) throw new Error("No section rules to select between.");
 
     await render(
-      <ZoneSelector counts={{}} onSelect={() => undefined} selected={firstZone.section} />,
+      <SectionSelector counts={{}} onSelect={() => undefined} selected={firstSection.section} />,
     );
 
-    expect(screen.getAllByRole("tab")).toHaveLength(ZONE_RULES.length);
+    expect(screen.getAllByRole("tab")).toHaveLength(COUNTED_SECTION_RULES.length);
   });
 });

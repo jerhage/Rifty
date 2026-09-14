@@ -7,7 +7,7 @@ import { CATALOG_COLUMNS } from "@/features/catalog/presentation/components/grid
 import {
   POOL_ROW_COLUMNS,
   POOL_TILE_COLUMNS,
-} from "@/features/deck/presentation/components/build/zone-pool-list";
+} from "@/features/deck/presentation/components/build/section-pool-list";
 import { CHAMPION_COLUMNS } from "@/features/deck/presentation/components/build/steps/champion-step";
 import { LEGEND_COLUMNS } from "@/features/deck/presentation/components/build/steps/legend-step";
 import { RailWidth } from "@/constants/theme";

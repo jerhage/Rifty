@@ -344,6 +344,11 @@ describe("card derivation", () => {
     expect(identityName("Yordle Sniper")).toBe("Yordle Sniper");
   });
 
+  it("should keep a hyphen that joins a word and a parenthetical the name carries in the middle", () => {
+    expect(identityName("Ahri - Nine-Tailed Fox")).toBe("Ahri, Nine-Tailed Fox");
+    expect(identityName("Recruit (271) // Buff")).toBe("Recruit (271) // Buff");
+  });
+
   it("should elide punctuation inside a word but collapse a separator to one space", () => {
     expect(cleanName("Doran's Shield")).toBe("Dorans Shield");
     expect(cleanName("Kai'Sa - Survivor")).toBe("KaiSa Survivor");

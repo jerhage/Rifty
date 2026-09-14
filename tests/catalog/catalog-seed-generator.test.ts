@@ -514,6 +514,50 @@ describe("catalog seed", () => {
     ]);
   });
 
+  it("should print the card's own name rather than the spelling each source used", () => {
+    const printings: readonly NormalizedPrinting[] = [
+      printing("a", { name: "Ahri - Alluring", identityName: "Ahri, Alluring" }),
+      printing("b", {
+        name: "Ahri - Alluring (Signature)",
+        identityName: "Ahri, Alluring",
+        finish: "signature",
+      }),
+    ];
+
+    const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
+
+    expect(seed.cardPrintings.map((row) => [row.id, row.printedName])).toEqual([
+      ["ogn-a", "Ahri, Alluring"],
+      ["ogn-b-signature", "Ahri, Alluring"],
+    ]);
+  });
+
+  it("should print the champion's name on a printing whose source dropped it", () => {
+    const legend = { typeId: "Legend", energy: null, might: null, power: null } as const;
+    const printings: readonly NormalizedPrinting[] = [
+      printing("a", {
+        ...legend,
+        name: "Ahri - Nine-Tailed Fox",
+        identityName: "Ahri, Nine-Tailed Fox",
+        championName: "Ahri",
+      }),
+      printing("b", {
+        ...legend,
+        name: "Nine-Tailed Fox (Metal)",
+        identityName: "Nine-Tailed Fox",
+        championName: "Ahri",
+        finish: "metal",
+      }),
+    ];
+
+    const { seed } = buildSeed(printings, [set("OGN")], imagesFor(printings));
+
+    expect(seed.cardPrintings.map((row) => row.printedName)).toEqual([
+      "Ahri, Nine-Tailed Fox",
+      "Ahri, Nine-Tailed Fox",
+    ]);
+  });
+
   it("should fail generation when a printing has no media row", () => {
     const printings: readonly NormalizedPrinting[] = [printing("a"), printing("b")];
 

@@ -432,6 +432,8 @@ function buildSeed(
   const reminderTexts = chosenReminders(keywordNames, remindersByPrinting);
   for (const group of groups) {
     const card = resolvedCard(group);
+    /** A Riftbound card's name is its identity, so every printing of it is printed with that name. */
+    const cardName = group.id;
     add(types, card.typeId);
     if (card.supertypeId) add(supertypes, card.supertypeId);
     cardRows.push(card);
@@ -446,11 +448,11 @@ function buildSeed(
       add(rarities, printing.rarityId);
       cardPrintingRows.push({
         id,
-        cardId: group.id,
+        cardId: cardName,
         riftboundId: printing.riftboundId,
         ...release,
         rarityId: printing.rarityId,
-        printedName: printing.name,
+        printedName: cardName,
         flavourText: printing.flavourText,
         sourceUpdatedAt: printing.sourceUpdatedAt,
         isCanonical: canonicalIds.has(printing.sourceId),

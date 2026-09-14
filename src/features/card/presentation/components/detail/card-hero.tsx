@@ -6,6 +6,8 @@ import { Radius } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { useTheme } from "@/hooks/use-theme";
 
+const MaxCardWidth = 420;
+
 /** The card face, shown plain — its own printing already carries the cost, might and domain. */
 function CardHero({ card }: { readonly card: Card }) {
   const theme = useTheme();
@@ -35,10 +37,12 @@ export { CardHero };
 
 const styles = StyleSheet.create({
   hero: {
+    alignSelf: "center",
     borderRadius: Radius.large,
     borderWidth: StyleSheet.hairlineWidth,
+    maxWidth: "100%",
     overflow: "hidden",
-    width: "100%",
+    width: MaxCardWidth,
   },
   image: {
     height: "100%",

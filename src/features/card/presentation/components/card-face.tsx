@@ -8,6 +8,10 @@ import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import { CardArt } from "./card-art";
 import { DomainBar } from "./domain-bar";
 
+/**
+ * Note to future self: these are for specifying how large of an image we allow the image library to
+ * shrink before putting into memory. Actual size of the card happens in card-hero.tsx for example.
+ */
 function CardFace({
   domainIds,
   imageUrl,

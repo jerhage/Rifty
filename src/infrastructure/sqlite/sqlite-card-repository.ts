@@ -65,13 +65,13 @@ class SqliteCardRepository implements CardRepository {
     private readonly imageBaseUrl: string,
   ) {}
 
-  async get(id: PrintingId, { signal }: ReadOptions = {}): Promise<Card | null> {
+  async get(printingId: PrintingId, { signal }: ReadOptions = {}): Promise<Card | null> {
     throwIfAborted(signal);
     const [row] = await this.db
       .select(PRINTED_CARD_COLUMNS)
       .from(cardPrintings)
       .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
-      .where(eq(cardPrintings.id, id))
+      .where(eq(cardPrintings.id, printingId))
       .limit(1);
     throwIfAborted(signal);
     if (!row) return null;

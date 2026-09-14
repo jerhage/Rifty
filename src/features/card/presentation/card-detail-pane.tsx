@@ -12,23 +12,23 @@ import type { PrintingId } from "@/features/card/value-objects/printing-id";
 
 function CardDetailPane({
   cardFinder,
-  cardId,
   onClose,
+  printingId,
 }: {
   readonly cardFinder: CardFinder;
-  readonly cardId: PrintingId | null;
   readonly onClose: () => void;
+  readonly printingId: PrintingId | null;
 }) {
   const insets = useSafeAreaInsets();
 
-  if (cardId === null) return <IdleCardPane />;
+  if (printingId === null) return <IdleCardPane />;
 
   return (
     <ThemedView style={styles.pane}>
       <View style={[styles.closeRow, { paddingTop: insets.top + Spacing.two }]}>
         <IconButton accessibilityLabel="Close the card" glyph="✕" onPress={onClose} />
       </View>
-      <CardDetailData cardFinder={cardFinder} cardId={cardId}>
+      <CardDetailData cardFinder={cardFinder} printingId={printingId}>
         {(card) => <CardDetailScreen card={card} />}
       </CardDetailData>
     </ThemedView>

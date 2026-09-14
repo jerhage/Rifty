@@ -12,11 +12,11 @@ interface FindCardCapabilities {
 }
 
 async function findCard(
-  id: PrintingId,
+  printingId: PrintingId,
   { cardFinder }: FindCardCapabilities,
   options?: ReadOptions,
 ): Promise<FindCardResult> {
-  const card = await cardFinder.get(id, options);
+  const card = await cardFinder.get(printingId, options);
   return card ? { type: "success", card } : { type: "notFound" };
 }
 

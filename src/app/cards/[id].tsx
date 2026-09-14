@@ -10,7 +10,7 @@ function CardDetailRoute() {
   const { cards } = useAppDependencies();
 
   return (
-    <CardDetailData cardFinder={cards.cardRepository} cardId={printingIdSchema.parse(id)}>
+    <CardDetailData cardFinder={cards.cardRepository} printingId={printingIdSchema.parse(id)}>
       {(card) => (
         <>
           <Stack.Screen options={{ title: card.name }} />

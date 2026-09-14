@@ -14,12 +14,12 @@ type CardDetailDataContent = ReadState<FindCardResult>;
 
 interface CardDetailDataProps {
   readonly cardFinder: CardFinder;
-  readonly cardId: PrintingId;
+  readonly printingId: PrintingId;
   readonly children: (card: Card) => ReactNode;
 }
 
-function CardDetailData({ cardFinder, cardId, children }: CardDetailDataProps) {
-  const { state } = useReadState(getCardQuery(cardId, { cardFinder }));
+function CardDetailData({ cardFinder, printingId, children }: CardDetailDataProps) {
+  const { state } = useReadState(getCardQuery(printingId, { cardFinder }));
 
   return match(state)
     .with({ type: "loading" }, () => <LoadingState />)

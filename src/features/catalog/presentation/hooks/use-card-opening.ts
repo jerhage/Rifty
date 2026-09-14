@@ -13,7 +13,7 @@ function openedBesideTheGrid(card: CardSummary): string {
 }
 
 /** How a card picked in the catalog gets shown, in the catalog's own words. */
-function useCardOpening(pushCardRoute: (cardId: PrintingId) => void): CardOpening {
+function useCardOpening(pushCardRoute: (printingId: PrintingId) => void): CardOpening {
   return useDetailOpening({
     closedMessage: "Card closed.",
     idOf: printingIdOf,

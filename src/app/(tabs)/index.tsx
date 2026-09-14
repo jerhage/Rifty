@@ -23,7 +23,8 @@ function HomeScreen() {
   const router = useRouter();
   const catalogQuery = useCatalogQuery();
   const pushCardRoute = useCallback(
-    (cardId: PrintingId) => router.push({ pathname: "/cards/[id]", params: { id: cardId } }),
+    (printingId: PrintingId) =>
+      router.push({ pathname: "/cards/[id]", params: { id: printingId } }),
     [router],
   );
   const opening = useCardOpening(pushCardRoute);
@@ -38,7 +39,11 @@ function HomeScreen() {
           <SplitLayout
             primary={<CardCatalog catalogQuery={catalogQuery} onOpenCard={open} />}
             secondary={
-              <CardDetailPane cardFinder={cards.cardRepository} cardId={shownId} onClose={close} />
+              <CardDetailPane
+                cardFinder={cards.cardRepository}
+                onClose={close}
+                printingId={shownId}
+              />
             }
           />
         ))

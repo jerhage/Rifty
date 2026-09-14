@@ -14,7 +14,7 @@ const vi = card("vi", unleashed.code, { name: "Vi" });
 
 async function renderCardDetail(cardFinder: CardFinder) {
   return await render(
-    <CardDetailData cardFinder={cardFinder} cardId={vi.printingId}>
+    <CardDetailData cardFinder={cardFinder} printingId={vi.printingId}>
       {(found: Card) => <Text>{found.name}</Text>}
     </CardDetailData>,
     { wrapper: createTestWrapper() },

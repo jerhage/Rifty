@@ -202,7 +202,7 @@ function copiesByCard(
 
 function verifyDeck(composition: DeckComposition, ruleset: TournamentRuleset): DeckVerification {
   const violations = [
-    ...singletonViolations(composition, "legend", "Legend"),
+    ...singletonViolations(composition, "legend"),
     ...championViolations(composition),
     ...COUNTED_SECTION_RULES.flatMap((rule) => sectionViolations(composition, rule)),
     ...sharedCopyViolations(composition),
@@ -217,8 +217,8 @@ function verifyDeck(composition: DeckComposition, ruleset: TournamentRuleset): D
 function singletonViolations(
   composition: DeckComposition,
   section: DeckSection,
-  label: string,
 ): readonly DeckLegalityViolation[] {
+  const { label } = sectionRule(section);
   const total = sectionTotal(composition, section);
 
   if (total === 1) return [];

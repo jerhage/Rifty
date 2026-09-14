@@ -90,7 +90,7 @@ function sectionRuleSummary(section: DeckSection): string {
     .with({ type: "limited" }, ({ copies: limit }) => `max ${limit} each`)
     .exhaustive();
 
-  return `${rule.requiredCount} cards · ${copies}`;
+  return `${rule.requiredCount} ${rule.requiredCount === 1 ? "card" : "cards"} · ${copies}`;
 }
 
 function searchHint(section: DeckSection): string {

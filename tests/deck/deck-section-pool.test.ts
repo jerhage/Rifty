@@ -4,6 +4,7 @@ import {
   legendCriteria,
   poolCriteria,
   sectionPoolViewChoice,
+  sectionRuleSummary,
 } from "@/features/deck/presentation/deck-section-pool";
 
 import { card } from "../card/fixtures";
@@ -11,6 +12,14 @@ import { card } from "../card/fixtures";
 const legend = card("legend", "OGN", { domainIds: ["Fury", "Order"] });
 
 describe("deck section pool", () => {
+  it("should count one card in the singular", () => {
+    expect(sectionRuleSummary("legend")).toBe("1 card · 1 each");
+  });
+
+  it("should count many cards in the plural", () => {
+    expect(sectionRuleSummary("mainDeck")).toBe("40 cards · max 3 each");
+  });
+
   it("should open on the legend's domains", () => {
     expect(defaultPoolFilters(legend).domainIds).toEqual(["Fury", "Order"]);
     expect(defaultPoolFilters(null).domainIds).toEqual([]);

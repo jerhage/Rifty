@@ -15,6 +15,24 @@ describe("card and set domain validation", () => {
     ).toThrow("Invalid URL");
   });
 
+  it("should accept the two card types that exist outside a deck", () => {
+    const buff = parseCard(
+      card("pr-ogn-298-alternate-art", "PR", {
+        name: "Buff",
+        classification: { typeId: "Other", supertypeId: "Token", rarityId: "common" },
+      }),
+    );
+    const recruit = parseCard(
+      card("ven-T04-nx", "VEN", {
+        name: "Recruit",
+        classification: { typeId: "Token", supertypeId: null, rarityId: "common" },
+      }),
+    );
+
+    expect(buff.classification.typeId).toBe("Other");
+    expect(recruit.classification.typeId).toBe("Token");
+  });
+
   it("should reject invalid card list criteria and a blank set code", () => {
     expect(() => parseCardListCriteria({ limit: 0 })).toThrow("Too small");
     expect(() => parseCardListCriteria({ sort: { type: "name", direction: "up" } })).toThrow();

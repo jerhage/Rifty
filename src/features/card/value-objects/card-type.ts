@@ -1,6 +1,15 @@
 import { z } from "zod/v4";
 
-const cardTypeSchema = z.enum(["Battlefield", "Gear", "Legend", "Rune", "Spell", "Unit"]);
+const cardTypeSchema = z.enum([
+  "Battlefield",
+  "Gear",
+  "Legend",
+  "Other",
+  "Rune",
+  "Spell",
+  "Token",
+  "Unit",
+]);
 
 type CardType = z.output<typeof cardTypeSchema>;
 
@@ -15,6 +24,8 @@ const TYPE_RANK: Record<CardType, number> = {
   Legend: 3,
   Battlefield: 4,
   Rune: 5,
+  Other: 6,
+  Token: 7,
 };
 
 const ORDERED_CARD_TYPES = [...cardTypeSchema.options].sort(

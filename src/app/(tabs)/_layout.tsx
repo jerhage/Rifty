@@ -6,7 +6,7 @@ import { useLayoutSize } from "@/hooks/use-layout-size";
 import { useTheme } from "@/hooks/use-theme";
 import { UsableWidthProvider } from "@/hooks/use-usable-width";
 
-function CatalogLayout() {
+function TabsLayout() {
   const theme = useTheme();
   const { layoutClass, usableWidth } = useLayoutSize();
   const isRail = layoutClass === "tablet";
@@ -60,4 +60,4 @@ function CatalogLayout() {
   );
 }
 
-export default CatalogLayout;
+export default TabsLayout;

@@ -14,7 +14,7 @@ import { CardHero } from "../components/detail/card-hero";
 import { CardKeywordRow } from "../components/detail/card-keyword-row";
 import { CardRulesPanel } from "../components/detail/card-rules-panel";
 import { CardSpeedRow } from "../components/detail/card-speed-row";
-import { CardTraitLine } from "../components/detail/card-trait-line";
+import { CardTagLine } from "../components/detail/card-tag-line";
 
 function CardDetailScreen({ card }: { readonly card: Card }) {
   const insets = useSafeAreaInsets();
@@ -39,7 +39,7 @@ function CardDetailScreen({ card }: { readonly card: Card }) {
         </ThemedText>
 
         <CardClassificationLine accent={accent} card={card} />
-        <CardTraitLine tagIds={card.tagIds} />
+        <CardTagLine tagIds={card.tagIds} />
         <CardAttributeRow accent={accent} card={card} />
         <CardSpeedRow speeds={card.speeds} />
         <CardKeywordRow keywords={card.keywords} />

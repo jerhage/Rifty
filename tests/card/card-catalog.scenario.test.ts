@@ -288,7 +288,7 @@ describe("card catalog scenarios", () => {
     store.close();
   });
 
-  it("should resolve cards by the riftbound id a deck stores", async () => {
+  it("should resolve cards by the riftbound id", async () => {
     const store = createSqliteScenarioStore();
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);

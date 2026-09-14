@@ -52,7 +52,7 @@ describe("deck build allowance", () => {
     });
   });
 
-  it("should keep different cards apart even when they share a character", () => {
+  it("should keep different cards apart even when they share a champion", () => {
     const draft = draftWith(["mainDeck", survivor, 3]);
 
     expect(remainingForCard(draft, "mainDeck", evolutionary)).toEqual({

@@ -11,7 +11,7 @@ import {
   POOL_TILE_COLUMNS,
 } from "@/features/deck/presentation/components/build/section-pool-list";
 import {
-  panelWidthFor,
+  paneWidthFor,
   poolWidthFor,
 } from "@/features/deck/presentation/components/build/steps/sections-step-columns";
 import { SectionsStep } from "@/features/deck/presentation/components/build/steps/sections-step";
@@ -220,7 +220,7 @@ describe("SectionsStep on a tablet", () => {
       width: fitColumns(poolWidthFor(1376), POOL_ROW_COLUMNS).columnWidth,
     });
     expect(screen.getByRole("button", { name: buildCardLabel(ZED, 2) }).parent).toHaveStyle({
-      width: fitColumns(panelWidthFor(1376), POOL_ROW_COLUMNS).columnWidth,
+      width: fitColumns(paneWidthFor(1376), POOL_ROW_COLUMNS).columnWidth,
     });
   });
 
@@ -236,7 +236,7 @@ describe("SectionsStep on a tablet", () => {
     expect(within(poolColumn).queryByLabelText("Deck name")).toBeNull();
   });
 
-  it("should reach the pool before the panel beside it", async () => {
+  it("should reach the pool before the pane beside it", async () => {
     await stepAt(1376, 1032, "pool");
 
     const spoken = screen
@@ -248,10 +248,10 @@ describe("SectionsStep on a tablet", () => {
 });
 
 describe("the widths the two columns take", () => {
-  it("should hold the panel at its cap once the frame is wide enough to reach it", () => {
-    expect([1376, 1280].map(panelWidthFor)).toEqual([420, 420]);
-    expect(panelWidthFor(1032)).toBeCloseTo(396.92);
-    expect(panelWidthFor(800)).toBeCloseTo(307.69);
+  it("should hold the pane at its cap once the frame is wide enough to reach it", () => {
+    expect([1376, 1280].map(paneWidthFor)).toEqual([420, 420]);
+    expect(paneWidthFor(1032)).toBeCloseTo(396.92);
+    expect(paneWidthFor(800)).toBeCloseTo(307.69);
   });
 
   it.each([
@@ -268,10 +268,8 @@ describe("the widths the two columns take", () => {
   );
 
   it("should keep the deck's own rows in a single column at every frame", () => {
-    const panels = [1376, 1280, 1032, 800].map(panelWidthFor);
+    const panes = [1376, 1280, 1032, 800].map(paneWidthFor);
 
-    expect(panels.map((width) => fitColumns(width, POOL_ROW_COLUMNS).columns)).toEqual([
-      1, 1, 1, 1,
-    ]);
+    expect(panes.map((width) => fitColumns(width, POOL_ROW_COLUMNS).columns)).toEqual([1, 1, 1, 1]);
   });
 });

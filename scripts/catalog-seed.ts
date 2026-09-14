@@ -164,7 +164,7 @@ type FetchedCard = { card: ApiCard; fetchedAt: string };
 type Taxonomy = typeof cardTypes.$inferInsert;
 type Marketplace = "cardmarket" | "tcgplayer";
 type MarketplaceReference = { marketplace: Marketplace; externalId: string };
-type NormalizedCard = {
+type NormalizedPrinting = {
   sourceId: string;
   isPrimaryFeed: boolean;
   riftboundId: string;
@@ -196,7 +196,7 @@ type NormalizedCard = {
   marketplaceReferences: readonly MarketplaceReference[];
 };
 type CardCore = Omit<
-  NormalizedCard,
+  NormalizedPrinting,
   | "championName"
   | "cleanName"
   | "collectorNumber"
@@ -230,8 +230,8 @@ type Seed = {
 };
 type CardGroup = {
   readonly id: string;
-  readonly printings: readonly NormalizedCard[];
-  readonly trusted: readonly NormalizedCard[];
+  readonly printings: readonly NormalizedPrinting[];
+  readonly trusted: readonly NormalizedPrinting[];
 };
 type GroupKeyword = {
   readonly id: string;
@@ -251,7 +251,7 @@ type ReconciledIdentities = {
 };
 type BuiltSeed = {
   readonly seed: Seed;
-  readonly skipped: readonly NormalizedCard[];
+  readonly skipped: readonly NormalizedPrinting[];
   readonly identityConflicts: readonly IdentityConflict[];
 };
 
@@ -290,7 +290,7 @@ function imageCardOf(card: ApiCard): SourcedCard {
   };
 }
 
-function normalize({ card, fetchedAt }: FetchedCard): NormalizedCard {
+function normalize({ card, fetchedAt }: FetchedCard): NormalizedPrinting {
   const raw = rawCardSchema.safeParse(card.raw);
   const identity = printingIdentity(card.riftboundId);
   const core = raw.success ? fromRaw(raw.data) : fromFlat(card, fetchedAt);
@@ -379,7 +379,7 @@ function fromFlat(card: ApiCard, fetchedAt: string): CardCore {
 }
 
 function buildSeed(
-  everyCard: readonly NormalizedCard[],
+  everyCard: readonly NormalizedPrinting[],
   sets: readonly RawSet[],
   imageFiles: ReadonlyMap<string, string>,
 ): BuiltSeed {
@@ -551,16 +551,16 @@ function buildSeed(
 }
 
 function currentPrintings(
-  printings: readonly NormalizedCard[],
+  printings: readonly NormalizedPrinting[],
   repaired: ReadonlyMap<string, string>,
-): readonly NormalizedCard[] {
+): readonly NormalizedPrinting[] {
   return newestOfReissued(withoutPoollessDuplicates(printings, repaired));
 }
 
 function withoutPoollessDuplicates(
-  printings: readonly NormalizedCard[],
+  printings: readonly NormalizedPrinting[],
   repaired: ReadonlyMap<string, string>,
-): readonly NormalizedCard[] {
+): readonly NormalizedPrinting[] {
   const pooled = new Set(
     printings
       .filter((printing) => printing.poolCode !== null)
@@ -572,8 +572,8 @@ function withoutPoollessDuplicates(
   );
 }
 
-function newestOfReissued(printings: readonly NormalizedCard[]): readonly NormalizedCard[] {
-  const newest = new Map<string, NormalizedCard>();
+function newestOfReissued(printings: readonly NormalizedPrinting[]): readonly NormalizedPrinting[] {
+  const newest = new Map<string, NormalizedPrinting>();
 
   for (const printing of printings) {
     const key = feedKey(printing);
@@ -586,18 +586,18 @@ function newestOfReissued(printings: readonly NormalizedCard[]): readonly Normal
   return printings.filter((printing) => current.has(printing.sourceId));
 }
 
-function reissueOrder(left: NormalizedCard, right: NormalizedCard): number {
+function reissueOrder(left: NormalizedPrinting, right: NormalizedPrinting): number {
   return (
     Date.parse(right.sourceUpdatedAt) - Date.parse(left.sourceUpdatedAt) ||
     left.sourceId.localeCompare(right.sourceId)
   );
 }
 
-function feedKey(printing: NormalizedCard): string {
+function feedKey(printing: NormalizedPrinting): string {
   return [printing.riftboundId, printing.finish].join("\u0000");
 }
 
-function releaseKey(printing: NormalizedCard, repaired: ReadonlyMap<string, string>): string {
+function releaseKey(printing: NormalizedPrinting, repaired: ReadonlyMap<string, string>): string {
   return [
     cardIdOf(printing, repaired),
     printing.setCode,
@@ -606,17 +606,17 @@ function releaseKey(printing: NormalizedCard, repaired: ReadonlyMap<string, stri
   ].join("\u0000");
 }
 
-function cardIdOf(printing: NormalizedCard, repaired: ReadonlyMap<string, string>): string {
+function cardIdOf(printing: NormalizedPrinting, repaired: ReadonlyMap<string, string>): string {
   return repaired.get(printing.identityName) ?? printing.identityName;
 }
 
 function cardGroups(
-  printings: readonly NormalizedCard[],
+  printings: readonly NormalizedPrinting[],
   repaired: ReadonlyMap<string, string>,
   publishedOn: ReadonlyMap<string, string>,
   canonicalIds: ReadonlySet<string>,
 ): readonly CardGroup[] {
-  const grouped = new Map<string, NormalizedCard[]>();
+  const grouped = new Map<string, NormalizedPrinting[]>();
 
   for (const printing of printings) {
     const id = cardIdOf(printing, repaired);
@@ -638,8 +638,8 @@ function cardGroups(
 }
 
 function printingOrder(
-  left: NormalizedCard,
-  right: NormalizedCard,
+  left: NormalizedPrinting,
+  right: NormalizedPrinting,
   publishedOn: ReadonlyMap<string, string>,
   canonicalIds: ReadonlySet<string>,
 ): number {
@@ -686,8 +686,8 @@ function resolvedCard(group: CardGroup): Seed["cards"][number] {
 }
 
 function firstPrinted<Value>(
-  printings: readonly NormalizedCard[],
-  valueOf: (printing: NormalizedCard) => Value | null,
+  printings: readonly NormalizedPrinting[],
+  valueOf: (printing: NormalizedPrinting) => Value | null,
 ): Value | null {
   for (const printing of printings) {
     const value = valueOf(printing);
@@ -703,7 +703,7 @@ function printedText(text: string): string | null {
   return bare.length === 0 || PLACEHOLDER_TEXT.test(bare) ? null : text;
 }
 
-function printedPrintings(printings: readonly NormalizedCard[]): readonly NormalizedCard[] {
+function printedPrintings(printings: readonly NormalizedPrinting[]): readonly NormalizedPrinting[] {
   return printings.filter((printing) => printedText(printing.rulesTextPlain) !== null);
 }
 
@@ -761,9 +761,9 @@ function targetKey(target: KeywordTarget): string {
 }
 
 function printingsByIdentity(
-  cards: readonly NormalizedCard[],
-): ReadonlyMap<string, readonly NormalizedCard[]> {
-  const grouped = new Map<string, NormalizedCard[]>();
+  cards: readonly NormalizedPrinting[],
+): ReadonlyMap<string, readonly NormalizedPrinting[]> {
+  const grouped = new Map<string, NormalizedPrinting[]>();
 
   for (const card of cards) {
     const held = grouped.get(card.identityName);
@@ -784,11 +784,11 @@ function droppedPrefix(host: string, tail: string): string {
   return host.slice(0, host.length - tail.length - CANONICAL_SEPARATOR.length);
 }
 
-function gameplayShape(card: NormalizedCard): string {
+function gameplayShape(card: NormalizedPrinting): string {
   return `${card.typeId}/${card.energy}/${card.might}/${card.power}`;
 }
 
-function reconciledIdentities(cards: readonly NormalizedCard[]): ReconciledIdentities {
+function reconciledIdentities(cards: readonly NormalizedPrinting[]): ReconciledIdentities {
   const grouped = printingsByIdentity(cards);
   const identities = [...grouped.keys()];
   const repaired = new Map<string, string>();
@@ -881,8 +881,8 @@ function chosenReminders(
   return chosen;
 }
 
-function canonicalCardIds(cards: readonly NormalizedCard[]): ReadonlySet<string> {
-  const chosen = new Map<string, NormalizedCard>();
+function canonicalCardIds(cards: readonly NormalizedPrinting[]): ReadonlySet<string> {
+  const chosen = new Map<string, NormalizedPrinting>();
 
   for (const card of cards) {
     const held = chosen.get(card.riftboundId);
@@ -892,7 +892,7 @@ function canonicalCardIds(cards: readonly NormalizedCard[]): ReadonlySet<string>
   return new Set([...chosen.values()].map((card) => card.sourceId));
 }
 
-function outranks(card: NormalizedCard, held: NormalizedCard): boolean {
+function outranks(card: NormalizedPrinting, held: NormalizedPrinting): boolean {
   const standard = card.finish === "standard";
   if (standard !== (held.finish === "standard")) return standard;
 
@@ -1082,4 +1082,4 @@ export {
   normalize,
   rawSetSchema,
 };
-export type { ApiCard, BuiltSeed, FetchedCard, IdentityConflict, NormalizedCard, RawSet, Seed };
+export type { ApiCard, BuiltSeed, FetchedCard, IdentityConflict, NormalizedPrinting, RawSet, Seed };

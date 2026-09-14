@@ -17,10 +17,10 @@ function outstandingFixesLabel(verification: DeckVerification): string {
     .exhaustive();
 }
 
-function completenessLabel(verification: DeckVerification): string {
+function legalityLabel(verification: DeckVerification): string {
   return match(verification)
     .with({ type: "legal" }, () => "Legal")
-    .with({ type: "illegal" }, () => "Incomplete")
+    .with({ type: "illegal" }, () => "Illegal")
     .exhaustive();
 }
 
@@ -31,4 +31,4 @@ function saveReadinessLabel(verification: DeckVerification): string {
     .exhaustive();
 }
 
-export { completenessLabel, legalityColor, outstandingFixesLabel, saveReadinessLabel };
+export { legalityColor, legalityLabel, outstandingFixesLabel, saveReadinessLabel };

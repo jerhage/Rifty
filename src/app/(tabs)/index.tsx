@@ -15,7 +15,7 @@ import {
   useCatalogQuery,
   type CatalogQuery,
 } from "@/features/catalog/presentation/hooks/use-catalog-query";
-import { CardNameSearchScreen } from "@/features/catalog/presentation/screens/card-name-search-screen";
+import { CatalogSearchScreen } from "@/features/catalog/presentation/screens/catalog-search-screen";
 import { CardSetsData } from "@/features/set/presentation/data/card-sets-data";
 
 function HomeScreen() {
@@ -86,11 +86,10 @@ function CardCatalog({
       criteria={catalogQuery.queryCriteria}
     >
       {(content) => (
-        <CardNameSearchScreen
+        <CatalogSearchScreen
           {...content}
           criteria={catalogQuery.criteria}
-          name={catalogQuery.name}
-          onChangeName={catalogQuery.setName}
+          onChangeQuery={catalogQuery.setQuery}
           onClearDomains={catalogQuery.clearDomains}
           onClearTypes={catalogQuery.clearTypes}
           onOpenCard={onOpenCard}
@@ -99,6 +98,7 @@ function CardCatalog({
           onToggleDomain={catalogQuery.toggleDomain}
           onToggleSortDirection={catalogQuery.toggleSortDirection}
           onToggleType={catalogQuery.toggleType}
+          query={catalogQuery.query}
         />
       )}
     </CardSummariesData>

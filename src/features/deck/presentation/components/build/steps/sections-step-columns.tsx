@@ -14,16 +14,16 @@ import { SectionPoolList } from "../section-pool-list";
 import { DeckDraftControls } from "./deck-draft-controls";
 import { SectionPoolControls } from "./section-pool-controls";
 
-const PanelMaxWidth = 420;
+const PaneMaxWidth = 420;
 const PoolShare = 1.6;
 
-/** The panel takes its share of the pair and never more than its cap; the pool keeps the rest. */
-function panelWidthFor(usableWidth: number): number {
-  return Math.min(PanelMaxWidth, usableWidth / (PoolShare + 1));
+/** The pane takes its share of the pair and never more than its cap; the pool keeps the rest. */
+function paneWidthFor(usableWidth: number): number {
+  return Math.min(PaneMaxWidth, usableWidth / (PoolShare + 1));
 }
 
 function poolWidthFor(usableWidth: number): number {
-  return usableWidth - panelWidthFor(usableWidth);
+  return usableWidth - paneWidthFor(usableWidth);
 }
 
 function SectionsStepColumns({
@@ -47,13 +47,13 @@ function SectionsStepColumns({
 }) {
   const theme = useTheme();
   const { usableWidth } = useLayoutSize();
-  const panelWidth = panelWidthFor(usableWidth);
+  const paneWidth = paneWidthFor(usableWidth);
   const held = placedCardTotal(placedCards(draft.draft, pool.section));
 
   return (
     <View style={styles.columns}>
       <View style={[styles.pool, { borderEndColor: theme.border }]}>
-        <UsableWidthProvider width={usableWidth - panelWidth}>
+        <UsableWidthProvider width={usableWidth - paneWidth}>
           <SectionPoolControls draft={draft.draft} pool={pool} viewChoice={viewChoice} />
 
           <SectionPoolList
@@ -69,8 +69,8 @@ function SectionsStepColumns({
         </UsableWidthProvider>
       </View>
 
-      <View style={[styles.panel, { width: panelWidth }]}>
-        <UsableWidthProvider width={panelWidth}>
+      <View style={[styles.pane, { width: paneWidth }]}>
+        <UsableWidthProvider width={paneWidth}>
           <DeckDraftControls
             draft={draft}
             onChangeName={onChangeName}
@@ -105,7 +105,7 @@ function SectionsStepColumns({
   );
 }
 
-export { panelWidthFor, poolWidthFor, SectionsStepColumns };
+export { paneWidthFor, poolWidthFor, SectionsStepColumns };
 
 const styles = StyleSheet.create({
   columns: {
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  panel: {
+  pane: {
     flexGrow: 0,
     flexShrink: 0,
   },

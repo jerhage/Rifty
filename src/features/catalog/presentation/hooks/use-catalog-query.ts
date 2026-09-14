@@ -22,11 +22,11 @@ function useCatalogQuery() {
   const [criteria, setCriteria] = useState<CatalogQueryCriteria>(DEFAULT_CRITERIA);
   const [draftCriteria, setDraftCriteria] = useState<CatalogQueryCriteria>(DEFAULT_CRITERIA);
   const [sheet, setSheet] = useState<CatalogSheetState>({ type: "hidden" });
-  const [name, setName] = useState("");
-  const debouncedName = useDebouncedValue(name, SEARCH_DEBOUNCE_MS);
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS);
   const queryCriteria: CatalogQueryCriteria = {
     ...criteria,
-    search: searchCriteriaFor(debouncedName),
+    search: searchCriteriaFor(debouncedQuery),
   };
 
   const openFilters = useCallback(() => {
@@ -92,12 +92,12 @@ function useCatalogQuery() {
     criteria,
     dismissSheet,
     draftCriteria,
-    name,
     openFilters,
     openSort,
+    query,
     queryCriteria,
     setDraftCriteria,
-    setName,
+    setQuery,
     sheet,
     toggleDomain,
     toggleSortDirection,
@@ -117,8 +117,8 @@ function toggleId<Id extends string>(
   return nextIds.length === 0 ? undefined : nextIds;
 }
 
-function searchCriteriaFor(name: string) {
-  const text = name.trim();
+function searchCriteriaFor(query: string) {
+  const text = query.trim();
   return text ? { type: "nameOrRulesText" as const, text } : undefined;
 }
 

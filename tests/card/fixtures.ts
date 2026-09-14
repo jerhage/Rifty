@@ -32,7 +32,7 @@ function cardSet(code: string, publishedOn: string, name = code): CardSet {
 }
 
 function card(
-  id: string,
+  printingId: string,
   setCode: string,
   options: Partial<
     Pick<
@@ -54,16 +54,16 @@ function card(
     >
   > = {},
 ): Card {
-  const name = options.name ?? `Card ${id}`;
+  const name = options.name ?? `Card ${printingId}`;
 
   return {
-    printingId: printingIdSchema.parse(id),
+    printingId: printingIdSchema.parse(printingId),
     cardId: cardIdSchema.parse(options.cardId ?? identityName(name)),
-    riftboundId: `${setCode.toLowerCase()}-${id}-100`,
+    riftboundId: `${setCode.toLowerCase()}-${printingId}-100`,
     setCode,
     collectorNumber: options.collectorNumber ?? "1",
     name,
-    cleanName: options.cleanName ?? `Card ${id}`,
+    cleanName: options.cleanName ?? `Card ${printingId}`,
     attributes: options.attributes ?? { energy: 3, might: 2, power: null },
     rulesText: options.rulesText ?? {
       rich: "<p>Play effect.</p>",
@@ -83,9 +83,9 @@ function card(
     keywords: options.keywords ?? [],
     championName: options.championName ?? null,
     tagIds: options.tagIds ?? [],
-    imageUrl: `http://localhost:8787/${setCode.toLowerCase()}-${id}-100.webp`,
+    imageUrl: `http://localhost:8787/${setCode.toLowerCase()}-${printingId}-100.webp`,
     marketplaceReferences: options.marketplaceReferences ?? [
-      { marketplace: "tcgplayer", externalId: `tcgplayer-${id}` },
+      { marketplace: "tcgplayer", externalId: `tcgplayer-${printingId}` },
     ],
   };
 }

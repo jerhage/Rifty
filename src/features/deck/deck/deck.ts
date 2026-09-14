@@ -125,8 +125,8 @@ type TournamentRuleset = z.output<typeof tournamentRulesetSchema>;
 type DeckLegalityRule = z.output<typeof deckLegalityRuleSchema>;
 type DeckLegalityViolation = z.output<typeof deckLegalityViolationSchema>;
 type DeckVerification = z.output<typeof deckVerificationSchema>;
-type LegalDeck = Extract<DeckVerification, { type: "legal" }>;
-type IllegalDeck = Extract<DeckVerification, { type: "illegal" }>;
+type LegalVerification = Extract<DeckVerification, { type: "legal" }>;
+type IllegalVerification = Extract<DeckVerification, { type: "illegal" }>;
 
 export {
   DECK_SECTIONS,
@@ -153,7 +153,7 @@ export type {
   DeckName,
   DeckSection,
   DeckVerification,
-  IllegalDeck,
-  LegalDeck,
+  IllegalVerification,
+  LegalVerification,
   TournamentRuleset,
 };

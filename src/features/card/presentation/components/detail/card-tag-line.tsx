@@ -5,24 +5,24 @@ import { Spacing } from "@/constants/theme";
 
 import { formatTaxonomyId } from "../../card-taxonomy-format";
 
-function CardTraitLine({ tagIds }: { readonly tagIds: readonly string[] }) {
+function CardTagLine({ tagIds }: { readonly tagIds: readonly string[] }) {
   if (tagIds.length === 0) return null;
 
-  const traits = tagIds.map((tagId) => formatTaxonomyId(tagId));
+  const tags = tagIds.map((tagId) => formatTaxonomyId(tagId));
 
   return (
     <ThemedText
-      accessibilityLabel={traits.join(", ")}
+      accessibilityLabel={tags.join(", ")}
       themeColor="textSecondary"
       type="mono"
       style={styles.line}
     >
-      {traits.join(" · ")}
+      {tags.join(" · ")}
     </ThemedText>
   );
 }
 
-export { CardTraitLine };
+export { CardTagLine };
 
 const styles = StyleSheet.create({
   line: {

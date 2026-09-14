@@ -20,20 +20,20 @@ import { CATALOG_COLUMNS } from "../grid/card-summary-grid";
  */
 function CatalogSearchHeader({
   criteria,
-  name,
-  onChangeName,
+  onChangeQuery,
   onClearDomains,
   onClearTypes,
   onToggleDomain,
   onToggleType,
+  query,
 }: {
   readonly criteria: CatalogQueryCriteria;
-  readonly name: string;
-  readonly onChangeName: (name: string) => void;
+  readonly onChangeQuery: (query: string) => void;
   readonly onClearDomains: () => void;
   readonly onClearTypes: () => void;
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleType: (typeId: CardType) => void;
+  readonly query: string;
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
@@ -56,8 +56,8 @@ function CatalogSearchHeader({
       <SearchField
         accessibilityLabel="Search cards by name or rules text"
         hint="Search cards"
-        onChangeQuery={onChangeName}
-        query={name}
+        onChangeQuery={onChangeQuery}
+        query={query}
       />
 
       <HorizontalScroller style={styles.domainRow}>

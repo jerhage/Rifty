@@ -12,10 +12,9 @@ import { CardSummaryPageFooter } from "../components/grid/card-summary-page-foot
 import { CatalogResultBar } from "../components/search/catalog-result-bar";
 import { CatalogSearchHeader } from "../components/search/catalog-search-header";
 
-interface CardNameSearchScreenProps extends CardSummariesDataContent {
+interface CatalogSearchScreenProps extends CardSummariesDataContent {
   readonly criteria: CatalogQueryCriteria;
-  readonly name: string;
-  readonly onChangeName: (name: string) => void;
+  readonly onChangeQuery: (query: string) => void;
   readonly onClearDomains: () => void;
   readonly onClearTypes: () => void;
   readonly onOpenCard: (card: CardSummary) => void;
@@ -24,15 +23,15 @@ interface CardNameSearchScreenProps extends CardSummariesDataContent {
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleSortDirection: () => void;
   readonly onToggleType: (typeId: CardType) => void;
+  readonly query: string;
 }
 
-function CardNameSearchScreen({
+function CatalogSearchScreen({
   cards,
   criteria,
   isRefreshing,
   loadMore,
-  name,
-  onChangeName,
+  onChangeQuery,
   onClearDomains,
   onClearTypes,
   onOpenCard,
@@ -42,25 +41,26 @@ function CardNameSearchScreen({
   onToggleSortDirection,
   onToggleType,
   paging,
+  query,
   refresh,
   retryLoadMore,
   total,
-}: CardNameSearchScreenProps) {
+}: CatalogSearchScreenProps) {
   return (
     <ThemedView style={styles.screen}>
       <CatalogSearchHeader
         criteria={criteria}
-        name={name}
-        onChangeName={onChangeName}
+        onChangeQuery={onChangeQuery}
         onClearDomains={onClearDomains}
         onClearTypes={onClearTypes}
         onToggleDomain={onToggleDomain}
         onToggleType={onToggleType}
+        query={query}
       />
       <CardSummaryGrid
         cards={cards}
         emptyMessage={
-          name.trim() ? "No cards match that search." : "No cards match. Loosen a filter?"
+          query.trim() ? "No cards match that search." : "No cards match. Loosen a filter?"
         }
         footer={<CardSummaryPageFooter paging={paging} retryLoadMore={retryLoadMore} />}
         header={
@@ -82,8 +82,8 @@ function CardNameSearchScreen({
   );
 }
 
-export { CardNameSearchScreen };
-export type { CardNameSearchScreenProps };
+export { CatalogSearchScreen };
+export type { CatalogSearchScreenProps };
 
 const styles = StyleSheet.create({
   screen: {

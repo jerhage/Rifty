@@ -7,7 +7,7 @@ import type { DeckSection } from "@/features/deck/deck/deck";
 import { useTheme } from "@/hooks/use-theme";
 
 import { sectionCounts, type DeckBuildStepId } from "../../../deck-build-steps";
-import { completenessLabel, legalityColor } from "../../../deck-legality-format";
+import { legalityColor, legalityLabel } from "../../../deck-legality-format";
 import type { SectionDraftViewState } from "../../../hooks/use-deck-build";
 import { BuildPickChip } from "../build-pick-chip";
 import { SectionSelector } from "../section-selector";
@@ -46,10 +46,10 @@ function DeckDraftControls({
           value={draft.name}
         />
         <ThemedText
-          style={[styles.completeness, { color: legalityColor(verification, theme) }]}
+          style={[styles.legality, { color: legalityColor(verification, theme) }]}
           type="mono"
         >
-          {completenessLabel(verification)}
+          {legalityLabel(verification)}
         </ThemedText>
       </View>
 
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     padding: 0,
     textAlignVertical: "center",
   },
-  completeness: {
+  legality: {
     flexShrink: 1,
   },
   chips: {

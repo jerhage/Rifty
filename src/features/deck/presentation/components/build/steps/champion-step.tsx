@@ -63,7 +63,7 @@ function ChampionStep({
           <EmptyState
             message={
               legend
-                ? `No champions match ${legend.name}'s character tag and domains.`
+                ? `No champions match ${legend.name}'s champion and domains.`
                 : "Pick a Legend first to see which champions it allows."
             }
           />

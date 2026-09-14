@@ -8,7 +8,7 @@ const legend = card("ogn-legend", "OGN", {
   domainIds: ["Fury", "Body"],
   classification: { typeId: "Legend", supertypeId: "Champion", rarityId: "rare" },
 });
-const legendWithoutCharacter = card("ogn-legend-plain", "OGN", {
+const legendWithoutChampion = card("ogn-legend-plain", "OGN", {
   name: "Nameless Legend",
   classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
 });
@@ -27,8 +27,8 @@ describe("champion pool criteria", () => {
     });
   });
 
-  it("should fall back to every champion unit when the legend names no character", () => {
-    expect(championCriteria(legendWithoutCharacter)).toEqual({
+  it("should fall back to every champion unit when the legend names no champion", () => {
+    expect(championCriteria(legendWithoutChampion)).toEqual({
       typeIds: ["Unit"],
       supertypeIds: ["Champion"],
     });

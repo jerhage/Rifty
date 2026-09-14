@@ -67,7 +67,7 @@ function useDeckDraft(start: DeckBuildStart) {
 
 function openingDraft(start: DeckBuildStart): DeckBuildDraft {
   return match(start)
-    .with({ type: "new" }, () => EMPTY_DRAFT)
+    .with({ type: "create" }, () => EMPTY_DRAFT)
     .with({ type: "edit" }, ({ resolvedDeck }) => draftFromDeck(resolvedDeck))
     .exhaustive();
 }

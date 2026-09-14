@@ -57,7 +57,7 @@ function DeckDraftControls({
         <BuildPickChip card={draft.legend} label="Legend" onEdit={() => onEditStep("legend")} />
         <BuildPickChip
           card={draft.chosenChampion}
-          label="Champion"
+          label="Chosen Champion"
           onEdit={() => onEditStep("chosenChampion")}
         />
       </View>

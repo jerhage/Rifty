@@ -5,11 +5,11 @@ import { SegmentedControl, SegmentedOption } from "@/components/ui/atoms/segment
 import type { SectionPoolLayout } from "../../deck-section-pool";
 
 function PoolLayoutToggle({
-  layout,
   onSelect,
+  poolLayout,
 }: {
-  readonly layout: SectionPoolLayout;
-  readonly onSelect: (layout: SectionPoolLayout) => void;
+  readonly onSelect: (poolLayout: SectionPoolLayout) => void;
+  readonly poolLayout: SectionPoolLayout;
 }) {
   return (
     <SegmentedControl size="compact">
@@ -18,7 +18,7 @@ function PoolLayoutToggle({
         label="List"
         onPress={() => onSelect("list")}
         role="radio"
-        selected={layout === "list"}
+        selected={poolLayout === "list"}
         size="compact"
       />
       <SegmentedOption
@@ -26,7 +26,7 @@ function PoolLayoutToggle({
         label="Cards"
         onPress={() => onSelect("grid")}
         role="radio"
-        selected={layout === "grid"}
+        selected={poolLayout === "grid"}
         size="compact"
       />
     </SegmentedControl>

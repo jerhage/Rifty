@@ -39,7 +39,7 @@ const CARD_SORT_OPTIONS_BY_ID: Readonly<Record<CardSortId, CardSortOption>> = {
   },
   energy: {
     id: "energy",
-    label: "Energy cost",
+    label: "Energy",
     note: "curve position",
     defaultDirection: "ascending",
     descendingLabel: "Most expensive",

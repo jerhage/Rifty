@@ -15,7 +15,7 @@ import { DeckAnalysisPanels } from "../components/detail/deck-analysis-panels";
 import { DeckSectionGroup } from "../components/detail/deck-section-group";
 import { deckGroups } from "../deck-contents";
 import { legalityColor, outstandingFixesLabel } from "../deck-legality-format";
-import { deckCountLabel, editedLabel } from "../deck-summary-format";
+import { deckCountLabel, editedLabel } from "../deck-label-format";
 
 interface DeckDetailScreenProps {
   readonly now: string;
@@ -76,7 +76,7 @@ function DeckDetailScreen({
         ) : null}
 
         <View style={styles.drawSimulation}>
-          <Button label="Draw sim" onPress={onDrawSimulation} variant="secondary" />
+          <Button label="Draw simulation" onPress={onDrawSimulation} variant="secondary" />
         </View>
 
         <DeckAnalysisPanels entries={entries} />

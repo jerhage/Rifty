@@ -22,11 +22,11 @@ function SectionPoolControls({
   draft,
   pool: {
     filters,
-    layout,
     openFilters,
     openSort,
+    poolLayout,
     query,
-    setLayout,
+    setPoolLayout,
     setQuery,
     setView,
     sort,
@@ -65,7 +65,7 @@ function SectionPoolControls({
             view={shown}
           />
         </View>
-        <PoolLayoutToggle layout={layout} onSelect={setLayout} />
+        <PoolLayoutToggle onSelect={setPoolLayout} poolLayout={poolLayout} />
       </View>
 
       <ThemedText numberOfLines={1} themeColor="textTertiary" type="mono" style={styles.rule}>

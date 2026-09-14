@@ -52,7 +52,7 @@ function SectionsStep({
           onLoadMorePool={onLoadMorePool}
           onOpenCard={onOpenCard}
           onSetQuantity={draft.setQuantity}
-          poolLayout={pool.layout}
+          poolLayout={pool.poolLayout}
           poolView={viewChoice.shown}
           section={pool.section}
           sectionPool={sectionPool}

@@ -2,7 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { Spacing } from "@/constants/theme";
 import { AttributeCurve } from "@/features/analysis/presentation/components/attribute-curve";
-import { KeywordTally } from "@/features/analysis/presentation/components/keyword-tally";
+import { KeywordMixPanel } from "@/features/analysis/presentation/components/keyword-mix-panel";
 import { SpeedMix } from "@/features/analysis/presentation/components/speed-mix";
 import type { ResolvedDeckEntry } from "@/features/deck/deck/resolved-deck";
 
@@ -15,7 +15,7 @@ function DeckAnalysisPanels({ entries }: { readonly entries: readonly ResolvedDe
     <View style={styles.panels}>
       <AttributeCurve buckets={energyBuckets} title="Energy curve" />
       <SpeedMix cardCount={abilityCards} speeds={speeds} />
-      <KeywordTally cardCount={abilityCards} mix={keywords} />
+      <KeywordMixPanel cardCount={abilityCards} mix={keywords} />
     </View>
   );
 }

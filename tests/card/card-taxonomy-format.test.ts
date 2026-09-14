@@ -27,7 +27,7 @@ describe("card attribute parts", () => {
     expect(cardAttributeParts(spell)).toEqual(["2 energy"]);
   });
 
-  it("should join the visible stats line with the separator the row shows", () => {
+  it("should join the visible attributes line with the separator the row shows", () => {
     expect(formatCardAttributes(ZED)).toBe("3 energy · 5 might");
   });
 });

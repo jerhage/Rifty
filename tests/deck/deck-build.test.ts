@@ -61,7 +61,7 @@ const savedEdit = resolvedDeck(
   unseatedChampion,
 );
 
-async function renderBuild(start: DeckBuildStart = { type: "new" }) {
+async function renderBuild(start: DeckBuildStart = { type: "create" }) {
   const onExit = jest.fn();
   const rendered = await renderHook(() => useDeckBuild(start, { onExit }), {
     wrapper: createTestWrapper(),

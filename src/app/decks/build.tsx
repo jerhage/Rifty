@@ -59,7 +59,7 @@ function DeckBuildRoute() {
             onExit={goBack}
             onOpenCard={openCard}
             onSaved={goBack}
-            start={{ type: "new" }}
+            start={{ type: "create" }}
           />
         )
       }

@@ -17,13 +17,13 @@ function curve(
   value: (card: Card) => number | null,
   buckets: readonly { readonly label: string; readonly matches: (value: number) => boolean }[],
 ): readonly CurveBucket[] {
-  const counted = copies.filter((entry) => value(entry.card) !== null);
+  const counted = copies.filter((copy) => value(copy.card) !== null);
 
   return buckets.map((bucket) => ({
     label: bucket.label,
     count: counted
-      .filter((entry) => bucket.matches(value(entry.card) ?? 0))
-      .reduce((total, entry) => total + entry.quantity, 0),
+      .filter((copy) => bucket.matches(value(copy.card) ?? 0))
+      .reduce((total, copy) => total + copy.quantity, 0),
   }));
 }
 
@@ -52,7 +52,7 @@ function mightCurve(copies: readonly CardCopy[]): readonly CurveBucket[] {
 /** Not in use. Waiting on a total-power line in `DeckAnalysisPanels`. */
 function totalPower(copies: readonly CardCopy[]): number {
   return copies.reduce(
-    (total, entry) => total + (entry.card.attributes.power ?? 0) * entry.quantity,
+    (total, copy) => total + (copy.card.attributes.power ?? 0) * copy.quantity,
     0,
   );
 }
@@ -68,8 +68,8 @@ function speedMix(copies: readonly CardCopy[]): readonly SpeedShare[] {
 
   return SPEED_ORDER.map((speed) => {
     const count = copies
-      .filter((entry) => entry.card.speeds.includes(speed))
-      .reduce((sum, entry) => sum + entry.quantity, 0);
+      .filter((copy) => copy.card.speeds.includes(speed))
+      .reduce((sum, copy) => sum + copy.quantity, 0);
 
     return { speed, count, share: total === 0 ? 0 : count / total };
   });
@@ -111,20 +111,20 @@ function countedKeywords(card: Card): readonly CardKeyword[] {
 }
 
 function keywordMix(copies: readonly CardCopy[]): KeywordMix {
-  const tally = new Map<string, KeywordShare>();
+  const shares = new Map<string, KeywordShare>();
 
-  for (const entry of copies) {
-    for (const keyword of countedKeywords(entry.card)) {
-      const running = tally.get(keyword.id);
+  for (const copy of copies) {
+    for (const keyword of countedKeywords(copy.card)) {
+      const running = shares.get(keyword.id);
       const value =
         keyword.value === null
           ? (running?.totalValue ?? null)
-          : (running?.totalValue ?? 0) + keyword.value * entry.quantity;
+          : (running?.totalValue ?? 0) + keyword.value * copy.quantity;
 
-      tally.set(keyword.id, {
+      shares.set(keyword.id, {
         id: keyword.id,
         name: keyword.name,
-        count: (running?.count ?? 0) + entry.quantity,
+        count: (running?.count ?? 0) + copy.quantity,
         totalValue: value,
       });
     }
@@ -132,9 +132,9 @@ function keywordMix(copies: readonly CardCopy[]): KeywordMix {
 
   return {
     carrying: copies
-      .filter((entry) => countedKeywords(entry.card).length > 0)
-      .reduce((total, entry) => total + entry.quantity, 0),
-    keywords: [...tally.values()].sort(
+      .filter((copy) => countedKeywords(copy.card).length > 0)
+      .reduce((total, copy) => total + copy.quantity, 0),
+    keywords: [...shares.values()].sort(
       (left, right) => right.count - left.count || left.name.localeCompare(right.name),
     ),
   };

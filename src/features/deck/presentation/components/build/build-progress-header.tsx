@@ -71,7 +71,7 @@ function BuildProgressHeader({
 
 function modeLabel(mode: DeckBuildMode): string {
   return match(mode)
-    .with("new", () => "New deck")
+    .with("create", () => "New deck")
     .with("edit", () => "Edit deck")
     .exhaustive();
 }

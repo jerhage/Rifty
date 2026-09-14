@@ -28,12 +28,12 @@ function DeckSectionGroup({
           {group.count}
         </ThemedText>
       </View>
-      {group.cards.map((held) => (
+      {group.cards.map((copy) => (
         <DeckCardRow
-          card={held.card}
-          key={held.card.printingId}
+          card={copy.card}
+          key={copy.card.printingId}
           onOpenCard={onOpenCard}
-          quantity={held.quantity}
+          quantity={copy.quantity}
         />
       ))}
     </View>

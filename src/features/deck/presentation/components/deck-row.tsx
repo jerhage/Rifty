@@ -10,7 +10,7 @@ import {
   deckCountParts,
   editedLabel,
   spokenEditedLabel,
-} from "../deck-summary-format";
+} from "../deck-label-format";
 
 function DeckRow({
   deck,

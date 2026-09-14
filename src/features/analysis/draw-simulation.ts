@@ -67,10 +67,10 @@ function atLeastOneChance(poolSize: number, copies: number, draws: number): numb
 function copiesByIdentity(copies: readonly CardCopy[]): ReadonlyMap<string, number> {
   const held = new Map<string, number>();
 
-  for (const entry of copies) {
-    const identity = entry.card.cardId;
+  for (const copy of copies) {
+    const identity = copy.card.cardId;
 
-    held.set(identity, (held.get(identity) ?? 0) + entry.quantity);
+    held.set(identity, (held.get(identity) ?? 0) + copy.quantity);
   }
 
   return held;
@@ -135,9 +135,7 @@ function dealHand(
   copies: readonly CardCopy[],
   shuffle: <T>(items: readonly T[]) => readonly T[],
 ): DealtHand {
-  const library = copies.flatMap((entry) =>
-    Array.from({ length: entry.quantity }, () => entry.card),
-  );
+  const library = copies.flatMap((copy) => Array.from({ length: copy.quantity }, () => copy.card));
   const pool = shuffle(library);
   const dealt = Math.min(OPENING_HAND_SIZE, pool.length);
 

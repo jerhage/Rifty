@@ -55,7 +55,7 @@ describe("DeckRow", () => {
 });
 
 describe("HandCardTile", () => {
-  it("should announce the cost badge and report the toggle as checked", async () => {
+  it("should announce the energy badge and report the toggle as checked", async () => {
     await render(
       <HandCardTile
         card={ZED}

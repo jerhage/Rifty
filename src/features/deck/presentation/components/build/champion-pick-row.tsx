@@ -69,7 +69,7 @@ function ChampionPickRow({
             {formatDomains(card)}
           </ThemedText>
         </View>
-        <ThemedText themeColor="textTertiary" type="mono" style={styles.stats}>
+        <ThemedText themeColor="textTertiary" type="mono" style={styles.attributes}>
           {formatCardAttributes(card)}
         </ThemedText>
       </View>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     minWidth: 0,
   },
-  stats: {
+  attributes: {
     marginTop: Spacing.one,
   },
   mark: {

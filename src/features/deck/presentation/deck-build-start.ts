@@ -12,7 +12,7 @@ interface DeckBuildCapabilities {
 }
 
 type DeckBuildStart =
-  | { readonly type: "new" }
+  | { readonly type: "create" }
   | { readonly type: "edit"; readonly resolvedDeck: ResolvedDeck };
 
 type DeckBuildMode = DeckBuildStart["type"];

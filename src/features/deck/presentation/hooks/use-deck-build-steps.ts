@@ -64,7 +64,7 @@ function retreatFrom(id: DeckBuildStepId): StepRetreat {
 
 function openingStepId(start: DeckBuildStart): DeckBuildStepId {
   return match<DeckBuildStart, DeckBuildStepId>(start)
-    .with({ type: "new" }, () => "legend")
+    .with({ type: "create" }, () => "legend")
     .with({ type: "edit" }, () => "sections")
     .exhaustive();
 }

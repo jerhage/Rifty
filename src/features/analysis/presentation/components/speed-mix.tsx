@@ -27,8 +27,8 @@ function SpeedMix({
 }) {
   const theme = useTheme();
   const speedColors = useSpeedColors();
-  const present = speeds.filter((entry) => entry.count > 0);
-  const counted = present.reduce((total, entry) => total + entry.count, 0);
+  const present = speeds.filter((share) => share.count > 0);
+  const counted = present.reduce((total, share) => total + share.count, 0);
 
   return (
     <Panel
@@ -44,12 +44,12 @@ function SpeedMix({
         importantForAccessibility="no-hide-descendants"
         style={[styles.bar, { backgroundColor: theme.fill }]}
       >
-        {present.map((entry) => (
+        {present.map((share) => (
           <View
-            key={entry.speed}
+            key={share.speed}
             style={{
-              backgroundColor: speedColors[entry.speed],
-              flexGrow: entry.count,
+              backgroundColor: speedColors[share.speed],
+              flexGrow: share.count,
               height: "100%",
             }}
           />
@@ -57,17 +57,17 @@ function SpeedMix({
       </View>
 
       <View style={styles.rows}>
-        {speeds.map((entry) => (
+        {speeds.map((share) => (
           <View
             accessible
-            accessibilityLabel={speedLabel(entry)}
-            key={entry.speed}
+            accessibilityLabel={speedLabel(share)}
+            key={share.speed}
             style={styles.row}
           >
-            <ColorDot color={speedColors[entry.speed]} shape="diamond" size={9} />
+            <ColorDot color={speedColors[share.speed]} shape="diamond" size={9} />
             <View style={styles.label}>
               <ThemedText type="body" style={styles.name}>
-                {cardSpeedName(entry.speed)}
+                {cardSpeedName(share.speed)}
               </ThemedText>
               <ThemedText
                 numberOfLines={1}
@@ -75,15 +75,15 @@ function SpeedMix({
                 type="body"
                 style={styles.note}
               >
-                {speedNote(entry.speed)}
+                {speedNote(share.speed)}
               </ThemedText>
             </View>
             <View style={styles.figures}>
-              <ThemedText style={{ color: speedColors[entry.speed] }} type="monoValue">
-                {`${Math.round(entry.share * 100)}%`}
+              <ThemedText style={{ color: speedColors[share.speed] }} type="monoValue">
+                {`${Math.round(share.share * 100)}%`}
               </ThemedText>
               <ThemedText themeColor="textTertiary" type="mono">
-                {entry.count}
+                {share.count}
               </ThemedText>
             </View>
           </View>
@@ -99,10 +99,10 @@ function SpeedMix({
   );
 }
 
-function speedLabel(entry: SpeedShare): string {
-  const cards = entry.count === 1 ? "1 card" : `${entry.count} cards`;
+function speedLabel(share: SpeedShare): string {
+  const cards = share.count === 1 ? "1 card" : `${share.count} cards`;
 
-  return `${cardSpeedName(entry.speed)}, ${speedNote(entry.speed)}, ${Math.round(entry.share * 100)}%, ${cards}`;
+  return `${cardSpeedName(share.speed)}, ${speedNote(share.speed)}, ${Math.round(share.share * 100)}%, ${cards}`;
 }
 
 export { SpeedMix };

@@ -7,7 +7,7 @@ import { useKeywordColors, useTheme } from "@/hooks/use-theme";
 
 import type { KeywordMix, KeywordShare } from "../../card-metrics";
 
-function KeywordTally({
+function KeywordMixPanel({
   cardCount,
   mix,
 }: {
@@ -72,7 +72,7 @@ function keywordLabel(keyword: KeywordShare): string {
   return `${keyword.name}, ${keyword.count === 1 ? "1 card" : `${keyword.count} cards`}`;
 }
 
-export { KeywordTally };
+export { KeywordMixPanel };
 
 const styles = StyleSheet.create({
   rows: {

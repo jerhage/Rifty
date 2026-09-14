@@ -196,7 +196,7 @@ describe("deck editing scenarios", () => {
         },
         dependencies,
       ),
-    ).resolves.toEqual({ type: "copyLimitReached", allowed: 1 });
+    ).resolves.toEqual({ type: "copyLimitExceeded", copies: 1 });
 
     await expect(
       setDeckCardQuantity(
@@ -235,7 +235,7 @@ describe("deck editing scenarios", () => {
         },
         dependencies,
       ),
-    ).resolves.toEqual({ type: "copyLimitReached", allowed: 0 });
+    ).resolves.toEqual({ type: "copyLimitExceeded", copies: 0 });
     store.close();
   });
 

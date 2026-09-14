@@ -12,7 +12,7 @@ import type { DeckSaver } from "../deck-saver";
 type SetDeckCardQuantityResult =
   | { readonly type: "success"; readonly deck: Deck }
   | { readonly type: "notFound" }
-  | { readonly type: "copyLimitReached"; readonly allowed: number };
+  | { readonly type: "copyLimitExceeded"; readonly copies: number };
 
 interface DeckCardQuantity {
   readonly section: DeckSection;
@@ -45,7 +45,7 @@ async function setDeckCardQuantity(
   return await match(remainingCopies(current.entries, section, cardId, printingId))
     .with(
       { type: "limited", copies: P.number.lt(quantity) },
-      ({ copies }): SetDeckCardQuantityResult => ({ type: "copyLimitReached", allowed: copies }),
+      ({ copies }): SetDeckCardQuantityResult => ({ type: "copyLimitExceeded", copies }),
     )
     .with({ type: "limited" }, { type: "unlimited" }, () =>
       savedWithQuantity(current, quantityRequest, { clock, deckSaver }),

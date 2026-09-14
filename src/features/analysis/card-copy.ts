@@ -7,7 +7,7 @@ interface CardCopy {
 
 /** Sums the quantities of a multiset of cards. */
 function copyCount(copies: readonly CardCopy[]): number {
-  return copies.reduce((total, entry) => total + entry.quantity, 0);
+  return copies.reduce((total, copy) => total + copy.quantity, 0);
 }
 
 export { copyCount };

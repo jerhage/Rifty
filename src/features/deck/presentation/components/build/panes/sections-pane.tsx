@@ -52,14 +52,14 @@ function SectionsPane({
         <>
           <DeckSaveData
             capabilities={capabilities}
-            draft={{
+            onChangeName={draft.changeName}
+            onSaved={onSaved}
+            request={{
               chosenChampion: draft.chosenChampion,
               entries: draft.entries,
               name: draft.draft.name,
               verification: draft.verification,
             }}
-            onChangeName={draft.changeName}
-            onSaved={onSaved}
             start={start}
           >
             {({ changeName }) => (

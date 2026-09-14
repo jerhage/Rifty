@@ -14,8 +14,7 @@ interface OddsRow {
   readonly byTurnThree: number;
 }
 
-function oddsRows(odds: DrawOdds): readonly OddsRow[] {
-  const pinned = odds.pinned;
+function oddsRows({ copyOdds, pinned }: DrawOdds): readonly OddsRow[] {
   const pinnedRows: readonly OddsRow[] =
     pinned === null
       ? []
@@ -30,11 +29,11 @@ function oddsRows(odds: DrawOdds): readonly OddsRow[] {
 
   return [
     ...pinnedRows,
-    ...odds.copyOdds.map((entry) => ({
-      key: `copies-${entry.copies}`,
-      label: entry.copies === 1 ? "1 copy" : `${entry.copies} copies`,
-      opening: entry.opening,
-      byTurnThree: entry.byTurnThree,
+    ...copyOdds.map((odds) => ({
+      key: `copies-${odds.copies}`,
+      label: odds.copies === 1 ? "1 copy" : `${odds.copies} copies`,
+      opening: odds.opening,
+      byTurnThree: odds.byTurnThree,
     })),
   ];
 }

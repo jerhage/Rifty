@@ -76,15 +76,15 @@ function resolvedDeck(
   cards: readonly Card[],
   chosenChampionCard: Card | null = null,
 ): ResolvedDeck {
-  const byPrintingId = new Map(cards.map((held) => [held.printingId, held]));
+  const byPrintingId = new Map(cards.map((card) => [card.printingId, card]));
 
   return {
     deck: source,
     entries: source.entries.map((entry) => {
-      const held = byPrintingId.get(entry.printingId);
-      if (!held) throw new Error(`No card fixture for printing ${entry.printingId}.`);
+      const card = byPrintingId.get(entry.printingId);
+      if (!card) throw new Error(`No card fixture for printing ${entry.printingId}.`);
 
-      return { section: entry.section, card: held, quantity: entry.quantity };
+      return { section: entry.section, card, quantity: entry.quantity };
     }),
     chosenChampionCard,
   };

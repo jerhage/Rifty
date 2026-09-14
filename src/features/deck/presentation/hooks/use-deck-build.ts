@@ -56,11 +56,11 @@ type SectionDraftViewState = Pick<DeckDraftState, "draft" | "setQuantity" | "ver
 type SectionPoolViewState = Pick<
   SectionPoolState,
   | "filters"
-  | "layout"
   | "openFilters"
   | "openSort"
+  | "poolLayout"
   | "query"
-  | "setLayout"
+  | "setPoolLayout"
   | "setQuery"
   | "setView"
   | "setSection"

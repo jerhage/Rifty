@@ -25,7 +25,7 @@ type SaveFooterMessage =
   | { readonly type: "failure"; readonly message: string }
   | { readonly type: "readiness"; readonly message: string };
 
-interface DeckSaveDraft {
+interface DeckSaveRequest {
   readonly chosenChampion: ChosenChampion | null;
   readonly entries: readonly DeckEntry[];
   readonly name: string;
@@ -43,16 +43,16 @@ interface DeckSaveControls {
 function DeckSaveData({
   capabilities,
   children,
-  draft,
   onChangeName,
   onSaved,
+  request,
   start,
 }: {
   readonly capabilities: DeckBuildCapabilities;
   readonly children: (controls: DeckSaveControls) => ReactNode;
-  readonly draft: DeckSaveDraft;
   readonly onChangeName: (name: string) => void;
   readonly onSaved: () => void;
+  readonly request: DeckSaveRequest;
   readonly start: DeckBuildStart;
 }) {
   const queryClient = useQueryClient();
@@ -93,7 +93,7 @@ function DeckSaveData({
     [onChangeName, reset, state],
   );
 
-  const { chosenChampion, entries, name, verification } = draft;
+  const { chosenChampion, entries, name, verification } = request;
   const save = useCallback(() => {
     submit({ ...deckIdentity(start, capabilities), chosenChampion, entries, name });
   }, [capabilities, chosenChampion, entries, name, start, submit]);
@@ -136,7 +136,7 @@ function deckIdentity(
   { clock, idGenerator }: DeckBuildCapabilities,
 ): Pick<DeckDraft, "id" | "notes" | "createdAt"> {
   return match(start)
-    .with({ type: "new" }, () => ({
+    .with({ type: "create" }, () => ({
       id: idGenerator.next(),
       notes: "",
       createdAt: clock.now(),
@@ -192,4 +192,4 @@ function footerMessage(state: DeckSaveState, verification: DeckVerification): Sa
 }
 
 export { DeckSaveData };
-export type { DeckSaveControls, DeckSaveDraft };
+export type { DeckSaveControls, DeckSaveRequest };

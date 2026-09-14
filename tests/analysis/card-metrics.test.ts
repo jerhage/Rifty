@@ -77,7 +77,7 @@ describe("card metrics", () => {
   });
 
   it("should count a supporting copy alongside the rest when it is handed one", () => {
-    expect(speedMix(withSupport).find((entry) => entry.speed === "reaction")?.count).toBe(3);
+    expect(speedMix(withSupport).find((share) => share.speed === "reaction")?.count).toBe(3);
     expect(keywordMix(withSupport).keywords.map((keyword) => keyword.id)).toContain("vision");
   });
 
@@ -114,7 +114,7 @@ describe("card metrics", () => {
     });
     const mix = keywordMix([{ card: granter, quantity: 1 }]);
 
-    expect(mix.keywords.map((entry) => entry.id)).toEqual(["tank"]);
+    expect(mix.keywords.map((share) => share.id)).toEqual(["tank"]);
     expect(mix.carrying).toBe(1);
   });
 
@@ -122,7 +122,7 @@ describe("card metrics", () => {
     const ramp = card("ramp", "OGN", { keywords: [controllerKeyword("add", "Add")] });
     const mix = keywordMix([{ card: ramp, quantity: 2 }]);
 
-    expect(mix.keywords.map((entry) => entry.id)).toEqual(["add"]);
+    expect(mix.keywords.map((share) => share.id)).toEqual(["add"]);
     expect(mix.carrying).toBe(2);
   });
 

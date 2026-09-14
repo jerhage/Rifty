@@ -62,7 +62,7 @@ function HandCardTile({
           style={styles.image}
         />
         {card.attributes.energy === null ? null : (
-          <View style={[styles.cost, { backgroundColor: theme.backgroundSheet }]}>
+          <View style={[styles.energy, { backgroundColor: theme.backgroundSheet }]}>
             <ThemedText type="mono">{`${card.attributes.energy}E`}</ThemedText>
           </View>
         )}
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     height: "100%",
     width: "100%",
   },
-  cost: {
+  energy: {
     borderBottomRightRadius: Radius.small - 2,
     borderTopLeftRadius: Radius.small - 2,
     left: 0,

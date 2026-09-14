@@ -102,10 +102,10 @@ async function renderDeckSave(store: DeckStore, name = "Storm") {
       <DeckListProbe listing={store.listing} />
       <DeckSaveData
         capabilities={store.capabilities}
-        draft={{ chosenChampion: null, entries: [], name, verification: LEGAL }}
         onChangeName={onChangeName}
         onSaved={onSaved}
-        start={{ type: "new" }}
+        request={{ chosenChampion: null, entries: [], name, verification: LEGAL }}
+        start={{ type: "create" }}
       >
         {(received) => {
           childProps.push(Object.keys(received));

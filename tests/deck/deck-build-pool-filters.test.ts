@@ -9,7 +9,7 @@ import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build"
 
 import { createTestWrapper } from "../test-wrapper";
 
-const start: DeckBuildStart = { type: "new" };
+const start: DeckBuildStart = { type: "create" };
 
 async function renderBuild() {
   return await renderHook(() => useDeckBuild(start, { onExit: () => undefined }), {

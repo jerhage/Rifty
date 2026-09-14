@@ -38,7 +38,7 @@ const single = card("single", "OGN", {
 });
 const sideboarded = card("sideboarded", "OGN", { name: "Sideboard Unit" });
 
-const library: readonly CardCopy[] = [
+const pool: readonly CardCopy[] = [
   { card: champion, quantity: 3 },
   { card: staple, quantity: 3 },
   { card: pair, quantity: 2 },
@@ -52,7 +52,7 @@ const splitPrintings: readonly CardCopy[] = [
   { card: pair, quantity: 3 },
 ];
 
-const smallLibrary: readonly CardCopy[] = [
+const smallPool: readonly CardCopy[] = [
   { card: champion, quantity: 1 },
   { card: staple, quantity: 1 },
   { card: pair, quantity: 1 },
@@ -61,7 +61,7 @@ const smallLibrary: readonly CardCopy[] = [
   { card: sideboarded, quantity: 1 },
 ];
 
-const shortLibrary: readonly CardCopy[] = [
+const shortPool: readonly CardCopy[] = [
   { card: champion, quantity: 1 },
   { card: staple, quantity: 1 },
   { card: pair, quantity: 1 },
@@ -100,14 +100,14 @@ describe("at least one chance", () => {
 
 describe("draw odds", () => {
   it("should count the copies it is given, most numerous first", () => {
-    const odds = drawOdds(library, null);
+    const odds = drawOdds(pool, null);
 
     expect(odds.poolSize).toBe(9);
-    expect(odds.copyOdds.map((entry) => entry.copies)).toEqual([3, 2, 1]);
+    expect(odds.copyOdds.map(({ copies }) => copies)).toEqual([3, 2, 1]);
   });
 
   it("should give each copy count its opening and turn three chances", () => {
-    const [threes, twos, ones] = drawOdds(library, null).copyOdds;
+    const [threes, twos, ones] = drawOdds(pool, null).copyOdds;
 
     expect(threes?.opening).toBeCloseTo(0.880952, 6);
     expect(threes?.byTurnThree).toBeCloseTo(0.988095, 6);
@@ -118,7 +118,7 @@ describe("draw odds", () => {
   });
 
   it("should report the pinned card held among the copies", () => {
-    const odds = drawOdds(library, champion).pinned;
+    const odds = drawOdds(pool, champion).pinned;
 
     expect(odds?.name).toBe("Volibear, Furious");
     expect(odds?.copies).toBe(3);
@@ -129,7 +129,7 @@ describe("draw odds", () => {
   it("should have no pinned row when none is pinned or the copies do not hold it", () => {
     const without: readonly CardCopy[] = [{ card: staple, quantity: 3 }];
 
-    expect(drawOdds(library, null).pinned).toBeNull();
+    expect(drawOdds(pool, null).pinned).toBeNull();
     expect(drawOdds(without, champion).pinned).toBeNull();
   });
 
@@ -137,7 +137,7 @@ describe("draw odds", () => {
     const odds = drawOdds(splitPrintings, null);
 
     expect(odds.poolSize).toBe(9);
-    expect(odds.copyOdds.map((entry) => entry.copies)).toEqual([3]);
+    expect(odds.copyOdds.map(({ copies }) => copies)).toEqual([3]);
   });
 
   it("should keep two cards with different identities in their own copy counts", () => {
@@ -146,7 +146,7 @@ describe("draw odds", () => {
       { card: pair, quantity: 1 },
     ];
 
-    expect(drawOdds(mixed, null).copyOdds.map((entry) => entry.copies)).toEqual([2, 1]);
+    expect(drawOdds(mixed, null).copyOdds.map(({ copies }) => copies)).toEqual([2, 1]);
   });
 
   it("should count every printing of the pinned card as copies of one card", () => {
@@ -169,7 +169,7 @@ describe("draw odds", () => {
     expect(drawOdds(without, championPrint).pinned).toBeNull();
   });
 
-  it("should give an empty library no buckets rather than odds against nothing", () => {
+  it("should give an empty pool no buckets rather than odds against nothing", () => {
     expect(drawOdds([], null)).toEqual({
       poolSize: 0,
       copyOdds: [],
@@ -213,15 +213,15 @@ describe("hand stats", () => {
 
 describe("dealing a hand", () => {
   it("should expand every copy, so a three-of can arrive more than once", () => {
-    expect(dealHand(library, identity).hand).toEqual([champion, champion, champion, staple]);
+    expect(dealHand(pool, identity).hand).toEqual([champion, champion, champion, staple]);
   });
 
   it("should deal from the shuffled order it is given", () => {
-    expect(dealHand(library, reversed).hand).toEqual([single, pair, pair, staple]);
+    expect(dealHand(pool, reversed).hand).toEqual([single, pair, pair, staple]);
   });
 
   it("should deal four cards and leave out what it was never given", () => {
-    const { hand } = dealHand(library, identity);
+    const { hand } = dealHand(pool, identity);
 
     expect(hand).toHaveLength(4);
     expect(hand).not.toContain(legend);
@@ -229,7 +229,7 @@ describe("dealing a hand", () => {
   });
 
   it("should keep the rest of the shuffled pool behind a cursor past the hand", () => {
-    const dealt = dealHand(library, identity);
+    const dealt = dealHand(pool, identity);
 
     expect(dealt.pool).toHaveLength(9);
     expect(dealt.cursor).toBe(4);
@@ -246,7 +246,7 @@ describe("dealing a hand", () => {
 
 describe("mulliganing a hand", () => {
   it("should replace one card with the next off the pool", () => {
-    const dealt = dealHand(library, identity);
+    const dealt = dealHand(pool, identity);
     const redrawn = mulliganHand(dealt, [1]);
 
     expect(redrawn.hand).toEqual([champion, staple, champion, staple]);
@@ -255,7 +255,7 @@ describe("mulliganing a hand", () => {
   });
 
   it("should replace two cards with the next two off the pool", () => {
-    const dealt = dealHand(smallLibrary, identity);
+    const dealt = dealHand(smallPool, identity);
     const redrawn = mulliganHand(dealt, [0, 2]);
 
     expect(redrawn.hand).toEqual([legend, staple, sideboarded, single]);
@@ -264,13 +264,13 @@ describe("mulliganing a hand", () => {
   });
 
   it("should take replacements in hand order however the selection was made", () => {
-    const dealt = dealHand(smallLibrary, identity);
+    const dealt = dealHand(smallPool, identity);
 
     expect(mulliganHand(dealt, [2, 0])).toEqual(mulliganHand(dealt, [0, 2]));
   });
 
   it("should leave the hand and the cursor alone when nothing is selected", () => {
-    const dealt = dealHand(library, identity);
+    const dealt = dealHand(pool, identity);
     const redrawn = mulliganHand(dealt, []);
 
     expect(redrawn.hand).toEqual(dealt.hand);
@@ -279,7 +279,7 @@ describe("mulliganing a hand", () => {
   });
 
   it("should never draw the same card twice or move the pool it drew from", () => {
-    const dealt = dealHand(smallLibrary, identity);
+    const dealt = dealHand(smallPool, identity);
     const redrawn = mulliganHand(dealt, [0, 1]);
 
     expect(redrawn.hand.slice(0, 2)).toEqual(dealt.pool.slice(4, 6));
@@ -287,7 +287,7 @@ describe("mulliganing a hand", () => {
   });
 
   it("should replace as many as the pool still holds and report how many it redrew", () => {
-    const dealt = dealHand(shortLibrary, identity);
+    const dealt = dealHand(shortPool, identity);
     const redrawn = mulliganHand(dealt, [1, 3]);
 
     expect(redrawn.hand).toEqual([champion, legend, pair, single]);

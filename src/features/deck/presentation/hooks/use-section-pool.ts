@@ -29,7 +29,7 @@ type SectionPoolSheetState =
 function useSectionPool(legend: Card | null) {
   const [section, setSection] = useState<DeckSection>("mainDeck");
   const [query, setQuery] = useState("");
-  const [layout, setLayout] = useState<SectionPoolLayout>("list");
+  const [poolLayout, setPoolLayout] = useState<SectionPoolLayout>("list");
   const [view, setView] = useState<SectionPoolView>("pool");
   const filterSheet = useDraftSheet<SectionPoolFilters>(() => defaultPoolFilters(legend));
   const sortSheet = useDraftSheet<CardSort | undefined>(() => DEFAULT_POOL_SORT);
@@ -100,14 +100,14 @@ function useSectionPool(legend: Card | null) {
     draftFilters: filterSheet.draft,
     draftSort: sortSheet.draft,
     filters: filterSheet.applied,
-    layout,
     openFilters: filterSheet.open,
     openSort: sortSheet.open,
+    poolLayout,
     query,
     resetFilters,
     resetFor,
     searchQuery,
-    setLayout,
+    setPoolLayout,
     setQuery,
     setView,
     setSection,

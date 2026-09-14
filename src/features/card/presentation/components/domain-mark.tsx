@@ -9,9 +9,9 @@ import { useDomainColors, useTheme } from "@/hooks/use-theme";
 import { domainCode } from "../card-taxonomy-format";
 
 /**
- * Where a mark sits: `segment` shares a bar with its siblings, `tag` stands on its own beside text.
+ * Where a mark sits: `segment` shares a bar with its siblings, `pill` stands on its own beside text.
  */
-type DomainMarkLayout = "segment" | "tag";
+type DomainMarkLayout = "segment" | "pill";
 
 /**
  * One domain as its color *and* its letter. Several of the seven domains are the same color under a
@@ -36,7 +36,7 @@ function DomainMark({
         styles.mark,
         match(layout)
           .with("segment", () => styles.segment)
-          .with("tag", () => styles.tag)
+          .with("pill", () => styles.pill)
           .exhaustive(),
         { backgroundColor: domainColors[domainId] },
       ]}
@@ -55,7 +55,7 @@ function DomainMarks({ domainIds }: { readonly domainIds: readonly CardDomain[] 
   return (
     <View style={styles.marks}>
       {domainIds.map((domainId) => (
-        <DomainMark domainId={domainId} key={domainId} layout="tag" />
+        <DomainMark domainId={domainId} key={domainId} layout="pill" />
       ))}
     </View>
   );
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   segment: {
     flex: 1,
   },
-  tag: {
+  pill: {
     borderRadius: 3,
     minWidth: 14,
     paddingHorizontal: Spacing.one - 1,

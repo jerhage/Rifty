@@ -54,7 +54,7 @@ function SectionPoolList({
 
   const isPool = poolView === "pool";
   const placed = placedCards(draft, section);
-  const listed = isPool ? sectionPool : placed.map((entry) => entry.card);
+  const listed = isPool ? sectionPool : placed.map(({ card }) => card);
 
   return match(poolView)
     .with("roles", () => (

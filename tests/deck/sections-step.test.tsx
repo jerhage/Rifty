@@ -46,11 +46,11 @@ function draftState(): SectionDraftViewState {
 function poolState(view: SectionPoolViewState["view"]): SectionPoolViewState {
   return {
     filters: EMPTY_POOL_FILTERS,
-    layout: "list",
+    poolLayout: "list",
     openFilters: () => undefined,
     openSort: () => undefined,
     query: "",
-    setLayout: () => undefined,
+    setPoolLayout: () => undefined,
     setQuery: () => undefined,
     setView: () => undefined,
     setSection: () => undefined,

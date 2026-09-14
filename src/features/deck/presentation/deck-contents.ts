@@ -41,7 +41,7 @@ function deckCards(
 function deckGroups(entries: readonly ResolvedDeckEntry[]): readonly DeckGroup[] {
   return GROUP_DEFINITIONS.flatMap((definition) => {
     const resolved = deckCards(entries, definition.sections).filter(
-      (held) => !definition.typeIds || definition.typeIds.includes(held.card.classification.typeId),
+      (copy) => !definition.typeIds || definition.typeIds.includes(copy.card.classification.typeId),
     );
 
     if (resolved.length === 0) return [];
@@ -51,7 +51,7 @@ function deckGroups(entries: readonly ResolvedDeckEntry[]): readonly DeckGroup[]
         title: definition.title,
         sections: definition.sections,
         cards: [...resolved].sort((left, right) => left.card.name.localeCompare(right.card.name)),
-        count: resolved.reduce((total, held) => total + held.quantity, 0),
+        count: resolved.reduce((total, copy) => total + copy.quantity, 0),
       },
     ];
   });

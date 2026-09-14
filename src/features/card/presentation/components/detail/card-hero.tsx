@@ -8,7 +8,7 @@ import { useTheme } from "@/hooks/use-theme";
 
 const MaxCardWidth = 420;
 
-/** The card face, shown plain — its own printing already carries the cost, might and domain. */
+/** The card face, shown plain — its own printing already carries the energy, might and domain. */
 function CardHero({ card }: { readonly card: Card }) {
   const theme = useTheme();
   const aspectRatio = match(card.orientation)

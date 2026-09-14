@@ -8,7 +8,7 @@ import type { Deck } from "@/features/deck/deck/deck";
 
 import { DeckRow } from "../components/deck-row";
 import { NewDeckButton } from "../components/new-deck-button";
-import { deckListLabel } from "../deck-summary-format";
+import { savedDeckLabel } from "../deck-label-format";
 
 interface DeckListScreenProps {
   readonly decks: readonly Deck[];
@@ -37,7 +37,7 @@ function DeckListScreen({ decks, now, onNewDeck, onOpenDeck }: DeckListScreenPro
           Decks
         </ThemedText>
         <ThemedText themeColor="textSecondary" type="body" style={styles.subtitle}>
-          {deckListLabel(decks.length)}
+          {savedDeckLabel(decks.length)}
         </ThemedText>
 
         {decks.map((deck) => (

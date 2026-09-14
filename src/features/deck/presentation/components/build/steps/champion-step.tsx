@@ -82,7 +82,7 @@ function ChampionStep({
       />
       <BuildFooter actionLabel="Build sections" onAction={onNext}>
         <ThemedText numberOfLines={1} themeColor="textSecondary" type="mono">
-          {selected ? selected.name : "No Champion yet — you can skip"}
+          {selected ? selected.name : "No Chosen Champion yet — you can skip"}
         </ThemedText>
       </BuildFooter>
     </>

@@ -48,7 +48,7 @@ function SectionsStepColumns({
   const theme = useTheme();
   const { usableWidth } = useLayoutSize();
   const paneWidth = paneWidthFor(usableWidth);
-  const held = placedCardTotal(placedCards(draft.draft, pool.section));
+  const inDeckCount = placedCardTotal(placedCards(draft.draft, pool.section));
 
   return (
     <View style={styles.columns}>
@@ -61,7 +61,7 @@ function SectionsStepColumns({
             onLoadMorePool={onLoadMorePool}
             onOpenCard={onOpenCard}
             onSetQuantity={draft.setQuantity}
-            poolLayout={pool.layout}
+            poolLayout={pool.poolLayout}
             poolView={viewChoice.shown}
             section={pool.section}
             sectionPool={sectionPool}
@@ -80,13 +80,13 @@ function SectionsStepColumns({
           />
 
           <ThemedText
-            accessibilityLabel={`In deck, ${held}`}
+            accessibilityLabel={`In deck, ${inDeckCount}`}
             accessibilityRole="header"
-            style={[styles.held, { borderBottomColor: theme.border }]}
+            style={[styles.inDeck, { borderBottomColor: theme.border }]}
             themeColor="textTertiary"
             type="mono"
           >
-            {`In deck · ${held}`}
+            {`In deck · ${inDeckCount}`}
           </ThemedText>
 
           <SectionPoolList
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     flexShrink: 0,
   },
-  held: {
+  inDeck: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingBottom: Spacing.three - 4,
     paddingHorizontal: Spacing.three,

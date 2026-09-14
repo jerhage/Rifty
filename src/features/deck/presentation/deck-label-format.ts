@@ -3,7 +3,12 @@ import { match } from "ts-pattern";
 import type { Deck, DeckSection } from "@/features/deck/deck/deck";
 
 /** Sections that make up the deck proper; the sideboard is counted and shown separately. */
-const MAIN_SECTIONS: readonly DeckSection[] = ["legend", "mainDeck", "runeDeck", "battlefield"];
+const PLAYABLE_DECK_SECTIONS: readonly DeckSection[] = [
+  "legend",
+  "mainDeck",
+  "runeDeck",
+  "battlefield",
+];
 
 function cardCount(deck: Deck, sections: readonly DeckSection[]): number {
   return deck.entries
@@ -12,7 +17,7 @@ function cardCount(deck: Deck, sections: readonly DeckSection[]): number {
 }
 
 function deckCardCount(deck: Deck): number {
-  return cardCount(deck, MAIN_SECTIONS);
+  return cardCount(deck, PLAYABLE_DECK_SECTIONS);
 }
 
 function sideboardCount(deck: Deck): number {
@@ -35,10 +40,10 @@ function deckCountLabel(deck: Deck): string {
   return deckCountParts(deck).join(" · ");
 }
 
-function deckListLabel(count: number): string {
-  if (count === 0) return "No decks yet. Build your first list.";
+function savedDeckLabel(count: number): string {
+  if (count === 0) return "No decks yet. Build your first deck.";
 
-  return count === 1 ? "1 list" : `${count} lists`;
+  return count === 1 ? "1 deck" : `${count} decks`;
 }
 
 type EditedAge =
@@ -96,8 +101,8 @@ export {
   deckCardCount,
   deckCountLabel,
   deckCountParts,
-  deckListLabel,
   editedLabel,
+  savedDeckLabel,
   sideboardCount,
   spokenEditedLabel,
 };

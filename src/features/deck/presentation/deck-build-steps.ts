@@ -160,25 +160,14 @@ function draftFromDeck({ chosenChampionCard, deck, entries }: ResolvedDeck): Dec
   return draft;
 }
 
-interface PlacedCard {
-  readonly card: Card;
-  readonly quantity: number;
-  readonly section: DeckSection;
-}
-
-function placedCards(draft: DeckBuildDraft, section: DeckSection): readonly PlacedCard[] {
+function placedCards(draft: DeckBuildDraft, section: DeckSection): readonly DraftSectionCard[] {
   return Object.values(draft.sectionCards[section])
     .filter((placed) => placed.quantity > 0)
-    .map((placed) => ({
-      card: placed.card,
-      quantity: placed.quantity,
-      section,
-    }))
     .sort((one, other) => one.card.name.localeCompare(other.card.name));
 }
 
-function placedCardTotal(placed: readonly PlacedCard[]): number {
-  return placed.reduce((total, entry) => total + entry.quantity, 0);
+function placedCardTotal(cards: readonly DraftSectionCard[]): number {
+  return cards.reduce((total, placed) => total + placed.quantity, 0);
 }
 
 /** The champion is a main deck card, so choosing one puts a copy there if none is held yet. */
@@ -213,4 +202,4 @@ export {
   withSectionCard,
   sectionCounts,
 };
-export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId, DraftSectionCard, PlacedCard };
+export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId, DraftSectionCard };

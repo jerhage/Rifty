@@ -583,8 +583,8 @@ function newestOfReissued(printings: readonly NormalizedPrinting[]): readonly No
 
   for (const printing of printings) {
     const key = feedKey(printing);
-    const held = newest.get(key);
-    if (held === undefined || reissueOrder(printing, held) < 0) newest.set(key, printing);
+    const kept = newest.get(key);
+    if (kept === undefined || reissueOrder(printing, kept) < 0) newest.set(key, printing);
   }
 
   const current = new Set([...newest.values()].map((printing) => printing.sourceId));
@@ -617,9 +617,9 @@ function cardGroups(
   const grouped = new Map<string, NormalizedPrinting[]>();
 
   for (const printing of printings) {
-    const held = grouped.get(printing.identityName);
-    if (held === undefined) grouped.set(printing.identityName, [printing]);
-    else held.push(printing);
+    const group = grouped.get(printing.identityName);
+    if (group === undefined) grouped.set(printing.identityName, [printing]);
+    else group.push(printing);
   }
 
   return [...grouped]
@@ -710,7 +710,7 @@ function groupKeywords(
   remindersByPrinting: ReadonlyMap<string, ReadonlyMap<string, string>>,
   reminderTexts: ReadonlyMap<string, string>,
 ): readonly GroupKeyword[] {
-  const held = new Map<string, GroupKeyword>();
+  const byKey = new Map<string, GroupKeyword>();
 
   for (const printing of printedPrintings(group.trusted)) {
     const reminders = remindersByPrinting.get(printing.sourceId) ?? new Map<string, string>();
@@ -727,20 +727,20 @@ function groupKeywords(
         occurrence.cost ?? "",
         ...targets.map(targetKey),
       ].join("\u0000");
-      const kept = held.get(key);
+      const kept = byKey.get(key);
       if (kept === undefined) {
-        held.set(key, {
+        byKey.set(key, {
           id: occurrence.id,
           value: occurrence.value,
           cost: occurrence.cost,
           reminder,
           targets,
         });
-      } else if (kept.reminder === null && reminder !== null) held.set(key, { ...kept, reminder });
+      } else if (kept.reminder === null && reminder !== null) byKey.set(key, { ...kept, reminder });
     }
   }
 
-  return [...held.values()];
+  return [...byKey.values()];
 }
 
 function groupSpeeds(group: CardGroup): readonly CardSpeed[] {
@@ -763,9 +763,9 @@ function printingsByIdentity(
   const grouped = new Map<string, NormalizedPrinting[]>();
 
   for (const card of cards) {
-    const held = grouped.get(card.identityName);
-    if (held === undefined) grouped.set(card.identityName, [card]);
-    else held.push(card);
+    const group = grouped.get(card.identityName);
+    if (group === undefined) grouped.set(card.identityName, [card]);
+    else group.push(card);
   }
 
   return grouped;
@@ -882,18 +882,19 @@ function canonicalCardIds(cards: readonly NormalizedPrinting[]): ReadonlySet<str
   const chosen = new Map<string, NormalizedPrinting>();
 
   for (const card of cards) {
-    const held = chosen.get(card.riftboundId);
-    if (held === undefined || outranks(card, held)) chosen.set(card.riftboundId, card);
+    const chosenSoFar = chosen.get(card.riftboundId);
+    if (chosenSoFar === undefined || outranks(card, chosenSoFar))
+      chosen.set(card.riftboundId, card);
   }
 
   return new Set([...chosen.values()].map((card) => card.sourceId));
 }
 
-function outranks(card: NormalizedPrinting, held: NormalizedPrinting): boolean {
+function outranks(card: NormalizedPrinting, rival: NormalizedPrinting): boolean {
   const standard = card.finish === "standard";
-  if (standard !== (held.finish === "standard")) return standard;
+  if (standard !== (rival.finish === "standard")) return standard;
 
-  return card.sourceId < held.sourceId;
+  return card.sourceId < rival.sourceId;
 }
 
 function tagKind(

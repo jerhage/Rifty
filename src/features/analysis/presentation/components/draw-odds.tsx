@@ -31,7 +31,7 @@ function oddsRows({ copyOdds, pinned }: DrawOdds): readonly OddsRow[] {
     ...pinnedRows,
     ...copyOdds.map((odds) => ({
       key: `copies-${odds.copies}`,
-      label: odds.copies === 1 ? "1 copy" : `${odds.copies} copies`,
+      label: odds.copies === 1 ? "Any card, 1 copy" : `Any card, ${odds.copies} copies`,
       opening: odds.opening,
       byTurnThree: odds.byTurnThree,
     })),

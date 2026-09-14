@@ -24,6 +24,10 @@ function HandCardTile({
 }) {
   const theme = useTheme();
   const openCard = useOpenCardHapticLongPress(() => onOpenCard(card));
+  const aspectRatio = match(card.orientation)
+    .with("portrait", () => 5 / 7)
+    .with("landscape", () => 7 / 5)
+    .exhaustive();
 
   return (
     <Pressable
@@ -44,6 +48,7 @@ function HandCardTile({
         style={[
           styles.art,
           {
+            aspectRatio,
             backgroundColor: theme.background,
             borderColor: selected ? theme.accent : theme.border,
             borderWidth: selected ? 1.5 : StyleSheet.hairlineWidth,
@@ -52,7 +57,7 @@ function HandCardTile({
       >
         <CardImage
           alternative={{ type: "decorative" }}
-          contentFit="cover"
+          contentFit="contain"
           source={card.imageUrl}
           style={styles.image}
         />
@@ -103,7 +108,6 @@ const styles = StyleSheet.create({
   },
   art: {
     borderRadius: Radius.medium,
-    height: 104,
     overflow: "hidden",
   },
   image: {

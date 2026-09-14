@@ -14,28 +14,13 @@ interface OddsRow {
   readonly byTurnThree: number;
 }
 
-function oddsRows({ copyOdds, pinned }: DrawOdds): readonly OddsRow[] {
-  const pinnedRows: readonly OddsRow[] =
-    pinned === null
-      ? []
-      : [
-          {
-            key: "pinned",
-            label: pinned.name,
-            opening: pinned.opening,
-            byTurnThree: pinned.byTurnThree,
-          },
-        ];
-
-  return [
-    ...pinnedRows,
-    ...copyOdds.map((odds) => ({
-      key: `copies-${odds.copies}`,
-      label: odds.copies === 1 ? "Any card, 1 copy" : `Any card, ${odds.copies} copies`,
-      opening: odds.opening,
-      byTurnThree: odds.byTurnThree,
-    })),
-  ];
+function oddsRows({ copyOdds }: DrawOdds): readonly OddsRow[] {
+  return copyOdds.map((odds) => ({
+    key: `copies-${odds.copies}`,
+    label: odds.copies === 1 ? "Any card, 1 copy" : `Any card, ${odds.copies} copies`,
+    opening: odds.opening,
+    byTurnThree: odds.byTurnThree,
+  }));
 }
 
 function DrawOddsPanel({ odds }: { readonly odds: DrawOdds }) {

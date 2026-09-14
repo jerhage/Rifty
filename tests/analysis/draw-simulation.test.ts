@@ -100,14 +100,14 @@ describe("at least one chance", () => {
 
 describe("draw odds", () => {
   it("should count the copies it is given, most numerous first", () => {
-    const odds = drawOdds(pool, null);
+    const odds = drawOdds(pool);
 
     expect(odds.poolSize).toBe(9);
     expect(odds.copyOdds.map(({ copies }) => copies)).toEqual([3, 2, 1]);
   });
 
   it("should give each copy count its opening and turn three chances", () => {
-    const [threes, twos, ones] = drawOdds(pool, null).copyOdds;
+    const [threes, twos, ones] = drawOdds(pool).copyOdds;
 
     expect(threes?.opening).toBeCloseTo(0.880952, 6);
     expect(threes?.byTurnThree).toBeCloseTo(0.988095, 6);
@@ -117,24 +117,8 @@ describe("draw odds", () => {
     expect(ones?.byTurnThree).toBeCloseTo(0.666667, 6);
   });
 
-  it("should report the pinned card held among the copies", () => {
-    const odds = drawOdds(pool, champion).pinned;
-
-    expect(odds?.name).toBe("Volibear, Furious");
-    expect(odds?.copies).toBe(3);
-    expect(odds?.opening).toBeCloseTo(0.880952, 6);
-    expect(odds?.byTurnThree).toBeCloseTo(0.988095, 6);
-  });
-
-  it("should have no pinned row when none is pinned or the copies do not hold it", () => {
-    const without: readonly CardCopy[] = [{ card: staple, quantity: 3 }];
-
-    expect(drawOdds(pool, null).pinned).toBeNull();
-    expect(drawOdds(without, champion).pinned).toBeNull();
-  });
-
   it("should sum two printings of one card into a single copy count", () => {
-    const odds = drawOdds(splitPrintings, null);
+    const odds = drawOdds(splitPrintings);
 
     expect(odds.poolSize).toBe(9);
     expect(odds.copyOdds.map(({ copies }) => copies)).toEqual([3]);
@@ -146,34 +130,13 @@ describe("draw odds", () => {
       { card: pair, quantity: 1 },
     ];
 
-    expect(drawOdds(mixed, null).copyOdds.map(({ copies }) => copies)).toEqual([2, 1]);
-  });
-
-  it("should count every printing of the pinned card as copies of one card", () => {
-    const odds = drawOdds(splitPrintings, champion).pinned;
-
-    expect(odds?.name).toBe("Volibear, Furious");
-    expect(odds?.copies).toBe(3);
-    expect(odds?.opening).toBeCloseTo(0.880952, 6);
-    expect(odds?.byTurnThree).toBeCloseTo(0.988095, 6);
-    expect(drawOdds(splitPrintings, championPrint).pinned?.copies).toBe(3);
-  });
-
-  it("should have no pinned row when the pool holds no printing of the pinned card", () => {
-    const without: readonly CardCopy[] = [
-      { card: staple, quantity: 3 },
-      { card: pair, quantity: 3 },
-    ];
-
-    expect(drawOdds(without, champion).pinned).toBeNull();
-    expect(drawOdds(without, championPrint).pinned).toBeNull();
+    expect(drawOdds(mixed).copyOdds.map(({ copies }) => copies)).toEqual([2, 1]);
   });
 
   it("should give an empty pool no buckets rather than odds against nothing", () => {
-    expect(drawOdds([], null)).toEqual({
+    expect(drawOdds([])).toEqual({
       poolSize: 0,
       copyOdds: [],
-      pinned: null,
     });
   });
 });

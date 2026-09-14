@@ -12,17 +12,9 @@ interface CopyOdds {
   readonly byTurnThree: number;
 }
 
-interface PinnedOdds {
-  readonly name: string;
-  readonly copies: number;
-  readonly opening: number;
-  readonly byTurnThree: number;
-}
-
 interface DrawOdds {
   readonly poolSize: number;
   readonly copyOdds: readonly CopyOdds[];
-  readonly pinned: PinnedOdds | null;
 }
 
 type HandVerdict = "keepable" | "risky";
@@ -65,39 +57,21 @@ function atLeastOneChance(poolSize: number, copies: number, draws: number): numb
 }
 
 function copiesByIdentity(copies: readonly CardCopy[]): ReadonlyMap<string, number> {
-  const held = new Map<string, number>();
+  const byCardId = new Map<string, number>();
 
   for (const copy of copies) {
     const identity = copy.card.cardId;
 
-    held.set(identity, (held.get(identity) ?? 0) + copy.quantity);
+    byCardId.set(identity, (byCardId.get(identity) ?? 0) + copy.quantity);
   }
 
-  return held;
+  return byCardId;
 }
 
-function pinnedOdds(
-  held: ReadonlyMap<string, number>,
-  pinned: Card | null,
-  poolSize: number,
-): PinnedOdds | null {
-  if (pinned === null) return null;
-
-  const quantity = held.get(pinned.cardId) ?? 0;
-  if (quantity <= 0) return null;
-
-  return {
-    name: pinned.cardId,
-    copies: quantity,
-    opening: atLeastOneChance(poolSize, quantity, OPENING_HAND_SIZE),
-    byTurnThree: atLeastOneChance(poolSize, quantity, TURN_THREE_CARDS_SEEN),
-  };
-}
-
-function drawOdds(copies: readonly CardCopy[], pinned: Card | null): DrawOdds {
+function drawOdds(copies: readonly CardCopy[]): DrawOdds {
   const poolSize = copyCount(copies);
-  const held = copiesByIdentity(copies);
-  const counts = [...new Set(held.values())].sort((left, right) => right - left);
+  const byCardId = copiesByIdentity(copies);
+  const counts = [...new Set(byCardId.values())].sort((left, right) => right - left);
 
   return {
     poolSize,
@@ -106,7 +80,6 @@ function drawOdds(copies: readonly CardCopy[], pinned: Card | null): DrawOdds {
       opening: atLeastOneChance(poolSize, count, OPENING_HAND_SIZE),
       byTurnThree: atLeastOneChance(poolSize, count, TURN_THREE_CARDS_SEEN),
     })),
-    pinned: pinnedOdds(held, pinned, poolSize),
   };
 }
 
@@ -188,5 +161,4 @@ export type {
   HandVerdict,
   MulliganSelection,
   MulliganedHand,
-  PinnedOdds,
 };

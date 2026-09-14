@@ -49,10 +49,7 @@ function DrawSimulationScreen({
     () => deckCards(resolvedDeck.entries, MAIN_DECK_SECTIONS),
     [resolvedDeck.entries],
   );
-  const odds = useMemo(
-    () => drawOdds(copies, resolvedDeck.chosenChampionCard),
-    [copies, resolvedDeck.chosenChampionCard],
-  );
+  const odds = useMemo(() => drawOdds(copies), [copies]);
   const shuffleCards = useCallback(
     <Item,>(items: readonly Item[]): readonly Item[] => shuffle(items, () => randomSource.next()),
     [randomSource],

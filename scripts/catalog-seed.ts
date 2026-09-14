@@ -398,9 +398,10 @@ function buildSeed(
   const publishedOn = new Map(sets.map((value) => [value.set_id, value.published_on] as const));
   const ordered = [...kept].sort((left, right) => left.sourceId.localeCompare(right.sourceId));
   const identities = reconciledIdentities(ordered);
-  const current = currentPrintings(ordered, identities.repaired);
+  const printings = withRepairedIdentities(ordered, identities.repaired);
+  const current = currentPrintings(printings);
   const canonicalIds = canonicalCardIds(current);
-  const groups = cardGroups(current, identities.repaired, publishedOn, canonicalIds);
+  const groups = cardGroups(current, publishedOn, canonicalIds);
   const derived = groups.flatMap((group) => printedPrintings(group.trusted));
   const magnitudeIds = keywordsWithMagnitude(derived.map((printing) => printing.rulesTextPlain));
   const remindersByPrinting = new Map(
@@ -408,7 +409,7 @@ function buildSeed(
   );
   const keywordNames = new Map<string, string>();
   const championNames = new Set(
-    ordered.map((card) => card.championName).filter((name) => name !== null),
+    printings.map((card) => card.championName).filter((name) => name !== null),
   );
   const types = new Map<string, Taxonomy>();
   const supertypes = new Map<string, Taxonomy>();
@@ -432,8 +433,6 @@ function buildSeed(
   const reminderTexts = chosenReminders(keywordNames, remindersByPrinting);
   for (const group of groups) {
     const card = resolvedCard(group);
-    /** A Riftbound card's name is its identity, so every printing of it is printed with that name. */
-    const cardName = group.id;
     add(types, card.typeId);
     if (card.supertypeId) add(supertypes, card.supertypeId);
     cardRows.push(card);
@@ -448,11 +447,11 @@ function buildSeed(
       add(rarities, printing.rarityId);
       cardPrintingRows.push({
         id,
-        cardId: cardName,
+        cardId: group.id,
         riftboundId: printing.riftboundId,
         ...release,
         rarityId: printing.rarityId,
-        printedName: cardName,
+        printedName: printing.identityName,
         flavourText: printing.flavourText,
         sourceUpdatedAt: printing.sourceUpdatedAt,
         isCanonical: canonicalIds.has(printing.sourceId),
@@ -552,25 +551,30 @@ function buildSeed(
   };
 }
 
-function currentPrintings(
+function withRepairedIdentities(
   printings: readonly NormalizedPrinting[],
   repaired: ReadonlyMap<string, string>,
 ): readonly NormalizedPrinting[] {
-  return newestOfReissued(withoutPoollessDuplicates(printings, repaired));
+  return printings.map((printing) => {
+    const host = repaired.get(printing.identityName);
+
+    return host === undefined ? printing : { ...printing, identityName: host };
+  });
+}
+
+function currentPrintings(printings: readonly NormalizedPrinting[]): readonly NormalizedPrinting[] {
+  return newestOfReissued(withoutPoollessDuplicates(printings));
 }
 
 function withoutPoollessDuplicates(
   printings: readonly NormalizedPrinting[],
-  repaired: ReadonlyMap<string, string>,
 ): readonly NormalizedPrinting[] {
   const pooled = new Set(
-    printings
-      .filter((printing) => printing.poolCode !== null)
-      .map((printing) => releaseKey(printing, repaired)),
+    printings.filter((printing) => printing.poolCode !== null).map(releaseKey),
   );
 
   return printings.filter(
-    (printing) => printing.poolCode !== null || !pooled.has(releaseKey(printing, repaired)),
+    (printing) => printing.poolCode !== null || !pooled.has(releaseKey(printing)),
   );
 }
 
@@ -599,31 +603,22 @@ function feedKey(printing: NormalizedPrinting): string {
   return [printing.riftboundId, printing.finish].join("\u0000");
 }
 
-function releaseKey(printing: NormalizedPrinting, repaired: ReadonlyMap<string, string>): string {
-  return [
-    cardIdOf(printing, repaired),
-    printing.setCode,
-    printing.collectorNumber,
-    printing.finish,
-  ].join("\u0000");
-}
-
-function cardIdOf(printing: NormalizedPrinting, repaired: ReadonlyMap<string, string>): string {
-  return repaired.get(printing.identityName) ?? printing.identityName;
+function releaseKey(printing: NormalizedPrinting): string {
+  return [printing.identityName, printing.setCode, printing.collectorNumber, printing.finish].join(
+    "\u0000",
+  );
 }
 
 function cardGroups(
   printings: readonly NormalizedPrinting[],
-  repaired: ReadonlyMap<string, string>,
   publishedOn: ReadonlyMap<string, string>,
   canonicalIds: ReadonlySet<string>,
 ): readonly CardGroup[] {
   const grouped = new Map<string, NormalizedPrinting[]>();
 
   for (const printing of printings) {
-    const id = cardIdOf(printing, repaired);
-    const held = grouped.get(id);
-    if (held === undefined) grouped.set(id, [printing]);
+    const held = grouped.get(printing.identityName);
+    if (held === undefined) grouped.set(printing.identityName, [printing]);
     else held.push(printing);
   }
 

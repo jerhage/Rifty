@@ -6,7 +6,7 @@ import type { DeckSection } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 
 import { minimumForCard } from "../deck-build-allowance";
-import type { DeckBuildStart } from "../deck-build-start";
+import type { DeckBuildMode } from "../deck-build-mode";
 import {
   chooseChampion,
   draftComposition,
@@ -16,8 +16,8 @@ import {
   type DeckBuildDraft,
 } from "../deck-build-steps";
 
-function useDeckDraft(start: DeckBuildStart) {
-  const [draft, setDraft] = useState<DeckBuildDraft>(() => openingDraft(start));
+function useDeckDraft(mode: DeckBuildMode) {
+  const [draft, setDraft] = useState<DeckBuildDraft>(() => openingDraft(mode));
 
   /** Changing the legend clears the champion, whose tag and domains have to match it. */
   const pickLegend = useCallback((legend: Card) => {
@@ -65,8 +65,8 @@ function useDeckDraft(start: DeckBuildStart) {
   };
 }
 
-function openingDraft(start: DeckBuildStart): DeckBuildDraft {
-  return match(start)
+function openingDraft(mode: DeckBuildMode): DeckBuildDraft {
+  return match(mode)
     .with({ type: "create" }, () => EMPTY_DRAFT)
     .with({ type: "edit" }, ({ resolvedDeck }) => draftFromDeck(resolvedDeck))
     .exhaustive();

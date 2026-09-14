@@ -43,10 +43,10 @@ function DeckBuildRoute() {
                 cardCounter={cardDependencies.cardRepository}
                 cardLister={cardDependencies.cardRepository}
                 keywords={keywords}
+                mode={{ type: "edit", resolvedDeck }}
                 onExit={goBack}
                 onOpenCard={openCard}
                 onSaved={goBack}
-                start={{ type: "edit", resolvedDeck }}
               />
             )}
           </DeckDetailData>
@@ -56,10 +56,10 @@ function DeckBuildRoute() {
             cardCounter={cardDependencies.cardRepository}
             cardLister={cardDependencies.cardRepository}
             keywords={keywords}
+            mode={{ type: "create" }}
             onExit={goBack}
             onOpenCard={openCard}
             onSaved={goBack}
-            start={{ type: "create" }}
           />
         )
       }

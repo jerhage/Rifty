@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { match } from "ts-pattern";
 
-import type { DeckBuildStart } from "../deck-build-start";
+import type { DeckBuildMode } from "../deck-build-mode";
 import { stepFor, type DeckBuildStep, type DeckBuildStepId } from "../deck-build-steps";
 
 type StepAdvance =
@@ -13,13 +13,13 @@ type StepRetreat =
   | { readonly type: "step"; readonly id: DeckBuildStepId };
 
 function useDeckBuildSteps(
-  start: DeckBuildStart,
+  mode: DeckBuildMode,
   {
     onEnterStep,
     onExit,
   }: { readonly onEnterStep: (step: DeckBuildStep) => void; readonly onExit: () => void },
 ) {
-  const [stepId, setStepId] = useState<DeckBuildStepId>(() => openingStepId(start));
+  const [stepId, setStepId] = useState<DeckBuildStepId>(() => openingStepId(mode));
 
   const goToStep = useCallback(
     (id: DeckBuildStepId) => {
@@ -43,7 +43,7 @@ function useDeckBuildSteps(
       .exhaustive();
   }, [goToStep, onExit, stepId]);
 
-  return { back, exit: onExit, goToStep, mode: start.type, next, step: stepFor(stepId) };
+  return { back, exit: onExit, goToStep, mode: mode.type, next, step: stepFor(stepId) };
 }
 
 function advanceFrom(id: DeckBuildStepId): StepAdvance {
@@ -62,8 +62,8 @@ function retreatFrom(id: DeckBuildStepId): StepRetreat {
     .exhaustive();
 }
 
-function openingStepId(start: DeckBuildStart): DeckBuildStepId {
-  return match<DeckBuildStart, DeckBuildStepId>(start)
+function openingStepId(mode: DeckBuildMode): DeckBuildStepId {
+  return match<DeckBuildMode, DeckBuildStepId>(mode)
     .with({ type: "create" }, () => "legend")
     .with({ type: "edit" }, () => "sections")
     .exhaustive();

@@ -11,7 +11,7 @@ import { BuildProgressHeader } from "../components/build/build-progress-header";
 import { ChampionPane } from "../components/build/panes/champion-pane";
 import { LegendPane } from "../components/build/panes/legend-pane";
 import { SectionsPane } from "../components/build/panes/sections-pane";
-import type { DeckBuildCapabilities, DeckBuildStart } from "../deck-build-start";
+import type { DeckBuildCapabilities, DeckBuildMode } from "../deck-build-mode";
 import type {
   DeckBuildStepsState,
   DeckDraftState,
@@ -26,10 +26,10 @@ interface DeckBuildScreenProps {
   readonly draft: DeckDraftState;
   readonly keywords: readonly Keyword[];
   readonly legends: LegendSearchState;
+  readonly mode: DeckBuildMode;
   readonly onOpenCard: (card: Card) => void;
   readonly onSaved: () => void;
   readonly pool: SectionPoolState;
-  readonly start: DeckBuildStart;
   readonly steps: DeckBuildStepsState;
 }
 
@@ -44,10 +44,10 @@ function DeckBuildScreen({
   draft,
   keywords,
   legends,
+  mode,
   onOpenCard,
   onSaved,
   pool,
-  start,
   steps,
 }: DeckBuildScreenProps) {
   return (
@@ -85,10 +85,10 @@ function DeckBuildScreen({
             cardLister={cardLister}
             draft={draft}
             keywords={keywords}
+            mode={mode}
             onOpenCard={onOpenCard}
             onSaved={onSaved}
             pool={pool}
-            start={start}
             steps={steps}
           />
         ))

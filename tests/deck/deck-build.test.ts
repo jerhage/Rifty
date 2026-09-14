@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react-native";
 
-import type { DeckBuildStart } from "@/features/deck/presentation/deck-build-start";
+import type { DeckBuildMode } from "@/features/deck/presentation/deck-build-mode";
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
 import { card } from "../card/fixtures";
@@ -61,9 +61,9 @@ const savedEdit = resolvedDeck(
   unseatedChampion,
 );
 
-async function renderBuild(start: DeckBuildStart = { type: "create" }) {
+async function renderBuild(mode: DeckBuildMode = { type: "create" }) {
   const onExit = jest.fn();
-  const rendered = await renderHook(() => useDeckBuild(start, { onExit }), {
+  const rendered = await renderHook(() => useDeckBuild(mode, { onExit }), {
     wrapper: createTestWrapper(),
   });
 

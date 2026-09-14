@@ -2,22 +2,22 @@ import { useCallback } from "react";
 
 import type { DeckSection } from "@/features/deck/deck/deck";
 
-import type { DeckBuildStart } from "../deck-build-start";
+import type { DeckBuildMode } from "../deck-build-mode";
 
 import { useDeckBuildSteps } from "./use-deck-build-steps";
 import { useDeckDraft } from "./use-deck-draft";
 import { useLegendSearch } from "./use-legend-search";
 import { useSectionPool } from "./use-section-pool";
 
-function useDeckBuild(start: DeckBuildStart, { onExit }: { readonly onExit: () => void }) {
-  const draft = useDeckDraft(start);
+function useDeckBuild(mode: DeckBuildMode, { onExit }: { readonly onExit: () => void }) {
+  const draft = useDeckDraft(mode);
   const legend = draft.draft.legend;
   const pool = useSectionPool(legend);
   const legends = useLegendSearch();
 
   const { resetFor, setSection } = pool;
 
-  const steps = useDeckBuildSteps(start, {
+  const steps = useDeckBuildSteps(mode, {
     /** The sections step opens on the legend's own domains rather than the whole catalog. */
     onEnterStep: (step) => {
       if (step.id === "sections") resetFor(legend);

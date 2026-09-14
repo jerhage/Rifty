@@ -5,7 +5,7 @@ import type { Keyword } from "@/features/card/keyword/keyword";
 
 import { DeckSaveData } from "../../../data/deck-save-data";
 import { SectionPoolData } from "../../../data/section-pool-data";
-import type { DeckBuildCapabilities, DeckBuildStart } from "../../../deck-build-start";
+import type { DeckBuildCapabilities, DeckBuildMode } from "../../../deck-build-mode";
 import type {
   DeckBuildStepsState,
   DeckDraftState,
@@ -20,10 +20,10 @@ interface SectionsPaneProps {
   readonly cardLister: CardLister;
   readonly draft: DeckDraftState;
   readonly keywords: readonly Keyword[];
+  readonly mode: DeckBuildMode;
   readonly onOpenCard: (card: Card) => void;
   readonly onSaved: () => void;
   readonly pool: SectionPoolState;
-  readonly start: DeckBuildStart;
   readonly steps: DeckBuildStepsState;
 }
 
@@ -33,10 +33,10 @@ function SectionsPane({
   cardLister,
   draft,
   keywords,
+  mode,
   onOpenCard,
   onSaved,
   pool,
-  start,
   steps,
 }: SectionsPaneProps) {
   return (
@@ -52,6 +52,7 @@ function SectionsPane({
         <>
           <DeckSaveData
             capabilities={capabilities}
+            mode={mode}
             onChangeName={draft.changeName}
             onSaved={onSaved}
             request={{
@@ -60,7 +61,6 @@ function SectionsPane({
               name: draft.draft.name,
               verification: draft.verification,
             }}
-            start={start}
           >
             {({ changeName }) => (
               <SectionsStep

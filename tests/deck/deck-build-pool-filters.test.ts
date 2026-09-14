@@ -1,18 +1,18 @@
 import { act, renderHook } from "@testing-library/react-native";
 
+import type { DeckBuildMode } from "@/features/deck/presentation/deck-build-mode";
 import {
   activePoolFilterCount,
   poolCriteria,
 } from "@/features/deck/presentation/deck-section-pool";
-import type { DeckBuildStart } from "@/features/deck/presentation/deck-build-start";
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
 import { createTestWrapper } from "../test-wrapper";
 
-const start: DeckBuildStart = { type: "create" };
+const mode: DeckBuildMode = { type: "create" };
 
 async function renderBuild() {
-  return await renderHook(() => useDeckBuild(start, { onExit: () => undefined }), {
+  return await renderHook(() => useDeckBuild(mode, { onExit: () => undefined }), {
     wrapper: createTestWrapper(),
   });
 }

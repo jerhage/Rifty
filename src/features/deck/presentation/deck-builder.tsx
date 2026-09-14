@@ -3,7 +3,7 @@ import type { Card } from "@/features/card/card";
 import type { CardLister } from "@/features/card/card-lister";
 import type { Keyword } from "@/features/card/keyword/keyword";
 
-import type { DeckBuildCapabilities, DeckBuildStart } from "./deck-build-start";
+import type { DeckBuildCapabilities, DeckBuildMode } from "./deck-build-mode";
 import { useDeckBuild } from "./hooks/use-deck-build";
 import { DeckBuildScreen } from "./screens/deck-build-screen";
 
@@ -12,21 +12,21 @@ function DeckBuilder({
   cardCounter,
   cardLister,
   keywords,
+  mode,
   onExit,
   onOpenCard,
   onSaved,
-  start,
 }: {
   readonly capabilities: DeckBuildCapabilities;
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
   readonly keywords: readonly Keyword[];
+  readonly mode: DeckBuildMode;
   readonly onExit: () => void;
   readonly onOpenCard: (card: Card) => void;
   readonly onSaved: () => void;
-  readonly start: DeckBuildStart;
 }) {
-  const build = useDeckBuild(start, { onExit });
+  const build = useDeckBuild(mode, { onExit });
 
   return (
     <DeckBuildScreen
@@ -36,10 +36,10 @@ function DeckBuilder({
       draft={build.draft}
       keywords={keywords}
       legends={build.legends}
+      mode={mode}
       onOpenCard={onOpenCard}
       onSaved={onSaved}
       pool={build.pool}
-      start={start}
       steps={build.steps}
     />
   );

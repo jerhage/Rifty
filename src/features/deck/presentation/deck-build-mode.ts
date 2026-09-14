@@ -11,10 +11,8 @@ interface DeckBuildCapabilities {
   readonly idGenerator: IdGenerator;
 }
 
-type DeckBuildStart =
+type DeckBuildMode =
   | { readonly type: "create" }
   | { readonly type: "edit"; readonly resolvedDeck: ResolvedDeck };
 
-type DeckBuildMode = DeckBuildStart["type"];
-
-export type { DeckBuildCapabilities, DeckBuildMode, DeckBuildStart };
+export type { DeckBuildCapabilities, DeckBuildMode };

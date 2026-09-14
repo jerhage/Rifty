@@ -8,7 +8,7 @@ import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 import { DECK_BUILD_STEPS, type DeckBuildStep } from "../../deck-build-steps";
-import type { DeckBuildMode } from "../../deck-build-start";
+import type { DeckBuildMode } from "../../deck-build-mode";
 
 function BuildProgressHeader({
   mode,
@@ -16,7 +16,7 @@ function BuildProgressHeader({
   onClose,
   step,
 }: {
-  readonly mode: DeckBuildMode;
+  readonly mode: DeckBuildMode["type"];
   readonly onBack: () => void;
   readonly onClose: () => void;
   readonly step: DeckBuildStep;
@@ -69,7 +69,7 @@ function BuildProgressHeader({
   );
 }
 
-function modeLabel(mode: DeckBuildMode): string {
+function modeLabel(mode: DeckBuildMode["type"]): string {
   return match(mode)
     .with("create", () => "New deck")
     .with("edit", () => "Edit deck")

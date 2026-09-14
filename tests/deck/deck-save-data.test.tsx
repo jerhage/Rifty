@@ -11,7 +11,7 @@ import {
   DeckSaveData,
   type DeckSaveControls,
 } from "@/features/deck/presentation/data/deck-save-data";
-import type { DeckBuildCapabilities } from "@/features/deck/presentation/deck-build-start";
+import type { DeckBuildCapabilities } from "@/features/deck/presentation/deck-build-mode";
 import { listDecksQuery } from "@/features/deck/queries/deck-queries";
 import { useReadState } from "@/hooks/use-read-state";
 
@@ -102,10 +102,10 @@ async function renderDeckSave(store: DeckStore, name = "Storm") {
       <DeckListProbe listing={store.listing} />
       <DeckSaveData
         capabilities={store.capabilities}
+        mode={{ type: "create" }}
         onChangeName={onChangeName}
         onSaved={onSaved}
         request={{ chosenChampion: null, entries: [], name, verification: LEGAL }}
-        start={{ type: "create" }}
       >
         {(received) => {
           childProps.push(Object.keys(received));

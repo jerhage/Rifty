@@ -11,7 +11,7 @@ import { useAnnouncement } from "@/hooks/use-announcement";
 import { useWriteState, type WriteState } from "@/hooks/use-write-state";
 
 import { BuildFooter } from "../components/build/build-footer";
-import type { DeckBuildCapabilities, DeckBuildStart } from "../deck-build-start";
+import type { DeckBuildCapabilities, DeckBuildMode } from "../deck-build-mode";
 import { saveReadinessLabel } from "../deck-legality-format";
 
 type DeckSaveState = WriteState<SaveDeckResult>;
@@ -43,17 +43,17 @@ interface DeckSaveControls {
 function DeckSaveData({
   capabilities,
   children,
+  mode,
   onChangeName,
   onSaved,
   request,
-  start,
 }: {
   readonly capabilities: DeckBuildCapabilities;
   readonly children: (controls: DeckSaveControls) => ReactNode;
+  readonly mode: DeckBuildMode;
   readonly onChangeName: (name: string) => void;
   readonly onSaved: () => void;
   readonly request: DeckSaveRequest;
-  readonly start: DeckBuildStart;
 }) {
   const queryClient = useQueryClient();
   const announce = useAnnouncement();
@@ -95,8 +95,8 @@ function DeckSaveData({
 
   const { chosenChampion, entries, name, verification } = request;
   const save = useCallback(() => {
-    submit({ ...deckIdentity(start, capabilities), chosenChampion, entries, name });
-  }, [capabilities, chosenChampion, entries, name, start, submit]);
+    submit({ ...deckIdentity(mode, capabilities), chosenChampion, entries, name });
+  }, [capabilities, chosenChampion, entries, mode, name, submit]);
 
   return (
     <>
@@ -132,10 +132,10 @@ function DeckSaveData({
 }
 
 function deckIdentity(
-  start: DeckBuildStart,
+  mode: DeckBuildMode,
   { clock, idGenerator }: DeckBuildCapabilities,
 ): Pick<DeckDraft, "id" | "notes" | "createdAt"> {
-  return match(start)
+  return match(mode)
     .with({ type: "create" }, () => ({
       id: idGenerator.next(),
       notes: "",

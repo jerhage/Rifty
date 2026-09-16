@@ -134,16 +134,14 @@ function DeckSaveData({
 function deckIdentity(
   mode: DeckBuildMode,
   { clock, idGenerator }: DeckBuildCapabilities,
-): Pick<DeckDraft, "id" | "notes" | "createdAt"> {
+): Pick<DeckDraft, "id" | "createdAt"> {
   return match(mode)
     .with({ type: "create" }, () => ({
       id: idGenerator.next(),
-      notes: "",
       createdAt: clock.now(),
     }))
     .with({ type: "edit" }, ({ resolvedDeck }) => ({
       id: resolvedDeck.deck.id,
-      notes: resolvedDeck.deck.notes,
       createdAt: resolvedDeck.deck.createdAt,
     }))
     .exhaustive();

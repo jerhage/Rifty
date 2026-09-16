@@ -3,7 +3,6 @@ import { parseDeck, parseDeckVerification } from "@/features/deck/deck/deck";
 const deck = {
   id: "deck-1",
   name: "Untitled deck",
-  notes: "",
   createdAt: "2026-09-07T00:00:00.000Z",
   updatedAt: "2026-09-07T00:00:00.000Z",
   chosenChampionCardId: null,

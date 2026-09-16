@@ -41,11 +41,6 @@ function DeckRow({
         <ThemedText themeColor="textTertiary" type="mono" style={styles.meta}>
           {deckCountLabel(deck)} · {editedLabel(deck.updatedAt, now)}
         </ThemedText>
-        {deck.notes ? (
-          <ThemedText numberOfLines={2} themeColor="textSecondary" type="body" style={styles.notes}>
-            {deck.notes}
-          </ThemedText>
-        ) : null}
       </View>
     </Pressable>
   );
@@ -71,9 +66,6 @@ const styles = StyleSheet.create({
   },
   meta: {
     marginTop: Spacing.one + 1,
-  },
-  notes: {
-    marginTop: Spacing.two,
   },
   pressed: {
     opacity: 0.7,

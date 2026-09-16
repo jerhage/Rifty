@@ -47,7 +47,6 @@ class SqliteDeckRepository implements DeckRepository {
         .values({
           id: deck.id,
           name: deck.name,
-          notes: deck.notes,
           createdAt: deck.createdAt,
           updatedAt: deck.updatedAt,
           chosenChampionCardId: deck.chosenChampionCardId,
@@ -56,7 +55,6 @@ class SqliteDeckRepository implements DeckRepository {
           target: decks.id,
           set: {
             name: deck.name,
-            notes: deck.notes,
             updatedAt: deck.updatedAt,
             chosenChampionCardId: deck.chosenChampionCardId,
           },

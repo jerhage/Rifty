@@ -69,12 +69,6 @@ function DeckDetailScreen({
           </ThemedText>
         </View>
 
-        {deck.notes ? (
-          <ThemedText themeColor="textSecondary" type="body" style={styles.notes}>
-            {deck.notes}
-          </ThemedText>
-        ) : null}
-
         <View style={styles.drawSimulation}>
           <Button label="Draw simulation" onPress={onDrawSimulation} variant="secondary" />
         </View>
@@ -126,9 +120,6 @@ const styles = StyleSheet.create({
   },
   meta: {
     flexShrink: 1,
-  },
-  notes: {
-    marginTop: Spacing.two + 1,
   },
   drawSimulation: {
     alignItems: "flex-start",

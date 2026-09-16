@@ -11,7 +11,6 @@ const decks = sqliteTable(
   {
     id: text().primaryKey(),
     name: text().notNull().unique(),
-    notes: text().notNull().default(""),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
     chosenChampionCardId: text("chosen_champion_card_id").references(() => cards.id, {
@@ -48,7 +47,6 @@ const deckSelectSchema = createSelectSchema(decks);
 const deckInsertSchema = createInsertSchema(decks, {
   id: (schema) => schema.trim().min(1),
   name: deckNameSchema,
-  notes: (schema) => schema,
   createdAt: (schema) => schema.trim().min(1),
   updatedAt: (schema) => schema.trim().min(1),
   chosenChampionCardId: (schema) => schema.trim().min(1),

@@ -9,7 +9,6 @@ describe("deck storage scenarios", () => {
     const store = deckScenarioStore();
     const tempo = deck("ember-tempo", {
       name: "Ember Tempo",
-      notes: "Fast board pressure.",
       entries: [
         { section: "mainDeck", cardId: "Ember Adept", printingId: "ogn-014", quantity: 3 },
         { section: "legend", cardId: "Ember Legend", printingId: "ogn-003", quantity: 1 },

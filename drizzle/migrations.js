@@ -4,13 +4,15 @@ import m0000 from './20260911185741_initial_schema/migration.sql';
 import m0001 from './20260916003312_core_rules/migration.sql';
 import m0002 from './20260916004202_core_rules_seed_state/migration.sql';
 import m0003 from './20260916160332_annotations/migration.sql';
+import m0004 from './20260916161824_drop_deck_notes/migration.sql';
 
   export default {
     migrations: {
       "20260911185741_initial_schema": m0000,
 "20260916003312_core_rules": m0001,
 "20260916004202_core_rules_seed_state": m0002,
-"20260916160332_annotations": m0003
+"20260916160332_annotations": m0003,
+"20260916161824_drop_deck_notes": m0004
 }
   }
   

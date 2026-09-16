@@ -28,7 +28,6 @@ const deckSchema = z
   .object({
     id: deckIdSchema,
     name: deckNameSchema,
-    notes: z.string(),
     createdAt: z.string().trim().min(1),
     updatedAt: z.string().trim().min(1),
     chosenChampionCardId: cardIdSchema.nullable(),

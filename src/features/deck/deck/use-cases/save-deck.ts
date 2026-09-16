@@ -28,7 +28,6 @@ type SaveDeckResult =
 interface DeckDraft {
   readonly id: DeckId;
   readonly name: string;
-  readonly notes: string;
   readonly createdAt: string;
   readonly chosenChampion: ChosenChampion | null;
   readonly entries: readonly DeckEntry[];

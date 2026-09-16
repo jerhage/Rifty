@@ -60,7 +60,6 @@ function deck(id: string, options: Partial<Omit<DeckInput, "id">> = {}): Deck {
   return parseDeck({
     id,
     name: options.name ?? `Deck ${id}`,
-    notes: options.notes ?? "",
     createdAt: options.createdAt ?? "2026-09-01T10:00:00.000Z",
     updatedAt: options.updatedAt ?? "2026-09-01T10:00:00.000Z",
     chosenChampionCardId: options.chosenChampionCardId ?? null,

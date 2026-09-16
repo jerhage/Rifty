@@ -268,7 +268,6 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
       .values({
         id: deck.id,
         name: deck.name,
-        notes: deck.notes,
         createdAt: deck.createdAt,
         updatedAt: deck.updatedAt,
         chosenChampionCardId: deck.chosenChampionCardId,

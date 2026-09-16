@@ -30,7 +30,6 @@ describe("deck editing scenarios", () => {
       deck: {
         id: "deck-1",
         name: "Ember Tempo",
-        notes: "",
         createdAt: "2026-09-07T12:00:00.000Z",
         updatedAt: "2026-09-07T12:00:00.000Z",
         chosenChampionCardId: null,
@@ -247,7 +246,6 @@ describe("deck editing scenarios", () => {
       {
         id: "ember",
         name: "Ember Tempo",
-        notes: "",
         createdAt: "2026-09-01T10:00:00.000Z",
         chosenChampion: null,
         entries: [
@@ -329,7 +327,6 @@ describe("deck editing scenarios", () => {
     const draft = {
       id: "ember",
       name: "Ember Tempo",
-      notes: "",
       createdAt: "2026-09-01T10:00:00.000Z",
       chosenChampion: null,
       entries: [
@@ -391,7 +388,6 @@ describe("deck editing scenarios", () => {
         {
           id: "ember",
           name: "iron wall",
-          notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
           chosenChampion: null,
           entries: [],
@@ -404,7 +400,6 @@ describe("deck editing scenarios", () => {
         {
           id: "ember",
           name: "Ember Tempo",
-          notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
           chosenChampion: null,
           entries: [],
@@ -423,7 +418,6 @@ describe("deck editing scenarios", () => {
       {
         id: "ember",
         name: "Ember Tempo",
-        notes: "",
         createdAt: "2026-09-01T10:00:00.000Z",
         chosenChampion: {
           cardId: cardId("Ember Hero"),
@@ -462,7 +456,6 @@ describe("deck editing scenarios", () => {
         {
           id: "ember",
           name: "Ember Tempo",
-          notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
           chosenChampion: null,
           entries: [
@@ -489,7 +482,6 @@ describe("deck editing scenarios", () => {
         {
           id: "ember",
           name: "Ember Tempo",
-          notes: "",
           createdAt: "2026-09-01T10:00:00.000Z",
           chosenChampion: {
             cardId: cardId("Ember Legend"),

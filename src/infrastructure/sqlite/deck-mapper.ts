@@ -15,7 +15,6 @@ function toDomainDeck({ deck, cards }: DeckPersistenceShape): Deck {
   return parseDeck({
     id: persistedDeck.id,
     name: persistedDeck.name,
-    notes: persistedDeck.notes,
     createdAt: persistedDeck.createdAt,
     updatedAt: persistedDeck.updatedAt,
     chosenChampionCardId: persistedDeck.chosenChampionCardId,

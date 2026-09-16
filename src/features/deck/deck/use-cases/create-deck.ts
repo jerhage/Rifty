@@ -32,7 +32,6 @@ async function createDeck(
   const deck = parseDeck({
     id: idGenerator.next(),
     name: parsedName.data,
-    notes: "",
     createdAt,
     updatedAt: createdAt,
     chosenChampionCardId: null,

@@ -16,6 +16,7 @@ import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
 import { createTestWrapper } from "../test-wrapper";
+import { subject } from "../annotation/fixtures";
 import { coreRuleAnnotations, coreRuleDocument } from "./fixtures";
 
 const EDITION: CoreRulesEdition = { title: "Riftbound Core Rules", publishedOn: "2025-06-02" };
@@ -38,7 +39,7 @@ function sameSubject(one: AnnotationSubject, other: AnnotationSubject): boolean 
 }
 
 interface BookmarkStore {
-  readonly capabilities: Omit<BookmarkedSubjectsDataProps, "children" | "kind">;
+  readonly capabilities: Omit<BookmarkedSubjectsDataProps<"coreRule">, "children" | "kind">;
   listReads(): number;
   scopes(): readonly BookmarkListScope[];
   subjectReads(): number;
@@ -51,7 +52,7 @@ interface BookmarkStore {
  */
 function createBookmarkStore(markedRuleNumbers: readonly string[] = []): BookmarkStore {
   const bookmarks: Bookmark[] = markedRuleNumbers.map((number) => ({
-    subject: { kind: "coreRule", id: number },
+    subject: subject("coreRule", number),
     createdAt: MARKED_AT,
   }));
   const scopes: BookmarkListScope[] = [];
@@ -133,7 +134,6 @@ async function renderBookmarkableDocument(
     <BookmarkedSubjectsData {...store.capabilities} kind="coreRule">
       {(bookmarked) => (
         <CoreRulesScreen
-          bookmarkedNumbers={bookmarked.bookmarkedIds}
           coreRules={coreRules}
           edition={EDITION}
           {...coreRuleAnnotations(bookmarked)}

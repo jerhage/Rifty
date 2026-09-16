@@ -18,8 +18,9 @@ import { CoreRulesContentsList } from "../contents/core-rules-contents-list";
 import { CoreRulesSavedSurface } from "../saved/core-rules-saved-surface";
 
 interface CoreRulesSheetProps {
-  readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
+  readonly bookmarkedCount: number;
   readonly coreRules: readonly CoreRule[];
+  readonly isBookmarked: (number: CoreRuleNumber) => boolean;
   readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onDismiss: () => void;
   readonly onGoToCoreRule: (number: CoreRuleNumber) => void;
@@ -34,8 +35,9 @@ interface CoreRulesSheetProps {
  * entries and a read of every subject's notes must not stand behind a closed one.
  */
 function CoreRulesSheet({
-  bookmarkedNumbers,
+  bookmarkedCount,
   coreRules,
+  isBookmarked,
   notesFor,
   onDismiss,
   onGoToCoreRule,
@@ -50,7 +52,7 @@ function CoreRulesSheet({
       ) : (
         <View style={styles.face}>
           <CoreRulesSheetHeader
-            bookmarkedCount={bookmarkedNumbers.size}
+            bookmarkedCount={bookmarkedCount}
             onDismiss={onDismiss}
             onShowFace={onShowFace}
             state={state}
@@ -62,8 +64,8 @@ function CoreRulesSheet({
               ))
               .with("saved", () => (
                 <CoreRulesSavedSurface
-                  bookmarkedNumbers={bookmarkedNumbers}
                   coreRules={coreRules}
+                  isBookmarked={isBookmarked}
                   notesFor={notesFor}
                   onGoToCoreRule={onGoToCoreRule}
                   onRemoveBookmark={onRemoveBookmark}

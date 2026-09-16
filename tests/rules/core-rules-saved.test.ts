@@ -1,4 +1,5 @@
 import { savedCoreRules } from "@/features/rules/presentation/core-rules-saved";
+import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
 import { coreRuleDocument } from "./fixtures";
 
@@ -18,8 +19,10 @@ const DOCUMENT = coreRuleDocument([
   { number: "700.1", body: "Recycle a card to draw a card." },
 ]);
 
-function marks(...numbers: readonly string[]): ReadonlySet<string> {
-  return new Set(numbers);
+function marks(...numbers: readonly string[]): (number: CoreRuleNumber) => boolean {
+  const marked = new Set(numbers);
+
+  return (number) => marked.has(number);
 }
 
 describe("savedCoreRules", () => {

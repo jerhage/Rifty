@@ -9,11 +9,11 @@ import {
   SCRATCHPAD_TITLE,
 } from "@/features/annotation/presentation/note-format";
 
-import { createNoteStore, fixedClock, sequentialIds, type NoteStore } from "./fixtures";
+import { createNoteStore, fixedClock, sequentialIds, subject, type NoteStore } from "./fixtures";
 import { createTestWrapper } from "../test-wrapper";
 
 const WRITTEN_AT = "2026-09-16T10:00:00.000Z";
-const CARD = { kind: "card", id: "vi" } as const;
+const CARD = subject("card", "vi");
 
 async function renderScratchpad(store: NoteStore = createNoteStore()): Promise<NoteStore> {
   await render(
@@ -90,7 +90,7 @@ describe("the scratchpad", () => {
     await waitFor(() => expect(store.notes()).toHaveLength(1));
     await expect(store.manager.getAll({ type: "onSubject", subject: CARD })).resolves.toEqual([]);
     await expect(
-      store.manager.getAll({ type: "onSubject", subject: { kind: "coreRule", id: "501.1" } }),
+      store.manager.getAll({ type: "onSubject", subject: subject("coreRule", "501.1") }),
     ).resolves.toEqual([]);
     await expect(store.manager.getAll({ type: "standalone" })).resolves.toHaveLength(1);
   });

@@ -30,20 +30,22 @@ import { CoreRulesSavedSurface } from "../components/saved/core-rules-saved-surf
 import { CoreRulesSheet } from "../components/sheet/core-rules-sheet";
 
 interface CoreRulesScreenProps {
-  /** Every rule the reader has marked, whether or not a query has filtered it out of view. */
-  readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
+  readonly bookmarkedCount: number;
   readonly bookmarkFor: (number: CoreRuleNumber) => ReactNode;
   readonly coreRules: readonly CoreRule[];
   readonly edition: CoreRulesEdition;
+  /** Asked of every rule the document holds, whether or not a query has filtered it out of view. */
+  readonly isBookmarked: (number: CoreRuleNumber) => boolean;
   readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
 }
 
 function CoreRulesScreen({
-  bookmarkedNumbers,
+  bookmarkedCount,
   bookmarkFor,
   coreRules,
   edition,
+  isBookmarked,
   notesFor,
   onRemoveBookmark,
 }: CoreRulesScreenProps) {
@@ -96,7 +98,7 @@ function CoreRulesScreen({
     <ThemedView style={styles.screen}>
       <CoreRulesHeader
         activeHit={activeHit}
-        bookmarkedCount={bookmarkedNumbers.size}
+        bookmarkedCount={bookmarkedCount}
         contentsPlacement={contentsPlacement}
         coreRules={coreRules}
         edition={edition}
@@ -130,13 +132,13 @@ function CoreRulesScreen({
         </View>
         {savedPlacement.type === "beside" ? (
           <CoreRulesSavedPane
-            bookmarkedCount={bookmarkedNumbers.size}
+            bookmarkedCount={bookmarkedCount}
             expanded={savedPlacement.expanded}
             onToggle={savedPlacement.toggle}
           >
             <CoreRulesSavedSurface
-              bookmarkedNumbers={bookmarkedNumbers}
               coreRules={coreRules}
+              isBookmarked={isBookmarked}
               notesFor={notesFor}
               onGoToCoreRule={scrollToCoreRule}
               onRemoveBookmark={onRemoveBookmark}
@@ -146,8 +148,9 @@ function CoreRulesScreen({
       </CoreRulesPage>
       {savedPlacement.type === "beside" ? null : (
         <CoreRulesSheet
-          bookmarkedNumbers={bookmarkedNumbers}
+          bookmarkedCount={bookmarkedCount}
           coreRules={coreRules}
+          isBookmarked={isBookmarked}
           notesFor={notesFor}
           onDismiss={hideSheet}
           onGoToCoreRule={goToCoreRuleFromSheet}

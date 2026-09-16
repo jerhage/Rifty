@@ -9,7 +9,7 @@ import { coreRuleNumberGutter } from "@/features/rules/presentation/components/c
 import { coreRuleAncestorNumbersOf } from "@/features/rules/value-objects/core-rule-number";
 
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
-import { coreRuleAnnotations, seededCoreRules } from "./fixtures";
+import { coreRuleAnnotations, coreRuleNumber, seededCoreRules } from "./fixtures";
 
 const CHAPTER_NUMBERS = ["000", "100", "500", "600", "700"];
 
@@ -27,11 +27,13 @@ afterEach(() => {
 });
 
 function entry(
-  number: string,
+  value: string,
   kind: CoreRule["kind"],
   body: string,
   details: CoreRuleDetail[] = [],
 ): CoreRule {
+  const number = coreRuleNumber(value);
+
   return {
     number,
     parentNumber: coreRuleAncestorNumbersOf(number).at(-1) ?? null,

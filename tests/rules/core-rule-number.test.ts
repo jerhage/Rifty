@@ -1,25 +1,31 @@
 import {
   coreRuleAncestorNumbersOf,
   coreRuleDepthOf,
+  coreRuleNumberSchema,
   isCoreRuleChapterNumber,
+  type CoreRuleNumber,
 } from "@/features/rules/value-objects/core-rule-number";
+
+function coreRuleNumber(value: string): CoreRuleNumber {
+  return coreRuleNumberSchema.parse(value);
+}
 
 describe("coreRuleDepthOf", () => {
   it("should count the segments of a five-deep number", () => {
-    const number = "626.1.d.1.a";
+    const number = coreRuleNumber("626.1.d.1.a");
 
     expect(coreRuleDepthOf(number)).toBe(5);
     expect(coreRuleDepthOf(number)).toBe(number.split(".").length);
   });
 
   it("should count a top-level number as one", () => {
-    expect(coreRuleDepthOf("000")).toBe(1);
+    expect(coreRuleDepthOf(coreRuleNumber("000"))).toBe(1);
   });
 });
 
 describe("coreRuleAncestorNumbersOf", () => {
   it("should list the enclosing numbers of a five-deep number, outermost first", () => {
-    expect(coreRuleAncestorNumbersOf("626.1.d.1.a")).toEqual([
+    expect(coreRuleAncestorNumbersOf(coreRuleNumber("626.1.d.1.a"))).toEqual([
       "626",
       "626.1",
       "626.1.d",
@@ -28,32 +34,27 @@ describe("coreRuleAncestorNumbersOf", () => {
   });
 
   it("should give a top-level number no ancestors", () => {
-    expect(coreRuleAncestorNumbersOf("000")).toEqual([]);
+    expect(coreRuleAncestorNumbersOf(coreRuleNumber("000"))).toEqual([]);
   });
 });
 
 describe("isCoreRuleChapterNumber", () => {
   it("should read a top-level century boundary as a chapter", () => {
-    expect(["000", "100", "500", "600", "700"].map(isCoreRuleChapterNumber)).toEqual([
-      true,
-      true,
-      true,
-      true,
-      true,
-    ]);
+    expect(
+      ["000", "100", "500", "600", "700"].map((value) =>
+        isCoreRuleChapterNumber(coreRuleNumber(value)),
+      ),
+    ).toEqual([true, true, true, true, true]);
   });
 
   it("should not read a top-level number off the century boundary as a chapter", () => {
-    expect(["101", "104", "717", "553"].map(isCoreRuleChapterNumber)).toEqual([
-      false,
-      false,
-      false,
-      false,
-    ]);
+    expect(
+      ["101", "104", "717", "553"].map((value) => isCoreRuleChapterNumber(coreRuleNumber(value))),
+    ).toEqual([false, false, false, false]);
   });
 
   it("should not read a number below the top level as a chapter", () => {
-    expect(isCoreRuleChapterNumber("100.1")).toBe(false);
-    expect(isCoreRuleChapterNumber("103.2.a")).toBe(false);
+    expect(isCoreRuleChapterNumber(coreRuleNumber("100.1"))).toBe(false);
+    expect(isCoreRuleChapterNumber(coreRuleNumber("103.2.a"))).toBe(false);
   });
 });

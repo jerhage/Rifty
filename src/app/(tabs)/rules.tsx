@@ -20,19 +20,20 @@ function RulesRoute() {
           clock={clock}
           kind="coreRule"
         >
-          {({ bookmarkedIds, toggleBookmark }) => (
+          {({ bookmarkedCount, isBookmarked, toggleBookmark }) => (
             <CoreRulesScreen
-              bookmarkedNumbers={bookmarkedIds}
+              bookmarkedCount={bookmarkedCount}
               bookmarkFor={(number) => (
                 <BookmarkToggle
                   alignment="start"
-                  bookmarked={bookmarkedIds.has(number)}
+                  bookmarked={isBookmarked(number)}
                   label={coreRuleBookmarkLabel(number)}
                   onPress={() => toggleBookmark(number)}
                 />
               )}
               coreRules={coreRules}
               edition={edition}
+              isBookmarked={isBookmarked}
               notesFor={(number) => (
                 <SubjectNotes
                   clock={clock}

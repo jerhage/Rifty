@@ -8,9 +8,9 @@ import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-nu
 import { CoreRulesSavedList } from "./core-rules-saved-list";
 
 interface CoreRulesSavedSurfaceProps {
-  /** Every rule the reader has marked, whether or not a query has filtered it out of view. */
-  readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
   readonly coreRules: readonly CoreRule[];
+  /** Asked of every rule the document holds, whether or not a query has filtered it out of view. */
+  readonly isBookmarked: (number: CoreRuleNumber) => boolean;
   readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onGoToCoreRule: (number: CoreRuleNumber) => void;
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
@@ -18,8 +18,8 @@ interface CoreRulesSavedSurfaceProps {
 
 /** Everything the reader has kept on this screen: the rules they have bookmarked, with their notes. */
 function CoreRulesSavedSurface({
-  bookmarkedNumbers,
   coreRules,
+  isBookmarked,
   notesFor,
   onGoToCoreRule,
   onRemoveBookmark,
@@ -27,8 +27,8 @@ function CoreRulesSavedSurface({
   return (
     <View style={styles.surface}>
       <CoreRulesSavedList
-        bookmarkedNumbers={bookmarkedNumbers}
         coreRules={coreRules}
+        isBookmarked={isBookmarked}
         notesFor={notesFor}
         onGoToCoreRule={onGoToCoreRule}
         onRemoveBookmark={onRemoveBookmark}

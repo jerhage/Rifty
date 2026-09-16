@@ -43,12 +43,12 @@ function HomeScreen() {
       kind="card"
       onBookmarksChanged={() => void queryClient.invalidateQueries({ queryKey: cardKeys.all() })}
     >
-      {({ bookmarkedIds, toggleBookmark }) => (
+      {({ bookmarkedCount, isBookmarked, toggleBookmark }) => (
         <>
           {match(opening)
             .with({ type: "route" }, ({ open }) => (
               <CardCatalog
-                bookmarkedCount={bookmarkedIds.size}
+                bookmarkedCount={bookmarkedCount}
                 catalogQuery={catalogQuery}
                 onOpenCard={open}
               />
@@ -57,7 +57,7 @@ function HomeScreen() {
               <SplitLayout
                 primary={
                   <CardCatalog
-                    bookmarkedCount={bookmarkedIds.size}
+                    bookmarkedCount={bookmarkedCount}
                     catalogQuery={catalogQuery}
                     onOpenCard={open}
                   />
@@ -67,7 +67,7 @@ function HomeScreen() {
                     bookmarkControl={
                       shownId === null ? null : (
                         <BookmarkToggle
-                          bookmarked={bookmarkedIds.has(shownId)}
+                          bookmarked={isBookmarked(shownId)}
                           label="Bookmark"
                           onPress={() => toggleBookmark(shownId)}
                         />
@@ -97,7 +97,7 @@ function HomeScreen() {
               <KeywordsData keywordLister={cards.keywordLister}>
                 {(keywords) => (
                   <CardCatalogFilterSheet
-                    bookmarkedCount={bookmarkedIds.size}
+                    bookmarkedCount={bookmarkedCount}
                     cardSets={cardSets}
                     criteria={catalogQuery.draftCriteria}
                     keywords={keywords}

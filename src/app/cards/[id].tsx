@@ -26,7 +26,7 @@ function CardDetailRoute() {
       kind="card"
       onBookmarksChanged={() => void queryClient.invalidateQueries({ queryKey: cardKeys.all() })}
     >
-      {({ bookmarkedIds, toggleBookmark }) => (
+      {({ isBookmarked, toggleBookmark }) => (
         <CardDetailData cardFinder={cards.cardRepository} printingId={printingId}>
           {(card) => (
             <>
@@ -34,7 +34,7 @@ function CardDetailRoute() {
               <CardDetailScreen
                 bookmarkControl={
                   <BookmarkToggle
-                    bookmarked={bookmarkedIds.has(printingId)}
+                    bookmarked={isBookmarked(printingId)}
                     label="Bookmark"
                     onPress={() => toggleBookmark(printingId)}
                   />

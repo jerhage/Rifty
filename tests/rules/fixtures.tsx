@@ -8,7 +8,10 @@ import type { CoreRule, CoreRuleDetail } from "@/features/rules/core-rule";
 import { coreRuleBookmarkLabel } from "@/features/rules/presentation/core-rules-format";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 import { listCoreRules } from "@/features/rules/use-cases/list-core-rules";
-import { coreRuleAncestorNumbersOf } from "@/features/rules/value-objects/core-rule-number";
+import {
+  coreRuleAncestorNumbersOf,
+  coreRuleNumberSchema,
+} from "@/features/rules/value-objects/core-rule-number";
 import { coreRulesSeed } from "@/infrastructure/database/generated/core-rules-seed";
 
 import { createNoteStore, fixedClock, sequentialIds } from "../annotation/fixtures";
@@ -27,13 +30,18 @@ function coreRuleDetails(bodies: readonly string[]): CoreRuleDetail[] {
   return bodies.map((body, position) => ({ position, kind: "bullet", body }));
 }
 
+function coreRuleNumber(value: string): CoreRuleNumber {
+  return coreRuleNumberSchema.parse(value);
+}
+
 /** A hand-written document in printed order. Positions are the given order, as the adapter reads. */
 function coreRuleDocument(drafts: readonly CoreRuleDraft[]): readonly CoreRule[] {
   return drafts.map((draft, position) => {
-    const ancestors = coreRuleAncestorNumbersOf(draft.number);
+    const number = coreRuleNumber(draft.number);
+    const ancestors = coreRuleAncestorNumbersOf(number);
 
     return {
-      number: draft.number,
+      number,
       parentNumber: ancestors.at(-1) ?? null,
       position,
       kind: draft.kind ?? "rule",
@@ -60,24 +68,27 @@ function coreRuleNumbered(coreRules: readonly CoreRule[], number: string): CoreR
   return found;
 }
 
-const NOTHING_MARKED: BookmarkedSubjects = {
-  bookmarkedIds: new Set(),
+const NOTHING_MARKED: BookmarkedSubjects<"coreRule"> = {
+  bookmarkedCount: 0,
+  isBookmarked: () => false,
   toggleBookmark: () => undefined,
 };
 
-/** The two slots the screen's callers fill, holding the very controls the route supplies. */
+/** What the screen's callers fill, holding the very controls and counts the route supplies. */
 function coreRuleAnnotations(
-  bookmarked: BookmarkedSubjects = NOTHING_MARKED,
+  bookmarked: BookmarkedSubjects<"coreRule"> = NOTHING_MARKED,
   noteManager: NoteManager = createNoteStore().manager,
 ) {
   const clock = fixedClock(ANNOTATED_AT);
   const idGenerator = sequentialIds();
 
   return {
+    bookmarkedCount: bookmarked.bookmarkedCount,
+    isBookmarked: bookmarked.isBookmarked,
     bookmarkFor: (number: CoreRuleNumber): ReactNode => (
       <BookmarkToggle
         alignment="start"
-        bookmarked={bookmarked.bookmarkedIds.has(number)}
+        bookmarked={bookmarked.isBookmarked(number)}
         label={coreRuleBookmarkLabel(number)}
         onPress={() => bookmarked.toggleBookmark(number)}
       />
@@ -94,4 +105,11 @@ function coreRuleAnnotations(
   };
 }
 
-export { ANNOTATED_AT, coreRuleAnnotations, coreRuleDocument, coreRuleNumbered, seededCoreRules };
+export {
+  ANNOTATED_AT,
+  coreRuleAnnotations,
+  coreRuleDocument,
+  coreRuleNumber,
+  coreRuleNumbered,
+  seededCoreRules,
+};

@@ -18,12 +18,12 @@ interface SavedCoreRule {
  */
 function savedCoreRules(
   coreRules: readonly CoreRule[],
-  bookmarkedNumbers: ReadonlySet<CoreRuleNumber>,
+  isBookmarked: (number: CoreRuleNumber) => boolean,
 ): readonly SavedCoreRule[] {
   const byNumber = new Map(coreRules.map((coreRule) => [coreRule.number, coreRule]));
 
   return coreRules
-    .filter((coreRule) => bookmarkedNumbers.has(coreRule.number))
+    .filter((coreRule) => isBookmarked(coreRule.number))
     .map((coreRule) => ({
       coreRule,
       heading: nearestHeadingOf(coreRule.number, byNumber),

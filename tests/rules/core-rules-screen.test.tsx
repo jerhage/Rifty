@@ -14,7 +14,6 @@ import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-s
 import { coreRuleAnnotations, coreRuleDocument, seededCoreRules } from "./fixtures";
 
 const EDITION: CoreRulesEdition = { title: "Riftbound Core Rules", publishedOn: "2025-06-02" };
-const NO_BOOKMARKS: ReadonlySet<string> = new Set();
 
 /**
  * The one movement the screen makes, watched where it asks for it. The list hands its caller an
@@ -75,7 +74,6 @@ describe("CoreRulesScreen", () => {
 
     await render(
       <CoreRulesScreen
-        bookmarkedNumbers={NO_BOOKMARKS}
         coreRules={coreRules}
         edition={EDITION}
         {...coreRuleAnnotations()}
@@ -96,7 +94,6 @@ describe("CoreRulesScreen", () => {
 
     await render(
       <CoreRulesScreen
-        bookmarkedNumbers={NO_BOOKMARKS}
         coreRules={coreRules}
         edition={EDITION}
         {...coreRuleAnnotations()}
@@ -126,7 +123,6 @@ const SEARCH_DOCUMENT = coreRuleDocument([
 async function renderSearchableDocument() {
   await render(
     <CoreRulesScreen
-      bookmarkedNumbers={NO_BOOKMARKS}
       coreRules={SEARCH_DOCUMENT}
       edition={EDITION}
       {...coreRuleAnnotations()}
@@ -299,7 +295,6 @@ const SCROLL_DOCUMENT = coreRuleDocument([
 async function renderScrollableDocument() {
   await render(
     <CoreRulesScreen
-      bookmarkedNumbers={NO_BOOKMARKS}
       coreRules={SCROLL_DOCUMENT}
       edition={EDITION}
       {...coreRuleAnnotations()}
@@ -458,7 +453,6 @@ function frameOf(width: number, height: number, fontScale = 1) {
 async function renderDocumentAt(width: number, height: number, fontScale = 1) {
   await render(
     <CoreRulesScreen
-      bookmarkedNumbers={NO_BOOKMARKS}
       coreRules={SCROLL_DOCUMENT}
       edition={EDITION}
       {...coreRuleAnnotations()}

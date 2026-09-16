@@ -13,7 +13,11 @@ import {
   listBookmarksQuery,
   toggleBookmarkMutation,
 } from "@/features/annotation/queries/annotation-queries";
-import type { AnnotationSubjectKind } from "@/features/annotation/value-objects/annotation-subject";
+import {
+  annotationSubjectSchema,
+  type AnnotationSubjectId,
+  type AnnotationSubjectKind,
+} from "@/features/annotation/value-objects/annotation-subject";
 import { useAnnouncement } from "@/hooks/use-announcement";
 import { useReadState } from "@/hooks/use-read-state";
 import { useWriteState } from "@/hooks/use-write-state";
@@ -23,18 +27,22 @@ const BOOKMARK_REMOVED_MESSAGE = "Bookmark removed.";
 const BOOKMARK_FAILED_MESSAGE = "Could not change the bookmark. Try again.";
 const EMPTY_IDS: ReadonlySet<string> = new Set();
 
-/** Which subjects of one kind carry a mark, and the one act that puts a mark on or takes it off. */
-interface BookmarkedSubjects {
-  readonly bookmarkedIds: ReadonlySet<string>;
-  toggleBookmark(id: string): void;
+/**
+ * Which subjects of one kind carry a mark, and the one act that puts a mark on or takes it off.
+ * The kind fixes the identifier, so a rule number cannot be handed to a screen of cards.
+ */
+interface BookmarkedSubjects<TKind extends AnnotationSubjectKind> {
+  readonly bookmarkedCount: number;
+  isBookmarked(id: AnnotationSubjectId<TKind>): boolean;
+  toggleBookmark(id: AnnotationSubjectId<TKind>): void;
 }
 
-interface BookmarkedSubjectsDataProps {
+interface BookmarkedSubjectsDataProps<TKind extends AnnotationSubjectKind> {
   /** The whole set, because this boundary reads and writes the same rows. */
   readonly bookmarkManager: BookmarkManager;
-  readonly children: (bookmarked: BookmarkedSubjects) => ReactNode;
+  readonly children: (bookmarked: BookmarkedSubjects<TKind>) => ReactNode;
   readonly clock: Clock;
-  readonly kind: AnnotationSubjectKind;
+  readonly kind: TKind;
   readonly onBookmarksChanged?: () => void;
 }
 
@@ -42,13 +50,13 @@ interface BookmarkedSubjectsDataProps {
  * Every mark of one kind in one read, so a screen holding a thousand subjects asks once rather than
  * once per row. There is no in-flight appearance: the control shows what is stored.
  */
-function BookmarkedSubjectsData({
+function BookmarkedSubjectsData<TKind extends AnnotationSubjectKind>({
   bookmarkManager,
   children,
   clock,
   kind,
   onBookmarksChanged,
-}: BookmarkedSubjectsDataProps) {
+}: BookmarkedSubjectsDataProps<TKind>) {
   const queryClient = useQueryClient();
   const announce = useAnnouncement();
   const scope = useMemo<BookmarkListScope>(() => ({ type: "ofKind", kind }), [kind]);
@@ -82,14 +90,24 @@ function BookmarkedSubjectsData({
       match(state)
         .with(
           { type: "success" },
-          ({ bookmarks }) => new Set(bookmarks.map(({ subject }) => subject.id)),
+          ({ bookmarks }): ReadonlySet<string> =>
+            new Set(bookmarks.map(({ subject }) => subject.id)),
         )
         .with({ type: "loading" }, { type: "failed" }, () => EMPTY_IDS)
         .exhaustive(),
     [state],
   );
 
-  const toggleBookmark = useCallback((id: string) => submit({ kind, id }), [kind, submit]);
+  const isBookmarked = useCallback(
+    (id: AnnotationSubjectId<TKind>) => bookmarkedIds.has(id),
+    [bookmarkedIds],
+  );
+
+  /** The kind and the id are assembled into a subject here, so the write cannot name another kind. */
+  const toggleBookmark = useCallback(
+    (id: AnnotationSubjectId<TKind>) => submit(annotationSubjectSchema.parse({ kind, id })),
+    [kind, submit],
+  );
 
   return match(state)
     .with({ type: "loading" }, () => <LoadingState />)
@@ -99,7 +117,9 @@ function BookmarkedSubjectsData({
         message="Could not load your bookmarks."
       />
     ))
-    .with({ type: "success" }, () => children({ bookmarkedIds, toggleBookmark }))
+    .with({ type: "success" }, () =>
+      children({ bookmarkedCount: bookmarkedIds.size, isBookmarked, toggleBookmark }),
+    )
     .exhaustive();
 }
 

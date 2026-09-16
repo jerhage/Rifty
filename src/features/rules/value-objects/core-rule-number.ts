@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-const coreRuleNumberSchema = z.string().trim().min(1);
+const coreRuleNumberSchema = z.string().trim().min(1).brand<"CoreRuleNumber">();
 
 /**
  * The printed identifier's segment count, so `103.2.a` is three deep. The parser carries its own
@@ -17,7 +17,9 @@ function coreRuleDepthOf(number: CoreRuleNumber): number {
 function coreRuleAncestorNumbersOf(number: CoreRuleNumber): readonly CoreRuleNumber[] {
   const segments = number.split(".");
 
-  return segments.slice(0, -1).map((_, index) => segments.slice(0, index + 1).join("."));
+  return segments
+    .slice(0, -1)
+    .map((_, index) => coreRuleNumberSchema.parse(segments.slice(0, index + 1).join(".")));
 }
 
 /**

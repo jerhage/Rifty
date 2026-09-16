@@ -8,6 +8,7 @@ import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
 import { listBookmarksQuery } from "@/features/annotation/queries/annotation-queries";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
+import { coreRuleNumberSchema } from "@/features/rules/value-objects/core-rule-number";
 import { useReadState } from "@/hooks/use-read-state";
 
 import { createTestWrapper } from "../test-wrapper";
@@ -15,6 +16,7 @@ import { fixedClock, subject } from "./fixtures";
 
 const STORE_FAILURE = new Error("The store is unavailable.");
 const MARKED_AT = "2026-09-16T10:00:00.000Z";
+const READ_NUMBERS = ["101.1", "101.2"].map((value) => coreRuleNumberSchema.parse(value));
 const RULE = subject("coreRule", "101.1");
 const CARD = subject("card", "Ember Adept");
 
@@ -76,10 +78,13 @@ async function renderMarks(manager: BookmarkManager, probe = false) {
         clock={fixedClock(MARKED_AT)}
         kind="coreRule"
       >
-        {({ bookmarkedIds, toggleBookmark }) => (
+        {({ isBookmarked, toggleBookmark }) => (
           <>
-            <Text>{`marked: ${[...bookmarkedIds].join(", ")}`}</Text>
-            <Pressable accessibilityRole="button" onPress={() => toggleBookmark("101.2")}>
+            <Text>{`marked: ${READ_NUMBERS.filter(isBookmarked).join(", ")}`}</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => toggleBookmark(coreRuleNumberSchema.parse("101.2"))}
+            >
               <Text>Mark 101.2</Text>
             </Pressable>
           </>

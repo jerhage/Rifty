@@ -13,11 +13,17 @@ import {
 } from "@/features/saved/presentation/saved-format";
 import { SavedScreen } from "@/features/saved/presentation/screens/saved-screen";
 
-import { createNoteStore, fixedClock, sequentialIds, type NoteStore } from "../annotation/fixtures";
+import {
+  createNoteStore,
+  fixedClock,
+  sequentialIds,
+  subject,
+  type NoteStore,
+} from "../annotation/fixtures";
 import { createTestWrapper } from "../test-wrapper";
 
 const WRITTEN_AT = "2026-09-16T10:00:00.000Z";
-const CARD = { kind: "card", id: "vi" } as const;
+const CARD = subject("card", "vi");
 const PHONE = { height: 874, width: 402 } as const;
 
 async function renderSaved(store: NoteStore = createNoteStore()): Promise<NoteStore> {

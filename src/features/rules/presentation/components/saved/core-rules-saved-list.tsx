@@ -15,9 +15,9 @@ import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-nu
 import { CoreRulesSavedEntry } from "./core-rules-saved-entry";
 
 interface CoreRulesSavedListProps {
-  /** Every rule the reader has marked, whether or not a query has filtered it out of view. */
-  readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
   readonly coreRules: readonly CoreRule[];
+  /** Asked of every rule the document holds, whether or not a query has filtered it out of view. */
+  readonly isBookmarked: (number: CoreRuleNumber) => boolean;
   readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onGoToCoreRule: (number: CoreRuleNumber) => void;
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
@@ -28,16 +28,13 @@ interface CoreRulesSavedListProps {
  * no scroller of its own, so each container decides how its own list scrolls.
  */
 function CoreRulesSavedList({
-  bookmarkedNumbers,
   coreRules,
+  isBookmarked,
   notesFor,
   onGoToCoreRule,
   onRemoveBookmark,
 }: CoreRulesSavedListProps) {
-  const saved = useMemo(
-    () => savedCoreRules(coreRules, bookmarkedNumbers),
-    [bookmarkedNumbers, coreRules],
-  );
+  const saved = useMemo(() => savedCoreRules(coreRules, isBookmarked), [coreRules, isBookmarked]);
 
   return (
     <LabelledSection label={coreRuleSavedSectionLabel(saved.length)}>

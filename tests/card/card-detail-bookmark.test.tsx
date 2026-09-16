@@ -83,11 +83,11 @@ async function renderCardDetail(store: MarkStore) {
       clock={{ now: () => MARKED_AT }}
       kind="card"
     >
-      {({ bookmarkedIds, toggleBookmark }) => (
+      {({ isBookmarked, toggleBookmark }) => (
         <CardDetailScreen
           bookmarkControl={
             <BookmarkToggle
-              bookmarked={bookmarkedIds.has(VI.printingId)}
+              bookmarked={isBookmarked(VI.printingId)}
               label="Bookmark"
               onPress={() => toggleBookmark(VI.printingId)}
             />

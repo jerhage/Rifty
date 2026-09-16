@@ -12,7 +12,13 @@ import {
 } from "@/features/card/presentation/screens/card-detail-screen";
 
 import { card, cardSet } from "./fixtures";
-import { createNoteStore, fixedClock, sequentialIds, type NoteStore } from "../annotation/fixtures";
+import {
+  createNoteStore,
+  fixedClock,
+  sequentialIds,
+  subject,
+  type NoteStore,
+} from "../annotation/fixtures";
 import { recordAnnouncements } from "../announcements";
 import { createTestWrapper } from "../test-wrapper";
 
@@ -170,7 +176,7 @@ describe("the notes on a card", () => {
     const store = createNoteStore([
       {
         id: "rule-note",
-        subject: { kind: "coreRule", id: "501.1" },
+        subject: subject("coreRule", "501.1"),
         title: "",
         body: "Chip damage is dealt.",
         createdAt: WRITTEN_AT,

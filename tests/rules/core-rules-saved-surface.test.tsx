@@ -19,7 +19,7 @@ import { SAVED_PANE_COLLAPSED_WIDTH } from "@/features/rules/presentation/compon
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
 import { recordAnnouncements } from "../announcements";
-import { createNoteStore, fixedClock, type NoteStore } from "../annotation/fixtures";
+import { createNoteStore, fixedClock, subject, type NoteStore } from "../annotation/fixtures";
 import { createTestWrapper } from "../test-wrapper";
 import { coreRuleAnnotations, coreRuleDocument } from "./fixtures";
 
@@ -81,7 +81,7 @@ function sameSubject(one: AnnotationSubject, other: AnnotationSubject): boolean 
 
 function createBookmarkManager(markedNumbers: readonly string[] = []): BookmarkManager {
   const bookmarks: Bookmark[] = markedNumbers.map((number) => ({
-    subject: { kind: "coreRule", id: number },
+    subject: subject("coreRule", number),
     createdAt: WRITTEN_AT,
   }));
 
@@ -151,7 +151,6 @@ async function renderRules(
     >
       {(bookmarked) => (
         <CoreRulesScreen
-          bookmarkedNumbers={bookmarked.bookmarkedIds}
           coreRules={DOCUMENT}
           edition={EDITION}
           {...coreRuleAnnotations(bookmarked, noteStore.manager)}
@@ -296,7 +295,7 @@ describe("the notes on a saved rule", () => {
     const store = createNoteStore([
       {
         id: "note-0",
-        subject: { kind: "coreRule", id: "501.1" },
+        subject: subject("coreRule", "501.1"),
         title: "",
         body: "Came up in round three.",
         createdAt: WRITTEN_AT,

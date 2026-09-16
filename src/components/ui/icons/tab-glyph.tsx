@@ -2,7 +2,7 @@ import { StyleSheet, View, type ColorValue } from "react-native";
 
 import { Radius } from "@/constants/theme";
 
-type TabGlyphShape = "square" | "diamond" | "circle";
+type TabGlyphShape = "square" | "diamond" | "circle" | "pill";
 
 function TabGlyph({ color, shape }: { readonly color: ColorValue; readonly shape: TabGlyphShape }) {
   return (
@@ -31,5 +31,9 @@ const styles = StyleSheet.create({
   },
   circle: {
     borderRadius: 8,
+  },
+  pill: {
+    borderRadius: 5,
+    height: 10,
   },
 });

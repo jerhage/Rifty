@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 
+import { TAB_DESTINATIONS, railCenteringStyle } from "@/components/app-shell/tab-destinations";
 import { TabGlyph } from "@/components/ui/icons/tab-glyph";
 import { Fonts, RailWidth } from "@/constants/theme";
 import { useLayoutSize } from "@/hooks/use-layout-size";
@@ -39,29 +40,17 @@ function TabsLayout() {
           tabBarVariant: isRail ? "material" : "uikit",
         }}
       >
-        <Tabs.Screen
-          name="index"
-          options={{
-            tabBarItemStyle: isRail ? { marginTop: "auto" } : undefined,
-            title: "Cards",
-            tabBarIcon: ({ color }) => <TabGlyph color={color} shape="square" />,
-          }}
-        />
-        <Tabs.Screen
-          name="decks"
-          options={{
-            title: "Decks",
-            tabBarIcon: ({ color }) => <TabGlyph color={color} shape="diamond" />,
-          }}
-        />
-        <Tabs.Screen
-          name="rules"
-          options={{
-            tabBarItemStyle: isRail ? { marginBottom: "auto" } : undefined,
-            title: "Rules",
-            tabBarIcon: ({ color }) => <TabGlyph color={color} shape="circle" />,
-          }}
-        />
+        {TAB_DESTINATIONS.map((destination, at) => (
+          <Tabs.Screen
+            key={destination.name}
+            name={destination.name}
+            options={{
+              tabBarItemStyle: isRail ? railCenteringStyle(at) : undefined,
+              title: destination.title,
+              tabBarIcon: ({ color }) => <TabGlyph color={color} shape={destination.shape} />,
+            }}
+          />
+        ))}
       </Tabs>
     </UsableWidthProvider>
   );

@@ -1,8 +1,10 @@
 import { render, screen } from "@testing-library/react-native";
-import { StyleSheet } from "react-native";
+import type { ReactTestRendererJSON } from "react-test-renderer";
+import { StyleSheet, View } from "react-native";
 
 import { BookmarkGlyph } from "@/components/ui/icons/bookmark-glyph";
 import { CHEVRON_ARMS, ChevronGlyph } from "@/components/ui/icons/chevron-glyph";
+import { TabGlyph, type TabGlyphShape } from "@/components/ui/icons/tab-glyph";
 
 function renderedStyle() {
   const json = screen.toJSON();
@@ -97,5 +99,45 @@ describe("BookmarkGlyph", () => {
 
     expect(renderedProps().props.accessibilityElementsHidden).toBe(true);
     expect(renderedProps().props.importantForAccessibility).toBe("no-hide-descendants");
+  });
+});
+
+/**
+ * A shape is what tells one destination from another, so no two may draw the same box, and color
+ * says nothing: it is the tint the tab bar hands every glyph.
+ */
+describe("TabGlyph", () => {
+  const SHAPES: readonly TabGlyphShape[] = ["square", "diamond", "circle", "pill"];
+
+  function drawnStyles(): readonly string[] {
+    const json = screen.toJSON();
+    const node = Array.isArray(json) ? json[0] : json;
+    const children: readonly (ReactTestRendererJSON | string)[] = node?.children ?? [];
+
+    return children.map((child) =>
+      JSON.stringify(typeof child === "string" ? child : StyleSheet.flatten(child.props.style)),
+    );
+  }
+
+  it("should draw a box of its own for every shape a destination may take", async () => {
+    await render(
+      <View>
+        {SHAPES.map((shape) => (
+          <TabGlyph color="#0B72E7" key={shape} shape={shape} />
+        ))}
+      </View>,
+    );
+
+    const drawn = drawnStyles();
+
+    expect(drawn).toHaveLength(SHAPES.length);
+    expect(new Set(drawn).size).toBe(SHAPES.length);
+  });
+
+  it("should take the color it was given rather than carry one per shape", async () => {
+    await render(<TabGlyph color="#0B72E7" shape="pill" />);
+
+    expect(renderedStyle().backgroundColor).toBe("#0B72E7");
+    expect(renderedProps().props.accessibilityElementsHidden).toBe(true);
   });
 });

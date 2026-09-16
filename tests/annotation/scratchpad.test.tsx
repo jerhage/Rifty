@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 
 import { Scratchpad } from "@/features/annotation/presentation/components/scratchpad";
+import { NotesData } from "@/features/annotation/presentation/data/notes-data";
 import {
   SCRATCHPAD_EMPTY_MESSAGE,
   SCRATCHPAD_NOTES_NAME,
@@ -16,11 +17,14 @@ const CARD = { kind: "card", id: "vi" } as const;
 
 async function renderScratchpad(store: NoteStore = createNoteStore()): Promise<NoteStore> {
   await render(
-    <Scratchpad
+    <NotesData
       clock={fixedClock(WRITTEN_AT)}
       idGenerator={sequentialIds()}
       noteManager={store.manager}
-    />,
+      subject={null}
+    >
+      {(written) => <Scratchpad written={written} />}
+    </NotesData>,
     { wrapper: createTestWrapper() },
   );
   await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` });

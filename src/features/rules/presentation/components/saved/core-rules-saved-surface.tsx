@@ -4,7 +4,6 @@ import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
 import { Spacing } from "@/constants/theme";
 import type { NoteManager } from "@/features/annotation/note-manager";
-import { Scratchpad } from "@/features/annotation/presentation/components/scratchpad";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
@@ -21,7 +20,7 @@ interface CoreRulesSavedSurfaceProps {
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
 }
 
-/** Everything the reader has kept: the scratchpad first, the bookmarked rules under it. */
+/** Everything the reader has kept on this screen: the rules they have bookmarked, with their notes. */
 function CoreRulesSavedSurface({
   bookmarkedNumbers,
   clock,
@@ -33,7 +32,6 @@ function CoreRulesSavedSurface({
 }: CoreRulesSavedSurfaceProps) {
   return (
     <View style={styles.surface}>
-      <Scratchpad clock={clock} idGenerator={idGenerator} noteManager={noteManager} />
       <CoreRulesSavedList
         bookmarkedNumbers={bookmarkedNumbers}
         clock={clock}

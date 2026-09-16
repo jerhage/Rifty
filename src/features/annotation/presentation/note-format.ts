@@ -47,6 +47,8 @@ function noteRemoveLabel(notesName: string, position: number): string {
 }
 
 const NOTE_PLACEHOLDER = "Write the note…";
+const NOTE_REMOVED_MESSAGE = "Note removed.";
+const NOTE_REMOVE_FAILED_MESSAGE = "Could not remove that note. Try again.";
 const NOTES_EMPTY_MESSAGE = "No notes on this one yet.";
 
 const SCRATCHPAD_TITLE = "Scratchpad";
@@ -57,6 +59,8 @@ const SCRATCHPAD_EMPTY_MESSAGE = "Nothing in the scratchpad yet.";
 export {
   NOTES_EMPTY_MESSAGE,
   NOTE_PLACEHOLDER,
+  NOTE_REMOVED_MESSAGE,
+  NOTE_REMOVE_FAILED_MESSAGE,
   SCRATCHPAD_EMPTY_MESSAGE,
   SCRATCHPAD_NOTES_NAME,
   SCRATCHPAD_PLACEHOLDER,

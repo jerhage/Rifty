@@ -10,6 +10,10 @@ import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { Note, NoteId } from "@/features/annotation/note";
 import type { NoteListScope } from "@/features/annotation/note-list-scope";
 import type { NoteManager } from "@/features/annotation/note-manager";
+import {
+  NOTE_REMOVED_MESSAGE,
+  NOTE_REMOVE_FAILED_MESSAGE,
+} from "@/features/annotation/presentation/note-format";
 import { annotationKeys } from "@/features/annotation/queries/annotation-keys";
 import {
   deleteNoteMutation,
@@ -25,9 +29,7 @@ const NOTE_WRITTEN_MESSAGE = "Note added.";
 const NOTE_REPLACED_MESSAGE = "Note saved.";
 const NOTE_BLANK_MESSAGE = "A note needs something written in it.";
 const NOTE_GONE_MESSAGE = "That note is no longer there.";
-const NOTE_REMOVED_MESSAGE = "Note removed.";
 const NOTE_FAILED_MESSAGE = "Could not save that note. Try again.";
-const NOTE_REMOVE_FAILED_MESSAGE = "Could not remove that note. Try again.";
 
 /** One subject's notes, or the notes that hang off no subject at all, newest first. */
 interface WrittenNotes {
@@ -110,5 +112,5 @@ function NotesData({ children, clock, idGenerator, noteManager, subject }: Notes
     .exhaustive();
 }
 
-export { NOTE_BLANK_MESSAGE, NOTE_REMOVED_MESSAGE, NOTE_WRITTEN_MESSAGE, NotesData };
+export { NOTE_BLANK_MESSAGE, NOTE_WRITTEN_MESSAGE, NotesData };
 export type { NotesDataProps, WrittenNotes };

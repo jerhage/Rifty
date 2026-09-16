@@ -14,6 +14,7 @@ const annotationKeys = {
     [...annotationKeys.bookmarks(), "list", scope] as const,
   notes: () => [...annotationKeys.all(), "note"] as const,
   noteList: (scope: NoteListScope) => [...annotationKeys.notes(), "list", scope] as const,
+  notedSubjects: () => [...annotationKeys.notes(), "subject"] as const,
 };
 
 export { annotationKeys };

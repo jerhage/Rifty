@@ -8,7 +8,14 @@ import { useTheme } from "@/hooks/use-theme";
 
 const MaxCardWidth = 420;
 
-/** The card face, shown plain — its own printing already carries the energy, might and domain. */
+/**
+ * The card face, shown plain — its own printing already carries the energy, might and domain.
+ *
+ * The shape sits on the image, not on the frame around it. A percentage width resolves against the
+ * width the frame was actually given, while an aspect ratio beside a capped width resolves against
+ * the cap — so in a pane narrower than the cap the frame grew taller than the art and showed its own
+ * background above and below it.
+ */
 function CardHero({ card }: { readonly card: Card }) {
   const theme = useTheme();
   const aspectRatio = match(card.orientation)
@@ -18,16 +25,13 @@ function CardHero({ card }: { readonly card: Card }) {
 
   return (
     <View
-      style={[
-        styles.hero,
-        { aspectRatio, backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}
+      style={[styles.hero, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}
     >
       <CardImage
         alternative={{ type: "described", label: `${card.name} card art` }}
         contentFit="contain"
         source={card.imageUrl}
-        style={styles.image}
+        style={[styles.image, { aspectRatio }]}
       />
     </View>
   );
@@ -45,7 +49,6 @@ const styles = StyleSheet.create({
     width: MaxCardWidth,
   },
   image: {
-    height: "100%",
     width: "100%",
   },
 });

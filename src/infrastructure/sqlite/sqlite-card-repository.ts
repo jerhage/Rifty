@@ -29,6 +29,8 @@ import type {
 import { Page } from "@/shared/page";
 import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
 import type { CardRepository } from "@/features/card/card-repository";
+import type { AnnotationSubjectKind } from "@/features/annotation/value-objects/annotation-subject";
+import { bookmarks } from "@/infrastructure/database/annotation-schema/annotations";
 import {
   cardDomains,
   cardMarketplaceReferences,
@@ -48,6 +50,8 @@ import { toDomainCard, toDomainCardSummary } from "./card-mapper";
 import type { SqliteDatabase } from "./sqlite-database";
 
 const PRINTING_ID_CHUNK_SIZE = 200;
+
+const CARD_SUBJECT_KIND: AnnotationSubjectKind = "card";
 
 const PRINTED_CARD_COLUMNS = {
   card: getTableColumns(cards),
@@ -308,6 +312,21 @@ class SqliteCardRepository implements CardRepository {
               and(
                 eq(cardKeywords.cardId, cards.id),
                 inArray(cardKeywords.keywordId, [...new Set(criteria.keywordIds)]),
+              ),
+            ),
+        ),
+      );
+    }
+    if (criteria.onlyBookmarked) {
+      conditions.push(
+        exists(
+          this.db
+            .select({ matched: sql`1` })
+            .from(bookmarks)
+            .where(
+              and(
+                eq(bookmarks.subjectKind, CARD_SUBJECT_KIND),
+                eq(bookmarks.subjectId, cardPrintings.id),
               ),
             ),
         ),

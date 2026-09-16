@@ -5,7 +5,7 @@ import { sortForId, toggledSort } from "@/features/card/presentation/card-sort-o
 import type { CardType } from "@/features/card/value-objects/card-type";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
-import type { CatalogQueryCriteria } from "../catalog-query-criteria";
+import { toggleOnlyBookmarked, type CatalogQueryCriteria } from "../catalog-query-criteria";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -79,6 +79,10 @@ function useCatalogQuery() {
     setCriteria((current) => ({ ...current, typeIds: undefined }));
   }, []);
 
+  const toggleBookmarkedOnly = useCallback(() => {
+    setCriteria(toggleOnlyBookmarked);
+  }, []);
+
   /** The arrow beside the sort label flips direction in place, without opening the sheet. */
   const toggleSortDirection = useCallback(() => {
     setCriteria((current) => ({ ...current, sort: toggledSort(current.sort) }));
@@ -99,6 +103,7 @@ function useCatalogQuery() {
     setDraftCriteria,
     setQuery,
     sheet,
+    toggleBookmarkedOnly,
     toggleDomain,
     toggleSortDirection,
     toggleType,

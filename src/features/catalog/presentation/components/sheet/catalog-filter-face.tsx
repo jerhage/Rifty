@@ -4,13 +4,19 @@ import { Chip } from "@/components/ui/atoms/chip";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
 import { SelectableChipRow } from "@/components/ui/atoms/selectable-chip-row";
 import { SheetFace } from "@/components/ui/atoms/sheet-face";
+import { SwitchRow } from "@/components/ui/atoms/switch-row";
 import { TextAction } from "@/components/ui/atoms/text-action";
 import { Spacing } from "@/constants/theme";
 import type { Keyword } from "@/features/card/keyword/keyword";
 import type { CardSet } from "@/features/set/card-set";
 import { useKeywordColor } from "@/hooks/use-theme";
 
-import { toggleKeyword, toggleSet, type CatalogQueryCriteria } from "../../catalog-query-criteria";
+import {
+  toggleKeyword,
+  toggleOnlyBookmarked,
+  toggleSet,
+  type CatalogQueryCriteria,
+} from "../../catalog-query-criteria";
 import { MinimumAttributeInput } from "./minimum-attribute-input";
 
 /**
@@ -18,6 +24,7 @@ import { MinimumAttributeInput } from "./minimum-attribute-input";
  * the grid, so repeating them here would give the same filter two homes.
  */
 function CatalogFilterFace({
+  bookmarkedCount,
   cardSets,
   criteria,
   keywords,
@@ -25,6 +32,7 @@ function CatalogFilterFace({
   onChangeCriteria,
   onClear,
 }: {
+  readonly bookmarkedCount: number;
   readonly cardSets: readonly CardSet[];
   readonly criteria: CatalogQueryCriteria;
   readonly keywords: readonly Keyword[];
@@ -80,6 +88,13 @@ function CatalogFilterFace({
               property="power"
             />
           </LabelledSection>
+
+          <SwitchRow
+            checked={criteria.onlyBookmarked ?? false}
+            label="Only bookmarked cards"
+            note={bookmarkedNote(bookmarkedCount)}
+            onToggle={() => onChangeCriteria(toggleOnlyBookmarked(criteria))}
+          />
         </>
       }
       confirmLabel="Show results"
@@ -87,6 +102,10 @@ function CatalogFilterFace({
       title="Advanced filters"
     />
   );
+}
+
+function bookmarkedNote(count: number): string {
+  return count === 1 ? "1 card bookmarked" : `${count} cards bookmarked`;
 }
 
 export { CatalogFilterFace };

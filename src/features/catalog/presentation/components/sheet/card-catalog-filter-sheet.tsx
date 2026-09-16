@@ -12,6 +12,7 @@ import { CatalogFilterFace } from "./catalog-filter-face";
 
 /** One sheet with two faces, chosen by the state the catalog query holds. */
 function CardCatalogFilterSheet({
+  bookmarkedCount,
   cardSets,
   criteria,
   keywords,
@@ -21,6 +22,7 @@ function CardCatalogFilterSheet({
   onDismiss,
   sheet,
 }: {
+  readonly bookmarkedCount: number;
   readonly cardSets: readonly CardSet[];
   readonly criteria: CatalogQueryCriteria;
   readonly keywords: readonly Keyword[];
@@ -43,6 +45,7 @@ function CardCatalogFilterSheet({
         ))
         .with({ type: "filter" }, () => (
           <CatalogFilterFace
+            bookmarkedCount={bookmarkedCount}
             cardSets={cardSets}
             criteria={criteria}
             keywords={keywords}

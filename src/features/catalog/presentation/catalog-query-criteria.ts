@@ -26,6 +26,10 @@ function toggleKeyword(criteria: CatalogQueryCriteria, keywordId: string): Catal
   return { ...criteria, keywordIds: nextIds.length === 0 ? undefined : nextIds };
 }
 
+function toggleOnlyBookmarked(criteria: CatalogQueryCriteria): CatalogQueryCriteria {
+  return { ...criteria, onlyBookmarked: criteria.onlyBookmarked ? undefined : true };
+}
+
 function setMinimum(
   criteria: CatalogQueryCriteria,
   property: NumericAttribute,
@@ -69,10 +73,18 @@ function activeFilterCount(criteria: CatalogQueryCriteria): number {
     criteria.energy === undefined ? 0 : 1,
     criteria.might === undefined ? 0 : 1,
     criteria.power === undefined ? 0 : 1,
+    criteria.onlyBookmarked ? 1 : 0,
   ];
 
   return selections.reduce((total, count) => total + count, 0);
 }
 
-export { activeFilterCount, minimumValue, setMinimum, toggleKeyword, toggleSet };
+export {
+  activeFilterCount,
+  minimumValue,
+  setMinimum,
+  toggleKeyword,
+  toggleOnlyBookmarked,
+  toggleSet,
+};
 export type { CatalogQueryCriteria, NumericAttribute };

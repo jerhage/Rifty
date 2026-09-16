@@ -35,6 +35,7 @@ interface BookmarkedSubjectsDataProps {
   readonly children: (bookmarked: BookmarkedSubjects) => ReactNode;
   readonly clock: Clock;
   readonly kind: AnnotationSubjectKind;
+  readonly onBookmarksChanged?: () => void;
 }
 
 /**
@@ -46,6 +47,7 @@ function BookmarkedSubjectsData({
   children,
   clock,
   kind,
+  onBookmarksChanged,
 }: BookmarkedSubjectsDataProps) {
   const queryClient = useQueryClient();
   const announce = useAnnouncement();
@@ -65,6 +67,7 @@ function BookmarkedSubjectsData({
     /** One mark is read through several scopes, so the whole subtree goes stale. Notes are untouched. */
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: annotationKeys.bookmarks() });
+      onBookmarksChanged?.();
       announce(
         match(result)
           .with({ type: "bookmarked" }, () => BOOKMARKED_MESSAGE)

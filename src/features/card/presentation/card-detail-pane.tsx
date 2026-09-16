@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -11,10 +12,12 @@ import { CardDetailScreen } from "@/features/card/presentation/screens/card-deta
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 
 function CardDetailPane({
+  bookmarkControl,
   cardFinder,
   onClose,
   printingId,
 }: {
+  readonly bookmarkControl: ReactNode;
   readonly cardFinder: CardFinder;
   readonly onClose: () => void;
   readonly printingId: PrintingId | null;
@@ -29,7 +32,7 @@ function CardDetailPane({
         <IconButton accessibilityLabel="Close the card" glyph="✕" onPress={onClose} />
       </View>
       <CardDetailData cardFinder={cardFinder} printingId={printingId}>
-        {(card) => <CardDetailScreen card={card} />}
+        {(card) => <CardDetailScreen bookmarkControl={bookmarkControl} card={card} />}
       </CardDetailData>
     </ThemedView>
   );

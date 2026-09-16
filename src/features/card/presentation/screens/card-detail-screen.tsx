@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet } from "react-native";
+import type { ReactNode } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
@@ -16,7 +17,12 @@ import { CardRulesPanel } from "../components/detail/card-rules-panel";
 import { CardSpeedRow } from "../components/detail/card-speed-row";
 import { CardTagLine } from "../components/detail/card-tag-line";
 
-function CardDetailScreen({ card }: { readonly card: Card }) {
+interface CardDetailScreenProps {
+  readonly bookmarkControl: ReactNode;
+  readonly card: Card;
+}
+
+function CardDetailScreen({ bookmarkControl, card }: CardDetailScreenProps) {
   const insets = useSafeAreaInsets();
   const accent = domainAccent(card, useDomainColors());
 
@@ -34,9 +40,12 @@ function CardDetailScreen({ card }: { readonly card: Card }) {
       >
         <CardHero card={card} />
 
-        <ThemedText accessibilityRole="header" type="display" style={styles.name}>
-          {card.name}
-        </ThemedText>
+        <View style={styles.nameRow}>
+          <ThemedText accessibilityRole="header" type="display" style={styles.name}>
+            {card.name}
+          </ThemedText>
+          {bookmarkControl}
+        </View>
 
         <CardClassificationLine accent={accent} card={card} />
         <CardTagLine tagIds={card.tagIds} />
@@ -59,6 +68,7 @@ function CardDetailScreen({ card }: { readonly card: Card }) {
 }
 
 export { CardDetailScreen };
+export type { CardDetailScreenProps };
 
 const styles = StyleSheet.create({
   screen: {
@@ -71,8 +81,14 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.three,
     width: "100%",
   },
-  name: {
+  nameRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: Spacing.two,
     marginTop: Spacing.three - 3,
+  },
+  name: {
+    flex: 1,
   },
   print: {
     marginTop: Spacing.three,

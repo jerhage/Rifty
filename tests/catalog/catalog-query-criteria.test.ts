@@ -1,4 +1,7 @@
-import { activeFilterCount } from "@/features/catalog/presentation/catalog-query-criteria";
+import {
+  activeFilterCount,
+  toggleOnlyBookmarked,
+} from "@/features/catalog/presentation/catalog-query-criteria";
 
 describe("active filter count", () => {
   it("should count nothing when no facet is set", () => {
@@ -21,5 +24,22 @@ describe("active filter count", () => {
 
   it("should count an attribute range once whatever its bounds", () => {
     expect(activeFilterCount({ energy: { type: "between", minimum: 2, maximum: 5 } })).toBe(1);
+  });
+
+  it("should count the bookmarked filter beside the sheet's other facets", () => {
+    expect(activeFilterCount({ onlyBookmarked: true, setCodes: ["OGN"] })).toBe(2);
+    expect(activeFilterCount({ onlyBookmarked: undefined })).toBe(0);
+  });
+});
+
+describe("the bookmarked criterion", () => {
+  it("should turn on and off again, leaving every other facet alone", () => {
+    const filtered = toggleOnlyBookmarked({ setCodes: ["OGN"] });
+
+    expect(filtered).toEqual({ onlyBookmarked: true, setCodes: ["OGN"] });
+    expect(toggleOnlyBookmarked(filtered)).toEqual({
+      onlyBookmarked: undefined,
+      setCodes: ["OGN"],
+    });
   });
 });

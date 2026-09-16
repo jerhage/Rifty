@@ -13,6 +13,7 @@ import { CatalogResultBar } from "../components/search/catalog-result-bar";
 import { CatalogSearchHeader } from "../components/search/catalog-search-header";
 
 interface CatalogSearchScreenProps extends CardSummariesDataContent {
+  readonly bookmarkedCount: number;
   readonly criteria: CatalogQueryCriteria;
   readonly onChangeQuery: (query: string) => void;
   readonly onClearDomains: () => void;
@@ -21,12 +22,14 @@ interface CatalogSearchScreenProps extends CardSummariesDataContent {
   readonly onOpenFilters: () => void;
   readonly onOpenSort: () => void;
   readonly onToggleDomain: (domainId: CardDomain) => void;
+  readonly onToggleOnlyBookmarked: () => void;
   readonly onToggleSortDirection: () => void;
   readonly onToggleType: (typeId: CardType) => void;
   readonly query: string;
 }
 
 function CatalogSearchScreen({
+  bookmarkedCount,
   cards,
   criteria,
   isRefreshing,
@@ -38,6 +41,7 @@ function CatalogSearchScreen({
   onOpenFilters,
   onOpenSort,
   onToggleDomain,
+  onToggleOnlyBookmarked,
   onToggleSortDirection,
   onToggleType,
   paging,
@@ -59,15 +63,15 @@ function CatalogSearchScreen({
       />
       <CardSummaryGrid
         cards={cards}
-        emptyMessage={
-          query.trim() ? "No cards match that search." : "No cards match. Loosen a filter?"
-        }
+        emptyMessage={emptyMessage(criteria, query)}
         footer={<CardSummaryPageFooter paging={paging} retryLoadMore={retryLoadMore} />}
         header={
           <CatalogResultBar
+            bookmarkedCount={bookmarkedCount}
             criteria={criteria}
             onOpenFilters={onOpenFilters}
             onOpenSort={onOpenSort}
+            onToggleOnlyBookmarked={onToggleOnlyBookmarked}
             onToggleSortDirection={onToggleSortDirection}
             resultCount={cards.length}
             total={total}
@@ -80,6 +84,13 @@ function CatalogSearchScreen({
       />
     </ThemedView>
   );
+}
+
+function emptyMessage(criteria: CatalogQueryCriteria, query: string): string {
+  if (criteria.onlyBookmarked) return "No bookmarked cards match. Bookmark one from its detail?";
+  if (query.trim()) return "No cards match that search.";
+
+  return "No cards match. Loosen a filter?";
 }
 
 export { CatalogSearchScreen };

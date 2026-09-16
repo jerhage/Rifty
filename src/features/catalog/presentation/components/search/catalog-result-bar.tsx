@@ -5,19 +5,24 @@ import { Spacing } from "@/constants/theme";
 import { CardSortControl } from "@/features/card/presentation/components/card-sort-control";
 
 import { activeFilterCount, type CatalogQueryCriteria } from "../../catalog-query-criteria";
+import { BookmarkedFilterControl } from "./bookmarked-filter-control";
 import { FilterControl } from "./filter-control";
 
 function CatalogResultBar({
+  bookmarkedCount,
   criteria,
   onOpenFilters,
   onOpenSort,
+  onToggleOnlyBookmarked,
   onToggleSortDirection,
   resultCount,
   total,
 }: {
+  readonly bookmarkedCount: number;
   readonly criteria: CatalogQueryCriteria;
   readonly onOpenFilters: () => void;
   readonly onOpenSort: () => void;
+  readonly onToggleOnlyBookmarked: () => void;
   readonly onToggleSortDirection: () => void;
   readonly resultCount: number;
   readonly total: number;
@@ -28,6 +33,11 @@ function CatalogResultBar({
         {countLabel(resultCount, total)}
       </ThemedText>
       <View style={styles.controls}>
+        <BookmarkedFilterControl
+          count={bookmarkedCount}
+          onPress={onToggleOnlyBookmarked}
+          selected={criteria.onlyBookmarked ?? false}
+        />
         <FilterControl count={activeFilterCount(criteria)} onPress={onOpenFilters} />
         <CardSortControl
           onOpenSort={onOpenSort}

@@ -51,6 +51,7 @@ const cardListCriteriaSchema = z.object({
   tagIds: z.array(taxonomyIdSchema).optional(),
   keywordIds: z.array(z.string().trim().min(1)).optional(),
   championNames: z.array(z.string().trim().min(1)).optional(),
+  onlyBookmarked: z.boolean().optional(),
   energy: cardNumericFilterSchema.optional(),
   might: cardNumericFilterSchema.optional(),
   power: cardNumericFilterSchema.optional(),

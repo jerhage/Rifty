@@ -6,6 +6,7 @@ import migrations from "../../../drizzle/migrations";
 
 import type { Logger } from "@/application/ports/logger";
 import { DrizzleLoggerAdapter } from "@/infrastructure/drizzle/drizzle-logger-adapter";
+import { createAnnotationDataStore, type AnnotationDataStore } from "./annotation-data-store";
 import { createReferenceDataStore, type ReferenceDataStore } from "./reference-data-store";
 import { createDeckDataStore, type DeckDataStore } from "./deck-data-store";
 import { ensureCatalogSeeded, ensureCoreRulesSeeded } from "./reference-seeder";
@@ -17,6 +18,7 @@ import { ensureCatalogSeeded, ensureCoreRulesSeeded } from "./reference-seeder";
 const CATALOG_DATABASE_NAME = "catalog.db";
 
 interface AppDataStore {
+  readonly annotations: AnnotationDataStore;
   readonly reference: ReferenceDataStore;
   readonly decks: DeckDataStore;
 }
@@ -34,6 +36,7 @@ async function openAppDataStore(logger: Logger, imageBaseUrl: string): Promise<A
   await seedDataset("core rules", () => ensureCoreRulesSeeded(database, logger));
 
   return {
+    annotations: createAnnotationDataStore(database, logger),
     reference: createReferenceDataStore(database, logger, imageBaseUrl),
     decks: createDeckDataStore(database, logger),
   };

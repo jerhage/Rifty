@@ -7,6 +7,7 @@ import { drizzle } from "drizzle-orm/node-sqlite";
 import type { Card } from "@/features/card/card";
 import type { CardSet } from "@/features/set/card-set";
 import type { Deck } from "@/features/deck/deck/deck";
+import type { AnnotationDataStore } from "@/infrastructure/database/annotation-data-store";
 import type { ReferenceDataStore } from "@/infrastructure/database/reference-data-store";
 import type { DeckDataStore } from "@/infrastructure/database/deck-data-store";
 import { applyCoreRulesSeed, type CoreRulesSeed } from "@/infrastructure/database/reference-seeder";
@@ -37,15 +38,20 @@ import {
   rarities,
   tags,
 } from "@/infrastructure/database/reference-schema/taxonomy";
+import { SqliteBookmarkRepository } from "@/infrastructure/sqlite/sqlite-bookmark-repository";
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
 import { SqliteCoreRulesRepository } from "@/infrastructure/sqlite/sqlite-core-rules-repository";
 import { SqliteDeckRepository } from "@/infrastructure/sqlite/sqlite-deck-repository";
 import { SqliteKeywordRepository } from "@/infrastructure/sqlite/sqlite-keyword-repository";
+import { SqliteNoteRepository } from "@/infrastructure/sqlite/sqlite-note-repository";
 import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
 
-/** The real engine and committed migrations, holding both catalog and deck tables. */
+/** The real engine and committed migrations, holding the catalog, deck and annotation tables. */
 interface SqliteScenarioStore extends ReferenceDataStore {
+  readonly annotationStore: AnnotationDataStore;
   readonly deckStore: DeckDataStore;
+  /** Every statement drizzle ran, so a test can prove a filter reached SQL. */
+  readonly executedSql: readonly string[];
   close(): void;
   removeCardMedia(printingId: string): void;
   seedCard(card: Card): void;
@@ -62,7 +68,11 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
   client.exec("PRAGMA foreign_keys = ON;");
   applyMigrations(client);
 
-  const database = drizzle({ client });
+  const executedSql: string[] = [];
+  const database = drizzle({
+    client,
+    logger: { logQuery: (query: string) => executedSql.push(query) },
+  });
   const seededCardIds = new Set<string>();
   const seededPrintingIds = new Set<string>();
   const seededSetCodes = new Set<string>();
@@ -286,11 +296,16 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
   }
 
   return {
+    annotationStore: {
+      bookmarks: new SqliteBookmarkRepository(database),
+      notes: new SqliteNoteRepository(database),
+    },
     cards: new SqliteCardRepository(database, TEST_IMAGE_BASE_URL),
     coreRules: new SqliteCoreRulesRepository(database),
     keywords: new SqliteKeywordRepository(database),
     sets: new SqliteSetRepository(database),
     deckStore: { repository: new SqliteDeckRepository(database) },
+    executedSql,
     removeCardMedia,
     seedCard,
     seedCoreRules,

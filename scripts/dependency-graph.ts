@@ -3,6 +3,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 
 const sourceRoot = resolve("src");
 const featureImportAllowances: Record<string, readonly string[]> = {
+  annotation: ["annotation"],
   set: ["set"],
   card: ["card", "set"],
   analysis: ["analysis", "card"],

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { match } from "ts-pattern";
 
@@ -18,13 +18,12 @@ import { CoreRuleHeadingRow } from "./core-rule-heading-row";
 import { CoreRuleNumberedRow } from "./core-rule-numbered-row";
 
 interface CoreRuleRowProps {
-  readonly bookmarked: boolean;
+  readonly bookmarkFor: (number: CoreRuleNumber) => ReactNode;
   readonly coreRule: CoreRule;
   /** Absent while nothing is searched, or while this rule holds no occurrence of the query. */
   readonly highlight: CoreRuleRowHighlight | null;
   /** Takes the rule's number, so one function serves every row and the row can be memoized. */
   readonly onSelect: (number: CoreRuleNumber) => void;
-  readonly onToggleBookmark: (number: CoreRuleNumber) => void;
   readonly selected: boolean;
 }
 
@@ -33,11 +32,10 @@ interface CoreRuleRowProps {
  * it lands among rather than all 1364.
  */
 function CoreRuleRowFace({
-  bookmarked,
+  bookmarkFor,
   coreRule,
   highlight,
   onSelect,
-  onToggleBookmark,
   selected,
 }: CoreRuleRowProps) {
   const theme = useTheme();
@@ -63,10 +61,9 @@ function CoreRuleRowFace({
       >
         <CoreRuleNumberedRow
           barColor={coreRuleBarColor(theme, highlight, selected)}
-          bookmarked={bookmarked}
+          bookmark={bookmarkFor(coreRule.number)}
           coreRule={coreRule}
           highlight={highlight}
-          onToggleBookmark={() => onToggleBookmark(coreRule.number)}
         />
       </Pressable>
     ))

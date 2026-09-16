@@ -79,7 +79,7 @@ describe("CoreRulesScreen", () => {
         coreRules={coreRules}
         edition={EDITION}
         {...coreRuleAnnotations()}
-        onToggleBookmark={() => undefined}
+        onRemoveBookmark={() => undefined}
       />,
       {
         wrapper: SafeArea,
@@ -100,7 +100,7 @@ describe("CoreRulesScreen", () => {
         coreRules={coreRules}
         edition={EDITION}
         {...coreRuleAnnotations()}
-        onToggleBookmark={() => undefined}
+        onRemoveBookmark={() => undefined}
       />,
       {
         wrapper: SafeArea,
@@ -130,7 +130,7 @@ async function renderSearchableDocument() {
       coreRules={SEARCH_DOCUMENT}
       edition={EDITION}
       {...coreRuleAnnotations()}
-      onToggleBookmark={() => undefined}
+      onRemoveBookmark={() => undefined}
     />,
     {
       wrapper: SafeArea,
@@ -303,7 +303,7 @@ async function renderScrollableDocument() {
       coreRules={SCROLL_DOCUMENT}
       edition={EDITION}
       {...coreRuleAnnotations()}
-      onToggleBookmark={() => undefined}
+      onRemoveBookmark={() => undefined}
     />,
     {
       wrapper: SafeArea,
@@ -462,7 +462,7 @@ async function renderDocumentAt(width: number, height: number, fontScale = 1) {
       coreRules={SCROLL_DOCUMENT}
       edition={EDITION}
       {...coreRuleAnnotations()}
-      onToggleBookmark={() => undefined}
+      onRemoveBookmark={() => undefined}
     />,
     {
       wrapper: frameOf(width, height, fontScale),

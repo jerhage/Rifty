@@ -9,7 +9,7 @@ import { coreRuleNumberGutter } from "@/features/rules/presentation/components/c
 import { coreRuleAncestorNumbersOf } from "@/features/rules/value-objects/core-rule-number";
 
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
-import { seededCoreRules } from "./fixtures";
+import { coreRuleAnnotations, seededCoreRules } from "./fixtures";
 
 const CHAPTER_NUMBERS = ["000", "100", "500", "600", "700"];
 
@@ -43,16 +43,17 @@ function entry(
 }
 
 async function renderRows(coreRules: readonly CoreRule[]) {
+  const { bookmarkFor } = coreRuleAnnotations();
+
   return await render(
     <>
       {coreRules.map((coreRule) => (
         <CoreRuleRow
-          bookmarked={false}
+          bookmarkFor={bookmarkFor}
           coreRule={coreRule}
           highlight={null}
           key={coreRule.number}
           onSelect={() => undefined}
-          onToggleBookmark={() => undefined}
           selected={false}
         />
       ))}

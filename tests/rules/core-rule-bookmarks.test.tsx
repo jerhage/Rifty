@@ -131,13 +131,13 @@ async function renderBookmarkableDocument(
 ) {
   await render(
     <BookmarkedSubjectsData {...store.capabilities} kind="coreRule">
-      {({ bookmarkedIds, toggleBookmark }) => (
+      {(bookmarked) => (
         <CoreRulesScreen
-          bookmarkedNumbers={bookmarkedIds}
+          bookmarkedNumbers={bookmarked.bookmarkedIds}
           coreRules={coreRules}
           edition={EDITION}
-          {...coreRuleAnnotations()}
-          onToggleBookmark={toggleBookmark}
+          {...coreRuleAnnotations(bookmarked)}
+          onRemoveBookmark={bookmarked.toggleBookmark}
         />
       )}
     </BookmarkedSubjectsData>,

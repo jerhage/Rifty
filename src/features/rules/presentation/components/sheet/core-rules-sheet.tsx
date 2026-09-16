@@ -1,12 +1,10 @@
+import type { ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { match } from "ts-pattern";
 
-import type { Clock } from "@/application/ports/clock";
-import type { IdGenerator } from "@/application/ports/id-generator";
 import { BottomSheetShell } from "@/components/ui/atoms/bottom-sheet-shell";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing, TouchTarget } from "@/constants/theme";
-import type { NoteManager } from "@/features/annotation/note-manager";
 import type { CoreRule } from "@/features/rules/core-rule";
 import {
   coreRuleBookmarkCountLabel,
@@ -21,10 +19,8 @@ import { CoreRulesSavedSurface } from "../saved/core-rules-saved-surface";
 
 interface CoreRulesSheetProps {
   readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
-  readonly clock: Clock;
   readonly coreRules: readonly CoreRule[];
-  readonly idGenerator: IdGenerator;
-  readonly noteManager: NoteManager;
+  readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onDismiss: () => void;
   readonly onGoToCoreRule: (number: CoreRuleNumber) => void;
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
@@ -39,10 +35,8 @@ interface CoreRulesSheetProps {
  */
 function CoreRulesSheet({
   bookmarkedNumbers,
-  clock,
   coreRules,
-  idGenerator,
-  noteManager,
+  notesFor,
   onDismiss,
   onGoToCoreRule,
   onRemoveBookmark,
@@ -69,10 +63,8 @@ function CoreRulesSheet({
               .with("saved", () => (
                 <CoreRulesSavedSurface
                   bookmarkedNumbers={bookmarkedNumbers}
-                  clock={clock}
                   coreRules={coreRules}
-                  idGenerator={idGenerator}
-                  noteManager={noteManager}
+                  notesFor={notesFor}
                   onGoToCoreRule={onGoToCoreRule}
                   onRemoveBookmark={onRemoveBookmark}
                 />

@@ -1,5 +1,8 @@
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
+import { BookmarkToggle } from "@/features/annotation/presentation/components/bookmark-toggle";
+import { SubjectNotes } from "@/features/annotation/presentation/components/subject-notes";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
+import { coreRuleBookmarkLabel } from "@/features/rules/presentation/core-rules-format";
 import { CoreRulesData } from "@/features/rules/presentation/data/core-rules-data";
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
@@ -20,12 +23,26 @@ function RulesRoute() {
           {({ bookmarkedIds, toggleBookmark }) => (
             <CoreRulesScreen
               bookmarkedNumbers={bookmarkedIds}
-              clock={clock}
+              bookmarkFor={(number) => (
+                <BookmarkToggle
+                  alignment="start"
+                  bookmarked={bookmarkedIds.has(number)}
+                  label={coreRuleBookmarkLabel(number)}
+                  onPress={() => toggleBookmark(number)}
+                />
+              )}
               coreRules={coreRules}
               edition={edition}
-              idGenerator={idGenerator}
-              noteManager={annotations.noteRepository}
-              onToggleBookmark={toggleBookmark}
+              notesFor={(number) => (
+                <SubjectNotes
+                  clock={clock}
+                  idGenerator={idGenerator}
+                  noteManager={annotations.noteRepository}
+                  notesName={number}
+                  subject={{ kind: "coreRule", id: number }}
+                />
+              )}
+              onRemoveBookmark={toggleBookmark}
             />
           )}
         </BookmarkedSubjectsData>

@@ -1,5 +1,12 @@
+import type { ReactNode } from "react";
+
 import type { NoteManager } from "@/features/annotation/note-manager";
+import { BookmarkToggle } from "@/features/annotation/presentation/components/bookmark-toggle";
+import { SubjectNotes } from "@/features/annotation/presentation/components/subject-notes";
+import type { BookmarkedSubjects } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
 import type { CoreRule, CoreRuleDetail } from "@/features/rules/core-rule";
+import { coreRuleBookmarkLabel } from "@/features/rules/presentation/core-rules-format";
+import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 import { listCoreRules } from "@/features/rules/use-cases/list-core-rules";
 import { coreRuleAncestorNumbersOf } from "@/features/rules/value-objects/core-rule-number";
 import { coreRulesSeed } from "@/infrastructure/database/generated/core-rules-seed";
@@ -53,9 +60,38 @@ function coreRuleNumbered(coreRules: readonly CoreRule[], number: string): CoreR
   return found;
 }
 
-/** The three seams the screen threads down to a saved entry's notes, over an empty store. */
-function coreRuleAnnotations(noteManager: NoteManager = createNoteStore().manager) {
-  return { clock: fixedClock(ANNOTATED_AT), idGenerator: sequentialIds(), noteManager };
+const NOTHING_MARKED: BookmarkedSubjects = {
+  bookmarkedIds: new Set(),
+  toggleBookmark: () => undefined,
+};
+
+/** The two slots the screen's callers fill, holding the very controls the route supplies. */
+function coreRuleAnnotations(
+  bookmarked: BookmarkedSubjects = NOTHING_MARKED,
+  noteManager: NoteManager = createNoteStore().manager,
+) {
+  const clock = fixedClock(ANNOTATED_AT);
+  const idGenerator = sequentialIds();
+
+  return {
+    bookmarkFor: (number: CoreRuleNumber): ReactNode => (
+      <BookmarkToggle
+        alignment="start"
+        bookmarked={bookmarked.bookmarkedIds.has(number)}
+        label={coreRuleBookmarkLabel(number)}
+        onPress={() => bookmarked.toggleBookmark(number)}
+      />
+    ),
+    notesFor: (number: CoreRuleNumber): ReactNode => (
+      <SubjectNotes
+        clock={clock}
+        idGenerator={idGenerator}
+        noteManager={noteManager}
+        notesName={number}
+        subject={{ kind: "coreRule", id: number }}
+      />
+    ),
+  };
 }
 
 export { ANNOTATED_AT, coreRuleAnnotations, coreRuleDocument, coreRuleNumbered, seededCoreRules };

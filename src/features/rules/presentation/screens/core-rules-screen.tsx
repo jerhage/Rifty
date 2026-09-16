@@ -4,12 +4,9 @@ import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
-import type { Clock } from "@/application/ports/clock";
-import type { IdGenerator } from "@/application/ports/id-generator";
 import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxReadingWidth, Spacing } from "@/constants/theme";
-import type { NoteManager } from "@/features/annotation/note-manager";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import type { CoreRuleRowHighlight } from "@/features/rules/presentation/core-rule-highlight";
@@ -35,22 +32,20 @@ import { CoreRulesSheet } from "../components/sheet/core-rules-sheet";
 interface CoreRulesScreenProps {
   /** Every rule the reader has marked, whether or not a query has filtered it out of view. */
   readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
-  readonly clock: Clock;
+  readonly bookmarkFor: (number: CoreRuleNumber) => ReactNode;
   readonly coreRules: readonly CoreRule[];
   readonly edition: CoreRulesEdition;
-  readonly idGenerator: IdGenerator;
-  readonly noteManager: NoteManager;
-  readonly onToggleBookmark: (number: CoreRuleNumber) => void;
+  readonly notesFor: (number: CoreRuleNumber) => ReactNode;
+  readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
 }
 
 function CoreRulesScreen({
   bookmarkedNumbers,
-  clock,
+  bookmarkFor,
   coreRules,
   edition,
-  idGenerator,
-  noteManager,
-  onToggleBookmark,
+  notesFor,
+  onRemoveBookmark,
 }: CoreRulesScreenProps) {
   const { layoutClass } = useLayoutSize();
   const { documentRef, scrollToRow } = useCoreRulesDocumentScroll();
@@ -123,13 +118,12 @@ function CoreRulesScreen({
             <CoreRulesNoMatches />
           ) : (
             <CoreRuleDocument
-              bookmarkedNumbers={bookmarkedNumbers}
+              bookmarkFor={bookmarkFor}
               contentsPlacement={contentsPlacement}
               coreRules={shownCoreRules}
               documentRef={documentRef}
               highlights={highlights}
               onSelectCoreRule={selectCoreRule}
-              onToggleBookmark={onToggleBookmark}
               selectedNumber={selectedNumber}
             />
           )}
@@ -142,12 +136,10 @@ function CoreRulesScreen({
           >
             <CoreRulesSavedSurface
               bookmarkedNumbers={bookmarkedNumbers}
-              clock={clock}
               coreRules={coreRules}
-              idGenerator={idGenerator}
-              noteManager={noteManager}
+              notesFor={notesFor}
               onGoToCoreRule={scrollToCoreRule}
-              onRemoveBookmark={onToggleBookmark}
+              onRemoveBookmark={onRemoveBookmark}
             />
           </CoreRulesSavedPane>
         ) : null}
@@ -155,13 +147,11 @@ function CoreRulesScreen({
       {savedPlacement.type === "beside" ? null : (
         <CoreRulesSheet
           bookmarkedNumbers={bookmarkedNumbers}
-          clock={clock}
           coreRules={coreRules}
-          idGenerator={idGenerator}
-          noteManager={noteManager}
+          notesFor={notesFor}
           onDismiss={hideSheet}
           onGoToCoreRule={goToCoreRuleFromSheet}
-          onRemoveBookmark={onToggleBookmark}
+          onRemoveBookmark={onRemoveBookmark}
           onShowFace={setSheetState}
           state={sheetState}
         />
@@ -197,28 +187,26 @@ function CoreRulesPage({
 }
 
 function CoreRuleDocument({
-  bookmarkedNumbers,
+  bookmarkFor,
   contentsPlacement,
   coreRules,
   documentRef,
   highlights,
   onSelectCoreRule,
-  onToggleBookmark,
   selectedNumber,
 }: {
-  readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
+  readonly bookmarkFor: (number: CoreRuleNumber) => ReactNode;
   readonly contentsPlacement: CoreRulesContentsPlacement;
   readonly coreRules: readonly CoreRule[];
   readonly documentRef: RefObject<FlashListRef<CoreRule> | null>;
   readonly highlights: ReadonlyMap<CoreRuleNumber, CoreRuleRowHighlight>;
   readonly onSelectCoreRule: (number: CoreRuleNumber) => void;
-  readonly onToggleBookmark: (number: CoreRuleNumber) => void;
   readonly selectedNumber: CoreRuleNumber | null;
 }) {
   const insets = useSafeAreaInsets();
   const rowState = useMemo(
-    () => ({ bookmarkedNumbers, highlights, selectedNumber }),
-    [bookmarkedNumbers, highlights, selectedNumber],
+    () => ({ bookmarkFor, highlights, selectedNumber }),
+    [bookmarkFor, highlights, selectedNumber],
   );
 
   const columnStyle = match(contentsPlacement)
@@ -239,11 +227,10 @@ function CoreRuleDocument({
       ref={documentRef}
       renderItem={({ item }) => (
         <CoreRuleRow
-          bookmarked={bookmarkedNumbers.has(item.number)}
+          bookmarkFor={bookmarkFor}
           coreRule={item}
           highlight={highlights.get(item.number) ?? null}
           onSelect={onSelectCoreRule}
-          onToggleBookmark={onToggleBookmark}
           selected={item.number === selectedNumber}
         />
       )}

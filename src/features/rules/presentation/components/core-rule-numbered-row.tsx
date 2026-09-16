@@ -1,11 +1,10 @@
+import type { ReactNode } from "react";
 import { StyleSheet, useWindowDimensions, View, type ColorValue } from "react-native";
 
-import { BookmarkToggle } from "@/features/annotation/presentation/components/bookmark-toggle";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { CoreRuleRowHighlight } from "@/features/rules/presentation/core-rule-highlight";
-import { coreRuleBookmarkLabel } from "@/features/rules/presentation/core-rules-format";
 
 import { CoreRuleDetails } from "./core-rule-details";
 import { CoreRuleText } from "./core-rule-text";
@@ -24,18 +23,16 @@ function coreRuleNumberGutter(fontScale: number): number {
 interface CoreRuleNumberedRowProps {
   /** The row's state channel: faint while nothing claims it, and later selection and search. */
   readonly barColor: ColorValue;
-  readonly bookmarked: boolean;
+  readonly bookmark: ReactNode;
   readonly coreRule: CoreRule;
   readonly highlight: CoreRuleRowHighlight | null;
-  readonly onToggleBookmark: () => void;
 }
 
 function CoreRuleNumberedRow({
   barColor,
-  bookmarked,
+  bookmark,
   coreRule,
   highlight,
-  onToggleBookmark,
 }: CoreRuleNumberedRowProps) {
   const { fontScale } = useWindowDimensions();
 
@@ -52,12 +49,7 @@ function CoreRuleNumberedRow({
         <CoreRuleText highlight={highlight?.body ?? null} text={coreRule.body} type="body" />
         <CoreRuleDetails details={coreRule.details} highlight={highlight} />
       </View>
-      <BookmarkToggle
-        alignment="start"
-        bookmarked={bookmarked}
-        label={coreRuleBookmarkLabel(coreRule.number)}
-        onPress={onToggleBookmark}
-      />
+      {bookmark}
     </View>
   );
 }

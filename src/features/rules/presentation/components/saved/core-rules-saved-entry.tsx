@@ -1,11 +1,8 @@
+import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing, TouchTarget } from "@/constants/theme";
-import type { Clock } from "@/application/ports/clock";
-import type { IdGenerator } from "@/application/ports/id-generator";
-import { SubjectNotes } from "@/features/annotation/presentation/components/subject-notes";
-import type { NoteManager } from "@/features/annotation/note-manager";
 import {
   coreRuleRemoveBookmarkLabel,
   coreRuleSavedContextLabel,
@@ -20,18 +17,14 @@ import { useTheme } from "@/hooks/use-theme";
 const SAVED_RULE_LINES = 2;
 
 interface CoreRulesSavedEntryProps {
-  readonly clock: Clock;
-  readonly idGenerator: IdGenerator;
-  readonly noteManager: NoteManager;
+  readonly notes: ReactNode;
   readonly onGoToCoreRule: (number: CoreRuleNumber) => void;
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
   readonly saved: SavedCoreRule;
 }
 
 function CoreRulesSavedEntry({
-  clock,
-  idGenerator,
-  noteManager,
+  notes,
   onGoToCoreRule,
   onRemoveBookmark,
   saved,
@@ -80,13 +73,7 @@ function CoreRulesSavedEntry({
           </ThemedText>
         </Pressable>
       </View>
-      <SubjectNotes
-        clock={clock}
-        idGenerator={idGenerator}
-        noteManager={noteManager}
-        notesName={coreRule.number}
-        subject={{ kind: "coreRule", id: coreRule.number }}
-      />
+      {notes}
     </View>
   );
 }

@@ -3,13 +3,13 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 
 const sourceRoot = resolve("src");
 const featureImportAllowances: Record<string, readonly string[]> = {
-  annotation: ["annotation"],
   set: ["set"],
   card: ["card", "set"],
   analysis: ["analysis", "card"],
   catalog: ["catalog", "card", "set"],
+  rules: ["rules"],
   deck: ["deck", "card", "analysis"],
-  rules: ["rules", "annotation"],
+  annotation: ["annotation", "card", "rules", "deck"],
   saved: ["saved"],
 };
 const zonesForbiddenFromFeatures = ["components", "hooks", "constants", "shared", "application"];

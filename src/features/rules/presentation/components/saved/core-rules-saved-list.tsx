@@ -1,12 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
-import type { Clock } from "@/application/ports/clock";
-import type { IdGenerator } from "@/application/ports/id-generator";
 import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
 import { Spacing } from "@/constants/theme";
-import type { NoteManager } from "@/features/annotation/note-manager";
 import type { CoreRule } from "@/features/rules/core-rule";
 import {
   CORE_RULES_NOTHING_SAVED_MESSAGE,
@@ -20,10 +17,8 @@ import { CoreRulesSavedEntry } from "./core-rules-saved-entry";
 interface CoreRulesSavedListProps {
   /** Every rule the reader has marked, whether or not a query has filtered it out of view. */
   readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
-  readonly clock: Clock;
   readonly coreRules: readonly CoreRule[];
-  readonly idGenerator: IdGenerator;
-  readonly noteManager: NoteManager;
+  readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onGoToCoreRule: (number: CoreRuleNumber) => void;
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
 }
@@ -34,10 +29,8 @@ interface CoreRulesSavedListProps {
  */
 function CoreRulesSavedList({
   bookmarkedNumbers,
-  clock,
   coreRules,
-  idGenerator,
-  noteManager,
+  notesFor,
   onGoToCoreRule,
   onRemoveBookmark,
 }: CoreRulesSavedListProps) {
@@ -54,10 +47,8 @@ function CoreRulesSavedList({
         <View style={styles.list}>
           {saved.map((entry) => (
             <CoreRulesSavedEntry
-              clock={clock}
-              idGenerator={idGenerator}
               key={entry.coreRule.number}
-              noteManager={noteManager}
+              notes={notesFor(entry.coreRule.number)}
               onGoToCoreRule={onGoToCoreRule}
               onRemoveBookmark={onRemoveBookmark}
               saved={entry}

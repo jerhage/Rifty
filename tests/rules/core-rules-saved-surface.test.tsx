@@ -19,9 +19,9 @@ import { SAVED_PANE_COLLAPSED_WIDTH } from "@/features/rules/presentation/compon
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
 import { recordAnnouncements } from "../announcements";
-import { createNoteStore, fixedClock, sequentialIds, type NoteStore } from "../annotation/fixtures";
+import { createNoteStore, fixedClock, type NoteStore } from "../annotation/fixtures";
 import { createTestWrapper } from "../test-wrapper";
-import { coreRuleDocument } from "./fixtures";
+import { coreRuleAnnotations, coreRuleDocument } from "./fixtures";
 
 const EDITION: CoreRulesEdition = { title: "Riftbound Core Rules", publishedOn: "2025-06-02" };
 const WRITTEN_AT = "2026-09-16T10:00:00.000Z";
@@ -149,15 +149,13 @@ async function renderRules(
       clock={fixedClock(WRITTEN_AT)}
       kind="coreRule"
     >
-      {({ bookmarkedIds, toggleBookmark }) => (
+      {(bookmarked) => (
         <CoreRulesScreen
-          bookmarkedNumbers={bookmarkedIds}
-          clock={fixedClock(WRITTEN_AT)}
+          bookmarkedNumbers={bookmarked.bookmarkedIds}
           coreRules={DOCUMENT}
           edition={EDITION}
-          idGenerator={sequentialIds()}
-          noteManager={noteStore.manager}
-          onToggleBookmark={toggleBookmark}
+          {...coreRuleAnnotations(bookmarked, noteStore.manager)}
+          onRemoveBookmark={bookmarked.toggleBookmark}
         />
       )}
     </BookmarkedSubjectsData>,

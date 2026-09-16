@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing, TouchTarget } from "@/constants/theme";
@@ -10,26 +11,29 @@ import {
   noteCountOnLabel,
   noteDiscardLabel,
   noteDraftFieldLabel,
-  noteSaveLabel,
   noteEntryLabel,
   noteFieldLabel,
   noteRemoveLabel,
+  noteSaveLabel,
 } from "@/features/annotation/presentation/note-format";
+import type { NoteWriting } from "@/features/annotation/presentation/noted-subjects-format";
+import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import { useTheme } from "@/hooks/use-theme";
 
 const NOTE_FIELD_HEIGHT = 46;
 
+type WriteNote = (subject: AnnotationSubject | null, id: NoteId | null, body: string) => void;
+
 interface NoteListProps {
   readonly emptyMessage: string;
   readonly notes: readonly Note[];
-  /** What the notes hang off on screen, so a screen showing several sets does not read alike. */
   readonly notesName: string;
   readonly onRemoveNote: (id: NoteId) => void;
-  readonly onWriteNote: (id: NoteId | null, body: string) => void;
+  readonly onWriteNote: WriteNote;
   readonly placeholder: string;
+  readonly writing: NoteWriting;
 }
 
-/** Emptying a field never removes a note: a blank body is refused, and removal has its own control. */
 function NoteList({
   emptyMessage,
   notes,
@@ -37,15 +41,19 @@ function NoteList({
   onRemoveNote,
   onWriteNote,
   placeholder,
+  writing,
 }: NoteListProps) {
   const theme = useTheme();
   const [draftBody, setDraftBody] = useState<string | null>(null);
 
-  const commitDraft = useCallback(() => {
-    if (draftBody !== null) onWriteNote(null, draftBody);
+  const commitDraft = useCallback(
+    (subject: AnnotationSubject | null) => {
+      if (draftBody !== null) onWriteNote(subject, null, draftBody);
 
-    setDraftBody(null);
-  }, [draftBody, onWriteNote]);
+      setDraftBody(null);
+    },
+    [draftBody, onWriteNote],
+  );
 
   return (
     <View style={styles.notes}>
@@ -58,22 +66,27 @@ function NoteList({
         >
           {noteCountLabel(notes.length)}
         </ThemedText>
-        <Pressable
-          accessibilityLabel={
-            draftBody === null ? noteAddLabel(notesName) : noteSaveLabel(notesName)
-          }
-          accessibilityRole="button"
-          onPress={draftBody === null ? () => setDraftBody("") : commitDraft}
-          style={({ pressed }) => [
-            styles.add,
-            { backgroundColor: theme.fill, borderColor: theme.border },
-            pressed && styles.pressed,
-          ]}
-        >
-          <ThemedText themeColor="accent" type="mono">
-            {draftBody === null ? "+ Note" : "Save note"}
-          </ThemedText>
-        </Pressable>
+        {match(writing)
+          .with({ type: "withheld" }, () => null)
+          .with({ type: "offered" }, ({ subject }) => (
+            <Pressable
+              accessibilityLabel={
+                draftBody === null ? noteAddLabel(notesName) : noteSaveLabel(notesName)
+              }
+              accessibilityRole="button"
+              onPress={draftBody === null ? () => setDraftBody("") : () => commitDraft(subject)}
+              style={({ pressed }) => [
+                styles.add,
+                { backgroundColor: theme.fill, borderColor: theme.border },
+                pressed && styles.pressed,
+              ]}
+            >
+              <ThemedText themeColor="accent" type="mono">
+                {draftBody === null ? "+ Note" : "Save note"}
+              </ThemedText>
+            </Pressable>
+          ))
+          .exhaustive()}
       </View>
       {notes.length === 0 && draftBody === null ? (
         <ThemedText themeColor="textSecondary" type="body">
@@ -86,9 +99,10 @@ function NoteList({
           note={note}
           notesName={notesName}
           onRemove={() => onRemoveNote(note.id)}
-          onWrite={(body) => onWriteNote(note.id, body)}
+          onWrite={onWriteNote}
           placeholder={placeholder}
           position={at + 1}
+          writing={writing}
         />
       ))}
       {draftBody === null ? null : (
@@ -119,13 +133,15 @@ function WrittenNote({
   onWrite,
   placeholder,
   position,
+  writing,
 }: {
   readonly note: Note;
   readonly notesName: string;
   readonly onRemove: () => void;
-  readonly onWrite: (body: string) => void;
+  readonly onWrite: WriteNote;
   readonly placeholder: string;
   readonly position: number;
+  readonly writing: NoteWriting;
 }) {
   const theme = useTheme();
 
@@ -135,15 +151,24 @@ function WrittenNote({
       onDiscard={onRemove}
       removeLabel={noteRemoveLabel(notesName, position)}
     >
-      <TextInput
-        accessibilityLabel={noteFieldLabel(notesName, position)}
-        defaultValue={note.body}
-        multiline
-        onEndEditing={(event) => onWrite(event.nativeEvent.text)}
-        placeholder={placeholder}
-        placeholderTextColor={theme.textTertiary}
-        style={[styles.field, { color: theme.text }]}
-      />
+      {match(writing)
+        .with({ type: "withheld" }, () => (
+          <ThemedText style={styles.field} type="body">
+            {note.body}
+          </ThemedText>
+        ))
+        .with({ type: "offered" }, ({ subject }) => (
+          <TextInput
+            accessibilityLabel={noteFieldLabel(notesName, position)}
+            defaultValue={note.body}
+            multiline
+            onEndEditing={(event) => onWrite(subject, note.id, event.nativeEvent.text)}
+            placeholder={placeholder}
+            placeholderTextColor={theme.textTertiary}
+            style={[styles.field, { color: theme.text }]}
+          />
+        ))
+        .exhaustive()}
     </NoteBlock>
   );
 }
@@ -184,7 +209,7 @@ function NoteBlock({
 }
 
 export { NoteList };
-export type { NoteListProps };
+export type { NoteListProps, WriteNote };
 
 const styles = StyleSheet.create({
   notes: {

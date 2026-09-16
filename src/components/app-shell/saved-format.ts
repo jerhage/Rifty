@@ -1,9 +1,27 @@
 const SAVED_TITLE = "Saved";
-const SCRATCHPAD_WRITTEN_SUMMARY = "scratchpad written";
-const SCRATCHPAD_EMPTY_SUMMARY = "scratchpad empty";
+const NOTHING_SAVED_SUMMARY = "nothing written yet";
 
-function savedSummaryLabel(scratchpadNoteCount: number): string {
-  return scratchpadNoteCount === 0 ? SCRATCHPAD_EMPTY_SUMMARY : SCRATCHPAD_WRITTEN_SUMMARY;
+interface SavedNoteCounts {
+  readonly card: number;
+  readonly coreRule: number;
+  readonly standalone: number;
+  readonly unfindable: number;
 }
 
-export { SAVED_TITLE, SCRATCHPAD_EMPTY_SUMMARY, SCRATCHPAD_WRITTEN_SUMMARY, savedSummaryLabel };
+function countLabel(count: number, what: string): string | null {
+  return count === 0 ? null : `${count} ${what}`;
+}
+
+function savedSummaryLabel(counts: SavedNoteCounts): string {
+  const parts = [
+    countLabel(counts.standalone, "standalone"),
+    countLabel(counts.card, "on cards"),
+    countLabel(counts.coreRule, "on rules"),
+    countLabel(counts.unfindable, "unplaced"),
+  ].filter((part) => part !== null);
+
+  return parts.length === 0 ? NOTHING_SAVED_SUMMARY : parts.join(" · ");
+}
+
+export { NOTHING_SAVED_SUMMARY, SAVED_TITLE, savedSummaryLabel };
+export type { SavedNoteCounts };

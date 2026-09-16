@@ -30,6 +30,7 @@ function SubjectNotes({ clock, idGenerator, noteManager, notesName, subject }: S
           onRemoveNote={removeNote}
           onWriteNote={writeNote}
           placeholder={NOTE_PLACEHOLDER}
+          writing={{ type: "offered", subject }}
         />
       )}
     </NotesData>

@@ -5,16 +5,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxReadingWidth, Spacing } from "@/constants/theme";
-import { SAVED_TITLE, savedSummaryLabel } from "@/components/app-shell/saved-format";
+import {
+  SAVED_TITLE,
+  savedSummaryLabel,
+  type SavedNoteCounts,
+} from "@/components/app-shell/saved-format";
 import { useTheme } from "@/hooks/use-theme";
 
 interface SavedScreenProps {
   readonly notes: ReactNode;
-  readonly scratchpad: ReactNode;
-  readonly scratchpadNoteCount: number;
+  readonly noteCounts: SavedNoteCounts;
 }
 
-function SavedScreen({ notes, scratchpad, scratchpadNoteCount }: SavedScreenProps) {
+function SavedScreen({ noteCounts, notes }: SavedScreenProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
 
@@ -36,7 +39,7 @@ function SavedScreen({ notes, scratchpad, scratchpadNoteCount }: SavedScreenProp
             {SAVED_TITLE}
           </ThemedText>
           <ThemedText style={styles.summary} themeColor="textTertiary" type="mono">
-            {savedSummaryLabel(scratchpadNoteCount)}
+            {savedSummaryLabel(noteCounts)}
           </ThemedText>
         </View>
       </View>
@@ -51,10 +54,7 @@ function SavedScreen({ notes, scratchpad, scratchpadNoteCount }: SavedScreenProp
         ]}
         style={styles.body}
       >
-        <View style={[styles.column, styles.stack]}>
-          {scratchpad}
-          {notes}
-        </View>
+        <View style={styles.column}>{notes}</View>
       </ScrollView>
     </ThemedView>
   );
@@ -82,9 +82,6 @@ const styles = StyleSheet.create({
   page: {
     flexGrow: 1,
     paddingTop: Spacing.three,
-  },
-  stack: {
-    gap: Spacing.five,
   },
   column: {
     alignSelf: "center",

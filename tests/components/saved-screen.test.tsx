@@ -1,20 +1,15 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 
-import { NotedSubjectSections } from "@/features/annotation/presentation/components/noted-subject-sections";
-import { Scratchpad } from "@/features/annotation/presentation/components/scratchpad";
-import { NotedSubjectsData } from "@/features/annotation/presentation/data/noted-subjects-data";
-import { NotesData } from "@/features/annotation/presentation/data/notes-data";
-import { notedCardsSectionLabel } from "@/features/annotation/presentation/noted-subjects-format";
+import { SAVED_TITLE, NOTHING_SAVED_SUMMARY } from "@/components/app-shell/saved-format";
+import { SavedScreen } from "@/components/app-shell/saved-screen";
+import { NoteSections } from "@/features/annotation/presentation/components/note-sections";
+import { NoteSectionsData } from "@/features/annotation/presentation/data/note-sections-data";
 import {
   SCRATCHPAD_NOTES_NAME,
   SCRATCHPAD_TITLE,
 } from "@/features/annotation/presentation/note-format";
-import {
-  SAVED_TITLE,
-  SCRATCHPAD_EMPTY_SUMMARY,
-  SCRATCHPAD_WRITTEN_SUMMARY,
-} from "@/components/app-shell/saved-format";
-import { SavedScreen } from "@/components/app-shell/saved-screen";
+import { notedCardsSectionLabel } from "@/features/annotation/presentation/noted-subjects-format";
+import { noteCountsOf } from "@/features/annotation/presentation/noted-subjects";
 import type { CardSummary } from "@/features/card/card-summary";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 
@@ -45,28 +40,20 @@ async function renderSaved(store: NoteStore = createNoteStore()): Promise<NoteSt
   const subjects = createSubjectStore([VI]);
 
   await render(
-    <NotesData
+    <NoteSectionsData
+      cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock(WRITTEN_AT)}
+      coreRulesFinder={subjects.coreRulesFinder}
       idGenerator={sequentialIds()}
       noteManager={store.manager}
-      subject={null}
     >
       {(written) => (
         <SavedScreen
-          notes={
-            <NotedSubjectsData
-              cardSummariesFinder={subjects.cardSummariesFinder}
-              coreRulesFinder={subjects.coreRulesFinder}
-              noteManager={store.manager}
-            >
-              {(noted) => <NotedSubjectSections noted={noted} />}
-            </NotedSubjectsData>
-          }
-          scratchpad={<Scratchpad written={written} />}
-          scratchpadNoteCount={written.notes.length}
+          notes={<NoteSections written={written} />}
+          noteCounts={noteCountsOf(written.sections)}
         />
       )}
-    </NotesData>,
+    </NoteSectionsData>,
     { wrapper: createTestWrapper(PHONE) },
   );
   await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` });
@@ -97,10 +84,18 @@ describe("the saved screen", () => {
       createNoteStore([writtenNote("note-1", CARD, "Holds the point.", WRITTEN_AT)]),
     );
 
-    expect(await screen.findByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
     expect(screen.getByRole("header", { name: VI.name })).toBeTruthy();
     expect(screen.getByRole("header", { name: SCRATCHPAD_TITLE })).toBeTruthy();
     expect(screen.getByLabelText(`0 notes on ${SCRATCHPAD_NOTES_NAME}`)).toBeTruthy();
+  });
+
+  it("should ask the notes table once for every section it shows", async () => {
+    const store = await renderSaved(
+      createNoteStore([writtenNote("note-1", CARD, "Holds the point.", WRITTEN_AT)]),
+    );
+
+    expect(store.scopes()).toEqual([{ type: "all" }]);
   });
 
   it("should store a note written from it against no subject at all", async () => {
@@ -110,25 +105,33 @@ describe("the saved screen", () => {
 
     await waitFor(() => expect(store.notes()).toHaveLength(1));
     expect(store.notes()[0]?.subject).toBeNull();
-    expect(store.scopes()).toContainEqual({ type: "standalone" });
     await expect(store.manager.getAll({ type: "onSubject", subject: CARD })).resolves.toEqual([]);
+  });
+
+  it("should read the notes back once when one is written from the scratchpad", async () => {
+    const store = await renderSaved();
+
+    await addScratchpadNote("Match one: mulliganed two.");
+
+    await screen.findByLabelText(`Note 1 on ${SCRATCHPAD_NOTES_NAME}`);
+    expect(store.scopes()).toEqual([{ type: "all" }, { type: "all" }]);
   });
 });
 
 describe("the saved summary", () => {
-  it("should say the scratchpad is empty while nothing has been written in it", async () => {
+  it("should say nothing is written while no note exists at all", async () => {
     await renderSaved();
 
-    expect(screen.getByText(SCRATCHPAD_EMPTY_SUMMARY)).toBeTruthy();
+    expect(screen.getByText(NOTHING_SAVED_SUMMARY)).toBeTruthy();
   });
 
-  it("should say the scratchpad is written once something is in it", async () => {
+  it("should count what stands in each section once something is written", async () => {
     await renderSaved();
 
     await addScratchpadNote("Trades to chase.");
 
-    expect(await screen.findByText(SCRATCHPAD_WRITTEN_SUMMARY)).toBeTruthy();
-    expect(screen.queryByText(SCRATCHPAD_EMPTY_SUMMARY)).toBeNull();
+    expect(await screen.findByText("1 standalone")).toBeTruthy();
+    expect(screen.queryByText(NOTHING_SAVED_SUMMARY)).toBeNull();
   });
 
   it("should count nothing that has no section yet, so no zero stands for one", async () => {

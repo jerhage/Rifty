@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 
-import { Scratchpad } from "@/features/annotation/presentation/components/scratchpad";
-import { NotesData } from "@/features/annotation/presentation/data/notes-data";
+import { NoteSections } from "@/features/annotation/presentation/components/note-sections";
+import { NoteSectionsData } from "@/features/annotation/presentation/data/note-sections-data";
 import {
   SCRATCHPAD_EMPTY_MESSAGE,
   SCRATCHPAD_NOTES_NAME,
@@ -9,22 +9,32 @@ import {
   SCRATCHPAD_TITLE,
 } from "@/features/annotation/presentation/note-format";
 
-import { createNoteStore, fixedClock, sequentialIds, subject, type NoteStore } from "./fixtures";
+import {
+  createNoteStore,
+  createSubjectStore,
+  fixedClock,
+  sequentialIds,
+  subject,
+  type NoteStore,
+} from "./fixtures";
 import { createTestWrapper } from "../test-wrapper";
 
 const WRITTEN_AT = "2026-09-16T10:00:00.000Z";
 const CARD = subject("card", "vi");
 
 async function renderScratchpad(store: NoteStore = createNoteStore()): Promise<NoteStore> {
+  const subjects = createSubjectStore();
+
   await render(
-    <NotesData
+    <NoteSectionsData
+      cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock(WRITTEN_AT)}
+      coreRulesFinder={subjects.coreRulesFinder}
       idGenerator={sequentialIds()}
       noteManager={store.manager}
-      subject={null}
     >
-      {(written) => <Scratchpad written={written} />}
-    </NotesData>,
+      {(written) => <NoteSections written={written} />}
+    </NoteSectionsData>,
     { wrapper: createTestWrapper() },
   );
   await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` });
@@ -63,10 +73,10 @@ describe("the scratchpad", () => {
     );
   });
 
-  it("should ask the store for the notes that hang off no subject", async () => {
+  it("should reach the store through the one read the whole screen shares", async () => {
     const store = await renderScratchpad();
 
-    expect(store.scopes()).toEqual([{ type: "standalone" }]);
+    expect(store.scopes()).toEqual([{ type: "all" }]);
   });
 
   it("should store a note with no subject and read it back", async () => {

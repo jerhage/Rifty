@@ -26,6 +26,7 @@ import type {
   CardSearch,
   CardSort,
 } from "@/features/card/card-list-criteria";
+import { chunked } from "@/shared/chunked";
 import { Page } from "@/shared/page";
 import { throwIfAborted, type ReadOptions } from "@/shared/read-options";
 import type { CardRepository } from "@/features/card/card-repository";
@@ -58,9 +59,29 @@ const PRINTED_CARD_COLUMNS = {
   printing: getTableColumns(cardPrintings),
 };
 
+const CARD_SUMMARY_COLUMNS = {
+  card: { id: cards.id, orientation: cards.orientation },
+  printing: {
+    id: cardPrintings.id,
+    riftboundId: cardPrintings.riftboundId,
+    printedName: cardPrintings.printedName,
+  },
+  media: { imageFile: cardMedia.imageFile },
+};
+
 interface PrintedCardRow {
   readonly card: typeof cards.$inferSelect;
   readonly printing: typeof cardPrintings.$inferSelect;
+}
+
+interface CardSummaryRow {
+  readonly card: { readonly id: string; readonly orientation: string };
+  readonly media: { readonly imageFile: string } | null;
+  readonly printing: {
+    readonly id: string;
+    readonly riftboundId: string;
+    readonly printedName: string;
+  };
 }
 
 class SqliteCardRepository implements CardRepository {
@@ -120,6 +141,28 @@ class SqliteCardRepository implements CardRepository {
     return found;
   }
 
+  async getSummariesByPrintingIds(
+    printingIds: readonly PrintingId[],
+    { signal }: ReadOptions = {},
+  ): Promise<readonly CardSummary[]> {
+    throwIfAborted(signal);
+    const found: CardSummary[] = [];
+
+    for (const chunk of chunked([...new Set(printingIds)], PRINTING_ID_CHUNK_SIZE)) {
+      const rows = await this.db
+        .select(CARD_SUMMARY_COLUMNS)
+        .from(cardPrintings)
+        .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
+        .leftJoin(cardMedia, eq(cardMedia.printingId, cardPrintings.id))
+        .where(inArray(cardPrintings.id, chunk))
+        .orderBy(...this.#orderBy(undefined));
+      throwIfAborted(signal);
+      found.push(...(await this.#toDomainCardSummaries(rows, signal)));
+    }
+
+    return found;
+  }
+
   async count(criteria?: CardListCriteria, { signal }: ReadOptions = {}): Promise<number> {
     throwIfAborted(signal);
     const [row] = await this.db
@@ -164,15 +207,7 @@ class SqliteCardRepository implements CardRepository {
     const { limit, offset } = pagination(criteria);
 
     const rows = await this.db
-      .select({
-        card: { id: cards.id, orientation: cards.orientation },
-        printing: {
-          id: cardPrintings.id,
-          riftboundId: cardPrintings.riftboundId,
-          printedName: cardPrintings.printedName,
-        },
-        media: { imageFile: cardMedia.imageFile },
-      })
+      .select(CARD_SUMMARY_COLUMNS)
       .from(cardPrintings)
       .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
       .leftJoin(cardMedia, eq(cardMedia.printingId, cardPrintings.id))
@@ -182,28 +217,35 @@ class SqliteCardRepository implements CardRepository {
       .limit(limit + 1)
       .offset(offset);
     throwIfAborted(signal);
-    const pageRows = rows.slice(0, limit);
+
+    return Page.create(
+      await this.#toDomainCardSummaries(rows.slice(0, limit), signal),
+      rows.length > limit,
+    );
+  }
+
+  async #toDomainCardSummaries(
+    rows: readonly CardSummaryRow[],
+    signal: AbortSignal | undefined,
+  ): Promise<CardSummary[]> {
     const domainsByCardId = await this.#domainRowsFor(
-      pageRows.map((row) => row.card.id),
+      rows.map((row) => row.card.id),
       signal,
     );
 
-    return Page.create(
-      pageRows.map(({ card, media, printing }) => {
-        if (!media) {
-          throw new Error(`Catalog card ${printing.id} is missing required related data.`);
-        }
+    return rows.map(({ card, media, printing }) => {
+      if (!media) {
+        throw new Error(`Catalog card ${printing.id} is missing required related data.`);
+      }
 
-        return toDomainCardSummary({
-          card,
-          printing,
-          media,
-          domains: domainsByCardId.get(card.id) ?? [],
-          imageBaseUrl: this.imageBaseUrl,
-        });
-      }),
-      rows.length > limit,
-    );
+      return toDomainCardSummary({
+        card,
+        printing,
+        media,
+        domains: domainsByCardId.get(card.id) ?? [],
+        imageBaseUrl: this.imageBaseUrl,
+      });
+    });
   }
 
   /**
@@ -504,15 +546,6 @@ class SqliteCardRepository implements CardRepository {
       });
     });
   }
-}
-
-function chunked<Item>(items: readonly Item[], size: number): (readonly Item[])[] {
-  const chunks: Item[][] = [];
-  for (let start = 0; start < items.length; start += size) {
-    chunks.push(items.slice(start, start + size));
-  }
-
-  return chunks;
 }
 
 function groupBy<Row, Key>(rows: readonly Row[], keyOf: (row: Row) => Key): Map<Key, Row[]> {

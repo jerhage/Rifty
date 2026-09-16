@@ -1,9 +1,13 @@
+import type { NoteManager } from "@/features/annotation/note-manager";
 import type { CoreRule, CoreRuleDetail } from "@/features/rules/core-rule";
 import { listCoreRules } from "@/features/rules/use-cases/list-core-rules";
 import { coreRuleAncestorNumbersOf } from "@/features/rules/value-objects/core-rule-number";
 import { coreRulesSeed } from "@/infrastructure/database/generated/core-rules-seed";
 
+import { createNoteStore, fixedClock, sequentialIds } from "../annotation/fixtures";
 import type { SqliteScenarioStore } from "../sqlite-scenario-store";
+
+const ANNOTATED_AT = "2026-09-16T10:00:00.000Z";
 
 interface CoreRuleDraft {
   readonly number: string;
@@ -49,4 +53,9 @@ function coreRuleNumbered(coreRules: readonly CoreRule[], number: string): CoreR
   return found;
 }
 
-export { coreRuleDocument, coreRuleNumbered, seededCoreRules };
+/** The three seams the screen threads down to a saved entry's notes, over an empty store. */
+function coreRuleAnnotations(noteManager: NoteManager = createNoteStore().manager) {
+  return { clock: fixedClock(ANNOTATED_AT), idGenerator: sequentialIds(), noteManager };
+}
+
+export { ANNOTATED_AT, coreRuleAnnotations, coreRuleDocument, coreRuleNumbered, seededCoreRules };

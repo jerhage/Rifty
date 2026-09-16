@@ -16,14 +16,7 @@ interface CoreRulesContentsColumnProps {
   readonly onSelectEntry: (number: CoreRuleNumber) => void;
 }
 
-/**
- * The contents standing beside the document rather than over it, where there is room for both.
- * Nothing opened it and an entry closes nothing: the reader keeps the list while they read.
- *
- * It scrolls on its own, so the document moving underneath leaves the reader's place in the
- * contents where they left it. It sits against the leading edge of the page, which has already
- * paid the safe-area inset and the side padding it stands in.
- */
+/** It scrolls on its own, so the document moving underneath leaves the reader's place in it. */
 function CoreRulesContentsColumn({ coreRules, onSelectEntry }: CoreRulesContentsColumnProps) {
   const theme = useTheme();
 

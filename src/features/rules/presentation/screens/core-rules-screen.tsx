@@ -4,9 +4,12 @@ import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
+import type { Clock } from "@/application/ports/clock";
+import type { IdGenerator } from "@/application/ports/id-generator";
 import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxReadingWidth, Spacing } from "@/constants/theme";
+import type { NoteManager } from "@/features/annotation/note-manager";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import type { CoreRuleRowHighlight } from "@/features/rules/presentation/core-rule-highlight";
@@ -15,40 +18,38 @@ import {
   CORE_RULES_NO_MATCHES_MESSAGE,
   coreRuleRowKindOf,
 } from "@/features/rules/presentation/core-rules-format";
+import type { CoreRulesSavedPlacement } from "@/features/rules/presentation/core-rules-saved-placement";
+import type { CoreRulesSheetState } from "@/features/rules/presentation/core-rules-sheet-state";
 import { useCoreRulesDocumentScroll } from "@/features/rules/presentation/hooks/use-core-rules-document-scroll";
 import { useCoreRulesSearch } from "@/features/rules/presentation/hooks/use-core-rules-search";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 import { useLayoutSize } from "@/hooks/use-layout-size";
 
 import { CoreRulesContentsColumn } from "../components/contents/core-rules-contents-column";
-import { CoreRulesContentsSheet } from "../components/contents/core-rules-contents-sheet";
 import { CoreRuleRow } from "../components/core-rule-row";
 import { CoreRulesHeader } from "../components/core-rules-header";
+import { CoreRulesSavedList } from "../components/saved/core-rules-saved-list";
+import { CoreRulesSavedPane } from "../components/saved/core-rules-saved-pane";
+import { CoreRulesSheet } from "../components/sheet/core-rules-sheet";
 
 interface CoreRulesScreenProps {
   /** Every rule the reader has marked, whether or not a query has filtered it out of view. */
   readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
+  readonly clock: Clock;
   readonly coreRules: readonly CoreRule[];
   readonly edition: CoreRulesEdition;
+  readonly idGenerator: IdGenerator;
+  readonly noteManager: NoteManager;
   readonly onToggleBookmark: (number: CoreRuleNumber) => void;
 }
 
-/**
- * The whole document in printed order under a header that does not scroll.
- *
- * A query that finds nothing replaces the document rather than printing a note beneath it, because
- * a message at the far end of 1364 entries is a message nobody reads.
- *
- * The contents are the one place the two frames differ in what exists rather than in how much room
- * it has. A tablet stands them beside the document: the page becomes a spread that fills the frame,
- * the contents pinned against its leading edge and the rules text taking every point that is left.
- * A phone has nowhere to put a second column, so the same list arrives as a sheet over the
- * document, and the document keeps the capped, centered column a single column of reading gets.
- */
 function CoreRulesScreen({
   bookmarkedNumbers,
+  clock,
   coreRules,
   edition,
+  idGenerator,
+  noteManager,
   onToggleBookmark,
 }: CoreRulesScreenProps) {
   const { layoutClass } = useLayoutSize();
@@ -67,27 +68,31 @@ function CoreRulesScreen({
     toggleMatchesOnly,
   } = useCoreRulesSearch(coreRules, scrollToRow);
   const [selectedNumber, setSelectedNumber] = useState<CoreRuleNumber | null>(null);
-  const [contentsShowing, setContentsShowing] = useState(false);
+  const [sheetState, setSheetState] = useState<CoreRulesSheetState>("hidden");
+  const [savedPaneExpanded, setSavedPaneExpanded] = useState(false);
   const foundNothing = search.type === "searched" && search.hitCount === 0;
 
-  /**
-   * One rule at a time, and pressing the chosen one again gives it up. Selection is the reader's
-   * own mark on the document, so it outlives a new query and outlives being filtered out of view.
-   */
+  /** Selection outlives a new query and outlives being filtered out of view. */
   const selectCoreRule = useCallback((number: CoreRuleNumber) => {
     setSelectedNumber((current) => (current === number ? null : number));
   }, []);
 
-  const showContents = useCallback(() => setContentsShowing(true), []);
-  const hideContents = useCallback(() => setContentsShowing(false), []);
+  const showContents = useCallback(() => setSheetState("contents"), []);
+  const showSaved = useCallback(() => setSheetState("saved"), []);
+  const hideSheet = useCallback(() => setSheetState("hidden"), []);
+  const toggleSavedPane = useCallback(() => setSavedPaneExpanded((open) => !open), []);
   const contentsPlacement: CoreRulesContentsPlacement =
     layoutClass === "tablet" ? { type: "beside" } : { type: "over", open: showContents };
+  const savedPlacement: CoreRulesSavedPlacement =
+    layoutClass === "tablet"
+      ? { type: "beside", expanded: savedPaneExpanded, toggle: toggleSavedPane }
+      : { type: "over", open: showSaved };
 
-  /** A sheet has said what it was opened to say once the reader has chosen, so it gives way. */
+  /** The movement first and the dismissal second, the order `stepToHit` already follows. */
   const goToCoreRuleFromSheet = useCallback(
     (number: CoreRuleNumber) => {
-      setContentsShowing(false);
       scrollToCoreRule(number);
+      setSheetState("hidden");
     },
     [scrollToCoreRule],
   );
@@ -106,6 +111,7 @@ function CoreRulesScreen({
         onStepToPreviousHit={stepToPreviousHit}
         onToggleMatchesOnly={toggleMatchesOnly}
         query={query}
+        savedPlacement={savedPlacement}
         search={search}
       />
       <CoreRulesPage contentsPlacement={contentsPlacement}>
@@ -128,23 +134,43 @@ function CoreRulesScreen({
             />
           )}
         </View>
+        {savedPlacement.type === "beside" ? (
+          <CoreRulesSavedPane
+            bookmarkedCount={bookmarkedNumbers.size}
+            expanded={savedPlacement.expanded}
+            onToggle={savedPlacement.toggle}
+          >
+            <CoreRulesSavedList
+              bookmarkedNumbers={bookmarkedNumbers}
+              clock={clock}
+              coreRules={coreRules}
+              idGenerator={idGenerator}
+              noteManager={noteManager}
+              onGoToCoreRule={scrollToCoreRule}
+              onRemoveBookmark={onToggleBookmark}
+            />
+          </CoreRulesSavedPane>
+        ) : null}
       </CoreRulesPage>
-      {contentsPlacement.type === "beside" ? null : (
-        <CoreRulesContentsSheet
+      {savedPlacement.type === "beside" ? null : (
+        <CoreRulesSheet
+          bookmarkedNumbers={bookmarkedNumbers}
+          clock={clock}
           coreRules={coreRules}
-          isOpen={contentsShowing}
-          onDismiss={hideContents}
-          onSelectEntry={goToCoreRuleFromSheet}
+          idGenerator={idGenerator}
+          noteManager={noteManager}
+          onDismiss={hideSheet}
+          onGoToCoreRule={goToCoreRuleFromSheet}
+          onRemoveBookmark={onToggleBookmark}
+          onShowFace={setSheetState}
+          state={sheetState}
         />
       )}
     </ThemedView>
   );
 }
 
-/**
- * What the reader reads, and how much of the frame it may use. A spread carries the side padding
- * and the safe-area insets for both of its columns, so nothing below it applies them a second time.
- */
+/** A spread pays the insets and the side padding for all its columns, so nothing below repeats them. */
 function CoreRulesPage({
   children,
   contentsPlacement,
@@ -195,10 +221,6 @@ function CoreRuleDocument({
     [bookmarkedNumbers, highlights, selectedNumber],
   );
 
-  /**
-   * Beside the contents the text takes the whole of what is left, and the page around it has
-   * already paid the insets. Alone it is one column of reading, so it is capped and centered.
-   */
   const columnStyle = match(contentsPlacement)
     .with({ type: "beside" }, () => styles.columnBesideContents)
     .with({ type: "over" }, () => [

@@ -33,8 +33,8 @@ function CoreRuleMatchNavigation({
 
   return (
     <View style={styles.row}>
-      <CoreRuleHitStep direction="left" label="Previous hit" onPress={onStepToPreviousHit} />
-      <CoreRuleHitStep direction="right" label="Next hit" onPress={onStepToNextHit} />
+      <CoreRuleHitStep direction="up" label="Previous hit" onPress={onStepToPreviousHit} />
+      <CoreRuleHitStep direction="down" label="Next hit" onPress={onStepToNextHit} />
       <ThemedText style={[styles.position, { color: theme.highlight }]} type="monoValue">
         {coreRuleHitPositionLabel(search, activeHit)}
       </ThemedText>

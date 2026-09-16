@@ -11,7 +11,7 @@ import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rule
 
 import { recordAnnouncements } from "../announcements";
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
-import { coreRuleDocument, seededCoreRules } from "./fixtures";
+import { coreRuleAnnotations, coreRuleDocument, seededCoreRules } from "./fixtures";
 
 const EDITION: CoreRulesEdition = { title: "Riftbound Core Rules", publishedOn: "2025-06-02" };
 const NO_BOOKMARKS: ReadonlySet<string> = new Set();
@@ -78,6 +78,7 @@ describe("CoreRulesScreen", () => {
         bookmarkedNumbers={NO_BOOKMARKS}
         coreRules={coreRules}
         edition={EDITION}
+        {...coreRuleAnnotations()}
         onToggleBookmark={() => undefined}
       />,
       {
@@ -98,6 +99,7 @@ describe("CoreRulesScreen", () => {
         bookmarkedNumbers={NO_BOOKMARKS}
         coreRules={coreRules}
         edition={EDITION}
+        {...coreRuleAnnotations()}
         onToggleBookmark={() => undefined}
       />,
       {
@@ -127,6 +129,7 @@ async function renderSearchableDocument() {
       bookmarkedNumbers={NO_BOOKMARKS}
       coreRules={SEARCH_DOCUMENT}
       edition={EDITION}
+      {...coreRuleAnnotations()}
       onToggleBookmark={() => undefined}
     />,
     {
@@ -299,6 +302,7 @@ async function renderScrollableDocument() {
       bookmarkedNumbers={NO_BOOKMARKS}
       coreRules={SCROLL_DOCUMENT}
       edition={EDITION}
+      {...coreRuleAnnotations()}
       onToggleBookmark={() => undefined}
     />,
     {
@@ -457,6 +461,7 @@ async function renderDocumentAt(width: number, height: number, fontScale = 1) {
       bookmarkedNumbers={NO_BOOKMARKS}
       coreRules={SCROLL_DOCUMENT}
       edition={EDITION}
+      {...coreRuleAnnotations()}
       onToggleBookmark={() => undefined}
     />,
     {

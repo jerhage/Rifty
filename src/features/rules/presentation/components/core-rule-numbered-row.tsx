@@ -16,11 +16,7 @@ const CORE_RULE_NUMBER_CHARACTERS = 11;
 /** `code` is monospace at 12 points, and a monospace glyph advances six tenths of its size. */
 const CORE_RULE_NUMBER_CHARACTER_WIDTH = 12 * 0.6;
 
-/**
- * Wide enough for every printed number the document holds, so the body's left edge never moves —
- * at whatever size the reader has asked for. A fixed 72 points held ten characters, so it wrapped
- * the three eleven-character numbers at the default size and more of them at every size above it.
- */
+/** A fixed 72 points held ten characters, so it wrapped the three eleven-character numbers. */
 function coreRuleNumberGutter(fontScale: number): number {
   return Math.ceil(CORE_RULE_NUMBER_CHARACTERS * CORE_RULE_NUMBER_CHARACTER_WIDTH * fontScale);
 }
@@ -34,11 +30,6 @@ interface CoreRuleNumberedRowProps {
   readonly onToggleBookmark: () => void;
 }
 
-/**
- * The mark stands at the end of the row, where the design puts it, and it is a control of its own
- * rather than a fifth state of the bar beside the number. Its target is the platform's minimum, so
- * a one-line rule is now as tall as a finger rather than as tall as its line.
- */
 function CoreRuleNumberedRow({
   barColor,
   bookmarked,

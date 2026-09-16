@@ -1,8 +1,11 @@
 import { match } from "ts-pattern";
 
+import type { Theme } from "@/constants/theme";
+
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { ActiveCoreRuleHit, CoreRuleSearch } from "@/features/rules/core-rule-search";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
+import type { SavedCoreRule } from "@/features/rules/presentation/core-rules-saved";
 import {
   coreRuleDepthOf,
   isCoreRuleChapterNumber,
@@ -22,12 +25,7 @@ function coreRuleChapters(coreRules: readonly CoreRule[]): readonly CoreRule[] {
   return coreRules.filter((coreRule) => coreRuleRowKindOf(coreRule) === "chapter");
 }
 
-/**
- * The table of contents: every depth-1 heading in document order, five of which are chapters. It is
- * a filter of the document the screen already holds rather than a second read, and it stops at
- * depth 1: taking the levels below would list all 1364 entries, which is the document again rather
- * than a list of where to go in it.
- */
+/** Depth 1 only: the levels below would list all 1364 entries, which is the document again. */
 function coreRulesContents(coreRules: readonly CoreRule[]): readonly CoreRule[] {
   return coreRules.filter(
     (coreRule) => coreRule.kind === "heading" && coreRuleDepthOf(coreRule.number) === 1,
@@ -38,10 +36,7 @@ function numberedCoreRuleCount(coreRules: readonly CoreRule[]): number {
   return coreRules.filter((coreRule) => coreRule.kind === "rule").length;
 }
 
-/**
- * The one line under the title: what the document holds while nothing is searched, and what the
- * query found once there is one.
- */
+/** The line under the title: what the document holds, or what the query found. */
 function coreRulesCountLabel(coreRules: readonly CoreRule[], search: CoreRuleSearch): string {
   return match(search)
     .with({ type: "noQuery" }, () => documentCountLabel(coreRules))
@@ -69,13 +64,44 @@ function coreRuleBookmarkLabel(number: CoreRuleNumber): string {
   return `Bookmark ${number}`;
 }
 
-/**
- * How much of the document the reader has kept. It counts every bookmarked rule, including the ones
- * a query has filtered out of view: a mark outlives what is on screen.
- */
+/** Counts marks a query has filtered out of view too: a mark outlives what is on screen. */
 function coreRuleBookmarkCountLabel(count: number): string {
   return `${count} bookmarked ${count === 1 ? "rule" : "rules"}`;
 }
+
+/** The context a marked rule is listed under, and the rule's own number when it stands under none. */
+function coreRuleSavedContextLabel({ coreRule, heading }: SavedCoreRule): string {
+  return heading === null ? coreRule.number : heading.body;
+}
+
+/** The whole entry, because the block that jumps to it is one control and swallows its own text. */
+function coreRuleSavedEntryLabel(saved: SavedCoreRule): string {
+  return `${saved.coreRule.number}, ${coreRuleSavedContextLabel(saved)}. ${saved.coreRule.body}`;
+}
+
+/** Giving up a mark from the surface, named so a column of removals does not read alike. */
+function coreRuleRemoveBookmarkLabel(number: CoreRuleNumber): string {
+  return `Remove bookmark ${number}`;
+}
+
+/** The design sets the scratchpad and the favorited cards beside it under labels of this shape. */
+function coreRuleSavedSectionLabel(count: number): string {
+  return `Bookmarked rules ${count}`;
+}
+
+/** An alpha byte on the token rather than a color of its own: both schemes state a six-digit hex. */
+const CoreRuleSavedAlpha = {
+  surface: "14",
+  edge: "38",
+} as const;
+
+function coreRuleSavedWash(theme: Theme, weight: keyof typeof CoreRuleSavedAlpha): string {
+  return `${theme.accent}${CoreRuleSavedAlpha[weight]}`;
+}
+
+/** What the saved surface says instead of drawing an empty box, in either frame. */
+const CORE_RULES_NOTHING_SAVED_MESSAGE =
+  "Bookmark a rule and it is kept here, with room for a note on how it came up.";
 
 /** Where the reader stands among the hits, counted from one, and `0 / 0` when nothing matched. */
 function coreRuleHitPositionLabel(search: CoreRuleSearch, activeHit: ActiveCoreRuleHit): string {
@@ -89,10 +115,7 @@ function coreRuleHitPositionLabel(search: CoreRuleSearch, activeHit: ActiveCoreR
     .exhaustive();
 }
 
-/**
- * What the screen says where the document was when a query matches nothing, and what a reader who
- * cannot see it is told. One sentence, so the two can never drift apart.
- */
+/** One sentence for the screen and the announcement, so the two cannot drift apart. */
 const CORE_RULES_NO_MATCHES_MESSAGE = "Nothing in the rules text matches that. Try a shorter term.";
 
 const CORE_RULES_NO_HIT_MESSAGE = "Nothing matches, so there is no hit to step to.";
@@ -110,10 +133,7 @@ function coreRuleSearchShape(search: CoreRuleSearch): CoreRuleSearchShape {
     .exhaustive();
 }
 
-/**
- * What a step tells a reader who cannot watch the counter move: which hit of how many, and the
- * number of the entry holding it, which is the only address this document has.
- */
+/** The number of the entry holding the hit is the only address this document has. */
 function coreRuleHitAnnouncement(search: CoreRuleSearch, activeHit: ActiveCoreRuleHit): string {
   return match({ search, activeHit })
     .with({ search: { type: "noQuery" } }, () => CORE_RULES_NO_HIT_MESSAGE)
@@ -126,12 +146,8 @@ function coreRuleHitAnnouncement(search: CoreRuleSearch, activeHit: ActiveCoreRu
     .exhaustive();
 }
 
-/**
- * What a new query is worth saying out loud, and `null` when it is worth nothing. A count that
- * changes with every letter is not worth a reader's breath — it is on screen, and they are typing.
- * What they cannot tell is that the document has been replaced by a note, or has come back, or is
- * whole again, so the shape of the result is what gets spoken and the letters between are silent.
- */
+/** `null` where the shape of the result held: a count ticking under a reader's own fingers is
+ * not worth saying, while the document being replaced by a note, or coming back, is. */
 function coreRuleSearchAnnouncement(before: CoreRuleSearch, after: CoreRuleSearch): string | null {
   if (coreRuleSearchShape(after) === coreRuleSearchShape(before)) return null;
 
@@ -151,12 +167,18 @@ function coreRulesEditionLabel(edition: CoreRulesEdition): string {
 
 export {
   CORE_RULES_NO_MATCHES_MESSAGE,
+  CORE_RULES_NOTHING_SAVED_MESSAGE,
   coreRuleBookmarkCountLabel,
   coreRuleBookmarkLabel,
   coreRuleChapters,
   coreRuleHitAnnouncement,
   coreRuleHitPositionLabel,
+  coreRuleRemoveBookmarkLabel,
   coreRuleRowKindOf,
+  coreRuleSavedContextLabel,
+  coreRuleSavedEntryLabel,
+  coreRuleSavedSectionLabel,
+  coreRuleSavedWash,
   coreRuleSearchAnnouncement,
   coreRulesContents,
   coreRulesCountLabel,

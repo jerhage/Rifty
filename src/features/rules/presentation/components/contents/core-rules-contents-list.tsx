@@ -10,10 +10,7 @@ import {
 } from "@/features/rules/presentation/core-rules-format";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
-/**
- * The column the three-character numbers stand in, scaled with the text it holds: the design's 34
- * points at the default size, and the same room at every size above it.
- */
+/** The design's 34 points at the default size, and the same room at every size above it. */
 const NUMBER_WIDTH = 34;
 
 function coreRulesContentsNumberWidth(fontScale: number): number {
@@ -25,11 +22,7 @@ interface CoreRulesContentsListProps {
   readonly onSelectEntry: (number: CoreRuleNumber) => void;
 }
 
-/**
- * Where to go in the document, drawn the same way wherever it sits: a sheet on a phone, a column
- * beside the document on a tablet. It holds no scroller of its own, so each container decides how
- * its own list scrolls.
- */
+/** It holds no scroller of its own, so each container decides how its own list scrolls. */
 function CoreRulesContentsList({ coreRules, onSelectEntry }: CoreRulesContentsListProps) {
   const contents = useMemo(() => coreRulesContents(coreRules), [coreRules]);
   const { fontScale } = useWindowDimensions();

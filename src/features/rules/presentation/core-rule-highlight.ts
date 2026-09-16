@@ -8,10 +8,7 @@ import type {
 } from "@/features/rules/core-rule-search";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
-/**
- * Where the query sits in one searched passage, and which of its occurrences the reader stands on.
- * Every occurrence is `length` long, so the text splits at the offsets without being scanned again.
- */
+/** Every occurrence is `length` long, so the text splits at the offsets without a second scan. */
 interface CoreRuleHighlight {
   readonly offsets: readonly number[];
   readonly length: number;
@@ -34,11 +31,7 @@ interface CoreRuleTextRun {
   readonly text: string;
 }
 
-/**
- * The washes the design draws behind a hit, as an alpha byte on the token. React Native fades a
- * text background only through the color itself — `opacity` would take the text with it — and both
- * schemes state `highlight` as a six-digit hex.
- */
+/** An alpha byte on the token: `opacity` would fade the text with the background behind it. */
 const CoreRuleHighlightAlpha = {
   /** Behind an occurrence that is not the active hit. */
   occurrence: "38",
@@ -75,10 +68,7 @@ function activeOffsetIn(
   return sameCoreRuleSearchTarget(activeHit.target, target) ? activeHit.offset : null;
 }
 
-/**
- * Turns one rule's match into the offsets each of its texts draws, without rescanning any of them:
- * the scan already reported every occurrence and the single length they share.
- */
+/** No text is rescanned: the search already reported every occurrence and their shared length. */
 function coreRuleRowHighlight(
   searchMatch: CoreRuleSearchMatch,
   queryLength: number,
@@ -117,11 +107,7 @@ interface CoreRuleRowSurface {
   readonly borderColor: string;
 }
 
-/**
- * Selection outranks the active hit on every channel a row has. A reader who chose a rule and then
- * stepped a hit onto it must still be able to see which row they chose, so the choice wins and the
- * hit keeps only its marked occurrences.
- */
+/** Selection outranks the active hit on every channel, so a chosen row stays visibly chosen. */
 function coreRuleRowSurface(
   theme: Theme,
   highlight: CoreRuleRowHighlight | null,

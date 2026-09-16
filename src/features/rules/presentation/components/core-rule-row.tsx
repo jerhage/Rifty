@@ -29,19 +29,8 @@ interface CoreRuleRowProps {
 }
 
 /**
- * A numbered rule is the entry a reader chooses, so it is the only row that presses. A chapter and
- * a heading name what is beneath them and are nothing to choose.
- *
- * The row the reader is standing on is tinted, so the active hit is findable without its offset,
- * and a row the reader has chosen outranks that tint on all three channels.
- *
- * It is memoized, and every prop is comparable by reference so the memo holds: a rule from the
- * loaded document, the highlight map's own value or `null`, two press functions that serve every
- * row, and two flags. A jump across the document then re-renders the rows it lands among, not all 1364.
- *
- * Marking a rule and choosing one are two acts on one row, so the mark is its own control inside
- * the row's press rather than a second meaning for it: the inner control takes the touch, and the
- * row's own press never fires beneath it.
+ * Memoized, and every prop is comparable by reference so the memo holds: a jump re-renders the rows
+ * it lands among rather than all 1364.
  */
 function CoreRuleRowFace({
   bookmarked,

@@ -16,7 +16,7 @@ import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
 import { createTestWrapper } from "../test-wrapper";
-import { coreRuleDocument } from "./fixtures";
+import { coreRuleAnnotations, coreRuleDocument } from "./fixtures";
 
 const EDITION: CoreRulesEdition = { title: "Riftbound Core Rules", publishedOn: "2025-06-02" };
 const MARKED_AT = "2026-09-16T10:00:00.000Z";
@@ -136,6 +136,7 @@ async function renderBookmarkableDocument(
           bookmarkedNumbers={bookmarkedIds}
           coreRules={coreRules}
           edition={EDITION}
+          {...coreRuleAnnotations()}
           onToggleBookmark={toggleBookmark}
         />
       )}

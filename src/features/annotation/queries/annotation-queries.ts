@@ -1,14 +1,26 @@
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 
 import type { BookmarkListScope } from "@/features/annotation/bookmark-list-scope";
+import type { NoteId } from "@/features/annotation/note";
+import type { NoteListScope } from "@/features/annotation/note-list-scope";
+import {
+  deleteNote,
+  type DeleteNoteCapabilities,
+} from "@/features/annotation/use-cases/delete-note";
 import {
   listBookmarks,
   type ListBookmarksCapabilities,
 } from "@/features/annotation/use-cases/list-bookmarks";
+import { listNotes, type ListNotesCapabilities } from "@/features/annotation/use-cases/list-notes";
 import {
   toggleBookmark,
   type ToggleBookmarkCapabilities,
 } from "@/features/annotation/use-cases/toggle-bookmark";
+import {
+  writeNote,
+  type NoteDraft,
+  type WriteNoteCapabilities,
+} from "@/features/annotation/use-cases/write-note";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 
 import { annotationKeys } from "./annotation-keys";
@@ -36,4 +48,30 @@ function toggleBookmarkMutation(capabilities: ToggleBookmarkCapabilities) {
   });
 }
 
-export { listBookmarksQuery, toggleBookmarkMutation };
+function listNotesQuery(scope: NoteListScope, capabilities: ListNotesCapabilities) {
+  return queryOptions({
+    queryKey: annotationKeys.noteList(scope),
+    queryFn: ({ signal }) => listNotes(scope, capabilities, { signal }),
+    staleTime: ANNOTATION_STALE_TIME_MS,
+  });
+}
+
+function writeNoteMutation(capabilities: WriteNoteCapabilities) {
+  return mutationOptions({
+    mutationFn: (draft: NoteDraft) => writeNote(draft, capabilities),
+  });
+}
+
+function deleteNoteMutation(capabilities: DeleteNoteCapabilities) {
+  return mutationOptions({
+    mutationFn: (id: NoteId) => deleteNote(id, capabilities),
+  });
+}
+
+export {
+  deleteNoteMutation,
+  listBookmarksQuery,
+  listNotesQuery,
+  toggleBookmarkMutation,
+  writeNoteMutation,
+};

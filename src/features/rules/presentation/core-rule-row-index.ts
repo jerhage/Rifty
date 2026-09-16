@@ -5,12 +5,8 @@ import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-nu
 type CoreRuleRowIndex = ReadonlyMap<CoreRuleNumber, number>;
 
 /**
- * Where each rule sits in the list **as currently shown**. Matches-only changes what the list
- * holds, so the row of a rule differs from its place in the document as soon as anything is
- * filtered out, and scrolling to the document's place would land on the wrong entry.
- *
- * A number the list does not hold is absent rather than zero, so a caller can move nowhere instead
- * of moving somewhere wrong.
+ * The row **as currently shown**: matches-only filters the list, so the document's place would land
+ * on the wrong entry. A number the list does not hold is absent rather than zero.
  */
 function coreRuleRowIndex(shownCoreRules: readonly CoreRule[]): CoreRuleRowIndex {
   const rows = new Map<CoreRuleNumber, number>();

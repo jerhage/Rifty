@@ -14,20 +14,7 @@ import {
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 import { useAnnouncement } from "@/hooks/use-announcement";
 
-/**
- * The rules screen's own state: what was typed, which hit the reader stands on, and whether the
- * document is narrowed to the matches. The scan is memoized on the document and the query alone,
- * because it walks every entry and its details and must not run again when next or previous moves
- * the reader — `activeCoreRuleHit` resolves that against the scan already in hand.
- *
- * The hit index is unbounded: next and previous add and subtract, and the wrap in both directions
- * belongs to `activeCoreRuleHit`.
- *
- * `scrollToRow` moves the document, and stepping calls it directly rather than through an effect
- * watching the active hit. An effect would fire a render late, would fire again on any render that
- * happened to change the hit, and would put the reason the document moved somewhere no reader of
- * the press handler can see.
- */
+/** The hit index is unbounded; the wrap in both directions belongs to `activeCoreRuleHit`. */
 function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: number) => void) {
   const announce = useAnnouncement();
   const [query, setQuery] = useState("");
@@ -35,11 +22,6 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: n
   const [matchesOnly, setMatchesOnly] = useState(false);
 
   const search = useMemo(() => searchCoreRules(coreRules, query), [coreRules, query]);
-  /**
-   * Resolved once per query and per step rather than on every render: it is what the highlight of
-   * every matching row is built from, and a fresh one each render would rebuild all of them and
-   * defeat the rows' memo.
-   */
   const activeHit = useMemo(() => activeCoreRuleHit(search, hitIndex), [hitIndex, search]);
 
   const highlights = useMemo(() => {
@@ -65,11 +47,7 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: n
 
   const rowIndex = useMemo(() => coreRuleRowIndex(shownCoreRules), [shownCoreRules]);
 
-  /**
-   * The one way the document moves to a rule, whether a step onto a hit or a tap in the contents
-   * asked for it. Matches-only narrows the list, so a rule the list does not hold moves nothing
-   * rather than scrolling a wrong row into view.
-   */
+  /** Matches-only narrows the list, so a rule it no longer holds moves nothing at all. */
   const scrollToCoreRule = useCallback(
     (number: CoreRuleNumber) => {
       const row = rowIndex.get(number);
@@ -79,15 +57,7 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: n
     [rowIndex, scrollToRow],
   );
 
-  /**
-   * One act: resolve the hit the reader is about to stand on, move the document to the rule that
-   * holds it, say where that leaves them, then move the counter. Matches-only shows every match, so
-   * that rule is always in the shown list.
-   *
-   * The counter is the one thing on this screen that changes without a word of its own, so the step
-   * speaks: a reader who cannot see `3 / 17` move is told, from the press that moved it. Each press
-   * supersedes the last, so the newest position interrupts a position nobody stands on any more.
-   */
+  /** The counter changes without a word of its own, so the press that moves it says where it lands. */
   const stepToHit = useCallback(
     (step: number) => {
       const steppedIndex = hitIndex + step;
@@ -101,15 +71,7 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: n
     [announce, hitIndex, scrollToCoreRule, search],
   );
 
-  /**
-   * Typing puts the reader back on the first hit, so the counter never points at a hit the new
-   * query does not have. Clearing the query also drops the filter: a document narrowed by a term
-   * the reader can no longer see is a trap.
-   *
-   * It scans here rather than waiting for the render's memo to do it, because what is worth saying
-   * depends on what the new query found and the announcement belongs in the act that changed it.
-   * `coreRuleSearchAnnouncement` keeps that to the letters that change what is on screen.
-   */
+  /** It scans here rather than waiting for the render's memo: the announcement belongs in the act. */
   const changeQuery = useCallback(
     (typed: string) => {
       const typedSearch = searchCoreRules(coreRules, typed);

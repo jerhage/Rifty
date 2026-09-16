@@ -4,7 +4,7 @@ import { CoreRulesData } from "@/features/rules/presentation/data/core-rules-dat
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
 function RulesRoute() {
-  const { annotations, clock, rules } = useAppDependencies();
+  const { annotations, clock, idGenerator, rules } = useAppDependencies();
 
   return (
     <CoreRulesData
@@ -20,8 +20,11 @@ function RulesRoute() {
           {({ bookmarkedIds, toggleBookmark }) => (
             <CoreRulesScreen
               bookmarkedNumbers={bookmarkedIds}
+              clock={clock}
               coreRules={coreRules}
               edition={edition}
+              idGenerator={idGenerator}
+              noteManager={annotations.noteRepository}
               onToggleBookmark={toggleBookmark}
             />
           )}

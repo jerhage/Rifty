@@ -30,10 +30,7 @@ interface BookmarkedSubjects {
 }
 
 interface BookmarkedSubjectsDataProps {
-  /**
-   * The whole set a consumer of marks needs, rather than its four seams one by one: this boundary
-   * reads and writes the same rows. Each use case below still takes only the narrow pieces it uses.
-   */
+  /** The whole set, because this boundary reads and writes the same rows. */
   readonly bookmarkManager: BookmarkManager;
   readonly children: (bookmarked: BookmarkedSubjects) => ReactNode;
   readonly clock: Clock;
@@ -41,13 +38,8 @@ interface BookmarkedSubjectsDataProps {
 }
 
 /**
- * Every mark of one kind in one read, as the set of the ids that carry one. A screen holding a
- * thousand subjects asks this once and answers each of them from the set, rather than asking the
- * store once per row.
- *
- * It owns the write as well, because the answer it hands down is what the write changes. There is
- * no in-flight appearance: the control shows what is stored, a mark lands when the read comes back,
- * and the two outcomes and the failure are what a reader who cannot see the control is told.
+ * Every mark of one kind in one read, so a screen holding a thousand subjects asks once rather than
+ * once per row. There is no in-flight appearance: the control shows what is stored.
  */
 function BookmarkedSubjectsData({
   bookmarkManager,
@@ -70,11 +62,7 @@ function BookmarkedSubjectsData({
       clock,
     }),
     onError: () => announce(BOOKMARK_FAILED_MESSAGE, "interrupting"),
-    /**
-     * One mark is read through several scopes — this kind, every kind, and the subject on its own —
-     * so the whole bookmark subtree goes stale rather than the scope the press happened to come
-     * from. Notes are left alone: marking a subject writes no note of it.
-     */
+    /** One mark is read through several scopes, so the whole subtree goes stale. Notes are untouched. */
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: annotationKeys.bookmarks() });
       announce(

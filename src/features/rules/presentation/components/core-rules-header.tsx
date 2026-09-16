@@ -1,11 +1,11 @@
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
 import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { MaxReadingWidth, Spacing } from "@/constants/theme";
+import { MaxReadingWidth, Spacing, TouchTarget } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { ActiveCoreRuleHit, CoreRuleSearch } from "@/features/rules/core-rule-search";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
@@ -15,6 +15,7 @@ import {
   coreRulesCountLabel,
   coreRulesEditionLabel,
 } from "@/features/rules/presentation/core-rules-format";
+import type { CoreRulesSavedPlacement } from "@/features/rules/presentation/core-rules-saved-placement";
 import { useTheme } from "@/hooks/use-theme";
 
 import { CoreRulesContentsControl } from "./contents/core-rules-contents-control";
@@ -32,14 +33,10 @@ interface CoreRulesHeaderProps {
   readonly onStepToPreviousHit: () => void;
   readonly onToggleMatchesOnly: () => void;
   readonly query: string;
+  readonly savedPlacement: CoreRulesSavedPlacement;
   readonly search: CoreRuleSearch;
 }
 
-/**
- * Names the edition on screen and stays put, so the document scrolls beneath rather than past it.
- * The count line under it answers whichever question the reader is asking: what the document holds,
- * or what their query found, and beside it how much of it they have kept.
- */
 function CoreRulesHeader({
   activeHit,
   bookmarkedCount,
@@ -52,15 +49,13 @@ function CoreRulesHeader({
   onStepToPreviousHit,
   onToggleMatchesOnly,
   query,
+  savedPlacement,
   search,
 }: CoreRulesHeaderProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
 
-  /**
-   * The header's own line-up follows the page below it: against the leading edge where the page is
-   * a spread, and inside the same capped column where the page is one column of prose.
-   */
+  /** The header's line-up follows the page below it. */
   const columnStyle = match(contentsPlacement)
     .with({ type: "beside" }, () => styles.spreadColumn)
     .with({ type: "over" }, () => styles.readingColumn)
@@ -113,12 +108,41 @@ function CoreRulesHeader({
           <ThemedText themeColor="textTertiary" type="mono">
             {coreRulesCountLabel(coreRules, search)}
           </ThemedText>
-          <ThemedText themeColor="textTertiary" type="mono">
-            {coreRuleBookmarkCountLabel(bookmarkedCount)}
-          </ThemedText>
+          <SavedControl count={bookmarkedCount} placement={savedPlacement} />
         </View>
       </View>
     </ThemedView>
+  );
+}
+
+/** The count is also the way to what was kept, and on a tablet it says whether the pane is open. */
+function SavedControl({
+  count,
+  placement,
+}: {
+  readonly count: number;
+  readonly placement: CoreRulesSavedPlacement;
+}) {
+  const label = coreRuleBookmarkCountLabel(count);
+
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      accessibilityState={match(placement)
+        .with({ type: "beside" }, ({ expanded }) => ({ expanded }))
+        .with({ type: "over" }, () => ({ expanded: false }))
+        .exhaustive()}
+      onPress={match(placement)
+        .with({ type: "beside" }, ({ toggle }) => toggle)
+        .with({ type: "over" }, ({ open }) => open)
+        .exhaustive()}
+      style={({ pressed }) => [styles.saved, pressed && styles.pressed]}
+    >
+      <ThemedText themeColor="accent" type="mono">
+        {label}
+      </ThemedText>
+    </Pressable>
   );
 }
 
@@ -155,7 +179,16 @@ const styles = StyleSheet.create({
   field: {
     marginTop: Spacing.two + 1,
   },
+  saved: {
+    justifyContent: "center",
+    minHeight: TouchTarget.minimum,
+    minWidth: TouchTarget.minimum,
+  },
+  pressed: {
+    opacity: 0.7,
+  },
   counts: {
+    alignItems: "center",
     flexDirection: "row",
     /** Two counts of scaling text in a phone's width: past about twice the default they wrap. */
     flexWrap: "wrap",

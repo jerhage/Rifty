@@ -10,11 +10,10 @@ const featureImportAllowances: Record<string, readonly string[]> = {
   rules: ["rules"],
   deck: ["deck", "card", "analysis"],
   annotation: ["annotation", "card", "rules", "deck"],
-  saved: ["saved"],
 };
 const zonesForbiddenFromFeatures = ["components", "hooks", "constants", "shared", "application"];
 const zonesForbiddenFromPersistenceFreeFeatures = ["infrastructure", "composition"];
-const persistenceFreeFeatures = ["catalog", "analysis", "saved"];
+const persistenceFreeFeatures = ["catalog", "analysis"];
 const resolvableExtensions = [".ts", ".tsx", ".d.ts", ".js", ".jsx", ".css", ".sql"];
 
 type SourceFile = {

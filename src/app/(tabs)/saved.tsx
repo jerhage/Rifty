@@ -1,7 +1,7 @@
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import { Scratchpad } from "@/features/annotation/presentation/components/scratchpad";
 import { NotesData } from "@/features/annotation/presentation/data/notes-data";
-import { SavedScreen } from "@/features/saved/presentation/screens/saved-screen";
+import { SavedScreen } from "@/components/app-shell/saved-screen";
 
 function SavedRoute() {
   const { annotations, clock, idGenerator } = useAppDependencies();

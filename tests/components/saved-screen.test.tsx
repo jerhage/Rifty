@@ -10,8 +10,8 @@ import {
   SAVED_TITLE,
   SCRATCHPAD_EMPTY_SUMMARY,
   SCRATCHPAD_WRITTEN_SUMMARY,
-} from "@/features/saved/presentation/saved-format";
-import { SavedScreen } from "@/features/saved/presentation/screens/saved-screen";
+} from "@/components/app-shell/saved-format";
+import { SavedScreen } from "@/components/app-shell/saved-screen";
 
 import {
   createNoteStore,

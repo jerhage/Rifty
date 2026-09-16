@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { MaxReadingWidth, Spacing } from "@/constants/theme";
-import { SAVED_TITLE, savedSummaryLabel } from "@/features/saved/presentation/saved-format";
+import { SAVED_TITLE, savedSummaryLabel } from "@/components/app-shell/saved-format";
 import { useTheme } from "@/hooks/use-theme";
 
 interface SavedScreenProps {

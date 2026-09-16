@@ -7,7 +7,12 @@ import {
   type CoreRuleRowHighlight,
 } from "@/features/rules/presentation/core-rule-highlight";
 import { coreRuleRowIndex } from "@/features/rules/presentation/core-rule-row-index";
+import {
+  coreRuleHitAnnouncement,
+  coreRuleSearchAnnouncement,
+} from "@/features/rules/presentation/core-rules-format";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
+import { useAnnouncement } from "@/hooks/use-announcement";
 
 /**
  * The rules screen's own state: what was typed, which hit the reader stands on, and whether the
@@ -24,6 +29,7 @@ import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-nu
  * the press handler can see.
  */
 function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: number) => void) {
+  const announce = useAnnouncement();
   const [query, setQuery] = useState("");
   const [hitIndex, setHitIndex] = useState(0);
   const [matchesOnly, setMatchesOnly] = useState(false);
@@ -75,8 +81,12 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: n
 
   /**
    * One act: resolve the hit the reader is about to stand on, move the document to the rule that
-   * holds it, then move the counter. Matches-only shows every match, so that rule is always in the
-   * shown list.
+   * holds it, say where that leaves them, then move the counter. Matches-only shows every match, so
+   * that rule is always in the shown list.
+   *
+   * The counter is the one thing on this screen that changes without a word of its own, so the step
+   * speaks: a reader who cannot see `3 / 17` move is told, from the press that moved it. Each press
+   * supersedes the last, so the newest position interrupts a position nobody stands on any more.
    */
   const stepToHit = useCallback(
     (step: number) => {
@@ -85,22 +95,35 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: n
 
       if (steppedHit.type === "hit") scrollToCoreRule(steppedHit.number);
 
+      announce(coreRuleHitAnnouncement(search, steppedHit), "interrupting");
       setHitIndex(steppedIndex);
     },
-    [hitIndex, scrollToCoreRule, search],
+    [announce, hitIndex, scrollToCoreRule, search],
   );
 
   /**
    * Typing puts the reader back on the first hit, so the counter never points at a hit the new
    * query does not have. Clearing the query also drops the filter: a document narrowed by a term
    * the reader can no longer see is a trap.
+   *
+   * It scans here rather than waiting for the render's memo to do it, because what is worth saying
+   * depends on what the new query found and the announcement belongs in the act that changed it.
+   * `coreRuleSearchAnnouncement` keeps that to the letters that change what is on screen.
    */
-  const changeQuery = useCallback((typed: string) => {
-    setQuery(typed);
-    setHitIndex(0);
+  const changeQuery = useCallback(
+    (typed: string) => {
+      const typedSearch = searchCoreRules(coreRules, typed);
+      const spoken = coreRuleSearchAnnouncement(search, typedSearch);
 
-    if (typed.trim().length === 0) setMatchesOnly(false);
-  }, []);
+      if (spoken !== null) announce(spoken);
+
+      setQuery(typed);
+      setHitIndex(0);
+
+      if (typed.trim().length === 0) setMatchesOnly(false);
+    },
+    [announce, coreRules, search],
+  );
   const stepToNextHit = useCallback(() => stepToHit(1), [stepToHit]);
   const stepToPreviousHit = useCallback(() => stepToHit(-1), [stepToHit]);
   const toggleMatchesOnly = useCallback(() => setMatchesOnly((current) => !current), []);

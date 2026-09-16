@@ -44,13 +44,14 @@ function numberedCoreRuleCount(coreRules: readonly CoreRule[]): number {
 function coreRulesCountLabel(coreRules: readonly CoreRule[], search: CoreRuleSearch): string {
   return match(search)
     .with({ type: "noQuery" }, () => documentCountLabel(coreRules))
-    .with({ type: "searched" }, (searched) => {
-      const hits = searched.hitCount;
-      const rules = searched.matches.length;
-
-      return `${hits} ${hits === 1 ? "hit" : "hits"} in ${rules} ${rules === 1 ? "rule" : "rules"}`;
-    })
+    .with({ type: "searched" }, (searched) =>
+      hitCountLabel(searched.hitCount, searched.matches.length),
+    )
     .exhaustive();
+}
+
+function hitCountLabel(hits: number, rules: number): string {
+  return `${hits} ${hits === 1 ? "hit" : "hits"} in ${rules} ${rules === 1 ? "rule" : "rules"}`;
 }
 
 function documentCountLabel(coreRules: readonly CoreRule[]): string {
@@ -74,14 +75,73 @@ function coreRuleHitPositionLabel(search: CoreRuleSearch, activeHit: ActiveCoreR
     .exhaustive();
 }
 
+/**
+ * What the screen says where the document was when a query matches nothing, and what a reader who
+ * cannot see it is told. One sentence, so the two can never drift apart.
+ */
+const CORE_RULES_NO_MATCHES_MESSAGE = "Nothing in the rules text matches that. Try a shorter term.";
+
+const CORE_RULES_NO_HIT_MESSAGE = "Nothing matches, so there is no hit to step to.";
+const CORE_RULES_SEARCH_CLEARED_MESSAGE = "Search cleared. The whole document is shown.";
+
+/** What a search leaves the reader looking at: the document, the hits in it, or a note. */
+type CoreRuleSearchShape = "found" | "foundNothing" | "noQuery";
+
+function coreRuleSearchShape(search: CoreRuleSearch): CoreRuleSearchShape {
+  return match(search)
+    .with({ type: "noQuery" }, (): CoreRuleSearchShape => "noQuery")
+    .with({ type: "searched" }, ({ hitCount }): CoreRuleSearchShape =>
+      hitCount === 0 ? "foundNothing" : "found",
+    )
+    .exhaustive();
+}
+
+/**
+ * What a step tells a reader who cannot watch the counter move: which hit of how many, and the
+ * number of the entry holding it, which is the only address this document has.
+ */
+function coreRuleHitAnnouncement(search: CoreRuleSearch, activeHit: ActiveCoreRuleHit): string {
+  return match({ search, activeHit })
+    .with({ search: { type: "noQuery" } }, () => CORE_RULES_NO_HIT_MESSAGE)
+    .with({ activeHit: { type: "noHit" } }, () => CORE_RULES_NO_HIT_MESSAGE)
+    .with(
+      { search: { type: "searched" }, activeHit: { type: "hit" } },
+      ({ search: searched, activeHit: hit }) =>
+        `Hit ${hit.hitIndex + 1} of ${searched.hitCount}, in ${hit.number}.`,
+    )
+    .exhaustive();
+}
+
+/**
+ * What a new query is worth saying out loud, and `null` when it is worth nothing. A count that
+ * changes with every letter is not worth a reader's breath — it is on screen, and they are typing.
+ * What they cannot tell is that the document has been replaced by a note, or has come back, or is
+ * whole again, so the shape of the result is what gets spoken and the letters between are silent.
+ */
+function coreRuleSearchAnnouncement(before: CoreRuleSearch, after: CoreRuleSearch): string | null {
+  if (coreRuleSearchShape(after) === coreRuleSearchShape(before)) return null;
+
+  return match(after)
+    .with({ type: "noQuery" }, () => CORE_RULES_SEARCH_CLEARED_MESSAGE)
+    .with({ type: "searched" }, ({ hitCount, matches }) =>
+      hitCount === 0
+        ? CORE_RULES_NO_MATCHES_MESSAGE
+        : `${hitCountLabel(hitCount, matches.length)}.`,
+    )
+    .exhaustive();
+}
+
 function coreRulesEditionLabel(edition: CoreRulesEdition): string {
   return `Published ${edition.publishedOn}`;
 }
 
 export {
+  CORE_RULES_NO_MATCHES_MESSAGE,
   coreRuleChapters,
+  coreRuleHitAnnouncement,
   coreRuleHitPositionLabel,
   coreRuleRowKindOf,
+  coreRuleSearchAnnouncement,
   coreRulesContents,
   coreRulesCountLabel,
   coreRulesEditionLabel,

@@ -11,7 +11,10 @@ import type { CoreRule } from "@/features/rules/core-rule";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import type { CoreRuleRowHighlight } from "@/features/rules/presentation/core-rule-highlight";
 import type { CoreRulesContentsPlacement } from "@/features/rules/presentation/core-rules-contents-placement";
-import { coreRuleRowKindOf } from "@/features/rules/presentation/core-rules-format";
+import {
+  CORE_RULES_NO_MATCHES_MESSAGE,
+  coreRuleRowKindOf,
+} from "@/features/rules/presentation/core-rules-format";
 import { useCoreRulesDocumentScroll } from "@/features/rules/presentation/hooks/use-core-rules-document-scroll";
 import { useCoreRulesSearch } from "@/features/rules/presentation/hooks/use-core-rules-search";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
@@ -210,7 +213,7 @@ function CoreRuleDocument({
 function CoreRulesNoMatches() {
   return (
     <View style={styles.noMatches}>
-      <EmptyState message="Nothing in the rules text matches that. Try a shorter term." />
+      <EmptyState message={CORE_RULES_NO_MATCHES_MESSAGE} />
     </View>
   );
 }

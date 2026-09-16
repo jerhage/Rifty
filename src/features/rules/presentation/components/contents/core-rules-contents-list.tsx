@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing, TouchTarget } from "@/constants/theme";
@@ -9,6 +9,16 @@ import {
   coreRulesContents,
 } from "@/features/rules/presentation/core-rules-format";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
+
+/**
+ * The column the three-character numbers stand in, scaled with the text it holds: the design's 34
+ * points at the default size, and the same room at every size above it.
+ */
+const NUMBER_WIDTH = 34;
+
+function coreRulesContentsNumberWidth(fontScale: number): number {
+  return Math.ceil(NUMBER_WIDTH * fontScale);
+}
 
 interface CoreRulesContentsListProps {
   readonly coreRules: readonly CoreRule[];
@@ -22,6 +32,7 @@ interface CoreRulesContentsListProps {
  */
 function CoreRulesContentsList({ coreRules, onSelectEntry }: CoreRulesContentsListProps) {
   const contents = useMemo(() => coreRulesContents(coreRules), [coreRules]);
+  const { fontScale } = useWindowDimensions();
 
   return (
     <View style={styles.list}>
@@ -29,6 +40,7 @@ function CoreRulesContentsList({ coreRules, onSelectEntry }: CoreRulesContentsLi
         <CoreRulesContentsEntry
           coreRule={coreRule}
           key={coreRule.number}
+          numberWidth={coreRulesContentsNumberWidth(fontScale)}
           onSelect={() => onSelectEntry(coreRule.number)}
         />
       ))}
@@ -39,9 +51,11 @@ function CoreRulesContentsList({ coreRules, onSelectEntry }: CoreRulesContentsLi
 /** A chapter names what follows it, so it is set a step above the headings it gathers. */
 function CoreRulesContentsEntry({
   coreRule,
+  numberWidth,
   onSelect,
 }: {
   readonly coreRule: CoreRule;
+  readonly numberWidth: number;
   readonly onSelect: () => void;
 }) {
   const isChapter = coreRuleRowKindOf(coreRule) === "chapter";
@@ -57,11 +71,10 @@ function CoreRulesContentsEntry({
         pressed && styles.pressed,
       ]}
     >
-      <ThemedText style={styles.number} themeColor="accent" type="code">
+      <ThemedText style={[styles.number, { width: numberWidth }]} themeColor="accent" type="code">
         {coreRule.number}
       </ThemedText>
       <ThemedText
-        numberOfLines={2}
         style={styles.name}
         themeColor={isChapter ? "text" : "textSecondary"}
         type={isChapter ? "heading" : "body"}
@@ -72,10 +85,8 @@ function CoreRulesContentsEntry({
   );
 }
 
-export { CoreRulesContentsList };
+export { CoreRulesContentsList, coreRulesContentsNumberWidth };
 export type { CoreRulesContentsListProps };
-
-const NUMBER_WIDTH = 34;
 
 const styles = StyleSheet.create({
   list: {
@@ -95,7 +106,6 @@ const styles = StyleSheet.create({
   number: {
     flexGrow: 0,
     flexShrink: 0,
-    width: NUMBER_WIDTH,
   },
   name: {
     flex: 1,

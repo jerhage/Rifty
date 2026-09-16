@@ -1,14 +1,15 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, within } from "@testing-library/react-native";
 import type { PropsWithChildren } from "react";
 import { Dimensions, StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { Colors, MaxReadingWidth, Spacing } from "@/constants/theme";
+import { Colors, MaxReadingWidth, Spacing, TouchTarget } from "@/constants/theme";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import { coreRuleHighlightWash } from "@/features/rules/presentation/core-rule-highlight";
 import { CORE_RULE_SCROLL_OFFSET } from "@/features/rules/presentation/hooks/use-core-rules-document-scroll";
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
+import { recordAnnouncements } from "../announcements";
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
 import { coreRuleDocument, seededCoreRules } from "./fixtures";
 
@@ -398,12 +399,10 @@ describe("CoreRulesScreen selection", () => {
  * The contents are read off the document the screen already holds, so the same four depth-1
  * headings of `SCROLL_DOCUMENT` stand in the list whichever frame draws it.
  */
-function frameOf(width: number, height: number) {
+function frameOf(width: number, height: number, fontScale = 1) {
   jest
     .spyOn(Dimensions, "get")
-    .mockReturnValue({ fontScale: 1, height, scale: 2, width } as ReturnType<
-      typeof Dimensions.get
-    >);
+    .mockReturnValue({ fontScale, height, scale: 2, width } as ReturnType<typeof Dimensions.get>);
 
   return function FrameWrapper({ children }: PropsWithChildren) {
     return (
@@ -419,9 +418,9 @@ function frameOf(width: number, height: number) {
   };
 }
 
-async function renderDocumentAt(width: number, height: number) {
+async function renderDocumentAt(width: number, height: number, fontScale = 1) {
   await render(<CoreRulesScreen coreRules={SCROLL_DOCUMENT} edition={EDITION} />, {
-    wrapper: frameOf(width, height),
+    wrapper: frameOf(width, height, fontScale),
   });
 
   return screen.getByLabelText("Search the core rules");
@@ -568,5 +567,169 @@ describe("CoreRulesScreen moving the document", () => {
     expect(mockScrollToIndex).not.toHaveBeenCalledWith(
       expect.objectContaining({ animated: false }),
     );
+  });
+});
+
+describe("CoreRulesScreen announcements", () => {
+  it("should say which hit of how many a step lands on, and which entry holds it", async () => {
+    const announcements = recordAnnouncements();
+    const field = await renderSearchableDocument();
+
+    await fireEvent.changeText(field, "recycle");
+    await fireEvent.press(screen.getByLabelText("Next hit"));
+
+    expect(announcements.at(-1)).toEqual({ message: "Hit 2 of 4, in 201.1.", queued: false });
+
+    await fireEvent.press(screen.getByLabelText("Previous hit"));
+
+    expect(announcements.at(-1)).toEqual({ message: "Hit 1 of 4, in 101.1.", queued: false });
+  });
+
+  it("should say the hits wrapped rather than leave the counter to say it", async () => {
+    const announcements = recordAnnouncements();
+    const field = await renderSearchableDocument();
+
+    await fireEvent.changeText(field, "recycle");
+    await fireEvent.press(screen.getByLabelText("Previous hit"));
+
+    expect(announcements.at(-1)?.message).toBe("Hit 4 of 4, in 201.1.");
+  });
+
+  it("should say what a query found, and stay silent while only the count changes", async () => {
+    const announcements = recordAnnouncements();
+    const field = await renderSearchableDocument();
+
+    await fireEvent.changeText(field, "recycle");
+
+    expect(announcements).toEqual([{ message: "4 hits in 2 rules.", queued: true }]);
+
+    await fireEvent.changeText(field, "runes");
+
+    expect(announcements).toHaveLength(1);
+  });
+
+  it("should say the document has been replaced by a note, once, and say when it is back", async () => {
+    const announcements = recordAnnouncements();
+    const field = await renderSearchableDocument();
+
+    await fireEvent.changeText(field, "planeswalker");
+
+    expect(announcements).toEqual([
+      { message: "Nothing in the rules text matches that. Try a shorter term.", queued: true },
+    ]);
+
+    await fireEvent.changeText(field, "planeswalkers");
+
+    expect(announcements).toHaveLength(1);
+
+    await fireEvent.changeText(field, "recycle");
+
+    expect(announcements.at(-1)?.message).toBe("4 hits in 2 rules.");
+  });
+
+  it("should say there is no hit to step to rather than count one the reader cannot reach", async () => {
+    const announcements = recordAnnouncements();
+    const field = await renderSearchableDocument();
+
+    await fireEvent.changeText(field, "planeswalker");
+    await fireEvent.press(screen.getByLabelText("Next hit"));
+
+    expect(announcements.at(-1)).toEqual({
+      message: "Nothing matches, so there is no hit to step to.",
+      queued: false,
+    });
+  });
+
+  it("should say the whole document is back when the search is cleared", async () => {
+    const announcements = recordAnnouncements();
+    const field = await renderSearchableDocument();
+
+    await fireEvent.changeText(field, "recycle");
+    await fireEvent.press(screen.getByLabelText("Clear search"));
+
+    expect(announcements.at(-1)).toEqual({
+      message: "Search cleared. The whole document is shown.",
+      queued: true,
+    });
+  });
+});
+
+describe("CoreRulesScreen at a large text size", () => {
+  it("should widen the contents number column with the size the reader reads at", async () => {
+    await renderDocumentAt(1376, 1032, 2);
+
+    const entry = within(screen.getByRole("button", { name: "501 Turn Structure" }));
+
+    expect(StyleSheet.flatten(entry.getByText("501").props.style).width).toBe(68);
+  });
+
+  it("should let a contents heading wrap rather than cut it off", async () => {
+    await renderDocumentAt(1376, 1032);
+
+    const entry = within(screen.getByRole("button", { name: "501 Turn Structure" }));
+
+    expect(entry.getByText("Turn Structure").props.numberOfLines).toBeUndefined();
+  });
+
+  it("should let the hit controls wrap rather than run them off a phone's header", async () => {
+    const field = await renderDocumentAt(402, 874);
+
+    await fireEvent.changeText(field, "recycle");
+
+    expect(
+      stylesAbove(screen.getByLabelText("Next hit")).some((style) => style?.flexWrap === "wrap"),
+    ).toBe(true);
+  });
+});
+
+/** Every control the rules screen added, measured against the platform's smallest target. */
+describe("CoreRulesScreen touch targets", () => {
+  it("should give the step controls a square of the minimum on both sides", async () => {
+    const field = await renderDocumentAt(402, 874);
+
+    await fireEvent.changeText(field, "recycle");
+
+    for (const label of ["Previous hit", "Next hit"]) {
+      expect(StyleSheet.flatten(screen.getByLabelText(label).props.style)).toMatchObject({
+        minHeight: TouchTarget.minimum,
+        minWidth: TouchTarget.minimum,
+      });
+    }
+  });
+
+  it("should give the matches-only toggle and the contents control the minimum height", async () => {
+    const field = await renderDocumentAt(402, 874);
+
+    await fireEvent.changeText(field, "recycle");
+
+    expect(
+      StyleSheet.flatten(screen.getByRole("checkbox", { name: "Matches only" }).props.style)
+        .minHeight,
+    ).toBe(TouchTarget.minimum);
+    expect(
+      StyleSheet.flatten(screen.getByRole("button", { name: "Contents" }).props.style).minHeight,
+    ).toBe(TouchTarget.minimum);
+  });
+
+  it("should take the search field's clear control out to the minimum with slop", async () => {
+    const field = await renderDocumentAt(402, 874);
+
+    await fireEvent.changeText(field, "recycle");
+
+    const clear = screen.getByLabelText("Clear search");
+    const slop = clear.props.hitSlop as { readonly left: number; readonly right: number };
+
+    expect(
+      StyleSheet.flatten(clear.props.style).minWidth + slop.left + slop.right,
+    ).toBeGreaterThanOrEqual(TouchTarget.minimum);
+  });
+
+  it("should give a contents entry the minimum height to stand a finger on", async () => {
+    await renderDocumentAt(1376, 1032);
+
+    expect(
+      StyleSheet.flatten(screen.getByRole("button", { name: "501 Turn Structure" }).props.style)
+        .minHeight,
+    ).toBe(TouchTarget.minimum);
   });
 });

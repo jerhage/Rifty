@@ -1,17 +1,30 @@
 import { render, screen } from "@testing-library/react-native";
-import { StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
 import { Fonts } from "@/constants/theme";
 import type { CoreRule, CoreRuleDetail } from "@/features/rules/core-rule";
 import { CoreRuleRow } from "@/features/rules/presentation/components/core-rule-row";
 import { coreRuleRowKindOf } from "@/features/rules/presentation/core-rules-format";
-import { CORE_RULE_NUMBER_GUTTER } from "@/features/rules/presentation/components/core-rule-numbered-row";
+import { coreRuleNumberGutter } from "@/features/rules/presentation/components/core-rule-numbered-row";
 import { coreRuleAncestorNumbersOf } from "@/features/rules/value-objects/core-rule-number";
 
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
 import { seededCoreRules } from "./fixtures";
 
 const CHAPTER_NUMBERS = ["000", "100", "500", "600", "700"];
+
+/** The preset's window reports a font scale of 2, so the size a reader reads at is always said. */
+function atFontScale(fontScale: number) {
+  jest
+    .spyOn(Dimensions, "get")
+    .mockReturnValue({ fontScale, height: 844, scale: 2, width: 390 } as ReturnType<
+      typeof Dimensions.get
+    >);
+}
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 function entry(
   number: string,
@@ -60,14 +73,37 @@ describe("CoreRuleRow", () => {
     expect(heading.fontWeight).toBe(600);
   });
 
-  it("should set a rule's number in a fixed-width mono gutter beside its body", async () => {
+  it("should set a rule's number in a mono gutter beside its body", async () => {
+    atFontScale(1);
+
     await renderRows([entry("103.2.a", "rule", "A deck holds forty cards.")]);
 
     expect(screen.getByText("A deck holds forty cards.")).toBeTruthy();
     expect(StyleSheet.flatten(screen.getByText("103.2.a").props.style)).toMatchObject({
       fontFamily: Fonts.mono,
-      width: CORE_RULE_NUMBER_GUTTER,
+      width: coreRuleNumberGutter(1),
     });
+  });
+
+  /**
+   * Eleven characters of 12pt monospace is 79.2 points, so the gutter is 80 and never the 72 that
+   * wrapped `648.8.f.1.b` at the size everybody reads at.
+   */
+  it("should hold the document's widest number at the default text size", async () => {
+    atFontScale(1);
+
+    await renderRows([entry("648.8.f.1.b", "rule", "A deck holds forty cards.")]);
+
+    expect(coreRuleNumberGutter(1)).toBe(80);
+    expect(StyleSheet.flatten(screen.getByText("648.8.f.1.b").props.style).width).toBe(80);
+  });
+
+  it("should widen the gutter with the size the reader has asked for", async () => {
+    atFontScale(2);
+
+    await renderRows([entry("648.8.f.1.b", "rule", "A deck holds forty cards.")]);
+
+    expect(StyleSheet.flatten(screen.getByText("648.8.f.1.b").props.style).width).toBe(159);
   });
 
   it("should render a rule's bullet under its body", async () => {

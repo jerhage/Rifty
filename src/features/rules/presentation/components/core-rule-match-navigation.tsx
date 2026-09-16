@@ -110,6 +110,8 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     flexDirection: "row",
+    /** Four controls of scaling text in a phone's width: past about twice the default they wrap. */
+    flexWrap: "wrap",
     gap: Spacing.two,
   },
   step: {

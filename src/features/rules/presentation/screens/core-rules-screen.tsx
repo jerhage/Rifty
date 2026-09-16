@@ -26,8 +26,11 @@ import { CoreRuleRow } from "../components/core-rule-row";
 import { CoreRulesHeader } from "../components/core-rules-header";
 
 interface CoreRulesScreenProps {
+  /** Every rule the reader has marked, whether or not a query has filtered it out of view. */
+  readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
   readonly coreRules: readonly CoreRule[];
   readonly edition: CoreRulesEdition;
+  readonly onToggleBookmark: (number: CoreRuleNumber) => void;
 }
 
 /**
@@ -42,7 +45,12 @@ interface CoreRulesScreenProps {
  * A phone has nowhere to put a second column, so the same list arrives as a sheet over the
  * document, and the document keeps the capped, centered column a single column of reading gets.
  */
-function CoreRulesScreen({ coreRules, edition }: CoreRulesScreenProps) {
+function CoreRulesScreen({
+  bookmarkedNumbers,
+  coreRules,
+  edition,
+  onToggleBookmark,
+}: CoreRulesScreenProps) {
   const { layoutClass } = useLayoutSize();
   const { documentRef, scrollToRow } = useCoreRulesDocumentScroll();
   const {
@@ -88,6 +96,7 @@ function CoreRulesScreen({ coreRules, edition }: CoreRulesScreenProps) {
     <ThemedView style={styles.screen}>
       <CoreRulesHeader
         activeHit={activeHit}
+        bookmarkedCount={bookmarkedNumbers.size}
         contentsPlacement={contentsPlacement}
         coreRules={coreRules}
         edition={edition}
@@ -108,11 +117,13 @@ function CoreRulesScreen({ coreRules, edition }: CoreRulesScreenProps) {
             <CoreRulesNoMatches />
           ) : (
             <CoreRuleDocument
+              bookmarkedNumbers={bookmarkedNumbers}
               contentsPlacement={contentsPlacement}
               coreRules={shownCoreRules}
               documentRef={documentRef}
               highlights={highlights}
               onSelectCoreRule={selectCoreRule}
+              onToggleBookmark={onToggleBookmark}
               selectedNumber={selectedNumber}
             />
           )}
@@ -160,22 +171,29 @@ function CoreRulesPage({
 }
 
 function CoreRuleDocument({
+  bookmarkedNumbers,
   contentsPlacement,
   coreRules,
   documentRef,
   highlights,
   onSelectCoreRule,
+  onToggleBookmark,
   selectedNumber,
 }: {
+  readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
   readonly contentsPlacement: CoreRulesContentsPlacement;
   readonly coreRules: readonly CoreRule[];
   readonly documentRef: RefObject<FlashListRef<CoreRule> | null>;
   readonly highlights: ReadonlyMap<CoreRuleNumber, CoreRuleRowHighlight>;
   readonly onSelectCoreRule: (number: CoreRuleNumber) => void;
+  readonly onToggleBookmark: (number: CoreRuleNumber) => void;
   readonly selectedNumber: CoreRuleNumber | null;
 }) {
   const insets = useSafeAreaInsets();
-  const rowState = useMemo(() => ({ highlights, selectedNumber }), [highlights, selectedNumber]);
+  const rowState = useMemo(
+    () => ({ bookmarkedNumbers, highlights, selectedNumber }),
+    [bookmarkedNumbers, highlights, selectedNumber],
+  );
 
   /**
    * Beside the contents the text takes the whole of what is left, and the page around it has
@@ -199,9 +217,11 @@ function CoreRuleDocument({
       ref={documentRef}
       renderItem={({ item }) => (
         <CoreRuleRow
+          bookmarked={bookmarkedNumbers.has(item.number)}
           coreRule={item}
           highlight={highlights.get(item.number) ?? null}
           onSelect={onSelectCoreRule}
+          onToggleBookmark={onToggleBookmark}
           selected={item.number === selectedNumber}
         />
       )}

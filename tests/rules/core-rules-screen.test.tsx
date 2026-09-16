@@ -14,6 +14,7 @@ import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-s
 import { coreRuleDocument, seededCoreRules } from "./fixtures";
 
 const EDITION: CoreRulesEdition = { title: "Riftbound Core Rules", publishedOn: "2025-06-02" };
+const NO_BOOKMARKS: ReadonlySet<string> = new Set();
 
 /**
  * The one movement the screen makes, watched where it asks for it. The list hands its caller an
@@ -72,9 +73,17 @@ describe("CoreRulesScreen", () => {
   it("should head the document with its edition, its date and what it holds", async () => {
     const coreRules = await seededCoreRules(store);
 
-    await render(<CoreRulesScreen coreRules={coreRules} edition={EDITION} />, {
-      wrapper: SafeArea,
-    });
+    await render(
+      <CoreRulesScreen
+        bookmarkedNumbers={NO_BOOKMARKS}
+        coreRules={coreRules}
+        edition={EDITION}
+        onToggleBookmark={() => undefined}
+      />,
+      {
+        wrapper: SafeArea,
+      },
+    );
 
     expect(screen.getByRole("header", { name: "Riftbound Core Rules" })).toBeTruthy();
     expect(screen.getByText("Published 2025-06-02")).toBeTruthy();
@@ -84,9 +93,17 @@ describe("CoreRulesScreen", () => {
   it("should open the document at its first entry", async () => {
     const coreRules = await seededCoreRules(store);
 
-    await render(<CoreRulesScreen coreRules={coreRules} edition={EDITION} />, {
-      wrapper: SafeArea,
-    });
+    await render(
+      <CoreRulesScreen
+        bookmarkedNumbers={NO_BOOKMARKS}
+        coreRules={coreRules}
+        edition={EDITION}
+        onToggleBookmark={() => undefined}
+      />,
+      {
+        wrapper: SafeArea,
+      },
+    );
 
     expect(screen.getByText("Golden and Silver Rules")).toBeTruthy();
   });
@@ -105,9 +122,17 @@ const SEARCH_DOCUMENT = coreRuleDocument([
 ]);
 
 async function renderSearchableDocument() {
-  await render(<CoreRulesScreen coreRules={SEARCH_DOCUMENT} edition={EDITION} />, {
-    wrapper: SafeArea,
-  });
+  await render(
+    <CoreRulesScreen
+      bookmarkedNumbers={NO_BOOKMARKS}
+      coreRules={SEARCH_DOCUMENT}
+      edition={EDITION}
+      onToggleBookmark={() => undefined}
+    />,
+    {
+      wrapper: SafeArea,
+    },
+  );
 
   return screen.getByLabelText("Search the core rules");
 }
@@ -269,9 +294,17 @@ const SCROLL_DOCUMENT = coreRuleDocument([
 ]);
 
 async function renderScrollableDocument() {
-  await render(<CoreRulesScreen coreRules={SCROLL_DOCUMENT} edition={EDITION} />, {
-    wrapper: SafeArea,
-  });
+  await render(
+    <CoreRulesScreen
+      bookmarkedNumbers={NO_BOOKMARKS}
+      coreRules={SCROLL_DOCUMENT}
+      edition={EDITION}
+      onToggleBookmark={() => undefined}
+    />,
+    {
+      wrapper: SafeArea,
+    },
+  );
 
   return screen.getByLabelText("Search the core rules");
 }
@@ -419,9 +452,17 @@ function frameOf(width: number, height: number, fontScale = 1) {
 }
 
 async function renderDocumentAt(width: number, height: number, fontScale = 1) {
-  await render(<CoreRulesScreen coreRules={SCROLL_DOCUMENT} edition={EDITION} />, {
-    wrapper: frameOf(width, height, fontScale),
-  });
+  await render(
+    <CoreRulesScreen
+      bookmarkedNumbers={NO_BOOKMARKS}
+      coreRules={SCROLL_DOCUMENT}
+      edition={EDITION}
+      onToggleBookmark={() => undefined}
+    />,
+    {
+      wrapper: frameOf(width, height, fontScale),
+    },
+  );
 
   return screen.getByLabelText("Search the core rules");
 }

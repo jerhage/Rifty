@@ -11,6 +11,7 @@ import type { ActiveCoreRuleHit, CoreRuleSearch } from "@/features/rules/core-ru
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import type { CoreRulesContentsPlacement } from "@/features/rules/presentation/core-rules-contents-placement";
 import {
+  coreRuleBookmarkCountLabel,
   coreRulesCountLabel,
   coreRulesEditionLabel,
 } from "@/features/rules/presentation/core-rules-format";
@@ -21,6 +22,7 @@ import { CoreRuleMatchNavigation } from "./core-rule-match-navigation";
 
 interface CoreRulesHeaderProps {
   readonly activeHit: ActiveCoreRuleHit;
+  readonly bookmarkedCount: number;
   readonly contentsPlacement: CoreRulesContentsPlacement;
   readonly coreRules: readonly CoreRule[];
   readonly edition: CoreRulesEdition;
@@ -36,10 +38,11 @@ interface CoreRulesHeaderProps {
 /**
  * Names the edition on screen and stays put, so the document scrolls beneath rather than past it.
  * The count line under it answers whichever question the reader is asking: what the document holds,
- * or what their query found.
+ * or what their query found, and beside it how much of it they have kept.
  */
 function CoreRulesHeader({
   activeHit,
+  bookmarkedCount,
   contentsPlacement,
   coreRules,
   edition,
@@ -106,9 +109,14 @@ function CoreRulesHeader({
             search={search}
           />
         ) : null}
-        <ThemedText style={styles.counts} themeColor="textTertiary" type="mono">
-          {coreRulesCountLabel(coreRules, search)}
-        </ThemedText>
+        <View style={styles.counts}>
+          <ThemedText themeColor="textTertiary" type="mono">
+            {coreRulesCountLabel(coreRules, search)}
+          </ThemedText>
+          <ThemedText themeColor="textTertiary" type="mono">
+            {coreRuleBookmarkCountLabel(bookmarkedCount)}
+          </ThemedText>
+        </View>
       </View>
     </ThemedView>
   );
@@ -148,6 +156,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.two + 1,
   },
   counts: {
+    flexDirection: "row",
+    /** Two counts of scaling text in a phone's width: past about twice the default they wrap. */
+    flexWrap: "wrap",
+    gap: Spacing.two,
     marginTop: Spacing.two - 1,
   },
 });

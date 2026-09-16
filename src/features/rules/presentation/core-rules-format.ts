@@ -6,6 +6,7 @@ import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import {
   coreRuleDepthOf,
   isCoreRuleChapterNumber,
+  type CoreRuleNumber,
 } from "@/features/rules/value-objects/core-rule-number";
 
 /** The three ways the document renders: a chapter, a heading under it, and a numbered rule. */
@@ -61,6 +62,19 @@ function documentCountLabel(coreRules: readonly CoreRule[]): string {
   return `${chapters} ${chapters === 1 ? "chapter" : "chapters"} · ${numbered} numbered ${
     numbered === 1 ? "rule" : "rules"
   }`;
+}
+
+/** The reader's own mark on one entry, named so a column of controls does not read alike. */
+function coreRuleBookmarkLabel(number: CoreRuleNumber): string {
+  return `Bookmark ${number}`;
+}
+
+/**
+ * How much of the document the reader has kept. It counts every bookmarked rule, including the ones
+ * a query has filtered out of view: a mark outlives what is on screen.
+ */
+function coreRuleBookmarkCountLabel(count: number): string {
+  return `${count} bookmarked ${count === 1 ? "rule" : "rules"}`;
 }
 
 /** Where the reader stands among the hits, counted from one, and `0 / 0` when nothing matched. */
@@ -137,6 +151,8 @@ function coreRulesEditionLabel(edition: CoreRulesEdition): string {
 
 export {
   CORE_RULES_NO_MATCHES_MESSAGE,
+  coreRuleBookmarkCountLabel,
+  coreRuleBookmarkLabel,
   coreRuleChapters,
   coreRuleHitAnnouncement,
   coreRuleHitPositionLabel,

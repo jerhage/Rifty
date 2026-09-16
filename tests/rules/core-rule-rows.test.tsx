@@ -47,10 +47,12 @@ async function renderRows(coreRules: readonly CoreRule[]) {
     <>
       {coreRules.map((coreRule) => (
         <CoreRuleRow
+          bookmarked={false}
           coreRule={coreRule}
           highlight={null}
           key={coreRule.number}
           onSelect={() => undefined}
+          onToggleBookmark={() => undefined}
           selected={false}
         />
       ))}

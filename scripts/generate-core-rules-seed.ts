@@ -1,8 +1,7 @@
-import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { parseCoreRules } from "./core-rules-parse";
-import { buildCoreRulesSeed } from "./core-rules-seed";
+import { buildCoreRulesSeed, coreRulesSeedVersion } from "./core-rules-seed";
 
 const inputPath = process.env.CORE_RULES_TEXT_PATH ?? "data/rules/core-rules.txt";
 const outputPath =
@@ -10,7 +9,7 @@ const outputPath =
   "src/infrastructure/database/generated/core-rules-seed.ts";
 
 const seed = buildCoreRulesSeed(parseCoreRules(await readFile(inputPath, "utf8")));
-const version = createHash("sha256").update(JSON.stringify(seed)).digest("hex");
+const version = coreRulesSeedVersion(seed);
 await mkdir(dirname(outputPath), { recursive: true });
 await writeFile(
   outputPath,

@@ -1,9 +1,8 @@
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseCoreRules } from "../../scripts/core-rules-parse";
 import type { CoreRule, CoreRulesDocument } from "../../scripts/core-rules-parse";
-import { buildCoreRulesSeed } from "../../scripts/core-rules-seed";
+import { buildCoreRulesSeed, coreRulesSeedVersion } from "../../scripts/core-rules-seed";
 import type { CoreRulesSeed } from "../../scripts/core-rules-seed";
 
 const EXTRACTED_TEXT_PATH = join(__dirname, "../../data/rules/core-rules.txt");
@@ -41,10 +40,6 @@ function coreRuleOf(overrides: Partial<CoreRule> = {}): CoreRule {
 
 function documentOf(...coreRules: readonly CoreRule[]): CoreRulesDocument {
   return { title: "Riftbound Core Rules", publishedOn: "2025-06-02", coreRules };
-}
-
-function versionOf(seed: CoreRulesSeed): string {
-  return createHash("sha256").update(JSON.stringify(seed)).digest("hex");
 }
 
 function withBody(document: CoreRulesDocument, body: string): CoreRulesDocument {
@@ -139,8 +134,8 @@ describe("core rules seed", () => {
   it("should hash the same document to the same version twice", () => {
     const text = extractedText();
 
-    expect(versionOf(buildCoreRulesSeed(parseCoreRules(text)))).toBe(
-      versionOf(buildCoreRulesSeed(parseCoreRules(text))),
+    expect(coreRulesSeedVersion(buildCoreRulesSeed(parseCoreRules(text)))).toBe(
+      coreRulesSeedVersion(buildCoreRulesSeed(parseCoreRules(text))),
     );
   });
 
@@ -148,7 +143,9 @@ describe("core rules seed", () => {
     const document = parseCoreRules(extractedText());
 
     expect(
-      versionOf(buildCoreRulesSeed(withBody(document, "A body the document does not print"))),
-    ).not.toBe(versionOf(buildCoreRulesSeed(document)));
+      coreRulesSeedVersion(
+        buildCoreRulesSeed(withBody(document, "A body the document does not print")),
+      ),
+    ).not.toBe(coreRulesSeedVersion(buildCoreRulesSeed(document)));
   });
 });

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   coreRuleDetailInsertSchema,
   coreRuleInsertSchema,
@@ -75,5 +76,10 @@ function buildCoreRulesSeed(document: CoreRulesDocument): CoreRulesSeed {
   return seed;
 }
 
-export { buildCoreRulesSeed };
+/** The seed's own content is the version: a regenerated seed reseeds only when a row changed. */
+function coreRulesSeedVersion(seed: CoreRulesSeed): string {
+  return createHash("sha256").update(JSON.stringify(seed)).digest("hex");
+}
+
+export { buildCoreRulesSeed, coreRulesSeedVersion };
 export type { CoreRulesSeed };

@@ -23,6 +23,7 @@
     "db:pull": "sh scripts/pull-device-db.sh",
     "fetch:cards": "deno run --sloppy-imports --allow-read --allow-write --allow-env --allow-net ./scripts/fetch-cards.ts",
     "fetch:card-images": "deno run --sloppy-imports --allow-read --allow-write --allow-env --allow-net ./scripts/fetch-card-images.ts",
+    "generate:core-rules-seed": "deno run --sloppy-imports --allow-read --allow-write --allow-env ./scripts/generate-core-rules-seed.ts",
     "generate:catalog-seed": "deno run --sloppy-imports --allow-read --allow-write --allow-env ./scripts/generate-catalog-seed.ts"
   },
   "dependencies": {

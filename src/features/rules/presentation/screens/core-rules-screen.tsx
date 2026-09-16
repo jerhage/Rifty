@@ -1,5 +1,6 @@
+import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useCallback, useMemo, useState, type ReactNode, type RefObject } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
@@ -10,10 +11,8 @@ import type { CoreRule } from "@/features/rules/core-rule";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import type { CoreRuleRowHighlight } from "@/features/rules/presentation/core-rule-highlight";
 import type { CoreRulesContentsPlacement } from "@/features/rules/presentation/core-rules-contents-placement";
-import {
-  useCoreRulesDocumentScroll,
-  type CoreRuleScrollFailure,
-} from "@/features/rules/presentation/hooks/use-core-rules-document-scroll";
+import { coreRuleRowKindOf } from "@/features/rules/presentation/core-rules-format";
+import { useCoreRulesDocumentScroll } from "@/features/rules/presentation/hooks/use-core-rules-document-scroll";
 import { useCoreRulesSearch } from "@/features/rules/presentation/hooks/use-core-rules-search";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 import { useLayoutSize } from "@/hooks/use-layout-size";
@@ -22,24 +21,6 @@ import { CoreRulesContentsColumn } from "../components/contents/core-rules-conte
 import { CoreRulesContentsSheet } from "../components/contents/core-rules-contents-sheet";
 import { CoreRuleRow } from "../components/core-rule-row";
 import { CoreRulesHeader } from "../components/core-rules-header";
-
-/** About one screen of rules, so the first paint is one screen's work rather than ten. */
-const CORE_RULE_INITIAL_ROWS = 12;
-
-/**
- * A batch is one frame's work. Kept near a screenful: larger drops frames while filling, smaller
- * leaves a jump's destination blank for longer.
- */
-const CORE_RULE_ROWS_PER_BATCH = 12;
-
-/**
- * Screens of rows kept mounted, the destination's own included — so four above and four below. The
- * default of ten each way holds hundreds of wrapped rule bodies for a document this long, and every
- * one of them costs on a pass. `removeClippedSubviews` is deliberately left at the platform's own
- * value: Android already detaches what is off screen, and forcing it on iOS blanks rows whose
- * height is not known in advance, which is every row here.
- */
-const CORE_RULE_WINDOW_SCREENS = 9;
 
 interface CoreRulesScreenProps {
   readonly coreRules: readonly CoreRule[];
@@ -60,7 +41,7 @@ interface CoreRulesScreenProps {
  */
 function CoreRulesScreen({ coreRules, edition }: CoreRulesScreenProps) {
   const { layoutClass } = useLayoutSize();
-  const { documentRef, retryScrollToRow, scrollToRow } = useCoreRulesDocumentScroll();
+  const { documentRef, scrollToRow } = useCoreRulesDocumentScroll();
   const {
     activeHit,
     changeQuery,
@@ -128,7 +109,6 @@ function CoreRulesScreen({ coreRules, edition }: CoreRulesScreenProps) {
               coreRules={shownCoreRules}
               documentRef={documentRef}
               highlights={highlights}
-              onScrollToRowFailed={retryScrollToRow}
               onSelectCoreRule={selectCoreRule}
               selectedNumber={selectedNumber}
             />
@@ -181,15 +161,13 @@ function CoreRuleDocument({
   coreRules,
   documentRef,
   highlights,
-  onScrollToRowFailed,
   onSelectCoreRule,
   selectedNumber,
 }: {
   readonly contentsPlacement: CoreRulesContentsPlacement;
   readonly coreRules: readonly CoreRule[];
-  readonly documentRef: RefObject<FlatList<CoreRule> | null>;
+  readonly documentRef: RefObject<FlashListRef<CoreRule> | null>;
   readonly highlights: ReadonlyMap<CoreRuleNumber, CoreRuleRowHighlight>;
-  readonly onScrollToRowFailed: (failure: CoreRuleScrollFailure) => void;
   readonly onSelectCoreRule: (number: CoreRuleNumber) => void;
   readonly selectedNumber: CoreRuleNumber | null;
 }) {
@@ -209,15 +187,13 @@ function CoreRuleDocument({
     .exhaustive();
 
   return (
-    <FlatList
+    <FlashList
       contentContainerStyle={[columnStyle, { paddingBottom: insets.bottom + Spacing.five }]}
       data={coreRules}
       extraData={rowState}
+      getItemType={coreRuleRowKindOf}
       keyExtractor={(coreRule) => coreRule.number}
-      onScrollToIndexFailed={onScrollToRowFailed}
       ref={documentRef}
-      initialNumToRender={CORE_RULE_INITIAL_ROWS}
-      maxToRenderPerBatch={CORE_RULE_ROWS_PER_BATCH}
       renderItem={({ item }) => (
         <CoreRuleRow
           coreRule={item}
@@ -227,7 +203,6 @@ function CoreRuleDocument({
         />
       )}
       style={styles.document}
-      windowSize={CORE_RULE_WINDOW_SCREENS}
     />
   );
 }

@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { PropsWithChildren } from "react";
-import { Dimensions, FlatList, StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Colors, MaxReadingWidth, Spacing } from "@/constants/theme";
@@ -15,20 +15,29 @@ import { coreRuleDocument, seededCoreRules } from "./fixtures";
 const EDITION: CoreRulesEdition = { title: "Riftbound Core Rules", publishedOn: "2025-06-02" };
 
 /**
- * Both of the list's movements are taken on the real `FlatList`, so what the screen asks for is
- * what is asserted. They are stood in for because nothing lays out under Jest: every row would
- * otherwise be unmeasured, and every step would recover through `onScrollToIndexFailed`.
+ * The one movement the screen makes, watched where it asks for it. The list hands its caller an
+ * imperative handle rather than an instance, so the handle is what stands in — the real list draws
+ * every row below, and only the movement is recorded. It is stood in for because nothing lays out
+ * under Jest, so a real scroll would have every row at the same offset.
  */
-let scrollToIndex: jest.SpyInstance;
-let scrollToOffset: jest.SpyInstance;
+const mockScrollToIndex = jest.fn();
+
+jest.mock("@shopify/flash-list", () => {
+  const { createElement, forwardRef, useImperativeHandle } = require("react");
+  const flashList = jest.requireActual("@shopify/flash-list");
+
+  return {
+    ...flashList,
+    FlashList: forwardRef(function WatchedFlashList(props: object, ref: unknown) {
+      useImperativeHandle(ref, () => ({ scrollToIndex: mockScrollToIndex }), []);
+
+      return createElement(flashList.FlashList, props);
+    }),
+  };
+});
 
 beforeEach(() => {
-  scrollToIndex = jest
-    .spyOn(FlatList.prototype, "scrollToIndex")
-    .mockImplementation(() => undefined);
-  scrollToOffset = jest
-    .spyOn(FlatList.prototype, "scrollToOffset")
-    .mockImplementation(() => undefined);
+  mockScrollToIndex.mockClear();
 });
 
 afterEach(() => {
@@ -266,8 +275,9 @@ async function renderScrollableDocument() {
   return screen.getByLabelText("Search the core rules");
 }
 
+/** The list adds `viewOffset`, so the gap the screen wants above the row is asked for as a debt. */
 function scrolledToRow(row: number) {
-  return { animated: false, index: row, viewOffset: CORE_RULE_SCROLL_OFFSET };
+  return { animated: true, index: row, viewOffset: -CORE_RULE_SCROLL_OFFSET };
 }
 
 describe("CoreRulesScreen stepping", () => {
@@ -275,12 +285,12 @@ describe("CoreRulesScreen stepping", () => {
     const field = await renderScrollableDocument();
 
     await fireEvent.changeText(field, "recycle");
-    expect(scrollToIndex).not.toHaveBeenCalled();
+    expect(mockScrollToIndex).not.toHaveBeenCalled();
 
     await fireEvent.press(screen.getByLabelText("Next hit"));
 
     expect(screen.getByText("2 / 3")).toBeTruthy();
-    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(7));
+    expect(mockScrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(7));
   });
 
   it("should move to the rule of a hit printed inside a detail", async () => {
@@ -291,7 +301,7 @@ describe("CoreRulesScreen stepping", () => {
     await fireEvent.press(screen.getByLabelText("Next hit"));
 
     expect(screen.getByText("3 / 3")).toBeTruthy();
-    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(8));
+    expect(mockScrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(8));
   });
 
   it("should move to the rule holding the last hit when previous wraps from the first", async () => {
@@ -301,7 +311,7 @@ describe("CoreRulesScreen stepping", () => {
     await fireEvent.press(screen.getByLabelText("Previous hit"));
 
     expect(screen.getByText("3 / 3")).toBeTruthy();
-    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(8));
+    expect(mockScrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(8));
   });
 
   it("should count the row in the filtered list rather than in the whole document", async () => {
@@ -311,30 +321,8 @@ describe("CoreRulesScreen stepping", () => {
     await fireEvent.press(screen.getByRole("checkbox", { name: "Matches only" }));
     await fireEvent.press(screen.getByLabelText("Next hit"));
 
-    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(3));
-    expect(scrollToIndex).not.toHaveBeenCalledWith(scrolledToRow(7));
-  });
-
-  it("should jump to the estimated offset and ask again for a row the list cannot reach", async () => {
-    const field = await renderScrollableDocument();
-
-    // Row heights vary, so the list refuses a row it has never measured. Refuse the first ask the
-    // way the real list does, through the handler it was handed.
-    scrollToIndex.mockImplementationOnce(function (this: FlatList, asked: { index: number }) {
-      this.props.onScrollToIndexFailed?.({
-        averageItemLength: 40,
-        highestMeasuredFrameIndex: 2,
-        index: asked.index,
-      });
-    });
-
-    await fireEvent.changeText(field, "recycle");
-    await fireEvent.press(screen.getByLabelText("Next hit"));
-
-    expect(scrollToOffset).toHaveBeenCalledWith({ animated: false, offset: 40 * 7 });
-
-    await waitFor(() => expect(scrollToIndex).toHaveBeenCalledTimes(2));
-    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(7));
+    expect(mockScrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(3));
+    expect(mockScrollToIndex).not.toHaveBeenCalledWith(scrolledToRow(7));
   });
 });
 
@@ -482,7 +470,7 @@ describe("CoreRulesScreen contents on a phone", () => {
 
     await chooseEntry("501 Turn Structure");
 
-    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(5));
+    expect(mockScrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(5));
     expect(screen.queryByRole("button", { name: "501 Turn Structure" })).toBeNull();
   });
 
@@ -503,8 +491,8 @@ describe("CoreRulesScreen contents on a phone", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Contents" }));
     await chooseEntry("501 Turn Structure");
 
-    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(2));
-    expect(scrollToIndex).not.toHaveBeenCalledWith(scrolledToRow(5));
+    expect(mockScrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(2));
+    expect(mockScrollToIndex).not.toHaveBeenCalledWith(scrolledToRow(5));
   });
 
   it("should move nowhere for an entry the shown list does not hold", async () => {
@@ -514,7 +502,7 @@ describe("CoreRulesScreen contents on a phone", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Contents" }));
     await chooseEntry("100 Game Concepts");
 
-    expect(scrollToIndex).not.toHaveBeenCalled();
+    expect(mockScrollToIndex).not.toHaveBeenCalled();
   });
 });
 
@@ -559,24 +547,26 @@ describe("CoreRulesScreen contents on a tablet", () => {
 
     await fireEvent.press(screen.getByRole("button", { name: "501 Turn Structure" }));
 
-    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(5));
+    expect(mockScrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(5));
     expect(screen.getByRole("button", { name: "501 Turn Structure" })).toBeTruthy();
   });
 });
 
 describe("CoreRulesScreen moving the document", () => {
-  it("should jump rather than animate, whichever control asked", async () => {
+  it("should animate the move, whichever control asked", async () => {
     const field = await renderDocumentAt(402, 874);
 
     await fireEvent.changeText(field, "recycle");
     await fireEvent.press(screen.getByLabelText("Next hit"));
 
-    expect(scrollToIndex).toHaveBeenLastCalledWith(expect.objectContaining({ animated: false }));
+    expect(mockScrollToIndex).toHaveBeenLastCalledWith(expect.objectContaining({ animated: true }));
 
     await fireEvent.press(screen.getByRole("button", { name: "Contents" }));
     await chooseEntry("501 Turn Structure");
 
-    expect(scrollToIndex).toHaveBeenLastCalledWith(expect.objectContaining({ animated: false }));
-    expect(scrollToIndex).not.toHaveBeenCalledWith(expect.objectContaining({ animated: true }));
+    expect(mockScrollToIndex).toHaveBeenLastCalledWith(expect.objectContaining({ animated: true }));
+    expect(mockScrollToIndex).not.toHaveBeenCalledWith(
+      expect.objectContaining({ animated: false }),
+    );
   });
 });

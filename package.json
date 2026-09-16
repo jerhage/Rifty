@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@expo/ui": "~57.0.16",
+    "@shopify/flash-list": "^2.3.2",
     "@tanstack/react-query": "^5.102.8",
     "drizzle-orm": "^1.0.0-rc.4",
     "expo": "~57.0.20",
@@ -77,6 +78,11 @@
       "^@/(.*)$": "<rootDir>/src/$1"
     },
     "preset": "jest-expo",
-    "watchman": false
+    "watchman": false,
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|@shopify/flash-list))",
+      "/node_modules/react-native-reanimated/plugin/",
+      "/node_modules/@react-native/babel-preset/"
+    ]
   }
 }

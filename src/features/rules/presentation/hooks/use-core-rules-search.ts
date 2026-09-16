@@ -6,6 +6,7 @@ import {
   coreRuleRowHighlight,
   type CoreRuleRowHighlight,
 } from "@/features/rules/presentation/core-rule-highlight";
+import { coreRuleRowIndex } from "@/features/rules/presentation/core-rule-row-index";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
 /**
@@ -16,8 +17,13 @@ import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-nu
  *
  * The hit index is unbounded: next and previous add and subtract, and the wrap in both directions
  * belongs to `activeCoreRuleHit`.
+ *
+ * `scrollToRow` moves the document, and stepping calls it directly rather than through an effect
+ * watching the active hit. An effect would fire a render late, would fire again on any render that
+ * happened to change the hit, and would put the reason the document moved somewhere no reader of
+ * the press handler can see.
  */
-function useCoreRulesSearch(coreRules: readonly CoreRule[]) {
+function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: number) => void) {
   const [query, setQuery] = useState("");
   const [hitIndex, setHitIndex] = useState(0);
   const [matchesOnly, setMatchesOnly] = useState(false);
@@ -46,6 +52,30 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[]) {
     return coreRules.filter((coreRule) => search.shownNumbers.has(coreRule.number));
   }, [coreRules, matchesOnly, search]);
 
+  const rowIndex = useMemo(() => coreRuleRowIndex(shownCoreRules), [shownCoreRules]);
+
+  /**
+   * One act: resolve the hit the reader is about to stand on, move the document to the rule that
+   * holds it, then move the counter. Matches-only shows every match, so that rule is always in the
+   * shown list — but when the lookup disagrees nothing moves, rather than a wrong row scrolling
+   * into view.
+   */
+  const stepToHit = useCallback(
+    (step: number) => {
+      const steppedIndex = hitIndex + step;
+      const steppedHit = activeCoreRuleHit(search, steppedIndex);
+
+      if (steppedHit.type === "hit") {
+        const row = rowIndex.get(steppedHit.number);
+
+        if (row !== undefined) scrollToRow(row);
+      }
+
+      setHitIndex(steppedIndex);
+    },
+    [hitIndex, rowIndex, scrollToRow, search],
+  );
+
   /**
    * Typing puts the reader back on the first hit, so the counter never points at a hit the new
    * query does not have. Clearing the query also drops the filter: a document narrowed by a term
@@ -57,8 +87,8 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[]) {
 
     if (typed.trim().length === 0) setMatchesOnly(false);
   }, []);
-  const stepToNextHit = useCallback(() => setHitIndex((current) => current + 1), []);
-  const stepToPreviousHit = useCallback(() => setHitIndex((current) => current - 1), []);
+  const stepToNextHit = useCallback(() => stepToHit(1), [stepToHit]);
+  const stepToPreviousHit = useCallback(() => stepToHit(-1), [stepToHit]);
   const toggleMatchesOnly = useCallback(() => setMatchesOnly((current) => !current), []);
 
   return {

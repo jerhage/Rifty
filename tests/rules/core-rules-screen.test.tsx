@@ -1,17 +1,39 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import type { PropsWithChildren } from "react";
-import { StyleSheet } from "react-native";
+import { FlatList, StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/theme";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import { coreRuleHighlightWash } from "@/features/rules/presentation/core-rule-highlight";
+import { CORE_RULE_SCROLL_OFFSET } from "@/features/rules/presentation/hooks/use-core-rules-document-scroll";
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
 import { coreRuleDocument, seededCoreRules } from "./fixtures";
 
 const EDITION: CoreRulesEdition = { title: "Riftbound Core Rules", publishedOn: "2025-06-02" };
+
+/**
+ * Both of the list's movements are taken on the real `FlatList`, so what the screen asks for is
+ * what is asserted. They are stood in for because nothing lays out under Jest: every row would
+ * otherwise be unmeasured, and every step would recover through `onScrollToIndexFailed`.
+ */
+let scrollToIndex: jest.SpyInstance;
+let scrollToOffset: jest.SpyInstance;
+
+beforeEach(() => {
+  scrollToIndex = jest
+    .spyOn(FlatList.prototype, "scrollToIndex")
+    .mockImplementation(() => undefined);
+  scrollToOffset = jest
+    .spyOn(FlatList.prototype, "scrollToOffset")
+    .mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 function SafeArea({ children }: PropsWithChildren) {
   return (
@@ -216,5 +238,170 @@ describe("CoreRulesScreen search", () => {
 
     await fireEvent.changeText(field, "recycle");
     expect(screen.getByText("4 hits in 2 rules")).toBeTruthy();
+  });
+});
+
+/**
+ * Nine entries, so a hit's row in the whole document and its row once matches-only has narrowed the
+ * list disagree. Three occurrences of the query: one in a rule body near the top, one further down,
+ * and one printed inside a detail.
+ */
+const SCROLL_DOCUMENT = coreRuleDocument([
+  { number: "100", kind: "heading", body: "Game Concepts" },
+  { number: "101", kind: "heading", body: "Deck Construction" },
+  { number: "101.1", body: "Runes pay for costs." },
+  { number: "101.2", body: "Recycle a card to draw a card." },
+  { number: "500", kind: "heading", body: "Playing the Game" },
+  { number: "501", kind: "heading", body: "Turn Structure" },
+  { number: "501.1", body: "Chip damage is dealt." },
+  { number: "501.2", body: "Recycle again." },
+  { number: "501.3", body: "A card may be spent.", details: ["Recycle the top card."] },
+]);
+
+async function renderScrollableDocument() {
+  await render(<CoreRulesScreen coreRules={SCROLL_DOCUMENT} edition={EDITION} />, {
+    wrapper: SafeArea,
+  });
+
+  return screen.getByLabelText("Search the core rules");
+}
+
+function scrolledToRow(row: number) {
+  return { animated: true, index: row, viewOffset: CORE_RULE_SCROLL_OFFSET };
+}
+
+describe("CoreRulesScreen stepping", () => {
+  it("should move the document to the rule holding the hit next steps onto", async () => {
+    const field = await renderScrollableDocument();
+
+    await fireEvent.changeText(field, "recycle");
+    expect(scrollToIndex).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByLabelText("Next hit"));
+
+    expect(screen.getByText("2 / 3")).toBeTruthy();
+    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(7));
+  });
+
+  it("should move to the rule of a hit printed inside a detail", async () => {
+    const field = await renderScrollableDocument();
+
+    await fireEvent.changeText(field, "recycle");
+    await fireEvent.press(screen.getByLabelText("Next hit"));
+    await fireEvent.press(screen.getByLabelText("Next hit"));
+
+    expect(screen.getByText("3 / 3")).toBeTruthy();
+    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(8));
+  });
+
+  it("should move to the rule holding the last hit when previous wraps from the first", async () => {
+    const field = await renderScrollableDocument();
+
+    await fireEvent.changeText(field, "recycle");
+    await fireEvent.press(screen.getByLabelText("Previous hit"));
+
+    expect(screen.getByText("3 / 3")).toBeTruthy();
+    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(8));
+  });
+
+  it("should count the row in the filtered list rather than in the whole document", async () => {
+    const field = await renderScrollableDocument();
+
+    await fireEvent.changeText(field, "recycle");
+    await fireEvent.press(screen.getByRole("checkbox", { name: "Matches only" }));
+    await fireEvent.press(screen.getByLabelText("Next hit"));
+
+    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(3));
+    expect(scrollToIndex).not.toHaveBeenCalledWith(scrolledToRow(7));
+  });
+
+  it("should jump to the estimated offset and ask again for a row the list cannot reach", async () => {
+    const field = await renderScrollableDocument();
+
+    // Row heights vary, so the list refuses a row it has never measured. Refuse the first ask the
+    // way the real list does, through the handler it was handed.
+    scrollToIndex.mockImplementationOnce(function (this: FlatList, asked: { index: number }) {
+      this.props.onScrollToIndexFailed?.({
+        averageItemLength: 40,
+        highestMeasuredFrameIndex: 2,
+        index: asked.index,
+      });
+    });
+
+    await fireEvent.changeText(field, "recycle");
+    await fireEvent.press(screen.getByLabelText("Next hit"));
+
+    expect(scrollToOffset).toHaveBeenCalledWith({ animated: true, offset: 40 * 7 });
+
+    await waitFor(() => expect(scrollToIndex).toHaveBeenCalledTimes(2));
+    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(7));
+  });
+});
+
+function rowSurface(number: string) {
+  return StyleSheet.flatten(screen.getByText(number).parent?.parent?.props.style);
+}
+
+function ruleBarColor(number: string) {
+  return StyleSheet.flatten(screen.getByText(number).parent?.props.style).borderLeftColor;
+}
+
+describe("CoreRulesScreen selection", () => {
+  it("should take a numbered rule on a press and give it up on a second", async () => {
+    await renderScrollableDocument();
+
+    expect(rowSurface("101.2").backgroundColor).toBe("transparent");
+
+    await fireEvent.press(screen.getByText("101.2"));
+
+    expect(rowSurface("101.2").backgroundColor).toBe(Colors.light.backgroundSelected);
+    expect(rowSurface("101.2").borderColor).toBe(Colors.light.borderStrong);
+    expect(ruleBarColor("101.2")).toBe(Colors.light.accent);
+
+    await fireEvent.press(screen.getByText("101.2"));
+
+    expect(rowSurface("101.2").backgroundColor).toBe("transparent");
+    expect(rowSurface("101.2").borderColor).toBe("transparent");
+    expect(ruleBarColor("101.2")).toBe(Colors.light.border);
+  });
+
+  it("should hold one rule at a time", async () => {
+    await renderScrollableDocument();
+
+    await fireEvent.press(screen.getByText("101.2"));
+    await fireEvent.press(screen.getByText("501.2"));
+
+    expect(rowSurface("501.2").backgroundColor).toBe(Colors.light.backgroundSelected);
+    expect(rowSurface("101.2").backgroundColor).toBe("transparent");
+  });
+
+  it("should leave a heading and a chapter unpressable", async () => {
+    await renderScrollableDocument();
+
+    expect(screen.getByRole("button", { name: /Recycle a card to draw a card\./ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Game Concepts/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Deck Construction/ })).toBeNull();
+  });
+
+  it("should draw a chosen rule as chosen even while it holds the active hit", async () => {
+    const field = await renderScrollableDocument();
+
+    await fireEvent.changeText(field, "recycle");
+    await fireEvent.press(screen.getByText("101.2"));
+
+    expect(screen.getByText("1 / 3")).toBeTruthy();
+    expect(rowSurface("101.2").backgroundColor).toBe(Colors.light.backgroundSelected);
+    expect(rowSurface("101.2").borderColor).toBe(Colors.light.borderStrong);
+    expect(ruleBarColor("101.2")).toBe(Colors.light.accent);
+  });
+
+  it("should keep the chosen rule when the query changes", async () => {
+    const field = await renderScrollableDocument();
+
+    await fireEvent.press(screen.getByText("101.2"));
+    await fireEvent.changeText(field, "runes");
+
+    expect(rowSurface("101.2").backgroundColor).toBe(Colors.light.backgroundSelected);
+    expect(ruleBarColor("101.2")).toBe(Colors.light.accent);
   });
 });

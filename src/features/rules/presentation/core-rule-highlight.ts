@@ -111,8 +111,41 @@ function coreRuleRowHighlight(
   };
 }
 
-/** The bar beside a numbered rule is its state channel: nothing, a hit, or the active hit. */
-function coreRuleBarColor(theme: Theme, highlight: CoreRuleRowHighlight | null): string {
+/** What sits behind a row and the border around it. Transparent is the row claimed by nothing. */
+interface CoreRuleRowSurface {
+  readonly backgroundColor: string;
+  readonly borderColor: string;
+}
+
+/**
+ * Selection outranks the active hit on every channel a row has. A reader who chose a rule and then
+ * stepped a hit onto it must still be able to see which row they chose, so the choice wins and the
+ * hit keeps only its marked occurrences.
+ */
+function coreRuleRowSurface(
+  theme: Theme,
+  highlight: CoreRuleRowHighlight | null,
+  selected: boolean,
+): CoreRuleRowSurface {
+  if (selected) {
+    return { backgroundColor: theme.backgroundSelected, borderColor: theme.borderStrong };
+  }
+
+  return {
+    backgroundColor:
+      highlight?.holdsActiveHit === true ? coreRuleHighlightWash(theme, "row") : "transparent",
+    borderColor: "transparent",
+  };
+}
+
+/** The bar beside a numbered rule is its state channel: selection, the active hit, a hit, or none. */
+function coreRuleBarColor(
+  theme: Theme,
+  highlight: CoreRuleRowHighlight | null,
+  selected: boolean,
+): string {
+  if (selected) return theme.accent;
+
   if (highlight === null) return theme.border;
 
   return highlight.holdsActiveHit ? theme.highlight : coreRuleHighlightWash(theme, "bar");
@@ -142,11 +175,18 @@ function coreRuleTextRuns(text: string, highlight: CoreRuleHighlight): readonly 
   return runs;
 }
 
-export { coreRuleBarColor, coreRuleHighlightWash, coreRuleRowHighlight, coreRuleTextRuns };
+export {
+  coreRuleBarColor,
+  coreRuleHighlightWash,
+  coreRuleRowHighlight,
+  coreRuleRowSurface,
+  coreRuleTextRuns,
+};
 export type {
   CoreRuleHighlight,
   CoreRuleHighlightWeight,
   CoreRuleRowHighlight,
+  CoreRuleRowSurface,
   CoreRuleTextRun,
   CoreRuleTextRunKind,
 };

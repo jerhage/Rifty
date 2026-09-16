@@ -11,7 +11,6 @@ import { coreRuleAncestorNumbersOf } from "@/features/rules/value-objects/core-r
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
 import { seededCoreRules } from "./fixtures";
 
-const BAR_COLOR = "#0B0D12";
 const CHAPTER_NUMBERS = ["000", "100", "500", "600", "700"];
 
 function entry(
@@ -35,10 +34,11 @@ async function renderRows(coreRules: readonly CoreRule[]) {
     <>
       {coreRules.map((coreRule) => (
         <CoreRuleRow
-          barColor={BAR_COLOR}
           coreRule={coreRule}
           highlight={null}
           key={coreRule.number}
+          onSelect={() => undefined}
+          selected={false}
         />
       ))}
     </>,

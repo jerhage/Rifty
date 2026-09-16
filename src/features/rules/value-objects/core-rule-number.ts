@@ -20,7 +20,22 @@ function coreRuleAncestorNumbersOf(number: CoreRuleNumber): readonly CoreRuleNum
   return segments.slice(0, -1).map((_, index) => segments.slice(0, index + 1).join("."));
 }
 
+/**
+ * The five chapters are numbered on century boundaries — `000`, `100`, `500`, `600`, `700` — so a
+ * chapter is read off the number rather than stored. The document marks no chapter of its own.
+ */
+function isCoreRuleChapterNumber(number: CoreRuleNumber): boolean {
+  const segments = number.split(".");
+
+  return segments.length === 1 && Number(segments[0]) % 100 === 0;
+}
+
 type CoreRuleNumber = z.output<typeof coreRuleNumberSchema>;
 
-export { coreRuleAncestorNumbersOf, coreRuleDepthOf, coreRuleNumberSchema };
+export {
+  coreRuleAncestorNumbersOf,
+  coreRuleDepthOf,
+  coreRuleNumberSchema,
+  isCoreRuleChapterNumber,
+};
 export type { CoreRuleNumber };

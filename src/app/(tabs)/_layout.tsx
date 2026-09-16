@@ -50,9 +50,16 @@ function TabsLayout() {
         <Tabs.Screen
           name="decks"
           options={{
-            tabBarItemStyle: isRail ? { marginBottom: "auto" } : undefined,
             title: "Decks",
             tabBarIcon: ({ color }) => <TabGlyph color={color} shape="diamond" />,
+          }}
+        />
+        <Tabs.Screen
+          name="rules"
+          options={{
+            tabBarItemStyle: isRail ? { marginBottom: "auto" } : undefined,
+            title: "Rules",
+            tabBarIcon: ({ color }) => <TabGlyph color={color} shape="circle" />,
           }}
         />
       </Tabs>

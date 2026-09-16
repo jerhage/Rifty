@@ -5,7 +5,6 @@ import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
 import { SubjectNotes } from "@/features/annotation/presentation/components/subject-notes";
-import { SubjectNotesData } from "@/features/annotation/presentation/data/subject-notes-data";
 import type { NoteManager } from "@/features/annotation/note-manager";
 import {
   coreRuleRemoveBookmarkLabel,
@@ -81,21 +80,13 @@ function CoreRulesSavedEntry({
           </ThemedText>
         </Pressable>
       </View>
-      <SubjectNotesData
+      <SubjectNotes
         clock={clock}
         idGenerator={idGenerator}
         noteManager={noteManager}
+        notesName={coreRule.number}
         subject={{ kind: "coreRule", id: coreRule.number }}
-      >
-        {({ notes, removeNote, writeNote }) => (
-          <SubjectNotes
-            notes={notes}
-            onRemoveNote={removeNote}
-            onWriteNote={writeNote}
-            subjectName={coreRule.number}
-          />
-        )}
-      </SubjectNotesData>
+      />
     </View>
   );
 }

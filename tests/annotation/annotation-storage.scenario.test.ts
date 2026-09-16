@@ -150,6 +150,59 @@ describe("annotation storage scenarios", () => {
     ]);
   });
 
+  it("should leave a card's notes standing when its bookmark is removed", async () => {
+    await toggleBookmark(CARD, bookmarkCapabilities("2026-09-16T10:00:00.000Z"));
+    await writeNote(
+      { id: null, subject: CARD, title: "", body: "Hold it for the second turn." },
+      noteCapabilities("2026-09-16T10:01:00.000Z"),
+    );
+
+    await expect(
+      toggleBookmark(CARD, bookmarkCapabilities("2026-09-16T10:02:00.000Z")),
+    ).resolves.toEqual({ type: "removed" });
+
+    const remaining = await listNotes(
+      { type: "onSubject", subject: CARD },
+      { noteLister: store.annotationStore.notes },
+    );
+
+    expect(remaining.notes.map((note) => note.body)).toEqual(["Hold it for the second turn."]);
+    await expect(
+      listBookmarks(
+        { type: "ofKind", kind: "card" },
+        { bookmarkLister: store.annotationStore.bookmarks },
+      ),
+    ).resolves.toEqual({ type: "success", bookmarks: [] });
+  });
+
+  it("should keep a card's notes and a rule's notes out of each other's reads", async () => {
+    const capabilities = noteCapabilities(
+      "2026-09-16T10:00:00.000Z",
+      "2026-09-16T10:01:00.000Z",
+      "2026-09-16T10:02:00.000Z",
+    );
+    await writeNote({ id: null, subject: CARD, title: "", body: "On the card" }, capabilities);
+    await writeNote({ id: null, subject: RULE, title: "", body: "On the rule" }, capabilities);
+    await writeNote({ id: null, subject: null, title: "", body: "On nothing" }, capabilities);
+
+    const onCard = await listNotes(
+      { type: "onSubject", subject: CARD },
+      { noteLister: store.annotationStore.notes },
+    );
+    const onRule = await listNotes(
+      { type: "onSubject", subject: RULE },
+      { noteLister: store.annotationStore.notes },
+    );
+    const onNothing = await listNotes(
+      { type: "standalone" },
+      { noteLister: store.annotationStore.notes },
+    );
+
+    expect(onCard.notes.map((note) => note.body)).toEqual(["On the card"]);
+    expect(onRule.notes.map((note) => note.body)).toEqual(["On the rule"]);
+    expect(onNothing.notes.map((note) => note.body)).toEqual(["On nothing"]);
+  });
+
   it("should collect many notes on one subject, newest writing first", async () => {
     const capabilities = noteCapabilities(
       "2026-09-16T10:00:00.000Z",

@@ -5,6 +5,10 @@ function noteCountLabel(count: number): string {
   return `${count} ${count === 1 ? "note" : "notes"}`;
 }
 
+function noteCountOnLabel(notesName: string, count: number): string {
+  return `${noteCountLabel(count)} on ${notesName}`;
+}
+
 function notePositionLabel(position: number): string {
   return `Note ${position}`;
 }
@@ -18,38 +22,48 @@ function noteEntryLabel(position: number, note: Note): string {
   return `${notePositionLabel(position)} · ${noteDateLabel(note)}`;
 }
 
-function noteFieldLabel(subjectName: string, position: number): string {
-  return `${notePositionLabel(position)} on ${subjectName}`;
+function noteFieldLabel(notesName: string, position: number): string {
+  return `${notePositionLabel(position)} on ${notesName}`;
 }
 
-function noteDraftFieldLabel(subjectName: string): string {
-  return `New note on ${subjectName}`;
+function noteDraftFieldLabel(notesName: string): string {
+  return `New note on ${notesName}`;
 }
 
-function noteAddLabel(subjectName: string): string {
-  return `Add a note to ${subjectName}`;
+function noteAddLabel(notesName: string): string {
+  return `Add a note to ${notesName}`;
 }
 
-function noteSaveLabel(subjectName: string): string {
-  return `Save the new note on ${subjectName}`;
+function noteSaveLabel(notesName: string): string {
+  return `Save the new note on ${notesName}`;
 }
 
-function noteDiscardLabel(subjectName: string): string {
-  return `Discard the new note on ${subjectName}`;
+function noteDiscardLabel(notesName: string): string {
+  return `Discard the new note on ${notesName}`;
 }
 
-function noteRemoveLabel(subjectName: string, position: number): string {
-  return `Remove ${notePositionLabel(position).toLowerCase()} on ${subjectName}`;
+function noteRemoveLabel(notesName: string, position: number): string {
+  return `Remove ${notePositionLabel(position).toLowerCase()} on ${notesName}`;
 }
 
 const NOTE_PLACEHOLDER = "Write the note…";
 const NOTES_EMPTY_MESSAGE = "No notes on this one yet.";
 
+const SCRATCHPAD_TITLE = "Scratchpad";
+const SCRATCHPAD_NOTES_NAME = "the scratchpad";
+const SCRATCHPAD_PLACEHOLDER = "Anything at all — round results, judge calls, trades to chase…";
+const SCRATCHPAD_EMPTY_MESSAGE = "Nothing in the scratchpad yet.";
+
 export {
   NOTES_EMPTY_MESSAGE,
   NOTE_PLACEHOLDER,
+  SCRATCHPAD_EMPTY_MESSAGE,
+  SCRATCHPAD_NOTES_NAME,
+  SCRATCHPAD_PLACEHOLDER,
+  SCRATCHPAD_TITLE,
   noteAddLabel,
   noteCountLabel,
+  noteCountOnLabel,
   noteDateLabel,
   noteDiscardLabel,
   noteDraftFieldLabel,

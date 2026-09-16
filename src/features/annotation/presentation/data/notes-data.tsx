@@ -29,33 +29,30 @@ const NOTE_REMOVED_MESSAGE = "Note removed.";
 const NOTE_FAILED_MESSAGE = "Could not save that note. Try again.";
 const NOTE_REMOVE_FAILED_MESSAGE = "Could not remove that note. Try again.";
 
-/** One subject's notes, newest first. */
-interface SubjectNotes {
+/** One subject's notes, or the notes that hang off no subject at all, newest first. */
+interface WrittenNotes {
   readonly notes: readonly Note[];
   removeNote(id: NoteId): void;
   writeNote(id: NoteId | null, body: string): void;
 }
 
-interface SubjectNotesDataProps {
-  readonly children: (notes: SubjectNotes) => ReactNode;
+interface NotesDataProps {
+  readonly children: (written: WrittenNotes) => ReactNode;
   readonly clock: Clock;
   readonly idGenerator: IdGenerator;
   /** The whole set, because this boundary reads and writes the same rows. */
   readonly noteManager: NoteManager;
-  readonly subject: AnnotationSubject;
+  readonly subject: AnnotationSubject | null;
 }
 
 /** `writeNote` refuses a blank body, so removing a note is a separate call on its own control. */
-function SubjectNotesData({
-  children,
-  clock,
-  idGenerator,
-  noteManager,
-  subject,
-}: SubjectNotesDataProps) {
+function NotesData({ children, clock, idGenerator, noteManager, subject }: NotesDataProps) {
   const queryClient = useQueryClient();
   const announce = useAnnouncement();
-  const scope = useMemo<NoteListScope>(() => ({ type: "onSubject", subject }), [subject]);
+  const scope = useMemo<NoteListScope>(
+    () => (subject === null ? { type: "standalone" } : { type: "onSubject", subject }),
+    [subject],
+  );
   const { reload, state } = useReadState(listNotesQuery(scope, { noteLister: noteManager }));
 
   /** One note is read through several scopes, so the whole subtree goes stale. Marks are untouched. */
@@ -113,5 +110,5 @@ function SubjectNotesData({
     .exhaustive();
 }
 
-export { NOTE_BLANK_MESSAGE, NOTE_REMOVED_MESSAGE, NOTE_WRITTEN_MESSAGE, SubjectNotesData };
-export type { SubjectNotes, SubjectNotesDataProps };
+export { NOTE_BLANK_MESSAGE, NOTE_REMOVED_MESSAGE, NOTE_WRITTEN_MESSAGE, NotesData };
+export type { NotesDataProps, WrittenNotes };

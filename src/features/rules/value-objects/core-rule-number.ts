@@ -10,7 +10,17 @@ function coreRuleDepthOf(number: CoreRuleNumber): number {
   return number.split(".").length;
 }
 
+/**
+ * The enclosing numbers, outermost first: `103.2.a` is under `103` and `103.2`. The document's
+ * parent chain is its segment chain, so an ancestor is read off the number rather than looked up.
+ */
+function coreRuleAncestorNumbersOf(number: CoreRuleNumber): readonly CoreRuleNumber[] {
+  const segments = number.split(".");
+
+  return segments.slice(0, -1).map((_, index) => segments.slice(0, index + 1).join("."));
+}
+
 type CoreRuleNumber = z.output<typeof coreRuleNumberSchema>;
 
-export { coreRuleDepthOf, coreRuleNumberSchema };
+export { coreRuleAncestorNumbersOf, coreRuleDepthOf, coreRuleNumberSchema };
 export type { CoreRuleNumber };

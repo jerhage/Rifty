@@ -1,26 +1,9 @@
-import type { CoreRule } from "@/features/rules/core-rule";
 import { findCoreRulesEdition } from "@/features/rules/use-cases/find-core-rules-edition";
 import { listCoreRules } from "@/features/rules/use-cases/list-core-rules";
 import { coreRulesSeed } from "@/infrastructure/database/generated/core-rules-seed";
 
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
-
-async function seededCoreRules(store: SqliteScenarioStore): Promise<readonly CoreRule[]> {
-  await store.seedCoreRules(coreRulesSeed);
-  const result = await listCoreRules({ coreRuleLister: store.coreRules });
-
-  if (result.type !== "success") throw new Error("The seeded document did not read back.");
-
-  return result.coreRules;
-}
-
-function coreRuleNumbered(coreRules: readonly CoreRule[], number: string): CoreRule {
-  const found = coreRules.find((coreRule) => coreRule.number === number);
-
-  if (found === undefined) throw new Error(`The document holds no core rule ${number}.`);
-
-  return found;
-}
+import { coreRuleNumbered, seededCoreRules } from "./fixtures";
 
 describe("core rules read scenarios", () => {
   let store: SqliteScenarioStore;

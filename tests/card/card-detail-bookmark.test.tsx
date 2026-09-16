@@ -93,6 +93,7 @@ async function renderCardDetail(store: MarkStore) {
             />
           }
           card={VI}
+          notes={null}
         />
       )}
     </BookmarkedSubjectsData>,

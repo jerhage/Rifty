@@ -3,15 +3,19 @@ import { Stack, useLocalSearchParams } from "expo-router";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import { BookmarkToggle } from "@/features/annotation/presentation/components/bookmark-toggle";
+import { SubjectNotes } from "@/features/annotation/presentation/components/subject-notes";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
 import { CardDetailData } from "@/features/card/presentation/data/card-detail-data";
-import { CardDetailScreen } from "@/features/card/presentation/screens/card-detail-screen";
+import {
+  CARD_NOTES_NAME,
+  CardDetailScreen,
+} from "@/features/card/presentation/screens/card-detail-screen";
 import { cardKeys } from "@/features/card/queries/card-keys";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 
 function CardDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { annotations, cards, clock } = useAppDependencies();
+  const { annotations, cards, clock, idGenerator } = useAppDependencies();
   const queryClient = useQueryClient();
   const printingId = printingIdSchema.parse(id);
 
@@ -36,6 +40,15 @@ function CardDetailRoute() {
                   />
                 }
                 card={card}
+                notes={
+                  <SubjectNotes
+                    clock={clock}
+                    idGenerator={idGenerator}
+                    noteManager={annotations.noteRepository}
+                    notesName={CARD_NOTES_NAME}
+                    subject={{ kind: "card", id: printingId }}
+                  />
+                }
               />
             </>
           )}

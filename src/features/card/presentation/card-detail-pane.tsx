@@ -14,11 +14,13 @@ import type { PrintingId } from "@/features/card/value-objects/printing-id";
 function CardDetailPane({
   bookmarkControl,
   cardFinder,
+  notes,
   onClose,
   printingId,
 }: {
   readonly bookmarkControl: ReactNode;
   readonly cardFinder: CardFinder;
+  readonly notes: ReactNode;
   readonly onClose: () => void;
   readonly printingId: PrintingId | null;
 }) {
@@ -32,7 +34,7 @@ function CardDetailPane({
         <IconButton accessibilityLabel="Close the card" glyph="✕" onPress={onClose} />
       </View>
       <CardDetailData cardFinder={cardFinder} printingId={printingId}>
-        {(card) => <CardDetailScreen bookmarkControl={bookmarkControl} card={card} />}
+        {(card) => <CardDetailScreen bookmarkControl={bookmarkControl} card={card} notes={notes} />}
       </CardDetailData>
     </ThemedView>
   );

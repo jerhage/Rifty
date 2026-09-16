@@ -6,11 +6,13 @@ import { match } from "ts-pattern";
 import { SplitLayout } from "@/components/app-shell/split-layout";
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import { BookmarkToggle } from "@/features/annotation/presentation/components/bookmark-toggle";
+import { SubjectNotes } from "@/features/annotation/presentation/components/subject-notes";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
 import type { CardSummary } from "@/features/card/card-summary";
 import { CardDetailPane } from "@/features/card/presentation/card-detail-pane";
 import { CardSummariesData } from "@/features/card/presentation/data/card-summaries-data";
 import { KeywordsData } from "@/features/card/presentation/data/keywords-data";
+import { CARD_NOTES_NAME } from "@/features/card/presentation/screens/card-detail-screen";
 import { cardKeys } from "@/features/card/queries/card-keys";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import { CardCatalogFilterSheet } from "@/features/catalog/presentation/components/sheet/card-catalog-filter-sheet";
@@ -23,7 +25,7 @@ import { CatalogSearchScreen } from "@/features/catalog/presentation/screens/cat
 import { CardSetsData } from "@/features/set/presentation/data/card-sets-data";
 
 function HomeScreen() {
-  const { annotations, cards, clock, sets } = useAppDependencies();
+  const { annotations, cards, clock, idGenerator, sets } = useAppDependencies();
   const router = useRouter();
   const queryClient = useQueryClient();
   const catalogQuery = useCatalogQuery();
@@ -72,6 +74,17 @@ function HomeScreen() {
                       )
                     }
                     cardFinder={cards.cardRepository}
+                    notes={
+                      shownId === null ? null : (
+                        <SubjectNotes
+                          clock={clock}
+                          idGenerator={idGenerator}
+                          noteManager={annotations.noteRepository}
+                          notesName={CARD_NOTES_NAME}
+                          subject={{ kind: "card", id: shownId }}
+                        />
+                      )
+                    }
                     onClose={close}
                     printingId={shownId}
                   />

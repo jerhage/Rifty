@@ -8,6 +8,12 @@ import {
   type AnnotationSubject,
   type AnnotationSubjectKind,
 } from "@/features/annotation/value-objects/annotation-subject";
+import type { CardSummariesByPrintingIdsFinder } from "@/features/card/card-summaries-by-printing-ids-finder";
+import type { CardSummary } from "@/features/card/card-summary";
+import type { PrintingId } from "@/features/card/value-objects/printing-id";
+import type { CoreRule } from "@/features/rules/core-rule";
+import type { CoreRulesByNumbersFinder } from "@/features/rules/core-rules-by-numbers-finder";
+import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
 function subject(kind: AnnotationSubjectKind, id: string): AnnotationSubject {
   return annotationSubjectSchema.parse({ kind, id });
@@ -92,5 +98,48 @@ function createNoteStore(seeded: readonly Note[] = []): NoteStore {
   };
 }
 
-export { createNoteStore, fixedClock, sequentialIds, subject };
-export type { NoteStore };
+function writtenNote(
+  id: string,
+  noteSubject: AnnotationSubject | null,
+  body: string,
+  writtenAt: string,
+): Note {
+  return { id, subject: noteSubject, title: "", body, createdAt: writtenAt, updatedAt: writtenAt };
+}
+
+interface SubjectStore {
+  readonly cardSummariesFinder: CardSummariesByPrintingIdsFinder;
+  readonly coreRulesFinder: CoreRulesByNumbersFinder;
+  cardAsks(): readonly (readonly PrintingId[])[];
+  coreRuleAsks(): readonly (readonly CoreRuleNumber[])[];
+}
+
+function createSubjectStore(
+  cards: readonly CardSummary[] = [],
+  coreRules: readonly CoreRule[] = [],
+): SubjectStore {
+  const cardAsks: (readonly PrintingId[])[] = [];
+  const coreRuleAsks: (readonly CoreRuleNumber[])[] = [];
+
+  return {
+    cardSummariesFinder: {
+      getSummariesByPrintingIds: (printingIds) => {
+        cardAsks.push(printingIds);
+
+        return Promise.resolve(cards.filter((card) => printingIds.includes(card.printingId)));
+      },
+    },
+    coreRulesFinder: {
+      getAllByNumbers: (numbers) => {
+        coreRuleAsks.push(numbers);
+
+        return Promise.resolve(coreRules.filter((coreRule) => numbers.includes(coreRule.number)));
+      },
+    },
+    cardAsks: () => cardAsks,
+    coreRuleAsks: () => coreRuleAsks,
+  };
+}
+
+export { createNoteStore, createSubjectStore, fixedClock, sequentialIds, subject, writtenNote };
+export type { NoteStore, SubjectStore };

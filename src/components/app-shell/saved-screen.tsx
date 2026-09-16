@@ -9,11 +9,12 @@ import { SAVED_TITLE, savedSummaryLabel } from "@/components/app-shell/saved-for
 import { useTheme } from "@/hooks/use-theme";
 
 interface SavedScreenProps {
+  readonly notes: ReactNode;
   readonly scratchpad: ReactNode;
   readonly scratchpadNoteCount: number;
 }
 
-function SavedScreen({ scratchpad, scratchpadNoteCount }: SavedScreenProps) {
+function SavedScreen({ notes, scratchpad, scratchpadNoteCount }: SavedScreenProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
 
@@ -50,7 +51,10 @@ function SavedScreen({ scratchpad, scratchpadNoteCount }: SavedScreenProps) {
         ]}
         style={styles.body}
       >
-        <View style={styles.column}>{scratchpad}</View>
+        <View style={[styles.column, styles.stack]}>
+          {scratchpad}
+          {notes}
+        </View>
       </ScrollView>
     </ThemedView>
   );
@@ -78,6 +82,9 @@ const styles = StyleSheet.create({
   page: {
     flexGrow: 1,
     paddingTop: Spacing.three,
+  },
+  stack: {
+    gap: Spacing.five,
   },
   column: {
     alignSelf: "center",

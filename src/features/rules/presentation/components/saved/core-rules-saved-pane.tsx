@@ -70,14 +70,14 @@ function CoreRulesSavedPane({
   return (
     <View style={[styles.pane, styles.open, { borderStartColor: theme.border }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <ThemedText
-          accessibilityRole="header"
-          style={styles.headings}
-          themeColor="textTertiary"
-          type="mono"
-        >
-          {SAVED_PANE_TITLE}
-        </ThemedText>
+        <View style={styles.headings}>
+          <ThemedText accessibilityRole="header" themeColor="textTertiary" type="mono">
+            {SAVED_PANE_TITLE}
+          </ThemedText>
+          <ThemedText themeColor="textTertiary" type="mono">
+            {coreRuleBookmarkCountLabel(bookmarkedCount)}
+          </ThemedText>
+        </View>
         <Pressable
           accessibilityLabel={SAVED_PANE_TITLE}
           accessibilityRole="button"

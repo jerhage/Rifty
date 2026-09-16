@@ -2,16 +2,18 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
+import { BookmarkGlyph } from "@/components/ui/icons/bookmark-glyph";
 import { SearchField } from "@/components/ui/atoms/search-field";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { MaxReadingWidth, Spacing, TouchTarget } from "@/constants/theme";
+import { MaxReadingWidth, Radius, Spacing, TouchTarget } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { ActiveCoreRuleHit, CoreRuleSearch } from "@/features/rules/core-rule-search";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import type { CoreRulesContentsPlacement } from "@/features/rules/presentation/core-rules-contents-placement";
 import {
   coreRuleBookmarkCountLabel,
+  coreRuleSavedWash,
   coreRulesCountLabel,
   coreRulesEditionLabel,
 } from "@/features/rules/presentation/core-rules-format";
@@ -83,8 +85,17 @@ function CoreRulesHeader({
             </ThemedText>
           </View>
           {match(contentsPlacement)
-            .with({ type: "beside" }, () => null)
-            .with({ type: "over" }, ({ open }) => <CoreRulesContentsControl onPress={open} />)
+            .with({ type: "beside" }, () => (
+              <ThemedText style={styles.spreadCount} themeColor="textTertiary" type="mono">
+                {coreRulesCountLabel(coreRules, search)}
+              </ThemedText>
+            ))
+            .with({ type: "over" }, ({ open }) => (
+              <View style={styles.controls}>
+                <SavedControl count={bookmarkedCount} placement={savedPlacement} />
+                <CoreRulesContentsControl onPress={open} />
+              </View>
+            ))
             .exhaustive()}
         </View>
         <SearchField
@@ -104,12 +115,16 @@ function CoreRulesHeader({
             search={search}
           />
         ) : null}
-        <View style={styles.counts}>
-          <ThemedText themeColor="textTertiary" type="mono">
-            {coreRulesCountLabel(coreRules, search)}
-          </ThemedText>
-          <SavedControl count={bookmarkedCount} placement={savedPlacement} />
-        </View>
+        {match(contentsPlacement)
+          .with({ type: "beside" }, () => null)
+          .with({ type: "over" }, () => (
+            <View style={styles.counts}>
+              <ThemedText themeColor="textTertiary" type="mono">
+                {coreRulesCountLabel(coreRules, search)}
+              </ThemedText>
+            </View>
+          ))
+          .exhaustive()}
       </View>
     </ThemedView>
   );
@@ -124,6 +139,7 @@ function SavedControl({
   readonly placement: CoreRulesSavedPlacement;
 }) {
   const label = coreRuleBookmarkCountLabel(count);
+  const theme = useTheme();
 
   return (
     <Pressable
@@ -137,10 +153,18 @@ function SavedControl({
         .with({ type: "beside" }, ({ toggle }) => toggle)
         .with({ type: "over" }, ({ open }) => open)
         .exhaustive()}
-      style={({ pressed }) => [styles.saved, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.saved,
+        {
+          backgroundColor: coreRuleSavedWash(theme, "surface"),
+          borderColor: coreRuleSavedWash(theme, "edge"),
+        },
+        pressed && styles.pressed,
+      ]}
     >
+      <BookmarkGlyph color={theme.accent} filled={count > 0} />
       <ThemedText themeColor="accent" type="mono">
-        {label}
+        {String(count)}
       </ThemedText>
     </Pressable>
   );
@@ -179,10 +203,24 @@ const styles = StyleSheet.create({
   field: {
     marginTop: Spacing.two + 1,
   },
+  spreadCount: {
+    alignSelf: "flex-end",
+  },
+  controls: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: Spacing.two - 2,
+  },
   saved: {
+    alignItems: "center",
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    flexDirection: "row",
+    gap: Spacing.two - 3,
     justifyContent: "center",
     minHeight: TouchTarget.minimum,
     minWidth: TouchTarget.minimum,
+    paddingHorizontal: Spacing.two,
   },
   pressed: {
     opacity: 0.7,

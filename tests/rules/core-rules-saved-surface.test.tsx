@@ -271,13 +271,11 @@ describe("the saved surface", () => {
   it("should give up a mark from the surface, and the header count should follow", async () => {
     await openSavedPane(["501.1", "700.1"]);
 
-    expect(screen.getByRole("button", { name: "2 bookmarked rules" })).toBeTruthy();
+    expect(screen.getByText("2 bookmarked rules")).toBeTruthy();
 
     await fireEvent.press(screen.getByRole("button", { name: "Remove bookmark 501.1" }));
 
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "1 bookmarked rule" })).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByText("1 bookmarked rule")).toBeTruthy());
     expect(screen.queryByRole("button", { name: /^501\.1,/ })).toBeNull();
     expect(screen.getByRole("button", { name: /^700\.1,/ })).toBeTruthy();
   });
@@ -408,21 +406,6 @@ describe("the saved pane on a tablet", () => {
     expect(screen.queryByRole("button", { name: /^501\.1,/ })).toBeNull();
   });
 
-  it("should open and close from the header count as well", async () => {
-    await renderRules(TABLET, ["501.1"]);
-
-    const count = screen.getByRole("button", { name: "1 bookmarked rule" });
-
-    expect(count.props.accessibilityState).toEqual({ expanded: false });
-
-    await fireEvent.press(count);
-
-    expect(screen.getByRole("button", { name: /^501\.1,/ })).toBeTruthy();
-    expect(
-      screen.getByRole("button", { name: "1 bookmarked rule" }).props.accessibilityState,
-    ).toEqual({ expanded: true });
-  });
-
   it("should leave the document uncapped in either state", async () => {
     await renderRules(TABLET, ["501.1"]);
 
@@ -547,6 +530,6 @@ describe("the saved surface and the document", () => {
 
     expect(screen.queryByLabelText("Bookmark 101.1")).toBeNull();
     expect(screen.getByRole("button", { name: /^101\.1, Deck Construction\./ })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "1 bookmarked rule" })).toBeTruthy();
+    expect(screen.getByText("1 bookmarked rule")).toBeTruthy();
   });
 });

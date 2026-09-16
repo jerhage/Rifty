@@ -53,6 +53,7 @@ function CoreRuleNumberedRow({
         <CoreRuleDetails details={coreRule.details} highlight={highlight} />
       </View>
       <BookmarkToggle
+        alignment="start"
         bookmarked={bookmarked}
         label={coreRuleBookmarkLabel(coreRule.number)}
         onPress={onToggleBookmark}

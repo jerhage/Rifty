@@ -216,15 +216,15 @@ describe("the core rules header's bookmark count", () => {
   it("should count what is marked and follow a mark down to none", async () => {
     await renderBookmarkableDocument(createBookmarkStore(["101.1", "201.1"]));
 
-    expect(screen.getByText("2 bookmarked rules")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "2 bookmarked rules" })).toBeTruthy();
 
     await fireEvent.press(markOn("101.1"));
 
-    expect(await screen.findByText("1 bookmarked rule")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "1 bookmarked rule" })).toBeTruthy();
 
     await fireEvent.press(markOn("201.1"));
 
-    expect(await screen.findByText("0 bookmarked rules")).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "0 bookmarked rules" })).toBeTruthy();
   });
 
   it("should hold a mark the shown list no longer holds, and keep showing the rest", async () => {
@@ -234,7 +234,7 @@ describe("the core rules header's bookmark count", () => {
     await fireEvent.press(screen.getByRole("checkbox", { name: "Matches only" }));
 
     expect(screen.queryByLabelText("Bookmark 101.2")).toBeNull();
-    expect(screen.getByText("2 bookmarked rules")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "2 bookmarked rules" })).toBeTruthy();
     expect(markedState("101.1")).toEqual({ checked: true });
     expect(screen.getByText("3 hits in 2 rules")).toBeTruthy();
   });

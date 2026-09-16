@@ -4,10 +4,22 @@ import { match } from "ts-pattern";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { CoreRuleDetail } from "@/features/rules/core-rule";
+import type {
+  CoreRuleHighlight,
+  CoreRuleRowHighlight,
+} from "@/features/rules/presentation/core-rule-highlight";
 import { useTheme } from "@/hooks/use-theme";
 
+import { CoreRuleText } from "./core-rule-text";
+
 /** The bullets and examples printed under a rule. They are never folded into its body. */
-function CoreRuleDetails({ details }: { readonly details: readonly CoreRuleDetail[] }) {
+function CoreRuleDetails({
+  details,
+  highlight,
+}: {
+  readonly details: readonly CoreRuleDetail[];
+  readonly highlight: CoreRuleRowHighlight | null;
+}) {
   if (details.length === 0) return null;
 
   return (
@@ -15,10 +27,18 @@ function CoreRuleDetails({ details }: { readonly details: readonly CoreRuleDetai
       {details.map((detail) =>
         match(detail)
           .with({ kind: "bullet" }, (bullet) => (
-            <CoreRuleBullet body={bullet.body} key={bullet.position} />
+            <CoreRuleBullet
+              body={bullet.body}
+              highlight={highlight?.detailsByPosition.get(bullet.position) ?? null}
+              key={bullet.position}
+            />
           ))
           .with({ kind: "example" }, (example) => (
-            <CoreRuleExample body={example.body} key={example.position} />
+            <CoreRuleExample
+              body={example.body}
+              highlight={highlight?.detailsByPosition.get(example.position) ?? null}
+              key={example.position}
+            />
           ))
           .exhaustive(),
       )}
@@ -26,20 +46,32 @@ function CoreRuleDetails({ details }: { readonly details: readonly CoreRuleDetai
   );
 }
 
-function CoreRuleBullet({ body }: { readonly body: string }) {
+function CoreRuleBullet({
+  body,
+  highlight,
+}: {
+  readonly body: string;
+  readonly highlight: CoreRuleHighlight | null;
+}) {
   return (
     <View style={styles.bullet}>
       <ThemedText themeColor="textTertiary" type="body">
         ·
       </ThemedText>
-      <ThemedText style={styles.bulletBody} themeColor="textSecondary" type="body">
-        {body}
-      </ThemedText>
+      <View style={styles.bulletBody}>
+        <CoreRuleText highlight={highlight} text={body} themeColor="textSecondary" type="body" />
+      </View>
     </View>
   );
 }
 
-function CoreRuleExample({ body }: { readonly body: string }) {
+function CoreRuleExample({
+  body,
+  highlight,
+}: {
+  readonly body: string;
+  readonly highlight: CoreRuleHighlight | null;
+}) {
   const theme = useTheme();
 
   return (
@@ -47,9 +79,7 @@ function CoreRuleExample({ body }: { readonly body: string }) {
       <ThemedText themeColor="textTertiary" type="mono">
         Example
       </ThemedText>
-      <ThemedText themeColor="textSecondary" type="body">
-        {body}
-      </ThemedText>
+      <CoreRuleText highlight={highlight} text={body} themeColor="textSecondary" type="body" />
     </View>
   );
 }
@@ -68,6 +98,7 @@ const styles = StyleSheet.create({
   },
   bulletBody: {
     flex: 1,
+    minWidth: 0,
   },
   example: {
     borderLeftWidth: StyleSheet.hairlineWidth,

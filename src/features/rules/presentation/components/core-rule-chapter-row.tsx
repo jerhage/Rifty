@@ -3,10 +3,19 @@ import { StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
+import type { CoreRuleRowHighlight } from "@/features/rules/presentation/core-rule-highlight";
 import { useTheme } from "@/hooks/use-theme";
 
+import { CoreRuleText } from "./core-rule-text";
+
 /** One of the document's five century-boundary headings, set apart by a rule across the column. */
-function CoreRuleChapterRow({ coreRule }: { readonly coreRule: CoreRule }) {
+function CoreRuleChapterRow({
+  coreRule,
+  highlight,
+}: {
+  readonly coreRule: CoreRule;
+  readonly highlight: CoreRuleRowHighlight | null;
+}) {
   const theme = useTheme();
 
   return (
@@ -16,9 +25,9 @@ function CoreRuleChapterRow({ coreRule }: { readonly coreRule: CoreRule }) {
         <ThemedText themeColor="accent" type="code">
           {coreRule.number}
         </ThemedText>
-        <ThemedText style={styles.name} type="display">
-          {coreRule.body}
-        </ThemedText>
+        <View style={styles.name}>
+          <CoreRuleText highlight={highlight?.body ?? null} text={coreRule.body} type="display" />
+        </View>
       </View>
     </View>
   );

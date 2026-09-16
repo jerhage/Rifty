@@ -34,7 +34,12 @@ async function renderRows(coreRules: readonly CoreRule[]) {
   return await render(
     <>
       {coreRules.map((coreRule) => (
-        <CoreRuleRow barColor={BAR_COLOR} coreRule={coreRule} key={coreRule.number} />
+        <CoreRuleRow
+          barColor={BAR_COLOR}
+          coreRule={coreRule}
+          highlight={null}
+          key={coreRule.number}
+        />
       ))}
     </>,
   );

@@ -8,6 +8,7 @@ import type { SqliteScenarioStore } from "../sqlite-scenario-store";
 interface CoreRuleDraft {
   readonly number: string;
   readonly body: string;
+  readonly kind?: CoreRule["kind"];
   readonly details?: readonly string[];
 }
 
@@ -24,7 +25,7 @@ function coreRuleDocument(drafts: readonly CoreRuleDraft[]): readonly CoreRule[]
       number: draft.number,
       parentNumber: ancestors.at(-1) ?? null,
       position,
-      kind: "rule",
+      kind: draft.kind ?? "rule",
       body: draft.body,
       details: coreRuleDetails(draft.details ?? []),
     };

@@ -2,7 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-sqlite";
 
-import { applyReferenceSeed, type CatalogSeed } from "@/infrastructure/database/reference-seeder";
+import { applyCatalogSeed, type CatalogSeed } from "@/infrastructure/database/reference-seeder";
 import {
   cardDomains,
   cardImageSources,
@@ -186,7 +186,7 @@ describe("reference seeder", () => {
   });
 
   it("should fill an empty database from the bundled catalog", async () => {
-    await applyReferenceSeed(db, FIRST_SEED, "version-one");
+    await applyCatalogSeed(db, FIRST_SEED, "version-one");
 
     expect(await db.select().from(cards)).toHaveLength(2);
     expect(await db.select().from(cardPrintings)).toHaveLength(2);
@@ -197,8 +197,8 @@ describe("reference seeder", () => {
   });
 
   it("should do nothing on a second run at the same version", async () => {
-    await applyReferenceSeed(db, FIRST_SEED, "version-one");
-    await applyReferenceSeed(db, EMPTY_SEED, "version-one");
+    await applyCatalogSeed(db, FIRST_SEED, "version-one");
+    await applyCatalogSeed(db, EMPTY_SEED, "version-one");
 
     expect(await db.select().from(cards)).toHaveLength(2);
     expect(await db.select().from(cardPrintings)).toHaveLength(2);
@@ -206,8 +206,8 @@ describe("reference seeder", () => {
   });
 
   it("should keep a printing the next catalog drops and replace its associations", async () => {
-    await applyReferenceSeed(db, FIRST_SEED, "version-one");
-    await applyReferenceSeed(db, SECOND_SEED, "version-two");
+    await applyCatalogSeed(db, FIRST_SEED, "version-one");
+    await applyCatalogSeed(db, SECOND_SEED, "version-two");
 
     const printingIds = (await db.select().from(cardPrintings)).map((row) => row.id);
     expect(printingIds).toEqual(expect.arrayContaining(["ogn-001", "ogn-002"]));
@@ -240,8 +240,8 @@ describe("reference seeder", () => {
   });
 
   it("should overwrite every column of a row the next catalog changes", async () => {
-    await applyReferenceSeed(db, FIRST_SEED, "version-one");
-    await applyReferenceSeed(
+    await applyCatalogSeed(db, FIRST_SEED, "version-one");
+    await applyCatalogSeed(
       db,
       {
         ...SECOND_SEED,
@@ -277,8 +277,8 @@ describe("reference seeder", () => {
   });
 
   it("should leave a dropped domain, tag and keyword behind", async () => {
-    await applyReferenceSeed(db, FIRST_SEED, "version-one");
-    await applyReferenceSeed(
+    await applyCatalogSeed(db, FIRST_SEED, "version-one");
+    await applyCatalogSeed(
       db,
       { ...SECOND_SEED, keywords: [], cardKeywords: [], cardKeywordTargets: [] },
       "version-two",

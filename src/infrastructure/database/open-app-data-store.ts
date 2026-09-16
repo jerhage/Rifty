@@ -8,7 +8,7 @@ import type { Logger } from "@/application/ports/logger";
 import { DrizzleLoggerAdapter } from "@/infrastructure/drizzle/drizzle-logger-adapter";
 import { createReferenceDataStore, type ReferenceDataStore } from "./reference-data-store";
 import { createDeckDataStore, type DeckDataStore } from "./deck-data-store";
-import { ensureReferenceDataSeeded } from "./reference-seeder";
+import { ensureCatalogSeeded, ensureCoreRulesSeeded } from "./reference-seeder";
 
 /**
  * The database file is still named for the catalog it was created to hold; renaming it would
@@ -21,7 +21,7 @@ interface AppDataStore {
   readonly decks: DeckDataStore;
 }
 
-/** Opens the local database, applies committed migrations, and seeds the catalog. */
+/** Opens the local database, applies committed migrations, and seeds every reference dataset. */
 async function openAppDataStore(logger: Logger, imageBaseUrl: string): Promise<AppDataStore> {
   const database = SQLite.openDatabaseSync(CATALOG_DATABASE_NAME);
   await database.execAsync("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;");
@@ -30,18 +30,23 @@ async function openAppDataStore(logger: Logger, imageBaseUrl: string): Promise<A
   } catch (error) {
     throw new Error(`Could not migrate the app database: ${errorMessage(error)}`, { cause: error });
   }
-  try {
-    await ensureReferenceDataSeeded(database, logger);
-  } catch (error) {
-    throw new Error(`Could not seed the card catalog database: ${errorMessage(error)}`, {
-      cause: error,
-    });
-  }
+  await seedDataset("card catalog", () => ensureCatalogSeeded(database, logger));
+  await seedDataset("core rules", () => ensureCoreRulesSeeded(database, logger));
 
   return {
     reference: createReferenceDataStore(database, logger, imageBaseUrl),
     decks: createDeckDataStore(database, logger),
   };
+}
+
+async function seedDataset(name: string, seed: () => Promise<void>): Promise<void> {
+  try {
+    await seed();
+  } catch (error) {
+    throw new Error(`Could not seed the ${name} into the app database: ${errorMessage(error)}`, {
+      cause: error,
+    });
+  }
 }
 
 function errorMessage(value: unknown): string {

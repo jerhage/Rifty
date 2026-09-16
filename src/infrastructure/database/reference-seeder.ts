@@ -7,6 +7,7 @@ import type * as SQLite from "expo-sqlite";
 import type { Logger } from "@/application/ports/logger";
 import { DrizzleLoggerAdapter } from "@/infrastructure/drizzle/drizzle-logger-adapter";
 import { CATALOG_SEED_VERSION, catalogSeed } from "./generated/catalog-seed";
+import { CORE_RULES_SEED_VERSION, coreRulesSeed } from "./generated/core-rules-seed";
 import {
   cardDomains,
   cardImageSources,
@@ -17,17 +18,24 @@ import {
   cardTags,
   cards,
 } from "./reference-schema/cards";
+import { coreRuleDetails, coreRules, coreRulesEditions } from "./reference-schema/core-rules";
 import { cardKeywordTargets, cardKeywords, keywords } from "./reference-schema/keywords";
-import { catalogSeedStates } from "./reference-schema/seed-state";
+import { catalogSeedStates, coreRulesSeedStates } from "./reference-schema/seed-state";
 import { cardSets, setMarketplaceReferences } from "./reference-schema/sets";
 import { cardSupertypes, cardTypes, domains, rarities, tags } from "./reference-schema/taxonomy";
 
 const CATALOG_SEED_STATE_ID = "catalog";
+const CORE_RULES_SEED_STATE_ID = "core-rules";
 // card_printing is the widest insert (12 columns); 40 rows stays below SQLite's 999-variable limit,
 // and an excluded reference in the conflict clause binds no further variable.
-const INSERT_BATCH_SIZE = 40;
+const CATALOG_INSERT_BATCH_SIZE = 40;
+// core_rule is the widest core rules insert (5 columns), so 180 rows bind 900 variables and
+// core_rule_detail's 4 columns bind 720 — both below the same 999-variable limit.
+const CORE_RULES_INSERT_BATCH_SIZE = 180;
 
 type ReferenceDatabase<TRunResult> = SQLiteAsyncDatabase<"sync", TRunResult, EmptyRelations>;
+
+type SeedStateTable = typeof catalogSeedStates | typeof coreRulesSeedStates;
 
 type CatalogSeed = {
   readonly cardTypes: readonly (typeof cardTypes.$inferInsert)[];
@@ -50,46 +58,110 @@ type CatalogSeed = {
   readonly cardSpeeds: readonly (typeof cardSpeeds.$inferInsert)[];
 };
 
-/** Imports bundled reference data only when its content version changes. */
-async function ensureReferenceDataSeeded(
+type CoreRulesSeed = {
+  readonly coreRulesEditions: readonly (typeof coreRulesEditions.$inferInsert)[];
+  readonly coreRules: readonly (typeof coreRules.$inferInsert)[];
+  readonly coreRuleDetails: readonly (typeof coreRuleDetails.$inferInsert)[];
+};
+
+/** Imports the bundled card catalog only when its content version changes. */
+async function ensureCatalogSeeded(database: SQLite.SQLiteDatabase, logger: Logger): Promise<void> {
+  const db = drizzle(database, { logger: new DrizzleLoggerAdapter(logger) });
+  if (await isSeededAt(db, catalogSeedStates, CATALOG_SEED_STATE_ID, CATALOG_SEED_VERSION)) return;
+
+  await database.withExclusiveTransactionAsync(async (transaction) => {
+    const transactionDb = drizzle(transaction, { logger: new DrizzleLoggerAdapter(logger) });
+    await applyCatalogSeed(transactionDb, catalogSeed, CATALOG_SEED_VERSION);
+  });
+}
+
+/** Imports the bundled core rules only when their content version changes. */
+async function ensureCoreRulesSeeded(
   database: SQLite.SQLiteDatabase,
   logger: Logger,
 ): Promise<void> {
   const db = drizzle(database, { logger: new DrizzleLoggerAdapter(logger) });
-  if (await isSeededAt(db, CATALOG_SEED_VERSION)) return;
+  const seeded = await isSeededAt(
+    db,
+    coreRulesSeedStates,
+    CORE_RULES_SEED_STATE_ID,
+    CORE_RULES_SEED_VERSION,
+  );
+  if (seeded) return;
 
   await database.withExclusiveTransactionAsync(async (transaction) => {
     const transactionDb = drizzle(transaction, { logger: new DrizzleLoggerAdapter(logger) });
-    await applyReferenceSeed(transactionDb, catalogSeed, CATALOG_SEED_VERSION);
+    await applyCoreRulesSeed(transactionDb, coreRulesSeed, CORE_RULES_SEED_VERSION);
   });
 }
 
-async function applyReferenceSeed<TRunResult>(
+async function applyCatalogSeed<TRunResult>(
   db: ReferenceDatabase<TRunResult>,
   seed: CatalogSeed,
   version: string,
 ): Promise<void> {
-  if (await isSeededAt(db, version)) return;
+  if (await isSeededAt(db, catalogSeedStates, CATALOG_SEED_STATE_ID, version)) return;
 
   await clearAssociationData(db);
   await upsertCatalogData(db, seed);
   await insertAssociationData(db, seed);
-  await db
-    .insert(catalogSeedStates)
-    .values({ id: CATALOG_SEED_STATE_ID, version })
-    .onConflictDoUpdate({ target: catalogSeedStates.id, set: { version } });
+  await recordSeedState(db, catalogSeedStates, CATALOG_SEED_STATE_ID, version);
+}
+
+/**
+ * Replaces the whole document, child rows first. No user row references a core rule, so there is
+ * nothing here to preserve the way a card a later catalog drops is preserved.
+ */
+async function applyCoreRulesSeed<TRunResult>(
+  db: ReferenceDatabase<TRunResult>,
+  seed: CoreRulesSeed,
+  version: string,
+): Promise<void> {
+  if (await isSeededAt(db, coreRulesSeedStates, CORE_RULES_SEED_STATE_ID, version)) return;
+
+  await db.delete(coreRuleDetails);
+  await db.delete(coreRules);
+  await db.delete(coreRulesEditions);
+
+  for (const rows of batches(seed.coreRulesEditions, CORE_RULES_INSERT_BATCH_SIZE)) {
+    await db.insert(coreRulesEditions).values([...rows]);
+  }
+  // Document order puts a parent before every child, which is what lets parent_number resolve
+  // while the foreign key is enforced row by row.
+  for (const rows of batches(seed.coreRules, CORE_RULES_INSERT_BATCH_SIZE)) {
+    await db.insert(coreRules).values([...rows]);
+  }
+  for (const rows of batches(seed.coreRuleDetails, CORE_RULES_INSERT_BATCH_SIZE)) {
+    await db.insert(coreRuleDetails).values([...rows]);
+  }
+
+  await recordSeedState(db, coreRulesSeedStates, CORE_RULES_SEED_STATE_ID, version);
 }
 
 async function isSeededAt<TRunResult>(
   db: ReferenceDatabase<TRunResult>,
+  table: SeedStateTable,
+  id: string,
   version: string,
 ): Promise<boolean> {
   const [state] = await db
-    .select({ version: catalogSeedStates.version })
-    .from(catalogSeedStates)
-    .where(eq(catalogSeedStates.id, CATALOG_SEED_STATE_ID))
+    .select({ version: table.version })
+    .from(table)
+    .where(eq(table.id, id))
     .limit(1);
   return state?.version === version;
+}
+
+async function recordSeedState<TRunResult>(
+  db: ReferenceDatabase<TRunResult>,
+  table: SeedStateTable,
+  id: string,
+  version: string,
+): Promise<void> {
+  await db
+    .insert(table)
+    .values({ id, version })
+    .onConflictDoUpdate({ target: table.id, set: { version } });
 }
 
 async function clearAssociationData<TRunResult>(db: ReferenceDatabase<TRunResult>): Promise<void> {
@@ -111,37 +183,37 @@ async function upsertCatalogData<TRunResult>(
   db: ReferenceDatabase<TRunResult>,
   seed: CatalogSeed,
 ): Promise<void> {
-  for (const rows of batches(seed.cardTypes)) {
+  for (const rows of catalogBatches(seed.cardTypes)) {
     await db
       .insert(cardTypes)
       .values([...rows])
       .onConflictDoUpdate(replaceOnConflict(cardTypes));
   }
-  for (const rows of batches(seed.cardSupertypes)) {
+  for (const rows of catalogBatches(seed.cardSupertypes)) {
     await db
       .insert(cardSupertypes)
       .values([...rows])
       .onConflictDoUpdate(replaceOnConflict(cardSupertypes));
   }
-  for (const rows of batches(seed.rarities)) {
+  for (const rows of catalogBatches(seed.rarities)) {
     await db
       .insert(rarities)
       .values([...rows])
       .onConflictDoUpdate(replaceOnConflict(rarities));
   }
-  for (const rows of batches(seed.cardSets)) {
+  for (const rows of catalogBatches(seed.cardSets)) {
     await db
       .insert(cardSets)
       .values([...rows])
       .onConflictDoUpdate(replaceOnConflict(cardSets));
   }
-  for (const rows of batches(seed.cards)) {
+  for (const rows of catalogBatches(seed.cards)) {
     await db
       .insert(cards)
       .values([...rows])
       .onConflictDoUpdate(replaceOnConflict(cards));
   }
-  for (const rows of batches(seed.cardPrintings)) {
+  for (const rows of catalogBatches(seed.cardPrintings)) {
     await db
       .insert(cardPrintings)
       .values([...rows])
@@ -153,26 +225,30 @@ async function insertAssociationData<TRunResult>(
   db: ReferenceDatabase<TRunResult>,
   seed: CatalogSeed,
 ): Promise<void> {
-  for (const rows of batches(seed.domains)) await db.insert(domains).values([...rows]);
-  for (const rows of batches(seed.tags)) await db.insert(tags).values([...rows]);
-  for (const rows of batches(seed.keywords)) await db.insert(keywords).values([...rows]);
-  for (const rows of batches(seed.setMarketplaceReferences)) {
+  for (const rows of catalogBatches(seed.domains)) await db.insert(domains).values([...rows]);
+  for (const rows of catalogBatches(seed.tags)) await db.insert(tags).values([...rows]);
+  for (const rows of catalogBatches(seed.keywords)) await db.insert(keywords).values([...rows]);
+  for (const rows of catalogBatches(seed.setMarketplaceReferences)) {
     await db.insert(setMarketplaceReferences).values([...rows]);
   }
-  for (const rows of batches(seed.cardMedia)) await db.insert(cardMedia).values([...rows]);
-  for (const rows of batches(seed.cardImageSources)) {
+  for (const rows of catalogBatches(seed.cardMedia)) await db.insert(cardMedia).values([...rows]);
+  for (const rows of catalogBatches(seed.cardImageSources)) {
     await db.insert(cardImageSources).values([...rows]);
   }
-  for (const rows of batches(seed.cardDomains)) await db.insert(cardDomains).values([...rows]);
-  for (const rows of batches(seed.cardTags)) await db.insert(cardTags).values([...rows]);
-  for (const rows of batches(seed.cardMarketplaceReferences)) {
+  for (const rows of catalogBatches(seed.cardDomains)) {
+    await db.insert(cardDomains).values([...rows]);
+  }
+  for (const rows of catalogBatches(seed.cardTags)) await db.insert(cardTags).values([...rows]);
+  for (const rows of catalogBatches(seed.cardMarketplaceReferences)) {
     await db.insert(cardMarketplaceReferences).values([...rows]);
   }
-  for (const rows of batches(seed.cardKeywords)) await db.insert(cardKeywords).values([...rows]);
-  for (const rows of batches(seed.cardKeywordTargets)) {
+  for (const rows of catalogBatches(seed.cardKeywords)) {
+    await db.insert(cardKeywords).values([...rows]);
+  }
+  for (const rows of catalogBatches(seed.cardKeywordTargets)) {
     await db.insert(cardKeywordTargets).values([...rows]);
   }
-  for (const rows of batches(seed.cardSpeeds)) await db.insert(cardSpeeds).values([...rows]);
+  for (const rows of catalogBatches(seed.cardSpeeds)) await db.insert(cardSpeeds).values([...rows]);
 }
 
 function replaceOnConflict(table: SQLiteTable): {
@@ -190,11 +266,15 @@ function replaceOnConflict(table: SQLiteTable): {
   };
 }
 
-function* batches<Value>(values: readonly Value[]): Generator<readonly Value[]> {
-  for (let start = 0; start < values.length; start += INSERT_BATCH_SIZE) {
-    yield values.slice(start, start + INSERT_BATCH_SIZE);
+function catalogBatches<Value>(values: readonly Value[]): Generator<readonly Value[]> {
+  return batches(values, CATALOG_INSERT_BATCH_SIZE);
+}
+
+function* batches<Value>(values: readonly Value[], size: number): Generator<readonly Value[]> {
+  for (let start = 0; start < values.length; start += size) {
+    yield values.slice(start, start + size);
   }
 }
 
-export { applyReferenceSeed, ensureReferenceDataSeeded };
-export type { CatalogSeed };
+export { applyCatalogSeed, applyCoreRulesSeed, ensureCatalogSeeded, ensureCoreRulesSeeded };
+export type { CatalogSeed, CoreRulesSeed };

@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import type { PropsWithChildren } from "react";
-import { FlatList, StyleSheet } from "react-native";
+import { Dimensions, FlatList, StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { Colors } from "@/constants/theme";
+import { Colors, MaxReadingWidth, Spacing } from "@/constants/theme";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import { coreRuleHighlightWash } from "@/features/rules/presentation/core-rule-highlight";
 import { CORE_RULE_SCROLL_OFFSET } from "@/features/rules/presentation/hooks/use-core-rules-document-scroll";
@@ -267,7 +267,7 @@ async function renderScrollableDocument() {
 }
 
 function scrolledToRow(row: number) {
-  return { animated: true, index: row, viewOffset: CORE_RULE_SCROLL_OFFSET };
+  return { animated: false, index: row, viewOffset: CORE_RULE_SCROLL_OFFSET };
 }
 
 describe("CoreRulesScreen stepping", () => {
@@ -331,7 +331,7 @@ describe("CoreRulesScreen stepping", () => {
     await fireEvent.changeText(field, "recycle");
     await fireEvent.press(screen.getByLabelText("Next hit"));
 
-    expect(scrollToOffset).toHaveBeenCalledWith({ animated: true, offset: 40 * 7 });
+    expect(scrollToOffset).toHaveBeenCalledWith({ animated: false, offset: 40 * 7 });
 
     await waitFor(() => expect(scrollToIndex).toHaveBeenCalledTimes(2));
     expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(7));
@@ -403,5 +403,180 @@ describe("CoreRulesScreen selection", () => {
 
     expect(rowSurface("101.2").backgroundColor).toBe(Colors.light.backgroundSelected);
     expect(ruleBarColor("101.2")).toBe(Colors.light.accent);
+  });
+});
+
+/**
+ * The contents are read off the document the screen already holds, so the same four depth-1
+ * headings of `SCROLL_DOCUMENT` stand in the list whichever frame draws it.
+ */
+function frameOf(width: number, height: number) {
+  jest
+    .spyOn(Dimensions, "get")
+    .mockReturnValue({ fontScale: 1, height, scale: 2, width } as ReturnType<
+      typeof Dimensions.get
+    >);
+
+  return function FrameWrapper({ children }: PropsWithChildren) {
+    return (
+      <SafeAreaProvider
+        initialMetrics={{
+          frame: { x: 0, y: 0, width, height },
+          insets: { bottom: 0, left: 0, right: 0, top: 0 },
+        }}
+      >
+        {children}
+      </SafeAreaProvider>
+    );
+  };
+}
+
+async function renderDocumentAt(width: number, height: number) {
+  await render(<CoreRulesScreen coreRules={SCROLL_DOCUMENT} edition={EDITION} />, {
+    wrapper: frameOf(width, height),
+  });
+
+  return screen.getByLabelText("Search the core rules");
+}
+
+/**
+ * A presented sheet leaves a placeholder in the React tree for content the platform hosts itself,
+ * and the placeholder takes no pointer events, so the harness refuses a press anywhere inside it.
+ * Activating the entry the way an assistive technology does reaches the same handler a finger does.
+ */
+async function chooseEntry(name: string) {
+  await fireEvent(screen.getByRole("button", { name }), "onClick");
+}
+
+/**
+ * Every style above a rendered node, so the arrangement its parents impose can be asserted. A
+ * scroller's content container counts: it is where a list's own column is capped or left to grow.
+ */
+function stylesAbove(node: ReturnType<typeof screen.getByRole>) {
+  const styles = [];
+
+  for (let above = node.parent; above !== null; above = above.parent) {
+    styles.push(StyleSheet.flatten(above.props.style));
+    styles.push(StyleSheet.flatten(above.props.contentContainerStyle));
+  }
+
+  return styles;
+}
+
+async function narrowToMatches(field: ReturnType<typeof screen.getByLabelText>) {
+  await fireEvent.changeText(field, "recycle");
+  await fireEvent.press(screen.getByRole("checkbox", { name: "Matches only" }));
+}
+
+describe("CoreRulesScreen contents on a phone", () => {
+  it("should open from the header control and close once an entry has moved the document", async () => {
+    await renderDocumentAt(402, 874);
+
+    expect(screen.queryByRole("button", { name: "501 Turn Structure" })).toBeNull();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Contents" }));
+
+    expect(screen.getByRole("button", { name: "100 Game Concepts" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "101 Deck Construction" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "500 Playing the Game" })).toBeTruthy();
+
+    await chooseEntry("501 Turn Structure");
+
+    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(5));
+    expect(screen.queryByRole("button", { name: "501 Turn Structure" })).toBeNull();
+  });
+
+  it("should leave the document in one capped, centered column of reading", async () => {
+    await renderDocumentAt(402, 874);
+
+    const column = stylesAbove(screen.getByText("Chip damage is dealt.")).find(
+      (style) => style?.maxWidth === MaxReadingWidth,
+    );
+
+    expect(column?.alignSelf).toBe("center");
+  });
+
+  it("should move to the row in the filtered list while matches-only is on", async () => {
+    const field = await renderDocumentAt(402, 874);
+
+    await narrowToMatches(field);
+    await fireEvent.press(screen.getByRole("button", { name: "Contents" }));
+    await chooseEntry("501 Turn Structure");
+
+    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(2));
+    expect(scrollToIndex).not.toHaveBeenCalledWith(scrolledToRow(5));
+  });
+
+  it("should move nowhere for an entry the shown list does not hold", async () => {
+    const field = await renderDocumentAt(402, 874);
+
+    await narrowToMatches(field);
+    await fireEvent.press(screen.getByRole("button", { name: "Contents" }));
+    await chooseEntry("100 Game Concepts");
+
+    expect(scrollToIndex).not.toHaveBeenCalled();
+  });
+});
+
+describe("CoreRulesScreen contents on a tablet", () => {
+  it("should stand beside the document, with nothing in the header to open them", async () => {
+    await renderDocumentAt(1376, 1032);
+
+    expect(screen.getByRole("header", { name: "Contents" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "501 Turn Structure" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Contents" })).toBeNull();
+  });
+
+  it("should stand against the leading edge, with nothing capping the spread", async () => {
+    await renderDocumentAt(1376, 1032);
+
+    const spread = stylesAbove(screen.getByRole("header", { name: "Contents" })).find(
+      (style) => style?.flexDirection === "row",
+    );
+
+    expect(spread?.paddingLeft).toBe(Spacing.three);
+    expect(spread?.maxWidth).toBeUndefined();
+    expect(
+      stylesAbove(screen.getByText("Chip damage is dealt.")).every(
+        (style) => style?.maxWidth === undefined,
+      ),
+    ).toBe(true);
+  });
+
+  it("should line the header up with the leading edge of the spread", async () => {
+    await renderDocumentAt(1376, 1032);
+
+    const column = stylesAbove(screen.getByRole("header", { name: "Riftbound Core Rules" })).find(
+      (style) => style?.paddingLeft === Spacing.three,
+    );
+
+    expect(column).toBeDefined();
+    expect(column?.maxWidth).toBeUndefined();
+  });
+
+  it("should stay where they are when an entry moves the document", async () => {
+    await renderDocumentAt(1376, 1032);
+
+    await fireEvent.press(screen.getByRole("button", { name: "501 Turn Structure" }));
+
+    expect(scrollToIndex).toHaveBeenLastCalledWith(scrolledToRow(5));
+    expect(screen.getByRole("button", { name: "501 Turn Structure" })).toBeTruthy();
+  });
+});
+
+describe("CoreRulesScreen moving the document", () => {
+  it("should jump rather than animate, whichever control asked", async () => {
+    const field = await renderDocumentAt(402, 874);
+
+    await fireEvent.changeText(field, "recycle");
+    await fireEvent.press(screen.getByLabelText("Next hit"));
+
+    expect(scrollToIndex).toHaveBeenLastCalledWith(expect.objectContaining({ animated: false }));
+
+    await fireEvent.press(screen.getByRole("button", { name: "Contents" }));
+    await chooseEntry("501 Turn Structure");
+
+    expect(scrollToIndex).toHaveBeenLastCalledWith(expect.objectContaining({ animated: false }));
+    expect(scrollToIndex).not.toHaveBeenCalledWith(expect.objectContaining({ animated: true }));
   });
 });

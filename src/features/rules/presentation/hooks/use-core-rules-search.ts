@@ -29,7 +29,12 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: n
   const [matchesOnly, setMatchesOnly] = useState(false);
 
   const search = useMemo(() => searchCoreRules(coreRules, query), [coreRules, query]);
-  const activeHit = activeCoreRuleHit(search, hitIndex);
+  /**
+   * Resolved once per query and per step rather than on every render: it is what the highlight of
+   * every matching row is built from, and a fresh one each render would rebuild all of them and
+   * defeat the rows' memo.
+   */
+  const activeHit = useMemo(() => activeCoreRuleHit(search, hitIndex), [hitIndex, search]);
 
   const highlights = useMemo(() => {
     const byNumber = new Map<CoreRuleNumber, CoreRuleRowHighlight>();
@@ -55,25 +60,34 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: n
   const rowIndex = useMemo(() => coreRuleRowIndex(shownCoreRules), [shownCoreRules]);
 
   /**
+   * The one way the document moves to a rule, whether a step onto a hit or a tap in the contents
+   * asked for it. Matches-only narrows the list, so a rule the list does not hold moves nothing
+   * rather than scrolling a wrong row into view.
+   */
+  const scrollToCoreRule = useCallback(
+    (number: CoreRuleNumber) => {
+      const row = rowIndex.get(number);
+
+      if (row !== undefined) scrollToRow(row);
+    },
+    [rowIndex, scrollToRow],
+  );
+
+  /**
    * One act: resolve the hit the reader is about to stand on, move the document to the rule that
    * holds it, then move the counter. Matches-only shows every match, so that rule is always in the
-   * shown list — but when the lookup disagrees nothing moves, rather than a wrong row scrolling
-   * into view.
+   * shown list.
    */
   const stepToHit = useCallback(
     (step: number) => {
       const steppedIndex = hitIndex + step;
       const steppedHit = activeCoreRuleHit(search, steppedIndex);
 
-      if (steppedHit.type === "hit") {
-        const row = rowIndex.get(steppedHit.number);
-
-        if (row !== undefined) scrollToRow(row);
-      }
+      if (steppedHit.type === "hit") scrollToCoreRule(steppedHit.number);
 
       setHitIndex(steppedIndex);
     },
-    [hitIndex, rowIndex, scrollToRow, search],
+    [hitIndex, scrollToCoreRule, search],
   );
 
   /**
@@ -97,6 +111,7 @@ function useCoreRulesSearch(coreRules: readonly CoreRule[], scrollToRow: (row: n
     highlights,
     matchesOnly,
     query,
+    scrollToCoreRule,
     search,
     shownCoreRules,
     stepToNextHit,

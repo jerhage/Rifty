@@ -3,7 +3,10 @@ import { match } from "ts-pattern";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { ActiveCoreRuleHit, CoreRuleSearch } from "@/features/rules/core-rule-search";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
-import { isCoreRuleChapterNumber } from "@/features/rules/value-objects/core-rule-number";
+import {
+  coreRuleDepthOf,
+  isCoreRuleChapterNumber,
+} from "@/features/rules/value-objects/core-rule-number";
 
 /** The three ways the document renders: a chapter, a heading under it, and a numbered rule. */
 type CoreRuleRowKind = "chapter" | "heading" | "rule";
@@ -16,6 +19,18 @@ function coreRuleRowKindOf(coreRule: CoreRule): CoreRuleRowKind {
 
 function coreRuleChapters(coreRules: readonly CoreRule[]): readonly CoreRule[] {
   return coreRules.filter((coreRule) => coreRuleRowKindOf(coreRule) === "chapter");
+}
+
+/**
+ * The table of contents: every depth-1 heading in document order, five of which are chapters. It is
+ * a filter of the document the screen already holds rather than a second read, and it stops at
+ * depth 1: taking the levels below would list all 1364 entries, which is the document again rather
+ * than a list of where to go in it.
+ */
+function coreRulesContents(coreRules: readonly CoreRule[]): readonly CoreRule[] {
+  return coreRules.filter(
+    (coreRule) => coreRule.kind === "heading" && coreRuleDepthOf(coreRule.number) === 1,
+  );
 }
 
 function numberedCoreRuleCount(coreRules: readonly CoreRule[]): number {
@@ -67,6 +82,7 @@ export {
   coreRuleChapters,
   coreRuleHitPositionLabel,
   coreRuleRowKindOf,
+  coreRulesContents,
   coreRulesCountLabel,
   coreRulesEditionLabel,
   numberedCoreRuleCount,

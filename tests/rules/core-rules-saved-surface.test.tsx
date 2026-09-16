@@ -7,6 +7,10 @@ import { MaxReadingWidth } from "@/constants/theme";
 import type { Bookmark } from "@/features/annotation/bookmark";
 import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
+import {
+  SCRATCHPAD_NOTES_NAME,
+  SCRATCHPAD_TITLE,
+} from "@/features/annotation/presentation/note-format";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import { CORE_RULES_NOTHING_SAVED_MESSAGE } from "@/features/rules/presentation/core-rules-format";
@@ -314,7 +318,7 @@ describe("the notes on a saved rule", () => {
     await openSavedPane(["501.1"]);
 
     expect(await screen.findByText("No notes on this one yet.")).toBeTruthy();
-    expect(screen.getByText("0 notes")).toBeTruthy();
+    expect(screen.getByLabelText("0 notes on 501.1")).toBeTruthy();
   });
 
   it("should add one when the field has something in it", async () => {
@@ -531,5 +535,62 @@ describe("the saved surface and the document", () => {
     expect(screen.queryByLabelText("Bookmark 101.1")).toBeNull();
     expect(screen.getByRole("button", { name: /^101\.1, Deck Construction\./ })).toBeTruthy();
     expect(screen.getByText("1 bookmarked rule")).toBeTruthy();
+  });
+});
+
+describe("the scratchpad on the saved surface", () => {
+  it("should stand above the bookmarked rules in the pane", async () => {
+    await openSavedPane(["501.1"]);
+
+    expect(screen.getByRole("header", { name: SCRATCHPAD_TITLE })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Bookmarked rules 1" })).toBeTruthy();
+    expect(
+      await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` }),
+    ).toBeTruthy();
+  });
+
+  it("should stand on the saved face of the phone sheet as well", async () => {
+    await renderRules(PHONE, ["501.1"]);
+
+    await fireEvent.press(screen.getByRole("button", { name: "1 bookmarked rule" }));
+
+    expect(screen.getByRole("header", { name: SCRATCHPAD_TITLE })).toBeTruthy();
+    expect(
+      await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` }),
+    ).toBeTruthy();
+  });
+
+  it("should stand there when no rule is marked at all", async () => {
+    await openSavedPane();
+
+    expect(screen.getByRole("header", { name: SCRATCHPAD_TITLE })).toBeTruthy();
+    expect(screen.getByText(CORE_RULES_NOTHING_SAVED_MESSAGE)).toBeTruthy();
+  });
+
+  it("should write what it holds against no subject at all", async () => {
+    const { noteStore } = await openSavedPane(["501.1"]);
+
+    await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` });
+    await addNote(SCRATCHPAD_NOTES_NAME, "Judge called it on turn four.");
+
+    await waitFor(() => expect(noteStore.notes()).toHaveLength(1));
+    expect(noteStore.notes()[0]?.subject).toBeNull();
+    expect(noteStore.scopes()).toContainEqual({ type: "standalone" });
+  });
+
+  it("should keep a rule's notes out of it and its own out of the rule's", async () => {
+    const { noteStore } = await openSavedPane(["501.1"]);
+
+    await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` });
+    await addNote(SCRATCHPAD_NOTES_NAME, "Anything at all.");
+    await addNote("501.1", "Chip damage, checked.");
+
+    await waitFor(() => expect(noteStore.notes()).toHaveLength(2));
+    expect(
+      (await screen.findByLabelText(`Note 1 on ${SCRATCHPAD_NOTES_NAME}`)).props.defaultValue,
+    ).toBe("Anything at all.");
+    expect((await screen.findByLabelText("Note 1 on 501.1")).props.defaultValue).toBe(
+      "Chip damage, checked.",
+    );
   });
 });

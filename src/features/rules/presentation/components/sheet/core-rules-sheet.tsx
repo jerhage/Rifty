@@ -17,7 +17,7 @@ import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-nu
 import { useTheme } from "@/hooks/use-theme";
 
 import { CoreRulesContentsList } from "../contents/core-rules-contents-list";
-import { CoreRulesSavedList } from "../saved/core-rules-saved-list";
+import { CoreRulesSavedSurface } from "../saved/core-rules-saved-surface";
 
 interface CoreRulesSheetProps {
   readonly bookmarkedNumbers: ReadonlySet<CoreRuleNumber>;
@@ -67,7 +67,7 @@ function CoreRulesSheet({
                 <CoreRulesContentsList coreRules={coreRules} onSelectEntry={onGoToCoreRule} />
               ))
               .with("saved", () => (
-                <CoreRulesSavedList
+                <CoreRulesSavedSurface
                   bookmarkedNumbers={bookmarkedNumbers}
                   clock={clock}
                   coreRules={coreRules}

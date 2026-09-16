@@ -28,8 +28,8 @@ import { useLayoutSize } from "@/hooks/use-layout-size";
 import { CoreRulesContentsColumn } from "../components/contents/core-rules-contents-column";
 import { CoreRuleRow } from "../components/core-rule-row";
 import { CoreRulesHeader } from "../components/core-rules-header";
-import { CoreRulesSavedList } from "../components/saved/core-rules-saved-list";
 import { CoreRulesSavedPane } from "../components/saved/core-rules-saved-pane";
+import { CoreRulesSavedSurface } from "../components/saved/core-rules-saved-surface";
 import { CoreRulesSheet } from "../components/sheet/core-rules-sheet";
 
 interface CoreRulesScreenProps {
@@ -140,7 +140,7 @@ function CoreRulesScreen({
             expanded={savedPlacement.expanded}
             onToggle={savedPlacement.toggle}
           >
-            <CoreRulesSavedList
+            <CoreRulesSavedSurface
               bookmarkedNumbers={bookmarkedNumbers}
               clock={clock}
               coreRules={coreRules}

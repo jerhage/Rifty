@@ -9,6 +9,7 @@ import type { CardSet } from "@/features/set/card-set";
 import type { Deck } from "@/features/deck/deck/deck";
 import type { ReferenceDataStore } from "@/infrastructure/database/reference-data-store";
 import type { DeckDataStore } from "@/infrastructure/database/deck-data-store";
+import { applyCoreRulesSeed, type CoreRulesSeed } from "@/infrastructure/database/reference-seeder";
 import {
   cardKeywordTargets,
   cardKeywords,
@@ -37,6 +38,7 @@ import {
   tags,
 } from "@/infrastructure/database/reference-schema/taxonomy";
 import { SqliteCardRepository } from "@/infrastructure/sqlite/sqlite-card-repository";
+import { SqliteCoreRulesRepository } from "@/infrastructure/sqlite/sqlite-core-rules-repository";
 import { SqliteDeckRepository } from "@/infrastructure/sqlite/sqlite-deck-repository";
 import { SqliteKeywordRepository } from "@/infrastructure/sqlite/sqlite-keyword-repository";
 import { SqliteSetRepository } from "@/infrastructure/sqlite/sqlite-set-repository";
@@ -47,11 +49,13 @@ interface SqliteScenarioStore extends ReferenceDataStore {
   close(): void;
   removeCardMedia(printingId: string): void;
   seedCard(card: Card): void;
+  seedCoreRules(seed: CoreRulesSeed): Promise<void>;
   seedDeck(deck: Deck): void;
   seedSet(cardSet: CardSet): void;
 }
 
 const TEST_IMAGE_BASE_URL = "http://localhost:8787";
+const CORE_RULES_TEST_VERSION = "scenario";
 
 function createSqliteScenarioStore(): SqliteScenarioStore {
   const client = new DatabaseSync(":memory:");
@@ -89,6 +93,10 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         )
         .run();
     }
+  }
+
+  async function seedCoreRules(seed: CoreRulesSeed): Promise<void> {
+    await applyCoreRulesSeed(database, seed, CORE_RULES_TEST_VERSION);
   }
 
   function seedCard(card: Card): void {
@@ -279,11 +287,13 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
 
   return {
     cards: new SqliteCardRepository(database, TEST_IMAGE_BASE_URL),
+    coreRules: new SqliteCoreRulesRepository(database),
     keywords: new SqliteKeywordRepository(database),
     sets: new SqliteSetRepository(database),
     deckStore: { repository: new SqliteDeckRepository(database) },
     removeCardMedia,
     seedCard,
+    seedCoreRules,
     seedDeck,
     seedSet,
     close: () => client.close(),

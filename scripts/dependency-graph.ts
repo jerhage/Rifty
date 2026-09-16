@@ -8,6 +8,7 @@ const featureImportAllowances: Record<string, readonly string[]> = {
   analysis: ["analysis", "card"],
   catalog: ["catalog", "card", "set"],
   deck: ["deck", "card", "analysis"],
+  rules: ["rules"],
 };
 const zonesForbiddenFromFeatures = ["components", "hooks", "constants", "shared", "application"];
 const zonesForbiddenFromPersistenceFreeFeatures = ["infrastructure", "composition"];

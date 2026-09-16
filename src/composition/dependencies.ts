@@ -5,6 +5,7 @@ import { cardImageBaseUrl } from "@/composition/card-image-host";
 import type { CardRepository } from "@/features/card/card-repository";
 import type { KeywordLister } from "@/features/card/keyword/keyword-lister";
 import type { DeckRepository } from "@/features/deck/deck/deck-repository";
+import type { CoreRulesRepository } from "@/features/rules/core-rules-repository";
 import type { SetRepository } from "@/features/set/set-repository";
 import { openAppDataStore } from "@/infrastructure/database/open-app-data-store";
 import { CryptoIdGenerator } from "@/infrastructure/identity/crypto-id-generator";
@@ -22,6 +23,10 @@ interface DeckDependencies {
   readonly deckRepository: DeckRepository;
 }
 
+interface RulesDependencies {
+  readonly coreRulesRepository: CoreRulesRepository;
+}
+
 interface SetDependencies {
   readonly setRepository: SetRepository;
 }
@@ -32,6 +37,7 @@ interface AppDependencies {
   readonly decks: DeckDependencies;
   readonly idGenerator: IdGenerator;
   readonly randomSource: RandomSource;
+  readonly rules: RulesDependencies;
   readonly sets: SetDependencies;
 }
 
@@ -49,6 +55,13 @@ async function createAppDependencies(): Promise<AppDependencies> {
     },
     idGenerator: new CryptoIdGenerator(),
     randomSource: new MathRandomSource(),
+    rules: {
+      coreRulesRepository: withQueryLogging(
+        store.reference.coreRules,
+        logger,
+        "CoreRulesRepository",
+      ),
+    },
     sets: {
       setRepository: withQueryLogging(store.reference.sets, logger, "SetRepository"),
     },
@@ -56,4 +69,10 @@ async function createAppDependencies(): Promise<AppDependencies> {
 }
 
 export { createAppDependencies };
-export type { AppDependencies, CardDependencies, DeckDependencies, SetDependencies };
+export type {
+  AppDependencies,
+  CardDependencies,
+  DeckDependencies,
+  RulesDependencies,
+  SetDependencies,
+};

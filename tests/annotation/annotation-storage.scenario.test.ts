@@ -203,6 +203,29 @@ describe("annotation storage scenarios", () => {
     expect(onNothing.notes.map((note) => note.body)).toEqual(["On nothing"]);
   });
 
+  it("should read every note of one kind in one query, and none of another kind", async () => {
+    const capabilities = noteCapabilities(
+      "2026-09-16T10:00:00.000Z",
+      "2026-09-16T10:01:00.000Z",
+      "2026-09-16T10:02:00.000Z",
+    );
+    const OTHER_RULE = subject("coreRule", "204.1");
+    await writeNote({ id: null, subject: RULE, title: "", body: "On one rule" }, capabilities);
+    await writeNote(
+      { id: null, subject: OTHER_RULE, title: "", body: "On another rule" },
+      capabilities,
+    );
+    await writeNote({ id: null, subject: CARD, title: "", body: "On the card" }, capabilities);
+
+    const ofKind = await listNotes(
+      { type: "ofKind", kind: "coreRule" },
+      { noteLister: store.annotationStore.notes },
+    );
+
+    expect(ofKind.notes.map((note) => note.body)).toEqual(["On another rule", "On one rule"]);
+    expect(store.executedSql.at(-1)).toMatch(/where .*"subject_kind" = \?/);
+  });
+
   it("should collect many notes on one subject, newest writing first", async () => {
     const capabilities = noteCapabilities(
       "2026-09-16T10:00:00.000Z",

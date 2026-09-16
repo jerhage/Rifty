@@ -22,6 +22,13 @@ interface CoreRuleRowProps {
   readonly coreRule: CoreRule;
   /** Absent while nothing is searched, or while this rule holds no occurrence of the query. */
   readonly highlight: CoreRuleRowHighlight | null;
+  /**
+   * The second slot the document fills. It is handed what pressing the control must do, because
+   * opening the popup is the screen's own state and the feature that draws the control has none.
+   */
+  readonly notesControlFor: (number: CoreRuleNumber, onOpen: () => void) => ReactNode;
+  /** Takes the rule, so one function serves every row and the row can be memoized. */
+  readonly onOpenNotes: (coreRule: CoreRule) => void;
   /** Takes the rule's number, so one function serves every row and the row can be memoized. */
   readonly onSelect: (number: CoreRuleNumber) => void;
   readonly selected: boolean;
@@ -35,6 +42,8 @@ function CoreRuleRowFace({
   bookmarkFor,
   coreRule,
   highlight,
+  notesControlFor,
+  onOpenNotes,
   onSelect,
   selected,
 }: CoreRuleRowProps) {
@@ -64,6 +73,7 @@ function CoreRuleRowFace({
           bookmark={bookmarkFor(coreRule.number)}
           coreRule={coreRule}
           highlight={highlight}
+          notesControl={notesControlFor(coreRule.number, () => onOpenNotes(coreRule))}
         />
       </Pressable>
     ))

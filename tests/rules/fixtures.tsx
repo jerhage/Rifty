@@ -2,8 +2,11 @@ import type { ReactNode } from "react";
 
 import type { NoteManager } from "@/features/annotation/note-manager";
 import { BookmarkToggle } from "@/features/annotation/presentation/components/bookmark-toggle";
+import { NotesControl } from "@/features/annotation/presentation/components/notes-control";
 import { SubjectNotes } from "@/features/annotation/presentation/components/subject-notes";
 import type { BookmarkedSubjects } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
+import type { SubjectNoteCounts } from "@/features/annotation/presentation/data/subject-note-counts-data";
+import { notesOnLabel } from "@/features/annotation/presentation/note-format";
 import type { CoreRule, CoreRuleDetail } from "@/features/rules/core-rule";
 import { coreRuleBookmarkLabel } from "@/features/rules/presentation/core-rules-format";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
@@ -74,10 +77,13 @@ const NOTHING_MARKED: BookmarkedSubjects<"coreRule"> = {
   toggleBookmark: () => undefined,
 };
 
+const NOTHING_NOTED: SubjectNoteCounts<"coreRule"> = { noteCountOf: () => 0 };
+
 /** What the screen's callers fill, holding the very controls and counts the route supplies. */
 function coreRuleAnnotations(
   bookmarked: BookmarkedSubjects<"coreRule"> = NOTHING_MARKED,
   noteManager: NoteManager = createNoteStore().manager,
+  noted: SubjectNoteCounts<"coreRule"> = NOTHING_NOTED,
 ) {
   const clock = fixedClock(ANNOTATED_AT);
   const idGenerator = sequentialIds();
@@ -85,12 +91,20 @@ function coreRuleAnnotations(
   return {
     bookmarkedCount: bookmarked.bookmarkedCount,
     isBookmarked: bookmarked.isBookmarked,
+    isNoted: (number: CoreRuleNumber): boolean => noted.noteCountOf(number) > 0,
     bookmarkFor: (number: CoreRuleNumber): ReactNode => (
       <BookmarkToggle
         alignment="start"
         bookmarked={bookmarked.isBookmarked(number)}
         label={coreRuleBookmarkLabel(number)}
         onPress={() => bookmarked.toggleBookmark(number)}
+      />
+    ),
+    notesControlFor: (number: CoreRuleNumber, onOpen: () => void): ReactNode => (
+      <NotesControl
+        count={noted.noteCountOf(number)}
+        label={notesOnLabel(number)}
+        onPress={onOpen}
       />
     ),
     notesFor: (number: CoreRuleNumber): ReactNode => (

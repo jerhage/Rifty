@@ -18,23 +18,29 @@ interface CoreRulesSavedListProps {
   readonly coreRules: readonly CoreRule[];
   /** Asked of every rule the document holds, whether or not a query has filtered it out of view. */
   readonly isBookmarked: (number: CoreRuleNumber) => boolean;
+  readonly isNoted: (number: CoreRuleNumber) => boolean;
   readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onGoToCoreRule: (number: CoreRuleNumber) => void;
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
 }
 
 /**
- * What the reader has kept, in document order rather than the order the marks were made. It holds
- * no scroller of its own, so each container decides how its own list scrolls.
+ * What the reader has kept, in document order rather than the order either act was made: a rule is
+ * filed here by a mark, by a note, or by both. It holds no scroller of its own, so each container
+ * decides how its own list scrolls.
  */
 function CoreRulesSavedList({
   coreRules,
   isBookmarked,
+  isNoted,
   notesFor,
   onGoToCoreRule,
   onRemoveBookmark,
 }: CoreRulesSavedListProps) {
-  const saved = useMemo(() => savedCoreRules(coreRules, isBookmarked), [coreRules, isBookmarked]);
+  const saved = useMemo(
+    () => savedCoreRules(coreRules, isBookmarked, isNoted),
+    [coreRules, isBookmarked, isNoted],
+  );
 
   return (
     <LabelledSection label={coreRuleSavedSectionLabel(saved.length)}>

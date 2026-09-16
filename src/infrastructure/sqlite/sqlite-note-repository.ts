@@ -71,6 +71,7 @@ function scopeCondition(scope: NoteListScope): SQL | undefined {
   return match<NoteListScope, SQL | undefined>(scope)
     .with({ type: "all" }, () => undefined)
     .with({ type: "standalone" }, () => isNull(notes.subjectKind))
+    .with({ type: "ofKind" }, ({ kind }) => eq(notes.subjectKind, kind))
     .with({ type: "onSubject" }, ({ subject }) =>
       and(eq(notes.subjectKind, subject.kind), eq(notes.subjectId, subject.id)),
     )

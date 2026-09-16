@@ -156,10 +156,11 @@ function savedCoreRulesByNumber(
   );
 
   return new Map(
-    savedCoreRules(coreRules, (number) => noted.has(number)).map((saved) => [
-      saved.coreRule.number,
-      saved,
-    ]),
+    savedCoreRules(
+      coreRules,
+      () => false,
+      (number) => noted.has(number),
+    ).map((saved) => [saved.coreRule.number, saved]),
   );
 }
 

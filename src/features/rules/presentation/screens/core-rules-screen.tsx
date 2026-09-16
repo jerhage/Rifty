@@ -24,6 +24,7 @@ import { useLayoutSize } from "@/hooks/use-layout-size";
 
 import { CoreRulesContentsColumn } from "../components/contents/core-rules-contents-column";
 import { CoreRuleRow } from "../components/core-rule-row";
+import { CoreRuleNotePopup } from "../components/note/core-rule-note-popup";
 import { CoreRulesHeader } from "../components/core-rules-header";
 import { CoreRulesSavedPane } from "../components/saved/core-rules-saved-pane";
 import { CoreRulesSavedSurface } from "../components/saved/core-rules-saved-surface";
@@ -36,6 +37,9 @@ interface CoreRulesScreenProps {
   readonly edition: CoreRulesEdition;
   /** Asked of every rule the document holds, whether or not a query has filtered it out of view. */
   readonly isBookmarked: (number: CoreRuleNumber) => boolean;
+  /** The same reach as `isBookmarked`, and independent of it: neither act implies the other. */
+  readonly isNoted: (number: CoreRuleNumber) => boolean;
+  readonly notesControlFor: (number: CoreRuleNumber, onOpen: () => void) => ReactNode;
   readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
 }
@@ -46,6 +50,8 @@ function CoreRulesScreen({
   coreRules,
   edition,
   isBookmarked,
+  isNoted,
+  notesControlFor,
   notesFor,
   onRemoveBookmark,
 }: CoreRulesScreenProps) {
@@ -65,6 +71,7 @@ function CoreRulesScreen({
     toggleMatchesOnly,
   } = useCoreRulesSearch(coreRules, scrollToRow);
   const [selectedNumber, setSelectedNumber] = useState<CoreRuleNumber | null>(null);
+  const [notedCoreRule, setNotedCoreRule] = useState<CoreRule | null>(null);
   const [sheetState, setSheetState] = useState<CoreRulesSheetState>("hidden");
   const [savedPaneExpanded, setSavedPaneExpanded] = useState(false);
   const foundNothing = search.type === "searched" && search.hitCount === 0;
@@ -74,6 +81,8 @@ function CoreRulesScreen({
     setSelectedNumber((current) => (current === number ? null : number));
   }, []);
 
+  const openNotes = useCallback((coreRule: CoreRule) => setNotedCoreRule(coreRule), []);
+  const closeNotes = useCallback(() => setNotedCoreRule(null), []);
   const showContents = useCallback(() => setSheetState("contents"), []);
   const showSaved = useCallback(() => setSheetState("saved"), []);
   const hideSheet = useCallback(() => setSheetState("hidden"), []);
@@ -125,6 +134,8 @@ function CoreRulesScreen({
               coreRules={shownCoreRules}
               documentRef={documentRef}
               highlights={highlights}
+              notesControlFor={notesControlFor}
+              onOpenNotes={openNotes}
               onSelectCoreRule={selectCoreRule}
               selectedNumber={selectedNumber}
             />
@@ -139,6 +150,7 @@ function CoreRulesScreen({
             <CoreRulesSavedSurface
               coreRules={coreRules}
               isBookmarked={isBookmarked}
+              isNoted={isNoted}
               notesFor={notesFor}
               onGoToCoreRule={scrollToCoreRule}
               onRemoveBookmark={onRemoveBookmark}
@@ -151,6 +163,7 @@ function CoreRulesScreen({
           bookmarkedCount={bookmarkedCount}
           coreRules={coreRules}
           isBookmarked={isBookmarked}
+          isNoted={isNoted}
           notesFor={notesFor}
           onDismiss={hideSheet}
           onGoToCoreRule={goToCoreRuleFromSheet}
@@ -159,6 +172,12 @@ function CoreRulesScreen({
           state={sheetState}
         />
       )}
+      <CoreRuleNotePopup
+        coreRule={notedCoreRule}
+        coreRules={coreRules}
+        notes={notedCoreRule === null ? null : notesFor(notedCoreRule.number)}
+        onDismiss={closeNotes}
+      />
     </ThemedView>
   );
 }
@@ -195,6 +214,8 @@ function CoreRuleDocument({
   coreRules,
   documentRef,
   highlights,
+  notesControlFor,
+  onOpenNotes,
   onSelectCoreRule,
   selectedNumber,
 }: {
@@ -203,13 +224,15 @@ function CoreRuleDocument({
   readonly coreRules: readonly CoreRule[];
   readonly documentRef: RefObject<FlashListRef<CoreRule> | null>;
   readonly highlights: ReadonlyMap<CoreRuleNumber, CoreRuleRowHighlight>;
+  readonly notesControlFor: (number: CoreRuleNumber, onOpen: () => void) => ReactNode;
+  readonly onOpenNotes: (coreRule: CoreRule) => void;
   readonly onSelectCoreRule: (number: CoreRuleNumber) => void;
   readonly selectedNumber: CoreRuleNumber | null;
 }) {
   const insets = useSafeAreaInsets();
   const rowState = useMemo(
-    () => ({ bookmarkFor, highlights, selectedNumber }),
-    [bookmarkFor, highlights, selectedNumber],
+    () => ({ bookmarkFor, highlights, notesControlFor, selectedNumber }),
+    [bookmarkFor, highlights, notesControlFor, selectedNumber],
   );
 
   const columnStyle = match(contentsPlacement)
@@ -233,6 +256,8 @@ function CoreRuleDocument({
           bookmarkFor={bookmarkFor}
           coreRule={item}
           highlight={highlights.get(item.number) ?? null}
+          notesControlFor={notesControlFor}
+          onOpenNotes={onOpenNotes}
           onSelect={onSelectCoreRule}
           selected={item.number === selectedNumber}
         />

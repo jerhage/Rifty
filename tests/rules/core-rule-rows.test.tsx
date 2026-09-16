@@ -45,7 +45,7 @@ function entry(
 }
 
 async function renderRows(coreRules: readonly CoreRule[]) {
-  const { bookmarkFor } = coreRuleAnnotations();
+  const { bookmarkFor, notesControlFor } = coreRuleAnnotations();
 
   return await render(
     <>
@@ -55,6 +55,8 @@ async function renderRows(coreRules: readonly CoreRule[]) {
           coreRule={coreRule}
           highlight={null}
           key={coreRule.number}
+          notesControlFor={notesControlFor}
+          onOpenNotes={() => undefined}
           onSelect={() => undefined}
           selected={false}
         />

@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
 import type { Note } from "@/features/annotation/note";
@@ -47,6 +49,15 @@ function sameSubject(one: Note["subject"], other: Note["subject"]): boolean {
   return one.kind === other.kind && one.id === other.id;
 }
 
+function inScope(note: Note, scope: NoteListScope): boolean {
+  return match(scope)
+    .with({ type: "all" }, () => true)
+    .with({ type: "standalone" }, () => note.subject === null)
+    .with({ type: "ofKind" }, ({ kind }) => note.subject?.kind === kind)
+    .with({ type: "onSubject" }, ({ subject: scoped }) => sameSubject(note.subject, scoped))
+    .exhaustive();
+}
+
 /**
  * The store as a screen meets it, ordered newest first as `NoteLister` promises. It counts what it
  * was asked rather than what it answered, so a screen reading once per note is visible in the
@@ -63,17 +74,7 @@ function createNoteStore(seeded: readonly Note[] = []): NoteStore {
       getAll: (scope) => {
         scopes.push(scope);
 
-        return Promise.resolve(
-          [...notes]
-            .reverse()
-            .filter((note) =>
-              scope.type === "all"
-                ? true
-                : scope.type === "standalone"
-                  ? note.subject === null
-                  : sameSubject(note.subject, scope.subject),
-            ),
-        );
+        return Promise.resolve([...notes].reverse().filter((note) => inScope(note, scope)));
       },
       remove: (id) => {
         removals += 1;

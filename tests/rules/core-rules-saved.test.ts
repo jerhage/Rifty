@@ -25,21 +25,23 @@ function marks(...numbers: readonly string[]): (number: CoreRuleNumber) => boole
   return (number) => marked.has(number);
 }
 
+const NOTHING_NOTED = marks();
+
 describe("savedCoreRules", () => {
   it("should list only the marked rules", () => {
-    const saved = savedCoreRules(DOCUMENT, marks("501.1"));
+    const saved = savedCoreRules(DOCUMENT, marks("501.1"), NOTHING_NOTED);
 
     expect(saved.map((entry) => entry.coreRule.number)).toEqual(["501.1"]);
   });
 
   it("should list them in document order rather than in the order they were marked", () => {
-    const saved = savedCoreRules(DOCUMENT, marks("700.1", "101.1", "501.1"));
+    const saved = savedCoreRules(DOCUMENT, marks("700.1", "101.1", "501.1"), NOTHING_NOTED);
 
     expect(saved.map((entry) => entry.coreRule.number)).toEqual(["101.1", "501.1", "700.1"]);
   });
 
   it("should take the nearest heading above a rule rather than a fixed level", () => {
-    const saved = savedCoreRules(DOCUMENT, marks("101.1.a", "501.1", "700.1"));
+    const saved = savedCoreRules(DOCUMENT, marks("101.1.a", "501.1", "700.1"), NOTHING_NOTED);
 
     expect(saved.map((entry) => entry.heading?.number)).toEqual(["101", "501", "700"]);
     expect(saved.map((entry) => entry.heading?.body)).toEqual([
@@ -56,18 +58,19 @@ describe("savedCoreRules", () => {
         { number: "101.1", body: "Runes pay for costs." },
       ]),
       marks("101.1"),
+      NOTHING_NOTED,
     );
 
     expect(saved[0]?.heading).toBeNull();
   });
 
   it("should drop a mark naming a number the document no longer holds", () => {
-    const saved = savedCoreRules(DOCUMENT, marks("101.1", "999.9"));
+    const saved = savedCoreRules(DOCUMENT, marks("101.1", "999.9"), NOTHING_NOTED);
 
     expect(saved.map((entry) => entry.coreRule.number)).toEqual(["101.1"]);
   });
 
   it("should list nothing when nothing is marked", () => {
-    expect(savedCoreRules(DOCUMENT, marks())).toEqual([]);
+    expect(savedCoreRules(DOCUMENT, marks(), NOTHING_NOTED)).toEqual([]);
   });
 });

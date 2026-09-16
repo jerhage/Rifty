@@ -21,6 +21,7 @@ interface CoreRulesSheetProps {
   readonly bookmarkedCount: number;
   readonly coreRules: readonly CoreRule[];
   readonly isBookmarked: (number: CoreRuleNumber) => boolean;
+  readonly isNoted: (number: CoreRuleNumber) => boolean;
   readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onDismiss: () => void;
   readonly onGoToCoreRule: (number: CoreRuleNumber) => void;
@@ -38,6 +39,7 @@ function CoreRulesSheet({
   bookmarkedCount,
   coreRules,
   isBookmarked,
+  isNoted,
   notesFor,
   onDismiss,
   onGoToCoreRule,
@@ -66,6 +68,7 @@ function CoreRulesSheet({
                 <CoreRulesSavedSurface
                   coreRules={coreRules}
                   isBookmarked={isBookmarked}
+                  isNoted={isNoted}
                   notesFor={notesFor}
                   onGoToCoreRule={onGoToCoreRule}
                   onRemoveBookmark={onRemoveBookmark}

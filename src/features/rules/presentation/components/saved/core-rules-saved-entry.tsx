@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import {
+  coreRuleKeepingLabel,
   coreRuleRemoveBookmarkLabel,
   coreRuleSavedContextLabel,
   coreRuleSavedEntryLabel,
@@ -23,6 +24,10 @@ interface CoreRulesSavedEntryProps {
   readonly saved: SavedCoreRule;
 }
 
+/**
+ * The removal is offered only where a mark stands, and it gives up the mark alone: the notes are
+ * stored apart and are given up one at a time through their own controls.
+ */
 function CoreRulesSavedEntry({
   notes,
   onGoToCoreRule,
@@ -30,7 +35,7 @@ function CoreRulesSavedEntry({
   saved,
 }: CoreRulesSavedEntryProps) {
   const theme = useTheme();
-  const { coreRule } = saved;
+  const { coreRule, heading, keeping } = saved;
 
   return (
     <View
@@ -55,24 +60,29 @@ function CoreRulesSavedEntry({
               {coreRule.number}
             </ThemedText>
             <ThemedText style={styles.heading} type="heading">
-              {coreRuleSavedContextLabel(saved)}
+              {coreRuleSavedContextLabel(coreRule, heading)}
             </ThemedText>
           </View>
           <ThemedText numberOfLines={SAVED_RULE_LINES} themeColor="textSecondary" type="body">
             {coreRule.body}
           </ThemedText>
         </Pressable>
-        <Pressable
-          accessibilityLabel={coreRuleRemoveBookmarkLabel(coreRule.number)}
-          accessibilityRole="button"
-          onPress={() => onRemoveBookmark(coreRule.number)}
-          style={({ pressed }) => [styles.remove, pressed && styles.pressed]}
-        >
-          <ThemedText themeColor="textTertiary" type="monoValue">
-            ×
-          </ThemedText>
-        </Pressable>
+        {keeping === "bookmarked" ? (
+          <Pressable
+            accessibilityLabel={coreRuleRemoveBookmarkLabel(coreRule.number)}
+            accessibilityRole="button"
+            onPress={() => onRemoveBookmark(coreRule.number)}
+            style={({ pressed }) => [styles.remove, pressed && styles.pressed]}
+          >
+            <ThemedText themeColor="textTertiary" type="monoValue">
+              ×
+            </ThemedText>
+          </Pressable>
+        ) : null}
       </View>
+      <ThemedText themeColor="textTertiary" type="mono">
+        {coreRuleKeepingLabel(keeping)}
+      </ThemedText>
       {notes}
     </View>
   );

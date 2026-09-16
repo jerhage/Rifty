@@ -26,6 +26,8 @@ interface CoreRuleNumberedRowProps {
   readonly bookmark: ReactNode;
   readonly coreRule: CoreRule;
   readonly highlight: CoreRuleRowHighlight | null;
+  /** Stands left of the mark, and says on its own face how much the rule already carries. */
+  readonly notesControl: ReactNode;
 }
 
 function CoreRuleNumberedRow({
@@ -33,6 +35,7 @@ function CoreRuleNumberedRow({
   bookmark,
   coreRule,
   highlight,
+  notesControl,
 }: CoreRuleNumberedRowProps) {
   const { fontScale } = useWindowDimensions();
 
@@ -49,7 +52,10 @@ function CoreRuleNumberedRow({
         <CoreRuleText highlight={highlight?.body ?? null} text={coreRule.body} type="body" />
         <CoreRuleDetails details={coreRule.details} highlight={highlight} />
       </View>
-      {bookmark}
+      <View style={styles.controls}>
+        {notesControl}
+        {bookmark}
+      </View>
     </View>
   );
 }
@@ -73,5 +79,12 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     minWidth: 0,
+  },
+  /** No slop on either control: they are adjacent, so a grown target would overlap its neighbour. */
+  controls: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    flexGrow: 0,
+    flexShrink: 0,
   },
 });

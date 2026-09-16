@@ -5,7 +5,10 @@ import type { Theme } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { ActiveCoreRuleHit, CoreRuleSearch } from "@/features/rules/core-rule-search";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
-import type { SavedCoreRule } from "@/features/rules/presentation/core-rules-saved";
+import type {
+  CoreRuleKeeping,
+  SavedCoreRule,
+} from "@/features/rules/presentation/core-rules-saved";
 import {
   coreRuleDepthOf,
   isCoreRuleChapterNumber,
@@ -69,14 +72,29 @@ function coreRuleBookmarkCountLabel(count: number): string {
   return `${count} bookmarked ${count === 1 ? "rule" : "rules"}`;
 }
 
-/** The context a marked rule is listed under, and the rule's own number when it stands under none. */
-function coreRuleSavedContextLabel({ coreRule, heading }: SavedCoreRule): string {
+/** The context a kept rule is listed under, and the rule's own number when it stands under none. */
+function coreRuleSavedContextLabel(coreRule: CoreRule, heading: CoreRule | null): string {
   return heading === null ? coreRule.number : heading.body;
 }
 
 /** The whole entry, because the block that jumps to it is one control and swallows its own text. */
-function coreRuleSavedEntryLabel(saved: SavedCoreRule): string {
-  return `${saved.coreRule.number}, ${coreRuleSavedContextLabel(saved)}. ${saved.coreRule.body}`;
+function coreRuleSavedEntryLabel({ coreRule, heading }: SavedCoreRule): string {
+  return `${coreRule.number}, ${coreRuleSavedContextLabel(coreRule, heading)}. ${coreRule.body}`;
+}
+
+/** Which of the two acts filed the rule, said on the entry so the list does not read as one act. */
+const CORE_RULE_KEEPING_LABELS: Readonly<Record<CoreRuleKeeping, string>> = {
+  bookmarked: "Bookmarked",
+  noted: "Noted",
+};
+
+function coreRuleKeepingLabel(keeping: CoreRuleKeeping): string {
+  return CORE_RULE_KEEPING_LABELS[keeping];
+}
+
+/** Heads the popup a rule's notes are written in, named so the rule it is about is never in doubt. */
+function coreRuleNotesTitle(number: CoreRuleNumber): string {
+  return `Notes on ${number}`;
 }
 
 /** Giving up a mark from the surface, named so a column of removals does not read alike. */
@@ -86,7 +104,7 @@ function coreRuleRemoveBookmarkLabel(number: CoreRuleNumber): string {
 
 /** The design sets the scratchpad and the favorited cards beside it under labels of this shape. */
 function coreRuleSavedSectionLabel(count: number): string {
-  return `Bookmarked rules ${count}`;
+  return `Bookmarked and noted rules ${count}`;
 }
 
 /** An alpha byte on the token rather than a color of its own: both schemes state a six-digit hex. */
@@ -101,7 +119,7 @@ function coreRuleSavedWash(theme: Theme, weight: keyof typeof CoreRuleSavedAlpha
 
 /** What the saved surface says instead of drawing an empty box, in either frame. */
 const CORE_RULES_NOTHING_SAVED_MESSAGE =
-  "Bookmark a rule and it is kept here, with room for a note on how it came up.";
+  "Note a rule with the lines control or bookmark it with the flag. Either one files it here.";
 
 /** Where the reader stands among the hits, counted from one, and `0 / 0` when nothing matched. */
 function coreRuleHitPositionLabel(search: CoreRuleSearch, activeHit: ActiveCoreRuleHit): string {
@@ -173,6 +191,8 @@ export {
   coreRuleChapters,
   coreRuleHitAnnouncement,
   coreRuleHitPositionLabel,
+  coreRuleKeepingLabel,
+  coreRuleNotesTitle,
   coreRuleRemoveBookmarkLabel,
   coreRuleRowKindOf,
   coreRuleSavedContextLabel,

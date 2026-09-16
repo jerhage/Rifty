@@ -9,6 +9,11 @@ function noteCountOnLabel(notesName: string, count: number): string {
   return `${noteCountLabel(count)} on ${notesName}`;
 }
 
+/** The control that opens a subject's notes: a stable name, with the count carried as its value. */
+function notesOnLabel(notesName: string): string {
+  return `Notes on ${notesName}`;
+}
+
 function notePositionLabel(position: number): string {
   return `Note ${position}`;
 }
@@ -86,4 +91,5 @@ export {
   notePositionLabel,
   noteRemoveLabel,
   noteSaveLabel,
+  notesOnLabel,
 };

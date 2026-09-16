@@ -70,7 +70,7 @@ function notedGroupView(subject: NotedSubject): NotedGroupView {
     .with({ type: "coreRule" }, ({ saved }): NotedGroupView => ({
       detail: saved.coreRule.number,
       emptyMessage: NOTES_EMPTY_MESSAGE,
-      name: coreRuleSavedContextLabel(saved),
+      name: coreRuleSavedContextLabel(saved.coreRule, saved.heading),
       notesName: `rule ${saved.coreRule.number}`,
       placeholder: NOTE_PLACEHOLDER,
       writing: { type: "offered", subject: { kind: "coreRule", id: saved.coreRule.number } },

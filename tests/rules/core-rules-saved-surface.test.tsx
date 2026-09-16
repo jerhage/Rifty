@@ -449,7 +449,7 @@ describe("the saved pane on a tablet", () => {
   it("should name and count its own section, leaving room for the ones beside it", async () => {
     await openSavedPane(["501.1", "700.1"]);
 
-    expect(screen.getByRole("header", { name: "Bookmarked rules 2" })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Bookmarked and noted rules 2" })).toBeTruthy();
   });
 
   it("should say so on the strip and in the pane when nothing is marked", async () => {
@@ -544,7 +544,7 @@ describe("the scratchpad and the saved surface", () => {
     expect(
       screen.queryByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` }),
     ).toBeNull();
-    expect(screen.getByRole("header", { name: "Bookmarked rules 1" })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Bookmarked and noted rules 1" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /^501\.1, Turn Structure\./ })).toBeTruthy();
   });
 

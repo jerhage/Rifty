@@ -84,10 +84,10 @@ describe("useDetailOpening on a tablet", () => {
   it("should show the picked subject in the pane without navigating", async () => {
     const { pushRoute, result } = await openingOn(1032, 1376);
 
-    expect(paneOf(result.current).shownId).toBeNull();
+    expect(paneOf(result.current).shown).toEqual({ type: "noSubject" });
     await act(async () => result.current.open(ZED));
 
-    expect(paneOf(result.current).shownId).toBe(ZED.id);
+    expect(paneOf(result.current).shown).toEqual({ id: ZED.id, type: "subject" });
     expect(pushRoute).not.toHaveBeenCalled();
   });
 
@@ -97,7 +97,7 @@ describe("useDetailOpening on a tablet", () => {
     await act(async () => result.current.open(ZED));
     await act(async () => result.current.open(AHRI));
 
-    expect(paneOf(result.current).shownId).toBe(AHRI.id);
+    expect(paneOf(result.current).shown).toEqual({ id: AHRI.id, type: "subject" });
   });
 
   it("should clear the pane when the subject is closed", async () => {
@@ -106,7 +106,7 @@ describe("useDetailOpening on a tablet", () => {
     await act(async () => result.current.open(ZED));
     await act(async () => paneOf(result.current).close());
 
-    expect(paneOf(result.current).shownId).toBeNull();
+    expect(paneOf(result.current).shown).toEqual({ type: "noSubject" });
   });
 
   it("should speak the change the screen reader gets no transition for", async () => {

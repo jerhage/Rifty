@@ -3,6 +3,10 @@ import { useCallback, useState } from "react";
 import { useAnnouncement } from "@/hooks/use-announcement";
 import { useLayoutSize } from "@/hooks/use-layout-size";
 
+type DetailPaneContent<Id> =
+  | { readonly type: "noSubject" }
+  | { readonly type: "subject"; readonly id: Id };
+
 type DetailOpening<Subject, Id> =
   | {
       readonly type: "route";
@@ -12,7 +16,7 @@ type DetailOpening<Subject, Id> =
       readonly type: "pane";
       readonly close: () => void;
       readonly open: (subject: Subject) => void;
-      readonly shownId: Id | null;
+      readonly shown: DetailPaneContent<Id>;
     };
 
 interface DetailWords<Subject, Id> {
@@ -34,27 +38,27 @@ function useDetailOpening<Subject, Id>({
 }: DetailWords<Subject, Id>): DetailOpening<Subject, Id> {
   const { layoutClass } = useLayoutSize();
   const announce = useAnnouncement();
-  const [shownId, setShownId] = useState<Id | null>(null);
+  const [shown, setShown] = useState<DetailPaneContent<Id>>({ type: "noSubject" });
 
   const push = useCallback((subject: Subject) => pushRoute(idOf(subject)), [idOf, pushRoute]);
 
   const showInPane = useCallback(
     (subject: Subject) => {
-      setShownId(idOf(subject));
+      setShown({ id: idOf(subject), type: "subject" });
       announce(openedMessage(subject), "interrupting");
     },
     [announce, idOf, openedMessage],
   );
 
   const closePane = useCallback(() => {
-    setShownId(null);
+    setShown({ type: "noSubject" });
     announce(closedMessage, "interrupting");
   }, [announce, closedMessage]);
 
   return layoutClass === "tablet"
-    ? { close: closePane, open: showInPane, shownId, type: "pane" }
+    ? { close: closePane, open: showInPane, shown, type: "pane" }
     : { open: push, type: "route" };
 }
 
 export { useDetailOpening };
-export type { DetailOpening };
+export type { DetailOpening, DetailPaneContent };

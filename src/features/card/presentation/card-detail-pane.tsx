@@ -8,10 +8,10 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 import type { CardFinder } from "@/features/card/card-finder";
-import type { CardPaneContent } from "@/features/card/presentation/card-pane-content";
 import { CardDetailData } from "@/features/card/presentation/data/card-detail-data";
 import { CardDetailScreen } from "@/features/card/presentation/screens/card-detail-screen";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
+import type { DetailPaneContent } from "@/hooks/use-detail-opening";
 
 function CardDetailPane({
   bookmarkFor,
@@ -24,13 +24,13 @@ function CardDetailPane({
   readonly cardFinder: CardFinder;
   readonly notesFor: (printingId: PrintingId) => ReactNode;
   readonly onClose: () => void;
-  readonly shown: CardPaneContent;
+  readonly shown: DetailPaneContent<PrintingId>;
 }) {
   const insets = useSafeAreaInsets();
 
   return match(shown)
-    .with({ type: "noCard" }, () => <IdleCardPane />)
-    .with({ type: "card" }, ({ printingId }) => (
+    .with({ type: "noSubject" }, () => <IdleCardPane />)
+    .with({ type: "subject" }, ({ id: printingId }) => (
       <ThemedView style={styles.pane}>
         <View style={[styles.closeRow, { paddingTop: insets.top + Spacing.two }]}>
           <IconButton accessibilityLabel="Close the card" glyph="✕" onPress={onClose} />

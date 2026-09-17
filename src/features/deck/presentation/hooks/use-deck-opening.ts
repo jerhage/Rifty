@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
+import { match } from "ts-pattern";
 
 import type { Deck, DeckId } from "@/features/deck/deck/deck";
 import { useAnnouncement } from "@/hooks/use-announcement";
-import { useDetailOpening } from "@/hooks/use-detail-opening";
+import { useDetailOpening, type DetailPaneContent } from "@/hooks/use-detail-opening";
 
 type DeckPaneContent =
   | { readonly type: "noDeck" }
@@ -35,11 +36,17 @@ function openedBesideTheList(deck: Deck): string {
  * The simulation belongs to one deck, so it shows only while that deck is the one shown. Picking
  * another deck needs no reset: the simulated id simply stops matching.
  */
-function deckPaneContent(shownId: DeckId | null, simulatedId: DeckId | null): DeckPaneContent {
-  if (shownId === null) return { type: "noDeck" };
-  if (shownId === simulatedId) return { deckId: shownId, type: "drawSimulation" };
-
-  return { deckId: shownId, type: "detail" };
+function deckPaneContent(
+  shown: DetailPaneContent<DeckId>,
+  simulatedId: DeckId | null,
+): DeckPaneContent {
+  return match(shown)
+    .returnType<DeckPaneContent>()
+    .with({ type: "noSubject" }, () => ({ type: "noDeck" }))
+    .with({ type: "subject" }, ({ id }) =>
+      id === simulatedId ? { deckId: id, type: "drawSimulation" } : { deckId: id, type: "detail" },
+    )
+    .exhaustive();
 }
 
 /** How a deck picked in the deck list gets shown, in the deck list's own words. */
@@ -79,7 +86,7 @@ function useDeckOpening(pushDeckRoute: (deckId: DeckId) => void): DeckOpening {
     },
     openDrawSimulation,
     returnToDetail,
-    shown: deckPaneContent(opening.shownId, simulatedId),
+    shown: deckPaneContent(opening.shown, simulatedId),
     type: "pane",
   };
 }

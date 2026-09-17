@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 
-import type { Card } from "@/features/card/card";
 import type { CardSort } from "@/features/card/card-list-criteria";
 import { toggledSort } from "@/features/card/presentation/card-sort-options";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
@@ -10,6 +9,7 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useDraftSheet } from "@/hooks/use-draft-sheet";
 import { toggle } from "@/shared/toggle";
 
+import type { DeckBuildPick } from "../deck-build-steps";
 import {
   DEFAULT_POOL_SORT,
   defaultPoolFilters,
@@ -26,7 +26,7 @@ type SectionPoolSheetState =
   | { readonly type: "filter" }
   | { readonly type: "sort" };
 
-function useSectionPool(legend: Card | null) {
+function useSectionPool(legend: DeckBuildPick) {
   const [section, setSection] = useState<DeckSection>("mainDeck");
   const [query, setQuery] = useState("");
   const [poolLayout, setPoolLayout] = useState<SectionPoolLayout>("list");
@@ -85,7 +85,7 @@ function useSectionPool(legend: Card | null) {
 
   /** Each section draws from its own pool, so the filters and the search go; the ordering stays. */
   const resetFor = useCallback(
-    (subject: Card | null) => {
+    (subject: DeckBuildPick) => {
       settle(defaultPoolFilters(subject));
       setQuery("");
     },

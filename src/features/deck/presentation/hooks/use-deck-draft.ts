@@ -12,6 +12,9 @@ import {
   draftComposition,
   draftFromDeck,
   EMPTY_DRAFT,
+  isPickOf,
+  NOT_PICKED,
+  pickOf,
   withSectionCard,
   type DeckBuildDraft,
 } from "../deck-build-steps";
@@ -22,16 +25,16 @@ function useDeckDraft(mode: DeckBuildMode) {
   /** Changing the legend clears the champion, whose tag and domains have to match it. */
   const pickLegend = useCallback((legend: Card) => {
     setDraft((current) =>
-      current.legend?.printingId === legend.printingId
-        ? { ...current, legend: null }
-        : { ...current, legend, chosenChampion: null },
+      isPickOf(current.legend, legend)
+        ? { ...current, legend: NOT_PICKED }
+        : { ...current, legend: pickOf(legend), chosenChampion: NOT_PICKED },
     );
   }, []);
 
   const pickChampion = useCallback((champion: Card) => {
     setDraft((current) =>
-      current.chosenChampion?.printingId === champion.printingId
-        ? { ...current, chosenChampion: null }
+      isPickOf(current.chosenChampion, champion)
+        ? { ...current, chosenChampion: NOT_PICKED }
         : chooseChampion(current, champion),
     );
   }, []);

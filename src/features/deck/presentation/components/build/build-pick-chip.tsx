@@ -1,37 +1,49 @@
 import { Pressable, StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
-import type { Card } from "@/features/card/card";
-import { domainAccent } from "@/features/card/presentation/card-taxonomy-format";
+import { Radius, Spacing, type Theme, type ThemeColor } from "@/constants/theme";
+import {
+  domainAccent,
+  type DomainPalette,
+} from "@/features/card/presentation/card-taxonomy-format";
 import { DomainMarks } from "@/features/card/presentation/components/domain-mark";
+import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import { useDomainColors, useTheme } from "@/hooks/use-theme";
 
+import type { DeckBuildPick } from "../../deck-build-steps";
+
+interface PickAppearance {
+  readonly accessibilityLabel: string;
+  readonly backgroundColor: string;
+  readonly borderColor: string;
+  readonly domainIds: readonly CardDomain[];
+  readonly name: string;
+  readonly nameColor: ThemeColor;
+}
+
 function BuildPickChip({
-  card,
   label,
   onEdit,
+  pick,
 }: {
-  readonly card: Card | null;
   readonly label: string;
   readonly onEdit: () => void;
+  readonly pick: DeckBuildPick;
 }) {
   const theme = useTheme();
   const domainColors = useDomainColors();
-  const domains = card?.domainIds ?? [];
-  const accent = card === null ? theme.borderStrong : domainAccent(card, domainColors);
+  const { accessibilityLabel, backgroundColor, borderColor, domainIds, name, nameColor } =
+    pickAppearance(pick, label, theme, domainColors);
 
   return (
     <Pressable
-      accessibilityLabel={card ? `${label}: ${card.cardId}. Change` : `Pick a ${label}`}
+      accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       onPress={onEdit}
       style={({ pressed }) => [
         styles.chip,
-        {
-          backgroundColor: card ? theme.backgroundElement : theme.fill,
-          borderColor: card ? accent : theme.border,
-        },
+        { backgroundColor, borderColor },
         pressed && styles.pressed,
       ]}
     >
@@ -40,18 +52,40 @@ function BuildPickChip({
           <ThemedText themeColor="textTertiary" type="mono">
             {label}
           </ThemedText>
-          <DomainMarks domainIds={domains} />
+          <DomainMarks domainIds={domainIds} />
         </View>
-        <ThemedText
-          numberOfLines={1}
-          style={styles.name}
-          themeColor={card ? "text" : "textSecondary"}
-        >
-          {card?.cardId ?? "Not picked"}
+        <ThemedText numberOfLines={1} style={styles.name} themeColor={nameColor}>
+          {name}
         </ThemedText>
       </View>
     </Pressable>
   );
+}
+
+function pickAppearance(
+  pick: DeckBuildPick,
+  label: string,
+  theme: Theme,
+  domainColors: DomainPalette,
+): PickAppearance {
+  return match(pick)
+    .with({ type: "notPicked" }, (): PickAppearance => ({
+      accessibilityLabel: `Pick a ${label}`,
+      backgroundColor: theme.fill,
+      borderColor: theme.border,
+      domainIds: [],
+      name: "Not picked",
+      nameColor: "textSecondary",
+    }))
+    .with({ type: "picked" }, ({ card }): PickAppearance => ({
+      accessibilityLabel: `${label}: ${card.cardId}. Change`,
+      backgroundColor: theme.backgroundElement,
+      borderColor: domainAccent(card, domainColors),
+      domainIds: card.domainIds,
+      name: card.cardId,
+      nameColor: "text",
+    }))
+    .exhaustive();
 }
 
 export { BuildPickChip };

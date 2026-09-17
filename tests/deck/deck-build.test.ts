@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react-native";
 
 import type { DeckBuildMode } from "@/features/deck/presentation/deck-build-mode";
+import { NOT_PICKED, pickOf } from "@/features/deck/presentation/deck-build-steps";
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
 import { card } from "../card/fixtures";
@@ -87,7 +88,7 @@ describe("deck build", () => {
 
     expect(result.current.draft.entries).toHaveLength(savedDeck.entries.length);
     expect(result.current.draft.entries).toEqual(expect.arrayContaining([...savedDeck.entries]));
-    expect(result.current.draft.draft.legend).toEqual(savedLegend);
+    expect(result.current.draft.draft.legend).toEqual(pickOf(savedLegend));
   });
 
   it("should keep a chosen champion the main deck does not seat", async () => {
@@ -96,7 +97,7 @@ describe("deck build", () => {
     expect(savedDeck.entries).not.toContainEqual(
       expect.objectContaining({ section: "mainDeck", cardId: unseatedChampion.cardId }),
     );
-    expect(result.current.draft.draft.chosenChampion).toEqual(unseatedChampion);
+    expect(result.current.draft.draft.chosenChampion).toEqual(pickOf(unseatedChampion));
   });
 
   it("should leave the builder when back is pressed on the first step", async () => {
@@ -148,12 +149,12 @@ describe("deck build", () => {
     await act(() => result.current.draft.pickLegend(legend));
     await act(() => result.current.draft.pickChampion(champion));
 
-    expect(result.current.draft.draft.chosenChampion).toEqual(champion);
+    expect(result.current.draft.draft.chosenChampion).toEqual(pickOf(champion));
 
     await act(() => result.current.draft.pickLegend(otherLegend));
 
-    expect(result.current.draft.draft.legend).toEqual(otherLegend);
-    expect(result.current.draft.draft.chosenChampion).toBeNull();
+    expect(result.current.draft.draft.legend).toEqual(pickOf(otherLegend));
+    expect(result.current.draft.draft.chosenChampion).toEqual(NOT_PICKED);
   });
 
   it("should deselect a legend or a champion picked twice", async () => {
@@ -162,12 +163,12 @@ describe("deck build", () => {
     await act(() => result.current.draft.pickLegend(legend));
     await act(() => result.current.draft.pickLegend(legend));
 
-    expect(result.current.draft.draft.legend).toBeNull();
+    expect(result.current.draft.draft.legend).toEqual(NOT_PICKED);
 
     await act(() => result.current.draft.pickChampion(champion));
     await act(() => result.current.draft.pickChampion(champion));
 
-    expect(result.current.draft.draft.chosenChampion).toBeNull();
+    expect(result.current.draft.draft.chosenChampion).toEqual(NOT_PICKED);
   });
 
   it("should keep one copy of the chosen champion in the main deck", async () => {

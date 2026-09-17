@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import type { Card } from "@/features/card/card";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import { chosenChampionOf } from "@/features/deck/deck/chosen-champion";
@@ -61,10 +63,27 @@ interface DraftSectionCard {
   readonly quantity: number;
 }
 
+type DeckBuildPick =
+  | { readonly type: "notPicked" }
+  | { readonly type: "picked"; readonly card: Card };
+
+const NOT_PICKED: DeckBuildPick = { type: "notPicked" };
+
+function pickOf(card: Card): DeckBuildPick {
+  return { type: "picked", card };
+}
+
+function isPickOf(pick: DeckBuildPick, card: Card): boolean {
+  return match(pick)
+    .with({ type: "notPicked" }, () => false)
+    .with({ type: "picked" }, (picked) => picked.card.printingId === card.printingId)
+    .exhaustive();
+}
+
 interface DeckBuildDraft {
   readonly name: string;
-  readonly legend: Card | null;
-  readonly chosenChampion: Card | null;
+  readonly legend: DeckBuildPick;
+  readonly chosenChampion: DeckBuildPick;
   readonly sectionCards: Readonly<
     Record<DeckSection, Readonly<Record<PrintingId, DraftSectionCard>>>
   >;
@@ -72,8 +91,8 @@ interface DeckBuildDraft {
 
 const EMPTY_DRAFT: DeckBuildDraft = {
   name: "",
-  legend: null,
-  chosenChampion: null,
+  legend: NOT_PICKED,
+  chosenChampion: NOT_PICKED,
   sectionCards: {
     legend: {},
     mainDeck: {},
@@ -101,17 +120,18 @@ function quantityOf(draft: DeckBuildDraft, section: DeckSection, printingId: Pri
   return draft.sectionCards[section][printingId]?.quantity ?? 0;
 }
 
-function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
-  const entries: DeckEntry[] = [];
+function legendEntries(pick: DeckBuildPick): DeckEntry[] {
+  return match(pick)
+    .with({ type: "notPicked" }, (): DeckEntry[] => [])
+    .with({ type: "picked" }, ({ card }): DeckEntry[] => [
+      { section: "legend", cardId: card.cardId, printingId: card.printingId, quantity: 1 },
+    ])
+    .exhaustive();
+}
 
-  if (draft.legend) {
-    entries.push({
-      section: "legend",
-      cardId: draft.legend.cardId,
-      printingId: draft.legend.printingId,
-      quantity: 1,
-    });
-  }
+function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
+  const entries: DeckEntry[] = legendEntries(draft.legend);
+
   for (const section of DECK_SECTIONS) {
     for (const placed of Object.values(draft.sectionCards[section])) {
       if (placed.quantity <= 0) continue;
@@ -129,7 +149,10 @@ function draftEntries(draft: DeckBuildDraft): DeckEntry[] {
 }
 
 function draftChampion(draft: DeckBuildDraft): ChosenChampion | null {
-  return draft.chosenChampion === null ? null : chosenChampionOf(draft.chosenChampion);
+  return match(draft.chosenChampion)
+    .with({ type: "notPicked" }, (): ChosenChampion | null => null)
+    .with({ type: "picked" }, ({ card }) => chosenChampionOf(card))
+    .exhaustive();
 }
 
 /** The draft reduced to the shape the deck's own rules read. */
@@ -141,11 +164,12 @@ function draftComposition(draft: DeckBuildDraft): DeckComposition {
 }
 
 function draftFromDeck({ chosenChampionCard, deck, entries }: ResolvedDeck): DeckBuildDraft {
+  const legendCard = entries.find((entry) => entry.section === "legend")?.card;
   let draft: DeckBuildDraft = {
     ...EMPTY_DRAFT,
     name: deck.name,
-    legend: entries.find((entry) => entry.section === "legend")?.card ?? null,
-    chosenChampion: chosenChampionCard,
+    legend: legendCard === undefined ? NOT_PICKED : pickOf(legendCard),
+    chosenChampion: chosenChampionCard === null ? NOT_PICKED : pickOf(chosenChampionCard),
   };
 
   for (const entry of entries) {
@@ -178,7 +202,7 @@ function chooseChampion(draft: DeckBuildDraft, champion: Card): DeckBuildDraft {
     quantity: Math.max(1, held),
   });
 
-  return { ...seated, chosenChampion: champion };
+  return { ...seated, chosenChampion: pickOf(champion) };
 }
 
 function sectionCounts(draft: DeckBuildDraft): Record<string, number> {
@@ -195,6 +219,9 @@ export {
   draftEntries,
   draftFromDeck,
   EMPTY_DRAFT,
+  isPickOf,
+  NOT_PICKED,
+  pickOf,
   placedCardTotal,
   placedCards,
   quantityOf,
@@ -202,4 +229,4 @@ export {
   withSectionCard,
   sectionCounts,
 };
-export type { DeckBuildDraft, DeckBuildStep, DeckBuildStepId, DraftSectionCard };
+export type { DeckBuildDraft, DeckBuildPick, DeckBuildStep, DeckBuildStepId, DraftSectionCard };

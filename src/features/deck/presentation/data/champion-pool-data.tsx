@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { match } from "ts-pattern";
 
 import type { Card } from "@/features/card/card";
 import type { CardCounter } from "@/features/card/card-counter";
@@ -7,13 +8,22 @@ import type { CardListCriteria } from "@/features/card/card-list-criteria";
 import { CardsData, type CardsDataContent } from "@/features/card/presentation/data/cards-data";
 import { CHAMPION_UNIT } from "@/features/deck/deck/deck-legality";
 
+import type { DeckBuildPick } from "../deck-build-steps";
+
 const EVERY_CHAMPION: CardListCriteria = {
   typeIds: [CHAMPION_UNIT.typeId],
   supertypeIds: [CHAMPION_UNIT.supertypeId],
 };
 
-function championCriteria(legend: Card | null): CardListCriteria {
-  if (legend === null || legend.championName === null) return EVERY_CHAMPION;
+function championCriteria(legend: DeckBuildPick): CardListCriteria {
+  return match(legend)
+    .with({ type: "notPicked" }, () => EVERY_CHAMPION)
+    .with({ type: "picked" }, ({ card }) => championsTheLegendAllows(card))
+    .exhaustive();
+}
+
+function championsTheLegendAllows(legend: Card): CardListCriteria {
+  if (legend.championName === null) return EVERY_CHAMPION;
 
   return {
     ...EVERY_CHAMPION,
@@ -31,7 +41,7 @@ function ChampionPoolData({
   readonly cardCounter: CardCounter;
   readonly cardLister: CardLister;
   readonly children: (pool: CardsDataContent) => ReactNode;
-  readonly legend: Card | null;
+  readonly legend: DeckBuildPick;
 }) {
   return (
     <CardsData

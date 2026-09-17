@@ -1,5 +1,6 @@
 import { FlatList, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { match } from "ts-pattern";
 
 import { EmptyState } from "@/components/ui/atoms/empty-state";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
@@ -7,19 +8,19 @@ import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 
-import type { DeckBuildStep } from "../../../deck-build-steps";
+import { isPickOf, type DeckBuildPick, type DeckBuildStep } from "../../../deck-build-steps";
 import { BuildFooter } from "../build-footer";
 import { ChampionPickRow } from "../champion-pick-row";
 import { StepIntro } from "./step-intro";
 
 interface ChampionStepProps {
   readonly champions: readonly Card[];
-  readonly legend: Card | null;
+  readonly legend: DeckBuildPick;
   readonly onLoadMore: () => void;
   readonly onNext: () => void;
   readonly onOpenCard: (card: Card) => void;
   readonly onPick: (card: Card) => void;
-  readonly selected: Card | null;
+  readonly selected: DeckBuildPick;
   readonly step: DeckBuildStep;
 }
 
@@ -59,22 +60,14 @@ function ChampionStep({
         numColumns={columns}
         onEndReached={onLoadMore}
         onEndReachedThreshold={0.5}
-        ListEmptyComponent={
-          <EmptyState
-            message={
-              legend
-                ? `No champions match ${legend.name}'s champion and domains.`
-                : "Pick a Legend first to see which champions it allows."
-            }
-          />
-        }
+        ListEmptyComponent={<EmptyState message={emptyPoolMessage(legend)} />}
         ListHeaderComponent={<StepIntro step={step} />}
         renderItem={({ item }) => (
           <ChampionPickRow
             card={item}
             onOpenCard={onOpenCard}
             onPick={onPick}
-            selected={selected?.printingId === item.printingId}
+            selected={isPickOf(selected, item)}
             width={columnWidth}
           />
         )}
@@ -82,11 +75,28 @@ function ChampionStep({
       />
       <BuildFooter actionLabel="Build sections" onAction={onNext}>
         <ThemedText numberOfLines={1} themeColor="textSecondary" type="mono">
-          {selected ? selected.name : "No Chosen Champion yet — you can skip"}
+          {championLabel(selected)}
         </ThemedText>
       </BuildFooter>
     </>
   );
+}
+
+function emptyPoolMessage(legend: DeckBuildPick): string {
+  return match(legend)
+    .with({ type: "notPicked" }, () => "Pick a Legend first to see which champions it allows.")
+    .with(
+      { type: "picked" },
+      ({ card }) => `No champions match ${card.name}'s champion and domains.`,
+    )
+    .exhaustive();
+}
+
+function championLabel(selected: DeckBuildPick): string {
+  return match(selected)
+    .with({ type: "notPicked" }, () => "No Chosen Champion yet — you can skip")
+    .with({ type: "picked" }, ({ card }) => card.name)
+    .exhaustive();
 }
 
 export { CHAMPION_COLUMNS, ChampionStep };

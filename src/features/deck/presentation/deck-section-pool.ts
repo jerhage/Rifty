@@ -1,6 +1,5 @@
 import { match } from "ts-pattern";
 
-import type { Card } from "@/features/card/card";
 import type { CardListCriteria, CardSort } from "@/features/card/card-list-criteria";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
 import { sortForId } from "@/features/card/presentation/card-sort-options";
@@ -8,6 +7,8 @@ import type { CardType } from "@/features/card/value-objects/card-type";
 import type { DeckSection } from "@/features/deck/deck/deck";
 import { sectionRule } from "@/features/deck/deck/deck-legality";
 import type { LayoutClass } from "@/hooks/use-layout-size";
+
+import type { DeckBuildPick } from "./deck-build-steps";
 
 interface SectionPoolFilters {
   readonly domainIds: readonly CardDomain[];
@@ -63,8 +64,14 @@ function viewBesideTheDeck(view: SectionPoolView): SectionPoolView {
 const DEFAULT_POOL_SORT: CardSort | undefined = sortForId("name");
 
 /** A deck plays within its legend's domains, so the pool starts narrowed to them. */
-function defaultPoolFilters(legend: Card | null): SectionPoolFilters {
-  return { ...EMPTY_POOL_FILTERS, domainIds: legend ? [...legend.domainIds] : [] };
+function defaultPoolFilters(legend: DeckBuildPick): SectionPoolFilters {
+  return {
+    ...EMPTY_POOL_FILTERS,
+    domainIds: match(legend)
+      .with({ type: "notPicked" }, (): readonly CardDomain[] => [])
+      .with({ type: "picked" }, ({ card }) => [...card.domainIds])
+      .exhaustive(),
+  };
 }
 
 /** Card types a section will accept. A legend, a rune and a battlefield are each their own type. */

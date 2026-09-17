@@ -1,5 +1,6 @@
 import { FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { match } from "ts-pattern";
 
 import { Chip } from "@/components/ui/atoms/chip";
 import { ColorDot } from "@/components/ui/atoms/color-dot";
@@ -12,7 +13,7 @@ import { ORDERED_DOMAINS } from "@/features/card/value-objects/card-domain";
 import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 import { useDomainColors } from "@/hooks/use-theme";
 
-import type { DeckBuildStep } from "../../../deck-build-steps";
+import { isPickOf, type DeckBuildPick, type DeckBuildStep } from "../../../deck-build-steps";
 import type { LegendSearchViewState } from "../../../hooks/use-deck-build";
 import { BuildFooter } from "../build-footer";
 import { LegendPickTile } from "../legend-pick-tile";
@@ -25,7 +26,7 @@ interface LegendStepProps {
   readonly onOpenCard: (card: Card) => void;
   readonly onPick: (card: Card) => void;
   readonly search: LegendSearchViewState;
-  readonly selected: Card | null;
+  readonly selected: DeckBuildPick;
   readonly step: DeckBuildStep;
 }
 
@@ -95,7 +96,7 @@ function LegendStep({
             card={item}
             onOpenCard={onOpenCard}
             onPick={onPick}
-            selected={selected?.printingId === item.printingId}
+            selected={isPickOf(selected, item)}
             width={columnWidth}
           />
         )}
@@ -103,11 +104,18 @@ function LegendStep({
       />
       <BuildFooter actionLabel="Continue" onAction={onNext}>
         <ThemedText numberOfLines={1} themeColor="textSecondary" type="mono">
-          {selected ? selected.name : "No Legend yet — you can skip"}
+          {legendLabel(selected)}
         </ThemedText>
       </BuildFooter>
     </>
   );
+}
+
+function legendLabel(selected: DeckBuildPick): string {
+  return match(selected)
+    .with({ type: "notPicked" }, () => "No Legend yet — you can skip")
+    .with({ type: "picked" }, ({ card }) => card.name)
+    .exhaustive();
 }
 
 export { LEGEND_COLUMNS, LegendStep };

@@ -11,7 +11,13 @@ import {
   type CopyAllowance,
 } from "@/features/deck/deck/deck-legality";
 
-import { draftEntries, quantityOf, sectionCounts, type DeckBuildDraft } from "./deck-build-steps";
+import {
+  draftEntries,
+  isPickOf,
+  quantityOf,
+  sectionCounts,
+  type DeckBuildDraft,
+} from "./deck-build-steps";
 
 /**
  * The rune deck is the one section the builder will not let you overfill, because runes are
@@ -56,7 +62,7 @@ function slotsHeldByOtherPrintings(
  */
 function minimumForCard(draft: DeckBuildDraft, section: DeckSection, card: Card): number {
   return match(section)
-    .with("mainDeck", () => (draft.chosenChampion?.printingId === card.printingId ? 1 : 0))
+    .with("mainDeck", () => (isPickOf(draft.chosenChampion, card) ? 1 : 0))
     .with("legend", "runeDeck", "battlefield", "sideboard", () => 0)
     .exhaustive();
 }

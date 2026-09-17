@@ -15,7 +15,7 @@ import type { Note } from "../note";
 import type { NoteLister } from "../note-lister";
 import type { AnnotationSubject } from "../value-objects/annotation-subject";
 
-type ListNotedSubjectsResult = {
+type ListSavedSubjectsResult = {
   readonly type: "success";
   readonly bookmarks: readonly Bookmark[];
   readonly cards: readonly CardSummary[];
@@ -23,22 +23,22 @@ type ListNotedSubjectsResult = {
   readonly notes: readonly Note[];
 };
 
-interface ListNotedSubjectsCapabilities {
+interface ListSavedSubjectsCapabilities {
   readonly bookmarkLister: BookmarkLister;
   readonly cardSummariesFinder: CardSummariesByPrintingIdsFinder;
   readonly coreRulesFinder: CoreRulesByNumbersFinder;
   readonly noteLister: NoteLister;
 }
 
-async function listNotedSubjects(
+async function listSavedSubjects(
   {
     bookmarkLister,
     cardSummariesFinder,
     coreRulesFinder,
     noteLister,
-  }: ListNotedSubjectsCapabilities,
+  }: ListSavedSubjectsCapabilities,
   options?: ReadOptions,
-): Promise<ListNotedSubjectsResult> {
+): Promise<ListSavedSubjectsResult> {
   const [bookmarks, notes] = await Promise.all([
     bookmarkLister.getAll({ type: "all" }, options),
     noteLister.getAll({ type: "all" }, options),
@@ -72,5 +72,5 @@ function coreRuleNumbersOf(subjects: readonly AnnotationSubject[]): readonly Cor
   );
 }
 
-export { listNotedSubjects };
-export type { ListNotedSubjectsCapabilities, ListNotedSubjectsResult };
+export { listSavedSubjects };
+export type { ListSavedSubjectsCapabilities, ListSavedSubjectsResult };

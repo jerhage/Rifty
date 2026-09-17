@@ -3,7 +3,7 @@ import type { PropsWithChildren } from "react";
 import { Dimensions } from "react-native";
 import { SafeAreaProvider, type EdgeInsets } from "react-native-safe-area-context";
 
-import { NOTE_COLUMNS } from "@/features/annotation/presentation/components/note-sections";
+import { SAVED_COLUMNS } from "@/features/annotation/presentation/components/saved-sections";
 import { CATALOG_COLUMNS } from "@/features/catalog/presentation/components/grid/card-summary-grid";
 import {
   POOL_ROW_COLUMNS,
@@ -141,7 +141,7 @@ describe("the grids each site derives", () => {
   });
 
   it("should keep the saved sections in one column on a phone and widen them on a tablet", () => {
-    expect(columnsAt(NOTE_COLUMNS, USABLE_WIDTHS)).toEqual([1, 2, 2, 3, 3, 4]);
+    expect(columnsAt(SAVED_COLUMNS, USABLE_WIDTHS)).toEqual([1, 2, 2, 3, 3, 4]);
   });
 });
 

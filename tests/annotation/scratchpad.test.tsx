@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 
-import { NoteSections } from "@/features/annotation/presentation/components/note-sections";
-import { NoteSectionsData } from "@/features/annotation/presentation/data/note-sections-data";
+import { SavedSections } from "@/features/annotation/presentation/components/saved-sections";
+import { SavedSectionsData } from "@/features/annotation/presentation/data/saved-sections-data";
 import {
   SCRATCHPAD_EMPTY_MESSAGE,
   SCRATCHPAD_NOTES_NAME,
@@ -29,7 +29,7 @@ async function renderScratchpad(store: NoteStore = createNoteStore()): Promise<N
   const subjects = createSubjectStore();
 
   await render(
-    <NoteSectionsData
+    <SavedSectionsData
       bookmarkManager={marked.manager}
       cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock(WRITTEN_AT)}
@@ -37,8 +37,8 @@ async function renderScratchpad(store: NoteStore = createNoteStore()): Promise<N
       idGenerator={sequentialIds()}
       noteManager={store.manager}
     >
-      {(written) => <NoteSections written={written} />}
-    </NoteSectionsData>,
+      {(saved) => <SavedSections saved={saved} />}
+    </SavedSectionsData>,
     { wrapper: createTestWrapper(PHONE) },
   );
   await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` });

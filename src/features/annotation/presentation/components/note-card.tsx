@@ -11,7 +11,7 @@ import {
   noteFieldLabel,
   noteRemoveLabel,
 } from "@/features/annotation/presentation/note-format";
-import type { NoteWriting } from "@/features/annotation/presentation/noted-subjects-format";
+import type { NoteWriting } from "@/features/annotation/presentation/saved-subjects-format";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import { useTheme } from "@/hooks/use-theme";
 

@@ -2,17 +2,17 @@ import { match } from "ts-pattern";
 
 import type { Bookmark } from "@/features/annotation/bookmark";
 import type { Note } from "@/features/annotation/note";
-import type {
-  NotedSubject,
-  NotedSubjectGroup,
-  SubjectKeeping,
-} from "@/features/annotation/presentation/noted-subject";
-import {
-  ORDERED_NOTE_SECTION_SPECS,
-  unfindableSubjectName,
-  type NoteSectionSpec,
-} from "@/features/annotation/presentation/noted-subjects-format";
 import { savedCards } from "@/features/annotation/presentation/saved-cards";
+import type {
+  SavedSubject,
+  SavedSubjectGroup,
+  SubjectKeeping,
+} from "@/features/annotation/presentation/saved-subject";
+import {
+  ORDERED_SAVED_SECTION_SPECS,
+  unfindableSubjectName,
+  type SavedSectionSpec,
+} from "@/features/annotation/presentation/saved-subjects-format";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
@@ -20,22 +20,22 @@ import type { CoreRule } from "@/features/rules/core-rule";
 import { savedCoreRules, type SavedCoreRule } from "@/features/rules/presentation/core-rules-saved";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
-type KeptCounts = Readonly<Record<NotedSubject["type"], number>>;
+type KeptCounts = Readonly<Record<SavedSubject["type"], number>>;
 
-interface NoteSection {
-  readonly groups: readonly NotedSubjectGroup[];
+interface SavedSection {
+  readonly groups: readonly SavedSubjectGroup[];
   readonly label: string;
   readonly message: string | null;
 }
 
 const STANDALONE_KEY = "standalone";
 
-function noteSections(
+function savedSections(
   bookmarks: readonly Bookmark[],
   notes: readonly Note[],
   cards: readonly CardSummary[],
   coreRules: readonly CoreRule[],
-): readonly NoteSection[] {
+): readonly SavedSection[] {
   const marked = bookmarks.map(({ subject }) => subject);
   const written = notes.flatMap(({ subject }) => (subject === null ? [] : [subject]));
   const markedNumbers = coreRuleNumbersOf(marked);
@@ -48,7 +48,7 @@ function noteSections(
     (number) => markedNumbers.has(number),
     (number) => writtenNumbers.has(number),
   );
-  const groupsByType: Readonly<Record<NotedSubject["type"], readonly NotedSubjectGroup[]>> = {
+  const groupsByType: Readonly<Record<SavedSubject["type"], readonly SavedSubjectGroup[]>> = {
     standalone: [scratchpadGroup(notes)],
     card: keptCards.map((card) =>
       cardGroup(
@@ -67,20 +67,20 @@ function noteSections(
     unfindable: unfindableGroups(notes, keptCards, keptCoreRules),
   };
 
-  return ORDERED_NOTE_SECTION_SPECS.flatMap((spec) => sectionsFor(spec, groupsByType[spec.type]));
+  return ORDERED_SAVED_SECTION_SPECS.flatMap((spec) => sectionsFor(spec, groupsByType[spec.type]));
 }
 
 function sectionsFor(
-  spec: NoteSectionSpec,
-  groups: readonly NotedSubjectGroup[],
-): readonly NoteSection[] {
+  spec: SavedSectionSpec,
+  groups: readonly SavedSubjectGroup[],
+): readonly SavedSection[] {
   const label = spec.label(groups.length);
 
   return match(spec.presence)
-    .with({ type: "always" }, ({ emptyMessage }): readonly NoteSection[] => [
+    .with({ type: "always" }, ({ emptyMessage }): readonly SavedSection[] => [
       { groups, label, message: groups.length === 0 ? emptyMessage : null },
     ])
-    .with({ type: "whenPopulated" }, ({ message }): readonly NoteSection[] =>
+    .with({ type: "whenPopulated" }, ({ message }): readonly SavedSection[] =>
       groups.length === 0 ? [] : [{ groups, label, message }],
     )
     .exhaustive();
@@ -94,7 +94,7 @@ function coreRuleNumbersOf(subjects: readonly AnnotationSubject[]): ReadonlySet<
   return new Set(subjects.flatMap((subject) => (subject.kind === "coreRule" ? [subject.id] : [])));
 }
 
-function scratchpadGroup(notes: readonly Note[]): NotedSubjectGroup {
+function scratchpadGroup(notes: readonly Note[]): SavedSubjectGroup {
   return {
     key: STANDALONE_KEY,
     notes: notes.filter(({ subject }) => subject === null),
@@ -116,7 +116,7 @@ function cardGroup(
   card: CardSummary,
   notes: readonly Note[],
   keeping: SubjectKeeping,
-): NotedSubjectGroup {
+): SavedSubjectGroup {
   return {
     key: card.printingId,
     notes: notesOn(notes, { kind: "card", id: card.printingId }),
@@ -128,7 +128,7 @@ function coreRuleGroup(
   saved: SavedCoreRule,
   notes: readonly Note[],
   keeping: SubjectKeeping,
-): NotedSubjectGroup {
+): SavedSubjectGroup {
   return {
     key: saved.coreRule.number,
     notes: notesOn(notes, { kind: "coreRule", id: saved.coreRule.number }),
@@ -140,13 +140,13 @@ function unfindableGroups(
   notes: readonly Note[],
   cards: readonly CardSummary[],
   coreRules: readonly SavedCoreRule[],
-): readonly NotedSubjectGroup[] {
+): readonly SavedSubjectGroup[] {
   const missing = notes.flatMap(({ subject }) =>
     subject !== null && !isResolved(subject, cards, coreRules) ? [subject] : [],
   );
 
   return [...new Map(missing.map((subject) => [unfindableSubjectName(subject), subject]))].map(
-    ([key, subject]): NotedSubjectGroup => ({
+    ([key, subject]): SavedSubjectGroup => ({
       key,
       notes: notesOn(notes, subject),
       subject: { type: "unfindable", subject },
@@ -175,8 +175,8 @@ function notesOn(notes: readonly Note[], subject: AnnotationSubject): readonly N
   );
 }
 
-function keptCountsOf(sections: readonly NoteSection[]): KeptCounts {
-  const counted: Record<NotedSubject["type"], number> = {
+function keptCountsOf(sections: readonly SavedSection[]): KeptCounts {
+  const counted: Record<SavedSubject["type"], number> = {
     card: 0,
     coreRule: 0,
     standalone: 0,
@@ -189,18 +189,18 @@ function keptCountsOf(sections: readonly NoteSection[]): KeptCounts {
   return counted;
 }
 
-function keptCountOf({ notes, subject }: NotedSubjectGroup): number {
+function keptCountOf({ notes, subject }: SavedSubjectGroup): number {
   return match(subject)
     .with({ type: "standalone" }, () => notes.length)
     .with({ type: "card" }, { type: "coreRule" }, { type: "unfindable" }, () => 1)
     .exhaustive();
 }
 
-function standaloneNotesOf(sections: readonly NoteSection[]): readonly Note[] {
+function standaloneNotesOf(sections: readonly SavedSection[]): readonly Note[] {
   return sections
     .flatMap(({ groups }) => groups)
     .flatMap(({ notes, subject }) => (subject.type === "standalone" ? notes : []));
 }
 
-export { keptCountsOf, noteSections, standaloneNotesOf };
-export type { KeptCounts, NoteSection };
+export { keptCountsOf, savedSections, standaloneNotesOf };
+export type { KeptCounts, SavedSection };

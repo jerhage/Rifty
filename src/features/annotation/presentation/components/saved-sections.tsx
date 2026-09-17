@@ -8,34 +8,34 @@ import type { NoteId } from "@/features/annotation/note";
 import { BookmarkToggle } from "@/features/annotation/presentation/components/bookmark-toggle";
 import type { WriteNote } from "@/features/annotation/presentation/components/note-card";
 import { NoteList } from "@/features/annotation/presentation/components/note-list";
-import type { SectionedNotes } from "@/features/annotation/presentation/data/note-sections-data";
-import type { NotedSubjectGroup } from "@/features/annotation/presentation/noted-subject";
-import type { NoteSection } from "@/features/annotation/presentation/noted-subjects";
+import type { SectionedSubjects } from "@/features/annotation/presentation/data/saved-sections-data";
+import type { SavedSubjectGroup } from "@/features/annotation/presentation/saved-subject";
+import type { SavedSection } from "@/features/annotation/presentation/saved-subjects";
 import {
   bookmarkOnLabel,
-  notedGroupView,
-} from "@/features/annotation/presentation/noted-subjects-format";
+  savedGroupView,
+} from "@/features/annotation/presentation/saved-subjects-format";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 import { useTheme } from "@/hooks/use-theme";
 
-interface NoteSectionsProps {
-  readonly written: SectionedNotes;
+interface SavedSectionsProps {
+  readonly saved: SectionedSubjects;
 }
 
 interface SectionColumn {
   readonly key: string;
-  readonly sections: readonly NoteSection[];
+  readonly sections: readonly SavedSection[];
 }
 
-const NOTE_COLUMNS: ColumnSpec = {
+const SAVED_COLUMNS: ColumnSpec = {
   gap: Spacing.three,
   minimum: 320,
   sidePadding: Spacing.three,
 };
 
 function sectionColumns(
-  sections: readonly NoteSection[],
+  sections: readonly SavedSection[],
   columns: number,
 ): readonly SectionColumn[] {
   const laid: SectionColumn[] = [];
@@ -52,24 +52,24 @@ function sectionColumns(
   return laid;
 }
 
-function NoteSections({ written }: NoteSectionsProps) {
-  const { columns } = useColumnFit(NOTE_COLUMNS);
+function SavedSections({ saved }: SavedSectionsProps) {
+  const { columns } = useColumnFit(SAVED_COLUMNS);
 
   return (
     <View style={styles.columns}>
-      {sectionColumns(written.sections, columns).map(({ key, sections }) => (
-        <NoteColumn key={key} sections={sections} written={written} />
+      {sectionColumns(saved.sections, columns).map(({ key, sections }) => (
+        <SavedColumn key={key} sections={sections} saved={saved} />
       ))}
     </View>
   );
 }
 
-function NoteColumn({
+function SavedColumn({
   sections,
-  written,
+  saved,
 }: {
-  readonly sections: readonly NoteSection[];
-  readonly written: SectionedNotes;
+  readonly sections: readonly SavedSection[];
+  readonly saved: SectionedSubjects;
 }) {
   return (
     <View style={styles.column}>
@@ -81,12 +81,12 @@ function NoteColumn({
             </ThemedText>
           )}
           {section.groups.map((group) => (
-            <NoteGroup
+            <SavedGroup
               group={group}
               key={group.key}
-              onRemoveBookmark={written.removeBookmark}
-              onRemoveNote={written.removeNote}
-              onWriteNote={written.writeNote}
+              onRemoveBookmark={saved.removeBookmark}
+              onRemoveNote={saved.removeNote}
+              onWriteNote={saved.writeNote}
             />
           ))}
         </LabelledSection>
@@ -95,19 +95,19 @@ function NoteColumn({
   );
 }
 
-function NoteGroup({
+function SavedGroup({
   group,
   onRemoveBookmark,
   onRemoveNote,
   onWriteNote,
 }: {
-  readonly group: NotedSubjectGroup;
+  readonly group: SavedSubjectGroup;
   readonly onRemoveBookmark: (subject: AnnotationSubject) => void;
   readonly onRemoveNote: (id: NoteId) => void;
   readonly onWriteNote: WriteNote;
 }) {
   const theme = useTheme();
-  const view = notedGroupView(group.subject);
+  const view = savedGroupView(group.subject);
 
   return (
     <View style={[styles.group, { backgroundColor: theme.fill, borderColor: theme.border }]}>
@@ -158,8 +158,8 @@ function NoteGroup({
   );
 }
 
-export { NOTE_COLUMNS, NoteSections };
-export type { NoteSectionsProps };
+export { SAVED_COLUMNS, SavedSections };
+export type { SavedSectionsProps };
 
 const styles = StyleSheet.create({
   columns: {

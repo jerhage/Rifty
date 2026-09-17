@@ -2,17 +2,17 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 
 import { SAVED_TITLE, NOTHING_SAVED_SUMMARY } from "@/components/app-shell/saved-format";
 import { SavedScreen } from "@/components/app-shell/saved-screen";
-import { NoteSections } from "@/features/annotation/presentation/components/note-sections";
-import { NoteSectionsData } from "@/features/annotation/presentation/data/note-sections-data";
+import { SavedSections } from "@/features/annotation/presentation/components/saved-sections";
+import { SavedSectionsData } from "@/features/annotation/presentation/data/saved-sections-data";
 import {
   SCRATCHPAD_NOTES_NAME,
   SCRATCHPAD_TITLE,
 } from "@/features/annotation/presentation/note-format";
 import {
-  notedCardsSectionLabel,
-  notedCoreRulesSectionLabel,
-} from "@/features/annotation/presentation/noted-subjects-format";
-import { keptCountsOf } from "@/features/annotation/presentation/noted-subjects";
+  savedCardsSectionLabel,
+  savedCoreRulesSectionLabel,
+} from "@/features/annotation/presentation/saved-subjects-format";
+import { keptCountsOf } from "@/features/annotation/presentation/saved-subjects";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CardSummary } from "@/features/card/card-summary";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
@@ -54,7 +54,7 @@ async function renderSaved(
   const subjects = createSubjectStore([VI], DOCUMENT);
 
   await render(
-    <NoteSectionsData
+    <SavedSectionsData
       bookmarkManager={bookmarks.manager}
       cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock(WRITTEN_AT)}
@@ -62,13 +62,13 @@ async function renderSaved(
       idGenerator={sequentialIds()}
       noteManager={store.manager}
     >
-      {(written) => (
+      {(saved) => (
         <SavedScreen
-          counts={keptCountsOf(written.sections)}
-          notes={<NoteSections written={written} />}
+          counts={keptCountsOf(saved.sections)}
+          sections={<SavedSections saved={saved} />}
         />
       )}
-    </NoteSectionsData>,
+    </SavedSectionsData>,
     { wrapper: createTestWrapper(frame) },
   );
   await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` });
@@ -122,7 +122,7 @@ describe("the saved screen", () => {
       createNoteStore([writtenNote("note-1", CARD, "Holds the point.", WRITTEN_AT)]),
     );
 
-    expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCardsSectionLabel(1) })).toBeTruthy();
     expect(screen.getByRole("header", { name: VI.name })).toBeTruthy();
     expect(screen.getByRole("header", { name: SCRATCHPAD_TITLE })).toBeTruthy();
     expect(screen.getByLabelText(`0 notes on ${SCRATCHPAD_NOTES_NAME}`)).toBeTruthy();
@@ -166,11 +166,11 @@ describe("the columns the saved sections stand in", () => {
 
     const holder = nearestHolderOf(
       sectionHeader(SCRATCHPAD_TITLE),
-      sectionHeader(notedCardsSectionLabel(0)),
+      sectionHeader(savedCardsSectionLabel(0)),
     );
 
     expect(
-      within(holder).getByRole("header", { name: notedCoreRulesSectionLabel(0) }),
+      within(holder).getByRole("header", { name: savedCoreRulesSectionLabel(0) }),
     ).toBeTruthy();
   });
 
@@ -179,11 +179,11 @@ describe("the columns the saved sections stand in", () => {
 
     const holder = nearestHolderOf(
       sectionHeader(SCRATCHPAD_TITLE),
-      sectionHeader(notedCardsSectionLabel(0)),
+      sectionHeader(savedCardsSectionLabel(0)),
     );
 
     expect(
-      within(holder).queryByRole("header", { name: notedCoreRulesSectionLabel(0) }),
+      within(holder).queryByRole("header", { name: savedCoreRulesSectionLabel(0) }),
     ).toBeNull();
   });
 
@@ -199,11 +199,11 @@ describe("the columns the saved sections stand in", () => {
 
     const holder = nearestHolderOf(
       sectionHeader(SCRATCHPAD_TITLE),
-      sectionHeader(notedCardsSectionLabel(1)),
+      sectionHeader(savedCardsSectionLabel(1)),
     );
 
     expect(
-      within(holder).queryByRole("header", { name: notedCoreRulesSectionLabel(1) }),
+      within(holder).queryByRole("header", { name: savedCoreRulesSectionLabel(1) }),
     ).toBeNull();
   });
 });

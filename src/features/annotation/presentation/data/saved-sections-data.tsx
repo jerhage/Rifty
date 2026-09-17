@@ -13,31 +13,34 @@ import {
   useNoteEditing,
   type NoteEditing,
 } from "@/features/annotation/presentation/hooks/use-note-editing";
-import { noteSections, type NoteSection } from "@/features/annotation/presentation/noted-subjects";
-import { listNotedSubjectsQuery } from "@/features/annotation/queries/annotation-queries";
+import {
+  savedSections,
+  type SavedSection,
+} from "@/features/annotation/presentation/saved-subjects";
+import { listSavedSubjectsQuery } from "@/features/annotation/queries/annotation-queries";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CardSummariesByPrintingIdsFinder } from "@/features/card/card-summaries-by-printing-ids-finder";
 import type { CoreRulesByNumbersFinder } from "@/features/rules/core-rules-by-numbers-finder";
 import { useReadState } from "@/hooks/use-read-state";
 
-const NO_SECTIONS: readonly NoteSection[] = [];
+const NO_SECTIONS: readonly SavedSection[] = [];
 
-interface SectionedNotes extends NoteEditing {
+interface SectionedSubjects extends NoteEditing {
   removeBookmark(subject: AnnotationSubject): void;
-  readonly sections: readonly NoteSection[];
+  readonly sections: readonly SavedSection[];
 }
 
-interface NoteSectionsDataProps {
+interface SavedSectionsDataProps {
   readonly bookmarkManager: BookmarkManager;
   readonly cardSummariesFinder: CardSummariesByPrintingIdsFinder;
-  readonly children: (written: SectionedNotes) => ReactNode;
+  readonly children: (saved: SectionedSubjects) => ReactNode;
   readonly clock: Clock;
   readonly coreRulesFinder: CoreRulesByNumbersFinder;
   readonly idGenerator: IdGenerator;
   readonly noteManager: NoteManager;
 }
 
-function NoteSectionsData({
+function SavedSectionsData({
   bookmarkManager,
   cardSummariesFinder,
   children,
@@ -45,9 +48,9 @@ function NoteSectionsData({
   coreRulesFinder,
   idGenerator,
   noteManager,
-}: NoteSectionsDataProps) {
+}: SavedSectionsDataProps) {
   const { reload, state } = useReadState(
-    listNotedSubjectsQuery({
+    listSavedSubjectsQuery({
       bookmarkLister: bookmarkManager,
       cardSummariesFinder,
       coreRulesFinder,
@@ -66,7 +69,7 @@ function NoteSectionsData({
     () =>
       match(state)
         .with({ type: "success" }, ({ bookmarks, cards, coreRules, notes }) =>
-          noteSections(bookmarks, notes, cards, coreRules),
+          savedSections(bookmarks, notes, cards, coreRules),
         )
         .with({ type: "loading" }, { type: "failed" }, () => NO_SECTIONS)
         .exhaustive(),
@@ -87,5 +90,5 @@ function NoteSectionsData({
     .exhaustive();
 }
 
-export { NoteSectionsData };
-export type { NoteSectionsDataProps, SectionedNotes };
+export { SavedSectionsData };
+export type { SavedSectionsDataProps, SectionedSubjects };

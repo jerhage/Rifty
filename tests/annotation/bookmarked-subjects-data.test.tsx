@@ -7,9 +7,9 @@ import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
 import {
   listBookmarksQuery,
-  listNotedSubjectsQuery,
+  listSavedSubjectsQuery,
 } from "@/features/annotation/queries/annotation-queries";
-import type { ListNotedSubjectsCapabilities } from "@/features/annotation/use-cases/list-noted-subjects";
+import type { ListSavedSubjectsCapabilities } from "@/features/annotation/use-cases/list-saved-subjects";
 import { coreRuleNumberSchema } from "@/features/rules/value-objects/core-rule-number";
 import { useReadState } from "@/hooks/use-read-state";
 
@@ -32,9 +32,9 @@ const CARD = subject("card", "Ember Adept");
 function SavedSubjectsProbe({
   capabilities,
 }: {
-  readonly capabilities: ListNotedSubjectsCapabilities;
+  readonly capabilities: ListSavedSubjectsCapabilities;
 }) {
-  const { state } = useReadState(listNotedSubjectsQuery(capabilities));
+  const { state } = useReadState(listSavedSubjectsQuery(capabilities));
 
   return <Text>{`saved: ${state.type === "success" ? state.notes.length : "…"}`}</Text>;
 }
@@ -74,7 +74,7 @@ async function renderMarks(manager: BookmarkManager, probe = false) {
 
 async function renderMarksBesideSaved(
   manager: BookmarkManager,
-  capabilities: ListNotedSubjectsCapabilities,
+  capabilities: ListSavedSubjectsCapabilities,
 ) {
   return await render(
     <>

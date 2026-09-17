@@ -9,9 +9,9 @@ import {
   SCRATCHPAD_TITLE,
 } from "@/features/annotation/presentation/note-format";
 import type {
-  NotedSubject,
+  SavedSubject,
   SubjectKeeping,
-} from "@/features/annotation/presentation/noted-subject";
+} from "@/features/annotation/presentation/saved-subject";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import {
   CORE_RULES_NOTHING_SAVED_MESSAGE,
@@ -26,17 +26,17 @@ type BookmarkDropping =
   | { readonly type: "offered"; readonly subject: AnnotationSubject }
   | { readonly type: "withheld" };
 
-type NoteSectionPresence =
+type SavedSectionPresence =
   | { readonly type: "always"; readonly emptyMessage: string | null }
   | { readonly type: "whenPopulated"; readonly message: string };
 
-interface NoteSectionSpec {
-  readonly type: NotedSubject["type"];
+interface SavedSectionSpec {
+  readonly type: SavedSubject["type"];
   readonly label: (count: number) => string;
-  readonly presence: NoteSectionPresence;
+  readonly presence: SavedSectionPresence;
 }
 
-interface NotedGroupView {
+interface SavedGroupView {
   readonly body?: string;
   readonly detail: string | null;
   readonly dropping: BookmarkDropping;
@@ -57,7 +57,7 @@ const UNFINDABLE_SUBJECT_KIND_LABELS = {
 const UNFINDABLE_NOTES_MESSAGE =
   "These were written against something the app can no longer find. Removing one is all that is left to do with it.";
 
-const NOTHING_NOTED_ON_CARDS_MESSAGE =
+const NOTHING_SAVED_ON_CARDS_MESSAGE =
   "Bookmark a card with the flag or write a note on it. Either one files it here.";
 
 const SUBJECT_KEEPING_LABELS: Readonly<Record<SubjectKeeping, string>> = {
@@ -70,11 +70,11 @@ function bookmarkOnLabel(notesName: string): string {
   return `Bookmark on ${notesName}`;
 }
 
-function notedCardsSectionLabel(count: number): string {
+function savedCardsSectionLabel(count: number): string {
   return `Bookmarked and noted cards ${count}`;
 }
 
-function notedCoreRulesSectionLabel(count: number): string {
+function savedCoreRulesSectionLabel(count: number): string {
   return `Bookmarked and noted rules ${count}`;
 }
 
@@ -86,35 +86,36 @@ function unfindableSubjectName(subject: AnnotationSubject): string {
   return `${UNFINDABLE_SUBJECT_KIND_LABELS[subject.kind]} ${subject.id}`;
 }
 
-const NOTE_SECTION_SPECS_BY_SUBJECT_TYPE: Readonly<Record<NotedSubject["type"], NoteSectionSpec>> =
-  {
-    standalone: {
-      type: "standalone",
-      label: () => SCRATCHPAD_TITLE,
-      presence: { type: "always", emptyMessage: null },
-    },
-    card: {
-      type: "card",
-      label: notedCardsSectionLabel,
-      presence: { type: "always", emptyMessage: NOTHING_NOTED_ON_CARDS_MESSAGE },
-    },
-    coreRule: {
-      type: "coreRule",
-      label: notedCoreRulesSectionLabel,
-      presence: { type: "always", emptyMessage: CORE_RULES_NOTHING_SAVED_MESSAGE },
-    },
-    unfindable: {
-      type: "unfindable",
-      label: unfindableNotesSectionLabel,
-      presence: { type: "whenPopulated", message: UNFINDABLE_NOTES_MESSAGE },
-    },
-  };
+const SAVED_SECTION_SPECS_BY_SUBJECT_TYPE: Readonly<
+  Record<SavedSubject["type"], SavedSectionSpec>
+> = {
+  standalone: {
+    type: "standalone",
+    label: () => SCRATCHPAD_TITLE,
+    presence: { type: "always", emptyMessage: null },
+  },
+  card: {
+    type: "card",
+    label: savedCardsSectionLabel,
+    presence: { type: "always", emptyMessage: NOTHING_SAVED_ON_CARDS_MESSAGE },
+  },
+  coreRule: {
+    type: "coreRule",
+    label: savedCoreRulesSectionLabel,
+    presence: { type: "always", emptyMessage: CORE_RULES_NOTHING_SAVED_MESSAGE },
+  },
+  unfindable: {
+    type: "unfindable",
+    label: unfindableNotesSectionLabel,
+    presence: { type: "whenPopulated", message: UNFINDABLE_NOTES_MESSAGE },
+  },
+};
 
-const ORDERED_NOTE_SECTION_SPECS: readonly NoteSectionSpec[] = [
-  NOTE_SECTION_SPECS_BY_SUBJECT_TYPE.standalone,
-  NOTE_SECTION_SPECS_BY_SUBJECT_TYPE.card,
-  NOTE_SECTION_SPECS_BY_SUBJECT_TYPE.coreRule,
-  NOTE_SECTION_SPECS_BY_SUBJECT_TYPE.unfindable,
+const ORDERED_SAVED_SECTION_SPECS: readonly SavedSectionSpec[] = [
+  SAVED_SECTION_SPECS_BY_SUBJECT_TYPE.standalone,
+  SAVED_SECTION_SPECS_BY_SUBJECT_TYPE.card,
+  SAVED_SECTION_SPECS_BY_SUBJECT_TYPE.coreRule,
+  SAVED_SECTION_SPECS_BY_SUBJECT_TYPE.unfindable,
 ];
 
 function bookmarkDroppingOf(keeping: SubjectKeeping, subject: AnnotationSubject): BookmarkDropping {
@@ -124,9 +125,9 @@ function bookmarkDroppingOf(keeping: SubjectKeeping, subject: AnnotationSubject)
     .exhaustive();
 }
 
-function notedGroupView(subject: NotedSubject): NotedGroupView {
+function savedGroupView(subject: SavedSubject): SavedGroupView {
   return match(subject)
-    .with({ type: "standalone" }, (): NotedGroupView => ({
+    .with({ type: "standalone" }, (): SavedGroupView => ({
       detail: null,
       dropping: { type: "withheld" },
       emptyMessage: SCRATCHPAD_EMPTY_MESSAGE,
@@ -136,7 +137,7 @@ function notedGroupView(subject: NotedSubject): NotedGroupView {
       placeholder: SCRATCHPAD_PLACEHOLDER,
       writing: { type: "offered", subject: null },
     }))
-    .with({ type: "card" }, ({ card, keeping }): NotedGroupView => {
+    .with({ type: "card" }, ({ card, keeping }): SavedGroupView => {
       const keptCard: AnnotationSubject = { kind: "card", id: card.printingId };
 
       return {
@@ -150,7 +151,7 @@ function notedGroupView(subject: NotedSubject): NotedGroupView {
         writing: { type: "offered", subject: keptCard },
       };
     })
-    .with({ type: "coreRule" }, ({ keeping, saved }): NotedGroupView => {
+    .with({ type: "coreRule" }, ({ keeping, saved }): SavedGroupView => {
       const keptCoreRule: AnnotationSubject = { kind: "coreRule", id: saved.coreRule.number };
 
       return {
@@ -165,7 +166,7 @@ function notedGroupView(subject: NotedSubject): NotedGroupView {
         writing: { type: "offered", subject: keptCoreRule },
       };
     })
-    .with({ type: "unfindable" }, ({ subject: missing }): NotedGroupView => ({
+    .with({ type: "unfindable" }, ({ subject: missing }): SavedGroupView => ({
       detail: missing.id,
       dropping: { type: "withheld" },
       emptyMessage: NOTES_EMPTY_MESSAGE,
@@ -179,13 +180,13 @@ function notedGroupView(subject: NotedSubject): NotedGroupView {
 }
 
 export {
-  NOTHING_NOTED_ON_CARDS_MESSAGE,
-  ORDERED_NOTE_SECTION_SPECS,
+  NOTHING_SAVED_ON_CARDS_MESSAGE,
+  ORDERED_SAVED_SECTION_SPECS,
   bookmarkOnLabel,
-  notedCardsSectionLabel,
-  notedCoreRulesSectionLabel,
-  notedGroupView,
+  savedCardsSectionLabel,
+  savedCoreRulesSectionLabel,
+  savedGroupView,
   unfindableNotesSectionLabel,
   unfindableSubjectName,
 };
-export type { BookmarkDropping, NoteSectionSpec, NoteWriting, NotedGroupView };
+export type { BookmarkDropping, NoteWriting, SavedGroupView, SavedSectionSpec };

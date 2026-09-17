@@ -1,15 +1,15 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import type { Note } from "@/features/annotation/note";
-import { NoteSections } from "@/features/annotation/presentation/components/note-sections";
-import { NoteSectionsData } from "@/features/annotation/presentation/data/note-sections-data";
+import { SavedSections } from "@/features/annotation/presentation/components/saved-sections";
+import { SavedSectionsData } from "@/features/annotation/presentation/data/saved-sections-data";
 import { SCRATCHPAD_TITLE } from "@/features/annotation/presentation/note-format";
 import {
-  NOTHING_NOTED_ON_CARDS_MESSAGE,
-  notedCardsSectionLabel,
-  notedCoreRulesSectionLabel,
+  NOTHING_SAVED_ON_CARDS_MESSAGE,
+  savedCardsSectionLabel,
+  savedCoreRulesSectionLabel,
   unfindableNotesSectionLabel,
-} from "@/features/annotation/presentation/noted-subjects-format";
+} from "@/features/annotation/presentation/saved-subjects-format";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CardSummary } from "@/features/card/card-summary";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
@@ -93,22 +93,22 @@ const MARKED_CARD = subject("card", VI_PRINTING);
 const MARKED_RULE = subject("coreRule", RULE_NUMBER);
 const MARKED_WITHDRAWN_CARD = subject("card", WITHDRAWN_PRINTING);
 
-interface NotedScreen {
+interface SavedStores {
   readonly bookmarks: BookmarkStore;
   readonly notes: NoteStore;
   readonly subjects: SubjectStore;
 }
 
-async function renderNoted(
+async function renderSaved(
   seeded: readonly Note[],
   marked: readonly AnnotationSubject[] = [],
-): Promise<NotedScreen> {
+): Promise<SavedStores> {
   const bookmarks = createBookmarkStore(marked);
   const notes = createNoteStore(seeded);
   const subjects = createSubjectStore([VI], [GAME_CONCEPTS, A_GAME]);
 
   await render(
-    <NoteSectionsData
+    <SavedSectionsData
       bookmarkManager={bookmarks.manager}
       cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock("2026-09-16T13:00:00.000Z")}
@@ -116,8 +116,8 @@ async function renderNoted(
       idGenerator={sequentialIds("written")}
       noteManager={notes.manager}
     >
-      {(written) => <NoteSections written={written} />}
-    </NoteSectionsData>,
+      {(saved) => <SavedSections saved={saved} />}
+    </SavedSectionsData>,
     { wrapper: createTestWrapper(PHONE) },
   );
   await screen.findByRole("header", { name: SCRATCHPAD_TITLE });
@@ -135,18 +135,18 @@ function sectionHolding(label: string) {
 
 describe("the notes gathered under their subjects", () => {
   it("should set a note on a card under the card's name and the printing it was written on", async () => {
-    await renderNoted([CARD_NOTE]);
+    await renderSaved([CARD_NOTE]);
 
-    expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCardsSectionLabel(1) })).toBeTruthy();
     expect(screen.getByRole("header", { name: VI.name })).toBeTruthy();
     expect(screen.getByText(VI_PRINTING)).toBeTruthy();
     expect(screen.getByLabelText(`Note 1 on ${VI.name}`).props.defaultValue).toBe(CARD_NOTE.body);
   });
 
   it("should set a note on a rule under its number and the heading it stands beneath", async () => {
-    await renderNoted([RULE_NOTE]);
+    await renderSaved([RULE_NOTE]);
 
-    expect(screen.getByRole("header", { name: notedCoreRulesSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCoreRulesSectionLabel(1) })).toBeTruthy();
     expect(screen.getByRole("header", { name: GAME_CONCEPTS.body })).toBeTruthy();
     expect(screen.getByText(RULE_NUMBER)).toBeTruthy();
     expect(screen.getByLabelText(`Note 1 on rule ${RULE_NUMBER}`).props.defaultValue).toBe(
@@ -155,22 +155,22 @@ describe("the notes gathered under their subjects", () => {
   });
 
   it("should stand a saved rule's own text beneath it, so the note reads without leaving", async () => {
-    await renderNoted([RULE_NOTE]);
+    await renderSaved([RULE_NOTE]);
 
     expect(screen.getByText(A_GAME.body)).toBeTruthy();
   });
 
   it("should leave a saved card to its name and its printing, with no rules text beneath", async () => {
-    await renderNoted([CARD_NOTE, RULE_NOTE]);
+    await renderSaved([CARD_NOTE, RULE_NOTE]);
 
-    expect(within(sectionHolding(notedCardsSectionLabel(1))).queryByText(A_GAME.body)).toBeNull();
+    expect(within(sectionHolding(savedCardsSectionLabel(1))).queryByText(A_GAME.body)).toBeNull();
     expect(
-      within(sectionHolding(notedCoreRulesSectionLabel(1))).getByText(A_GAME.body),
+      within(sectionHolding(savedCoreRulesSectionLabel(1))).getByText(A_GAME.body),
     ).toBeTruthy();
   });
 
   it("should collect several notes on one subject under one heading, newest first", async () => {
-    await renderNoted([CARD_NOTE, SECOND_CARD_NOTE]);
+    await renderSaved([CARD_NOTE, SECOND_CARD_NOTE]);
 
     expect(screen.getAllByRole("header", { name: VI.name })).toHaveLength(1);
     expect(screen.getByLabelText(`2 notes on ${VI.name}`)).toBeTruthy();
@@ -179,23 +179,23 @@ describe("the notes gathered under their subjects", () => {
   });
 
   it("should keep the card and rule sections standing with nothing filed in either", async () => {
-    await renderNoted([SCRATCHPAD_NOTE]);
+    await renderSaved([SCRATCHPAD_NOTE]);
 
-    expect(screen.getByRole("header", { name: notedCardsSectionLabel(0) })).toBeTruthy();
-    expect(screen.getByRole("header", { name: notedCoreRulesSectionLabel(0) })).toBeTruthy();
-    expect(screen.getByText(NOTHING_NOTED_ON_CARDS_MESSAGE)).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCardsSectionLabel(0) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCoreRulesSectionLabel(0) })).toBeTruthy();
+    expect(screen.getByText(NOTHING_SAVED_ON_CARDS_MESSAGE)).toBeTruthy();
     expect(screen.getByText(CORE_RULES_NOTHING_SAVED_MESSAGE)).toBeTruthy();
   });
 
   it("should hold back the section for a missing subject until a note needs it", async () => {
-    await renderNoted([CARD_NOTE]);
+    await renderSaved([CARD_NOTE]);
 
-    expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCardsSectionLabel(1) })).toBeTruthy();
     expect(screen.queryByText(/Notes with a missing subject/)).toBeNull();
   });
 
   it("should ask each feature for its subjects once rather than once per note", async () => {
-    const { subjects } = await renderNoted(
+    const { subjects } = await renderSaved(
       [CARD_NOTE, RULE_NOTE, SECOND_CARD_NOTE, WITHDRAWN_NOTE],
       [MARKED_CARD, MARKED_RULE],
     );
@@ -209,7 +209,7 @@ describe("the notes gathered under their subjects", () => {
   });
 
   it("should ask for what is marked as well as what is noted", async () => {
-    const { bookmarks, subjects } = await renderNoted([], [MARKED_CARD, MARKED_RULE]);
+    const { bookmarks, subjects } = await renderSaved([], [MARKED_CARD, MARKED_RULE]);
 
     expect(bookmarks.scopes()).toEqual([{ type: "all" }]);
     expect(subjects.cardAsks()[0]).toEqual([VI_PRINTING]);
@@ -217,7 +217,7 @@ describe("the notes gathered under their subjects", () => {
   });
 
   it("should take another note against a subject it already found", async () => {
-    const { notes } = await renderNoted([CARD_NOTE]);
+    const { notes } = await renderSaved([CARD_NOTE]);
 
     await fireEvent.press(screen.getByRole("button", { name: `Add a note to ${VI.name}` }));
     await fireEvent.changeText(
@@ -231,7 +231,7 @@ describe("the notes gathered under their subjects", () => {
   });
 
   it("should take an edit to a note already written on a card", async () => {
-    const { notes } = await renderNoted([CARD_NOTE]);
+    const { notes } = await renderSaved([CARD_NOTE]);
 
     await fireEvent(screen.getByLabelText(`Note 1 on ${VI.name}`), "endEditing", {
       nativeEvent: { text: "Holds the point against anything." },
@@ -244,7 +244,7 @@ describe("the notes gathered under their subjects", () => {
   });
 
   it("should take an edit to a note already written on a rule", async () => {
-    const { notes } = await renderNoted([RULE_NOTE]);
+    const { notes } = await renderSaved([RULE_NOTE]);
 
     await fireEvent(screen.getByLabelText(`Note 1 on rule ${RULE_NUMBER}`), "endEditing", {
       nativeEvent: { text: "Came up twice in round three." },
@@ -257,7 +257,7 @@ describe("the notes gathered under their subjects", () => {
   });
 
   it("should seat every note it is given, whatever its subject turns out to be", async () => {
-    await renderNoted([CARD_NOTE, RULE_NOTE, WITHDRAWN_NOTE, SCRATCHPAD_NOTE]);
+    await renderSaved([CARD_NOTE, RULE_NOTE, WITHDRAWN_NOTE, SCRATCHPAD_NOTE]);
 
     expect(screen.getByLabelText("Note 1 on the scratchpad").props.defaultValue).toBe(
       SCRATCHPAD_NOTE.body,
@@ -272,17 +272,17 @@ describe("the notes gathered under their subjects", () => {
 
 describe("a note whose subject cannot be found", () => {
   it("should stand in its own section, saying what it was attached to", async () => {
-    await renderNoted([CARD_NOTE, WITHDRAWN_NOTE]);
+    await renderSaved([CARD_NOTE, WITHDRAWN_NOTE]);
 
     expect(screen.getByRole("header", { name: unfindableNotesSectionLabel(1) })).toBeTruthy();
     expect(screen.getByRole("header", { name: "Card" })).toBeTruthy();
     expect(screen.getByText(WITHDRAWN_PRINTING)).toBeTruthy();
     expect(screen.getAllByText(WITHDRAWN_NOTE.body)).toHaveLength(1);
-    expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCardsSectionLabel(1) })).toBeTruthy();
   });
 
   it("should be shown as it stands, with nothing offering to change it", async () => {
-    await renderNoted([WITHDRAWN_NOTE]);
+    await renderSaved([WITHDRAWN_NOTE]);
 
     expect(screen.getByText(WITHDRAWN_NOTE.body)).toBeTruthy();
     expect(screen.queryByLabelText(`Note 1 on ${WITHDRAWN_NAME}`)).toBeNull();
@@ -290,7 +290,7 @@ describe("a note whose subject cannot be found", () => {
   });
 
   it("should be given up from there, which is the only place it can be", async () => {
-    const { notes } = await renderNoted([WITHDRAWN_NOTE]);
+    const { notes } = await renderSaved([WITHDRAWN_NOTE]);
 
     await fireEvent.press(
       screen.getByRole("button", { name: `Remove note 1 on ${WITHDRAWN_NAME}` }),
@@ -306,7 +306,7 @@ describe("a note whose subject cannot be found", () => {
 
 describe("the notes with no subject at all", () => {
   it("should stand in the scratchpad section rather than under a subject", async () => {
-    await renderNoted([CARD_NOTE, SCRATCHPAD_NOTE]);
+    await renderSaved([CARD_NOTE, SCRATCHPAD_NOTE]);
 
     expect(screen.getByRole("header", { name: SCRATCHPAD_TITLE })).toBeTruthy();
     expect(screen.getByLabelText("Note 1 on the scratchpad").props.defaultValue).toBe(
@@ -316,7 +316,7 @@ describe("the notes with no subject at all", () => {
   });
 
   it("should keep its section standing even with nothing written in it", async () => {
-    await renderNoted([CARD_NOTE]);
+    await renderSaved([CARD_NOTE]);
 
     expect(screen.getByRole("header", { name: SCRATCHPAD_TITLE })).toBeTruthy();
     expect(screen.getByLabelText("0 notes on the scratchpad")).toBeTruthy();
@@ -325,41 +325,41 @@ describe("the notes with no subject at all", () => {
 
 describe("a subject that is marked rather than written on", () => {
   it("should file a marked rule under its heading with nothing written on it", async () => {
-    await renderNoted([], [MARKED_RULE]);
+    await renderSaved([], [MARKED_RULE]);
 
-    expect(screen.getByRole("header", { name: notedCoreRulesSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCoreRulesSectionLabel(1) })).toBeTruthy();
     expect(screen.getByRole("header", { name: GAME_CONCEPTS.body })).toBeTruthy();
     expect(screen.getByText(A_GAME.body)).toBeTruthy();
     expect(screen.getByLabelText(`0 notes on rule ${RULE_NUMBER}`)).toBeTruthy();
   });
 
   it("should file a marked card under its name with nothing written on it", async () => {
-    await renderNoted([], [MARKED_CARD]);
+    await renderSaved([], [MARKED_CARD]);
 
-    expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCardsSectionLabel(1) })).toBeTruthy();
     expect(screen.getByRole("header", { name: VI.name })).toBeTruthy();
     expect(screen.getByText(VI_PRINTING)).toBeTruthy();
     expect(screen.getByLabelText(`0 notes on ${VI.name}`)).toBeTruthy();
   });
 
   it("should stand a rule that is both marked and written on once", async () => {
-    await renderNoted([RULE_NOTE], [MARKED_RULE]);
+    await renderSaved([RULE_NOTE], [MARKED_RULE]);
 
-    expect(screen.getByRole("header", { name: notedCoreRulesSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCoreRulesSectionLabel(1) })).toBeTruthy();
     expect(screen.getAllByRole("header", { name: GAME_CONCEPTS.body })).toHaveLength(1);
     expect(screen.getByLabelText(`1 note on rule ${RULE_NUMBER}`)).toBeTruthy();
   });
 
   it("should stand a card that is both marked and written on once", async () => {
-    await renderNoted([CARD_NOTE], [MARKED_CARD]);
+    await renderSaved([CARD_NOTE], [MARKED_CARD]);
 
-    expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCardsSectionLabel(1) })).toBeTruthy();
     expect(screen.getAllByRole("header", { name: VI.name })).toHaveLength(1);
     expect(screen.getByLabelText(`1 note on ${VI.name}`)).toBeTruthy();
   });
 
   it("should take a note against a subject that only a mark had filed", async () => {
-    const { notes } = await renderNoted([], [MARKED_CARD]);
+    const { notes } = await renderSaved([], [MARKED_CARD]);
 
     await fireEvent.press(screen.getByRole("button", { name: `Add a note to ${VI.name}` }));
     await fireEvent.changeText(
@@ -375,26 +375,26 @@ describe("a subject that is marked rather than written on", () => {
 
 describe("why a kept row stands where it does", () => {
   it("should say a card that only a mark filed is bookmarked", async () => {
-    await renderNoted([], [MARKED_CARD]);
+    await renderSaved([], [MARKED_CARD]);
 
     expect(screen.getByText("Bookmarked")).toBeTruthy();
   });
 
   it("should say a card that only a note filed is noted, offering no mark to give up", async () => {
-    await renderNoted([CARD_NOTE]);
+    await renderSaved([CARD_NOTE]);
 
     expect(screen.getByText("Noted")).toBeTruthy();
     expect(screen.queryByRole("checkbox", { name: `Bookmark on ${VI.name}` })).toBeNull();
   });
 
   it("should say a rule that both acts filed is bookmarked and noted", async () => {
-    await renderNoted([RULE_NOTE], [MARKED_RULE]);
+    await renderSaved([RULE_NOTE], [MARKED_RULE]);
 
     expect(screen.getByText("Bookmarked and noted")).toBeTruthy();
   });
 
   it("should give up the mark from the row and leave what is written standing", async () => {
-    const { bookmarks, notes } = await renderNoted([CARD_NOTE], [MARKED_CARD]);
+    const { bookmarks, notes } = await renderSaved([CARD_NOTE], [MARKED_CARD]);
 
     await fireEvent.press(screen.getByRole("checkbox", { name: `Bookmark on ${VI.name}` }));
 
@@ -407,16 +407,16 @@ describe("why a kept row stands where it does", () => {
 
 describe("a mark whose subject cannot be found", () => {
   it("should be left out rather than filed as a missing subject", async () => {
-    await renderNoted([], [MARKED_WITHDRAWN_CARD]);
+    await renderSaved([], [MARKED_WITHDRAWN_CARD]);
 
     expect(screen.queryByText(WITHDRAWN_PRINTING)).toBeNull();
     expect(screen.queryByRole("header", { name: "Card" })).toBeNull();
     expect(screen.queryByText(/Notes with a missing subject/)).toBeNull();
-    expect(screen.getByRole("header", { name: notedCardsSectionLabel(0) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: savedCardsSectionLabel(0) })).toBeTruthy();
   });
 
   it("should leave a note on the same missing subject standing", async () => {
-    await renderNoted([WITHDRAWN_NOTE], [MARKED_WITHDRAWN_CARD]);
+    await renderSaved([WITHDRAWN_NOTE], [MARKED_WITHDRAWN_CARD]);
 
     expect(screen.getByRole("header", { name: unfindableNotesSectionLabel(1) })).toBeTruthy();
     expect(screen.getByText(WITHDRAWN_NOTE.body)).toBeTruthy();

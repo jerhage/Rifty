@@ -11,11 +11,11 @@ import {
   listBookmarks,
   type ListBookmarksCapabilities,
 } from "@/features/annotation/use-cases/list-bookmarks";
-import {
-  listNotedSubjects,
-  type ListNotedSubjectsCapabilities,
-} from "@/features/annotation/use-cases/list-noted-subjects";
 import { listNotes, type ListNotesCapabilities } from "@/features/annotation/use-cases/list-notes";
+import {
+  listSavedSubjects,
+  type ListSavedSubjectsCapabilities,
+} from "@/features/annotation/use-cases/list-saved-subjects";
 import {
   toggleBookmark,
   type ToggleBookmarkCapabilities,
@@ -60,10 +60,10 @@ function listNotesQuery(scope: NoteListScope, capabilities: ListNotesCapabilitie
   });
 }
 
-function listNotedSubjectsQuery(capabilities: ListNotedSubjectsCapabilities) {
+function listSavedSubjectsQuery(capabilities: ListSavedSubjectsCapabilities) {
   return queryOptions({
-    queryKey: annotationKeys.notedSubjects(),
-    queryFn: ({ signal }) => listNotedSubjects(capabilities, { signal }),
+    queryKey: annotationKeys.savedSubjects(),
+    queryFn: ({ signal }) => listSavedSubjects(capabilities, { signal }),
     staleTime: ANNOTATION_STALE_TIME_MS,
   });
 }
@@ -83,8 +83,8 @@ function deleteNoteMutation(capabilities: DeleteNoteCapabilities) {
 export {
   deleteNoteMutation,
   listBookmarksQuery,
-  listNotedSubjectsQuery,
   listNotesQuery,
+  listSavedSubjectsQuery,
   toggleBookmarkMutation,
   writeNoteMutation,
 };

@@ -3,7 +3,7 @@ import type { NoteListScope } from "@/features/annotation/note-list-scope";
 
 /**
  * Three subtrees, not two: marking a subject writes no note of it and writing a note marks nothing,
- * while `notedSubjects()` spans both, so each write path must leave its own subtree and that one stale.
+ * while `savedSubjects()` spans both, so each write path must leave its own subtree and that one stale.
  */
 const annotationKeys = {
   all: () => ["annotation"] as const,
@@ -12,7 +12,7 @@ const annotationKeys = {
     [...annotationKeys.bookmarks(), "list", scope] as const,
   notes: () => [...annotationKeys.all(), "note"] as const,
   noteList: (scope: NoteListScope) => [...annotationKeys.notes(), "list", scope] as const,
-  notedSubjects: () => [...annotationKeys.all(), "notedSubject"] as const,
+  savedSubjects: () => [...annotationKeys.all(), "savedSubject"] as const,
 };
 
 export { annotationKeys };

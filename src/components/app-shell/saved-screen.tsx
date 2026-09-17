@@ -14,10 +14,10 @@ import { useTheme } from "@/hooks/use-theme";
 
 interface SavedScreenProps {
   readonly counts: SavedCounts;
-  readonly notes: ReactNode;
+  readonly sections: ReactNode;
 }
 
-function SavedScreen({ counts, notes }: SavedScreenProps) {
+function SavedScreen({ counts, sections }: SavedScreenProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
 
@@ -52,7 +52,7 @@ function SavedScreen({ counts, notes }: SavedScreenProps) {
         ]}
         style={styles.body}
       >
-        {notes}
+        {sections}
       </ScrollView>
     </ThemedView>
   );

@@ -38,16 +38,16 @@ function useBookmarkToggling({
   const queryClient = useQueryClient();
   const announce = useAnnouncement();
 
-  const refreshBookmarksAndNotedSubjects = useCallback(() => {
+  const refreshBookmarksAndSavedSubjects = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: annotationKeys.bookmarks() });
-    void queryClient.invalidateQueries({ queryKey: annotationKeys.notedSubjects() });
+    void queryClient.invalidateQueries({ queryKey: annotationKeys.savedSubjects() });
   }, [queryClient]);
 
   const { submit } = useWriteState({
     ...toggleBookmarkMutation({ bookmarkFinder, bookmarkRemover, bookmarkSaver, clock }),
     onError: () => announce(BOOKMARK_FAILED_MESSAGE, "interrupting"),
     onSuccess: (result) => {
-      refreshBookmarksAndNotedSubjects();
+      refreshBookmarksAndSavedSubjects();
       onBookmarksChanged?.();
       announce(
         match(result)

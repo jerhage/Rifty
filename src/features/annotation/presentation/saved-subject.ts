@@ -5,16 +5,16 @@ import type { SavedCoreRule } from "@/features/rules/presentation/core-rules-sav
 
 type SubjectKeeping = "bookmarked" | "both" | "noted";
 
-type NotedSubject =
+type SavedSubject =
   | { readonly type: "standalone" }
   | { readonly type: "card"; readonly card: CardSummary; readonly keeping: SubjectKeeping }
   | { readonly type: "coreRule"; readonly saved: SavedCoreRule; readonly keeping: SubjectKeeping }
   | { readonly type: "unfindable"; readonly subject: AnnotationSubject };
 
-interface NotedSubjectGroup {
+interface SavedSubjectGroup {
   readonly key: string;
   readonly notes: readonly Note[];
-  readonly subject: NotedSubject;
+  readonly subject: SavedSubject;
 }
 
-export type { NotedSubject, NotedSubjectGroup, SubjectKeeping };
+export type { SavedSubject, SavedSubjectGroup, SubjectKeeping };

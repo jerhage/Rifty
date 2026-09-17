@@ -1,14 +1,14 @@
 import { SavedScreen } from "@/components/app-shell/saved-screen";
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
-import { NoteSections } from "@/features/annotation/presentation/components/note-sections";
-import { NoteSectionsData } from "@/features/annotation/presentation/data/note-sections-data";
-import { keptCountsOf } from "@/features/annotation/presentation/noted-subjects";
+import { SavedSections } from "@/features/annotation/presentation/components/saved-sections";
+import { SavedSectionsData } from "@/features/annotation/presentation/data/saved-sections-data";
+import { keptCountsOf } from "@/features/annotation/presentation/saved-subjects";
 
 function SavedRoute() {
   const { annotations, cards, clock, idGenerator, rules } = useAppDependencies();
 
   return (
-    <NoteSectionsData
+    <SavedSectionsData
       bookmarkManager={annotations.bookmarkRepository}
       cardSummariesFinder={cards.cardRepository}
       clock={clock}
@@ -16,13 +16,13 @@ function SavedRoute() {
       idGenerator={idGenerator}
       noteManager={annotations.noteRepository}
     >
-      {(written) => (
+      {(saved) => (
         <SavedScreen
-          counts={keptCountsOf(written.sections)}
-          notes={<NoteSections written={written} />}
+          counts={keptCountsOf(saved.sections)}
+          sections={<SavedSections saved={saved} />}
         />
       )}
-    </NoteSectionsData>
+    </SavedSectionsData>
   );
 }
 

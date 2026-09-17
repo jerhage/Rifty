@@ -7,14 +7,16 @@ const noteTitleSchema = z.string().trim();
 const noteBodySchema = z.string().trim().min(1);
 
 /** A note with no subject stands alone, and a subject may collect as many as a person writes. */
-const noteSchema = z.object({
-  id: noteIdSchema,
-  subject: annotationSubjectSchema.nullable(),
-  title: noteTitleSchema,
-  body: noteBodySchema,
-  createdAt: z.string().trim().min(1),
-  updatedAt: z.string().trim().min(1),
-});
+const noteSchema = z
+  .object({
+    id: noteIdSchema,
+    subject: annotationSubjectSchema.nullable(),
+    title: noteTitleSchema,
+    body: noteBodySchema,
+    createdAt: z.string().trim().min(1),
+    updatedAt: z.string().trim().min(1),
+  })
+  .readonly();
 
 function parseNote(value: unknown): Note {
   return noteSchema.parse(value);

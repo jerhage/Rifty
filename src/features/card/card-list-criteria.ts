@@ -5,21 +5,25 @@ import { cardDomainSchema } from "@/features/card/value-objects/card-domain";
 import { cardTypeSchema } from "@/features/card/value-objects/card-type";
 import { taxonomyIdSchema } from "@/features/card/value-objects/taxonomy-id";
 
-const cardSearchSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("name"), text: z.string().trim().min(1) }),
-  z.object({ type: z.literal("rulesText"), text: z.string().trim().min(1) }),
-  z.object({ type: z.literal("nameOrRulesText"), text: z.string().trim().min(1) }),
-]);
+const cardSearchSchema = z
+  .discriminatedUnion("type", [
+    z.object({ type: z.literal("name"), text: z.string().trim().min(1) }),
+    z.object({ type: z.literal("rulesText"), text: z.string().trim().min(1) }),
+    z.object({ type: z.literal("nameOrRulesText"), text: z.string().trim().min(1) }),
+  ])
+  .readonly();
 
 const cardSortDirectionSchema = z.enum(["ascending", "descending"]);
 
-const cardSortSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("catalogOrder") }),
-  z.object({ type: z.literal("name"), direction: cardSortDirectionSchema }),
-  z.object({ type: z.literal("energy"), direction: cardSortDirectionSchema }),
-  z.object({ type: z.literal("might"), direction: cardSortDirectionSchema }),
-  z.object({ type: z.literal("power"), direction: cardSortDirectionSchema }),
-]);
+const cardSortSchema = z
+  .discriminatedUnion("type", [
+    z.object({ type: z.literal("catalogOrder") }),
+    z.object({ type: z.literal("name"), direction: cardSortDirectionSchema }),
+    z.object({ type: z.literal("energy"), direction: cardSortDirectionSchema }),
+    z.object({ type: z.literal("might"), direction: cardSortDirectionSchema }),
+    z.object({ type: z.literal("power"), direction: cardSortDirectionSchema }),
+  ])
+  .readonly();
 
 const cardNumericFilterSchema = z
   .discriminatedUnion("type", [
@@ -35,31 +39,34 @@ const cardNumericFilterSchema = z
   .refine(
     (filter) => filter.type !== "between" || filter.minimum <= filter.maximum,
     "A numeric filter minimum cannot exceed its maximum.",
-  );
+  )
+  .readonly();
 
-const cardListCriteriaSchema = z.object({
-  riftboundIds: z.array(z.string().trim().min(1)).optional(),
-  setCodes: z.array(setCodeSchema).optional(),
-  typeIds: z.array(cardTypeSchema).optional(),
-  supertypeIds: z.array(taxonomyIdSchema).optional(),
-  rarityIds: z.array(taxonomyIdSchema).optional(),
-  /** Use for an 'AND' query (e.g. show me cards that have both calm AND mind domains)*/
-  domainIds: z.array(cardDomainSchema).optional(),
-  /** Use for an 'OR' query (e.g. show me cards that have either calm OR mind domains) */
-  anyDomainIds: z.array(cardDomainSchema).optional(),
-  withinDomainIds: z.array(cardDomainSchema).optional(),
-  tagIds: z.array(taxonomyIdSchema).optional(),
-  keywordIds: z.array(z.string().trim().min(1)).optional(),
-  championNames: z.array(z.string().trim().min(1)).optional(),
-  onlyBookmarked: z.boolean().optional(),
-  energy: cardNumericFilterSchema.optional(),
-  might: cardNumericFilterSchema.optional(),
-  power: cardNumericFilterSchema.optional(),
-  search: cardSearchSchema.optional(),
-  sort: cardSortSchema.optional(),
-  limit: z.number().int().positive().max(100).optional(),
-  offset: z.number().int().nonnegative().optional(),
-});
+const cardListCriteriaSchema = z
+  .object({
+    riftboundIds: z.array(z.string().trim().min(1)).readonly().optional(),
+    setCodes: z.array(setCodeSchema).readonly().optional(),
+    typeIds: z.array(cardTypeSchema).readonly().optional(),
+    supertypeIds: z.array(taxonomyIdSchema).readonly().optional(),
+    rarityIds: z.array(taxonomyIdSchema).readonly().optional(),
+    /** Use for an 'AND' query (e.g. show me cards that have both calm AND mind domains)*/
+    domainIds: z.array(cardDomainSchema).readonly().optional(),
+    /** Use for an 'OR' query (e.g. show me cards that have either calm OR mind domains) */
+    anyDomainIds: z.array(cardDomainSchema).readonly().optional(),
+    withinDomainIds: z.array(cardDomainSchema).readonly().optional(),
+    tagIds: z.array(taxonomyIdSchema).readonly().optional(),
+    keywordIds: z.array(z.string().trim().min(1)).readonly().optional(),
+    championNames: z.array(z.string().trim().min(1)).readonly().optional(),
+    onlyBookmarked: z.boolean().optional(),
+    energy: cardNumericFilterSchema.optional(),
+    might: cardNumericFilterSchema.optional(),
+    power: cardNumericFilterSchema.optional(),
+    search: cardSearchSchema.optional(),
+    sort: cardSortSchema.optional(),
+    limit: z.number().int().positive().max(100).optional(),
+    offset: z.number().int().nonnegative().optional(),
+  })
+  .readonly();
 
 function parseCardListCriteria(value: unknown): CardListCriteria {
   return cardListCriteriaSchema.parse(value);

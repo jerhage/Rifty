@@ -10,12 +10,14 @@ const deckIdSchema = z.string().trim().min(1).brand<"DeckId">();
 const deckNameSchema = z.string().trim().min(1);
 const deckSectionSchema = z.enum(["legend", "mainDeck", "runeDeck", "battlefield", "sideboard"]);
 const DECK_SECTIONS = deckSectionSchema.options;
-const deckEntrySchema = z.object({
-  section: deckSectionSchema,
-  cardId: cardIdSchema,
-  printingId: printingIdSchema,
-  quantity: z.number().int().positive(),
-});
+const deckEntrySchema = z
+  .object({
+    section: deckSectionSchema,
+    cardId: cardIdSchema,
+    printingId: printingIdSchema,
+    quantity: z.number().int().positive(),
+  })
+  .readonly();
 
 /**
  * A saved deck intentionally permits incomplete and tournament-illegal compositions. It only
@@ -31,7 +33,7 @@ const deckSchema = z
     createdAt: z.string().trim().min(1),
     updatedAt: z.string().trim().min(1),
     chosenChampionCardId: cardIdSchema.nullable(),
-    entries: z.array(deckEntrySchema),
+    entries: z.array(deckEntrySchema).readonly(),
   })
   .superRefine((deck, context) => {
     const entryIndexesByKey = new Map<string, number>();
@@ -46,38 +48,45 @@ const deckSchema = z
       }
       entryIndexesByKey.set(key, index);
     });
-  });
+  })
+  .readonly();
 
-const tournamentRulesetSchema = z.object({
-  id: z.string().trim().min(1),
-  format: z.string().trim().min(1),
-  version: z.string().trim().min(1),
-});
+const tournamentRulesetSchema = z
+  .object({
+    id: z.string().trim().min(1),
+    format: z.string().trim().min(1),
+    version: z.string().trim().min(1),
+  })
+  .readonly();
 
-const deckLegalityRuleSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("sectionRequired"), section: deckSectionSchema }),
-  z.object({ kind: z.literal("sectionSize"), section: deckSectionSchema }),
-  z.object({ kind: z.literal("sectionCopyLimit"), section: deckSectionSchema }),
-  z.object({ kind: z.literal("sharedCopyLimit") }),
-  z.object({ kind: z.literal("championRequired") }),
-  z.object({ kind: z.literal("championInMainDeck") }),
-  z.object({ kind: z.literal("championIsChampionUnit") }),
-]);
+const deckLegalityRuleSchema = z
+  .discriminatedUnion("kind", [
+    z.object({ kind: z.literal("sectionRequired"), section: deckSectionSchema }),
+    z.object({ kind: z.literal("sectionSize"), section: deckSectionSchema }),
+    z.object({ kind: z.literal("sectionCopyLimit"), section: deckSectionSchema }),
+    z.object({ kind: z.literal("sharedCopyLimit") }),
+    z.object({ kind: z.literal("championRequired") }),
+    z.object({ kind: z.literal("championInMainDeck") }),
+    z.object({ kind: z.literal("championIsChampionUnit") }),
+  ])
+  .readonly();
 
-const deckLegalityViolationSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("deckConstraint"),
-    rule: deckLegalityRuleSchema,
-    message: z.string().trim().min(1),
-  }),
-  z.object({
-    type: z.literal("cardConstraint"),
-    cardId: cardIdSchema,
-    printingIds: z.array(printingIdSchema),
-    rule: deckLegalityRuleSchema,
-    message: z.string().trim().min(1),
-  }),
-]);
+const deckLegalityViolationSchema = z
+  .discriminatedUnion("type", [
+    z.object({
+      type: z.literal("deckConstraint"),
+      rule: deckLegalityRuleSchema,
+      message: z.string().trim().min(1),
+    }),
+    z.object({
+      type: z.literal("cardConstraint"),
+      cardId: cardIdSchema,
+      printingIds: z.array(printingIdSchema).readonly(),
+      rule: deckLegalityRuleSchema,
+      message: z.string().trim().min(1),
+    }),
+  ])
+  .readonly();
 
 /**
  * A derived assessment, never a persisted deck field: catalog data and tournament rules can change.
@@ -85,17 +94,19 @@ const deckLegalityViolationSchema = z.discriminatedUnion("type", [
  * `ruleset` is kept deliberately although nothing reads it yet. Which ruleset judged a deck is a
  * real fact about the verification, and it becomes meaningful as soon as a second format exists.
  */
-const deckVerificationSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("legal"),
-    ruleset: tournamentRulesetSchema,
-  }),
-  z.object({
-    type: z.literal("illegal"),
-    ruleset: tournamentRulesetSchema,
-    violations: z.array(deckLegalityViolationSchema).min(1),
-  }),
-]);
+const deckVerificationSchema = z
+  .discriminatedUnion("type", [
+    z.object({
+      type: z.literal("legal"),
+      ruleset: tournamentRulesetSchema,
+    }),
+    z.object({
+      type: z.literal("illegal"),
+      ruleset: tournamentRulesetSchema,
+      violations: z.array(deckLegalityViolationSchema).min(1).readonly(),
+    }),
+  ])
+  .readonly();
 
 function parseDeck(value: unknown): Deck {
   return deckSchema.parse(value);

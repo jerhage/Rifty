@@ -14,11 +14,13 @@ const annotationSubjectKindSchema = z.enum(["coreRule", "card", "deck"]);
  * The union is a vocabulary rather than a permission: nothing offers to bookmark every kind today,
  * and a subject that no longer resolves is detected where it is read rather than guarded here.
  */
-const annotationSubjectSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("coreRule"), id: coreRuleNumberSchema }),
-  z.object({ kind: z.literal("card"), id: printingIdSchema }),
-  z.object({ kind: z.literal("deck"), id: deckIdSchema }),
-]);
+const annotationSubjectSchema = z
+  .discriminatedUnion("kind", [
+    z.object({ kind: z.literal("coreRule"), id: coreRuleNumberSchema }),
+    z.object({ kind: z.literal("card"), id: printingIdSchema }),
+    z.object({ kind: z.literal("deck"), id: deckIdSchema }),
+  ])
+  .readonly();
 
 type AnnotationSubjectKind = z.output<typeof annotationSubjectKindSchema>;
 type AnnotationSubject = z.output<typeof annotationSubjectSchema>;

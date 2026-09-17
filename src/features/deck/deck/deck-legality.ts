@@ -17,10 +17,12 @@ import {
   type TournamentRuleset,
 } from "./deck";
 
-const copyAllowanceSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("limited"), copies: z.number().int().nonnegative() }),
-  z.object({ type: z.literal("unlimited") }),
-]);
+const copyAllowanceSchema = z
+  .discriminatedUnion("type", [
+    z.object({ type: z.literal("limited"), copies: z.number().int().nonnegative() }),
+    z.object({ type: z.literal("unlimited") }),
+  ])
+  .readonly();
 
 type CopyAllowance = z.output<typeof copyAllowanceSchema>;
 

@@ -10,6 +10,7 @@ import { MaxReadingWidth, Spacing } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import type { CoreRuleRowHighlight } from "@/features/rules/presentation/core-rule-highlight";
+import type { CoreRuleNotesState } from "@/features/rules/presentation/core-rule-notes-state";
 import type { CoreRulesContentsPlacement } from "@/features/rules/presentation/core-rules-contents-placement";
 import {
   CORE_RULES_NO_MATCHES_MESSAGE,
@@ -73,7 +74,7 @@ function CoreRulesScreen({
     toggleMatchesOnly,
   } = useCoreRulesSearch(coreRules, scrollToRow);
   const [selectedNumber, setSelectedNumber] = useState<CoreRuleNumber | null>(null);
-  const [notedCoreRule, setNotedCoreRule] = useState<CoreRule | null>(null);
+  const [notesState, setNotesState] = useState<CoreRuleNotesState>({ type: "closed" });
   const [sheetState, setSheetState] = useState<CoreRulesSheetState>("hidden");
   const [savedPaneExpanded, setSavedPaneExpanded] = useState(false);
   const foundNothing = search.type === "searched" && search.hitCount === 0;
@@ -84,8 +85,11 @@ function CoreRulesScreen({
   }, []);
 
   const isNoted = useCallback((number: CoreRuleNumber) => noteCountOf(number) > 0, [noteCountOf]);
-  const openNotes = useCallback((coreRule: CoreRule) => setNotedCoreRule(coreRule), []);
-  const closeNotes = useCallback(() => setNotedCoreRule(null), []);
+  const openNotes = useCallback(
+    (coreRule: CoreRule) => setNotesState({ type: "open", coreRule }),
+    [],
+  );
+  const closeNotes = useCallback(() => setNotesState({ type: "closed" }), []);
   const showContents = useCallback(() => setSheetState("contents"), []);
   const showSaved = useCallback(() => setSheetState("saved"), []);
   const hideSheet = useCallback(() => setSheetState("hidden"), []);
@@ -185,11 +189,11 @@ function CoreRulesScreen({
         ))
         .exhaustive()}
       <CoreRuleNotePopup
-        coreRule={notedCoreRule}
         coreRules={coreRules}
         noteCountOf={noteCountOf}
-        notes={notedCoreRule === null ? null : notePanelFor(notedCoreRule.number)}
+        notePanelFor={notePanelFor}
         onDismiss={closeNotes}
+        state={notesState}
       />
     </ThemedView>
   );

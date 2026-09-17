@@ -6,6 +6,7 @@ import { BottomSheetShell } from "@/components/ui/atoms/bottom-sheet-shell";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
+import type { CoreRuleNotesState } from "@/features/rules/presentation/core-rule-notes-state";
 import {
   coreRuleNoteEdge,
   coreRuleNotesTitle,
@@ -25,12 +26,11 @@ const CLOSE_LABEL = "Done";
 const DISMISS_LABEL = "Close the notes";
 
 interface CoreRuleNotePopupProps {
-  /** The rule whose notes are open, and `null` while none is. */
-  readonly coreRule: CoreRule | null;
   readonly coreRules: readonly CoreRule[];
   readonly noteCountOf: (number: CoreRuleNumber) => number;
-  readonly notes: ReactNode;
+  readonly notePanelFor: (number: CoreRuleNumber) => ReactNode;
   readonly onDismiss: () => void;
+  readonly state: CoreRuleNotesState;
 }
 
 /**
@@ -38,11 +38,11 @@ interface CoreRuleNotePopupProps {
  * gated on the rule being marked: the two acts are stored apart and offered apart.
  */
 function CoreRuleNotePopup({
-  coreRule,
   coreRules,
   noteCountOf,
-  notes,
+  notePanelFor,
   onDismiss,
+  state,
 }: CoreRuleNotePopupProps) {
   const { layoutClass } = useLayoutSize();
   const theme = useTheme();
@@ -51,22 +51,23 @@ function CoreRuleNotePopup({
     .with("phone", () => (
       <BottomSheetShell
         heightFraction={SHEET_HEIGHT_FRACTION}
-        isPresented={coreRule !== null}
+        isPresented={state.type === "open"}
         onDismiss={onDismiss}
       >
-        {coreRule === null ? (
-          <View />
-        ) : (
-          <CoreRuleNoteFace
-            coreRule={coreRule}
-            coreRules={coreRules}
-            noteCountOf={noteCountOf}
-            notes={notes}
-            onDismiss={onDismiss}
-            ruleLines={CLAMPED_RULE_LINES}
-            style={[styles.filling, { borderTopColor: coreRuleNoteEdge(theme) }]}
-          />
-        )}
+        {match(state)
+          .with({ type: "closed" }, () => <View />)
+          .with({ type: "open" }, ({ coreRule }) => (
+            <CoreRuleNoteFace
+              coreRule={coreRule}
+              coreRules={coreRules}
+              noteCountOf={noteCountOf}
+              notes={notePanelFor(coreRule.number)}
+              onDismiss={onDismiss}
+              ruleLines={CLAMPED_RULE_LINES}
+              style={[styles.filling, { borderTopColor: coreRuleNoteEdge(theme) }]}
+            />
+          ))
+          .exhaustive()}
       </BottomSheetShell>
     ))
     .with("tablet", () => (
@@ -74,21 +75,24 @@ function CoreRuleNotePopup({
         animationType="fade"
         onRequestClose={onDismiss}
         transparent
-        visible={coreRule !== null}
+        visible={state.type === "open"}
       >
-        {coreRule === null ? null : (
-          <CenteredPopup onDismiss={onDismiss}>
-            <CoreRuleNoteFace
-              coreRule={coreRule}
-              coreRules={coreRules}
-              noteCountOf={noteCountOf}
-              notes={notes}
-              onDismiss={onDismiss}
-              ruleLines={undefined}
-              style={styles.fitting}
-            />
-          </CenteredPopup>
-        )}
+        {match(state)
+          .with({ type: "closed" }, () => null)
+          .with({ type: "open" }, ({ coreRule }) => (
+            <CenteredPopup onDismiss={onDismiss}>
+              <CoreRuleNoteFace
+                coreRule={coreRule}
+                coreRules={coreRules}
+                noteCountOf={noteCountOf}
+                notes={notePanelFor(coreRule.number)}
+                onDismiss={onDismiss}
+                ruleLines={undefined}
+                style={styles.fitting}
+              />
+            </CenteredPopup>
+          ))
+          .exhaustive()}
       </Modal>
     ))
     .exhaustive();

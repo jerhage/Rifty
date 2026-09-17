@@ -12,7 +12,7 @@ import { CardGridItem } from "./card-grid-item";
 interface CardSummaryGridProps {
   readonly cards: readonly CardSummary[];
   readonly emptyMessage: string;
-  readonly footer?: ReactElement | null;
+  readonly footer: ReactElement;
   readonly header: ReactElement;
   readonly isRefreshing: boolean;
   readonly onEndReached: () => void;

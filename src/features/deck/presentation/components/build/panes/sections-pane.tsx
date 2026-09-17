@@ -77,9 +77,8 @@ function SectionsPane({
                 />
 
                 <BuildFooter
+                  actionAvailability={saveAction.availability}
                   actionLabel={saveAction.label}
-                  isActionBusy={saveAction.isBusy}
-                  isActionEnabled={saveAction.isEnabled}
                   onAction={saveAction.save}
                 >
                   <BuildSaveMessage message={saveAction.message} />

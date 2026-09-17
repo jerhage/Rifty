@@ -14,6 +14,7 @@ import { saveDeckMutation } from "@/features/deck/queries/deck-queries";
 import { useAnnouncement } from "@/hooks/use-announcement";
 import { useWriteState } from "@/hooks/use-write-state";
 
+import type { BuildActionAvailability } from "../components/build/build-footer";
 import type { DeckBuildCapabilities, DeckBuildMode } from "../deck-build-mode";
 import {
   footerMessage,
@@ -33,8 +34,7 @@ interface DeckSaveRequest {
 }
 
 interface DeckSaveAction {
-  readonly isBusy: boolean;
-  readonly isEnabled: boolean;
+  readonly availability: BuildActionAvailability;
   readonly label: string;
   readonly message: SaveFooterMessage;
   save(): void;
@@ -110,8 +110,7 @@ function DeckSaveData({
   return children({
     changeName,
     saveAction: {
-      isBusy: state.type === "saving",
-      isEnabled: state.type !== "saving",
+      availability: state.type === "saving" ? "busy" : "ready",
       label: saveActionLabel(state),
       message: footerMessage(state, verification),
       save,

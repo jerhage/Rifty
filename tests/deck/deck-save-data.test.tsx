@@ -118,9 +118,8 @@ async function renderDeckSave(store: DeckStore, name = "Storm") {
               <Text>section pool</Text>
 
               <BuildFooter
+                actionAvailability={received.saveAction.availability}
                 actionLabel={received.saveAction.label}
-                isActionBusy={received.saveAction.isBusy}
-                isActionEnabled={received.saveAction.isEnabled}
                 onAction={received.saveAction.save}
               >
                 <BuildSaveMessage message={received.saveAction.message} />

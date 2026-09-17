@@ -6,21 +6,22 @@ import { Button } from "@/components/ui/atoms/button";
 import { Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
+type BuildActionAvailability = "busy" | "ready";
+
 function BuildFooter({
+  actionAvailability,
   actionLabel,
   children,
-  isActionBusy = false,
-  isActionEnabled = true,
   onAction,
 }: {
+  readonly actionAvailability: BuildActionAvailability;
   readonly actionLabel: string;
   readonly children: ReactNode;
-  readonly isActionBusy?: boolean;
-  readonly isActionEnabled?: boolean;
   readonly onAction: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const isBusy = actionAvailability === "busy";
 
   return (
     <View
@@ -36,8 +37,8 @@ function BuildFooter({
     >
       <View style={styles.info}>{children}</View>
       <Button
-        busy={isActionBusy}
-        disabled={!isActionEnabled}
+        busy={isBusy}
+        disabled={isBusy}
         label={actionLabel}
         onPress={onAction}
         variant="primary"
@@ -47,6 +48,7 @@ function BuildFooter({
 }
 
 export { BuildFooter };
+export type { BuildActionAvailability };
 
 const styles = StyleSheet.create({
   footer: {

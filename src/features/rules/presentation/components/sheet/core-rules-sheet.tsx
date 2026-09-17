@@ -99,16 +99,13 @@ function CoreRulesSheetHeader({
     <View style={[styles.header, { borderBottomColor: theme.border }]}>
       <View style={styles.tabs}>
         <CoreRulesSheetTab
-          label="Contents"
           onPress={() => onShowFace("contents")}
+          role={{ type: "contents" }}
           selected={state === "contents"}
         />
         <CoreRulesSheetTab
-          accent
-          count={bookmarkedCount}
-          label="Saved"
-          name={`Saved, ${coreRuleBookmarkCountLabel(bookmarkedCount)}`}
           onPress={() => onShowFace("saved")}
+          role={{ type: "saved", bookmarkedCount }}
           selected={state === "saved"}
         />
       </View>
@@ -126,32 +123,31 @@ function CoreRulesSheetHeader({
   );
 }
 
+type CoreRulesSheetTabRole =
+  | { readonly type: "contents" }
+  | { readonly type: "saved"; readonly bookmarkedCount: number };
+
 /** Two pills rather than a track with a thumb, which is what the design draws. */
 function CoreRulesSheetTab({
-  accent = false,
-  count,
-  label,
-  name,
   onPress,
+  role,
   selected,
 }: {
-  readonly accent?: boolean;
-  readonly count?: number;
-  readonly label: string;
-  readonly name?: string;
   readonly onPress: () => void;
+  readonly role: CoreRulesSheetTabRole;
   readonly selected: boolean;
 }) {
   const theme = useTheme();
+  const { accessibleName, label } = coreRulesSheetTabTitle(role);
   const { backgroundColor, borderColor, labelColor } = coreRulesSheetTabAppearance(
     theme,
+    role,
     selected,
-    accent,
   );
 
   return (
     <Pressable
-      accessibilityLabel={name ?? label}
+      accessibilityLabel={accessibleName}
       accessibilityRole="tab"
       accessibilityState={{ selected }}
       onPress={onPress}
@@ -164,17 +160,38 @@ function CoreRulesSheetTab({
       <ThemedText themeColor={labelColor} type="mono">
         {label}
       </ThemedText>
-      {count !== undefined && (
-        <ThemedText
-          style={styles.count}
-          themeColor={selected ? "accent" : "textTertiary"}
-          type="mono"
-        >
-          {count}
-        </ThemedText>
-      )}
+      {match(role)
+        .with({ type: "contents" }, () => null)
+        .with({ type: "saved" }, ({ bookmarkedCount }) => (
+          <ThemedText
+            style={styles.count}
+            themeColor={selected ? "accent" : "textTertiary"}
+            type="mono"
+          >
+            {bookmarkedCount}
+          </ThemedText>
+        ))
+        .exhaustive()}
     </Pressable>
   );
+}
+
+interface CoreRulesSheetTabTitle {
+  readonly accessibleName: string;
+  readonly label: string;
+}
+
+function coreRulesSheetTabTitle(role: CoreRulesSheetTabRole): CoreRulesSheetTabTitle {
+  return match(role)
+    .with({ type: "contents" }, (): CoreRulesSheetTabTitle => ({
+      accessibleName: "Contents",
+      label: "Contents",
+    }))
+    .with({ type: "saved" }, ({ bookmarkedCount }): CoreRulesSheetTabTitle => ({
+      accessibleName: `Saved, ${coreRuleBookmarkCountLabel(bookmarkedCount)}`,
+      label: "Saved",
+    }))
+    .exhaustive();
 }
 
 interface CoreRulesSheetTabAppearance {
@@ -185,21 +202,21 @@ interface CoreRulesSheetTabAppearance {
 
 function coreRulesSheetTabAppearance(
   theme: Theme,
+  role: CoreRulesSheetTabRole,
   selected: boolean,
-  accent: boolean,
 ): CoreRulesSheetTabAppearance {
-  return match({ accent, selected })
+  return match({ role, selected })
     .with({ selected: false }, (): CoreRulesSheetTabAppearance => ({
       backgroundColor: "transparent",
       borderColor: "transparent",
       labelColor: "textSecondary",
     }))
-    .with({ selected: true, accent: true }, (): CoreRulesSheetTabAppearance => ({
+    .with({ role: { type: "saved" }, selected: true }, (): CoreRulesSheetTabAppearance => ({
       backgroundColor: coreRuleSavedWash(theme, "surface"),
       borderColor: coreRuleSavedWash(theme, "edge"),
       labelColor: "accent",
     }))
-    .with({ selected: true, accent: false }, (): CoreRulesSheetTabAppearance => ({
+    .with({ role: { type: "contents" }, selected: true }, (): CoreRulesSheetTabAppearance => ({
       backgroundColor: theme.fill,
       borderColor: theme.border,
       labelColor: "text",

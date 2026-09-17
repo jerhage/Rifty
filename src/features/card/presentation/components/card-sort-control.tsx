@@ -33,7 +33,7 @@ function CardSortControl({
 }: {
   readonly onOpenSort: () => void;
   readonly onToggleDirection: () => void;
-  readonly sort: CardSort | undefined;
+  readonly sort: CardSort;
 }) {
   const theme = useTheme();
   const arrow = sortDirectionArrow(sort);

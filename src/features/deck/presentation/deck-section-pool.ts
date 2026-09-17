@@ -61,7 +61,7 @@ function viewBesideTheDeck(view: SectionPoolView): SectionPoolView {
 }
 
 /** The pool opens alphabetically, the order the catalog opens in and the one the deck lists in. */
-const DEFAULT_POOL_SORT: CardSort | undefined = sortForId("name");
+const DEFAULT_POOL_SORT: CardSort = sortForId("name");
 
 /** A deck plays within its legend's domains, so the pool starts narrowed to them. */
 function defaultPoolFilters(legend: DeckBuildPick): SectionPoolFilters {
@@ -108,7 +108,7 @@ function poolCriteria(
   section: DeckSection,
   filters: SectionPoolFilters,
   query: string,
-  sort: CardSort | undefined,
+  sort: CardSort,
 ): Omit<CardListCriteria, "limit" | "offset"> {
   const text = query.trim();
   const chosenTypes = filters.typeIds.filter((type) => sectionCardTypes(section).includes(type));

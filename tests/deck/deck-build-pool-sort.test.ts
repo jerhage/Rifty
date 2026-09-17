@@ -83,14 +83,14 @@ describe("deck build pool sort", () => {
     expect(result.current.pool.sheet).toEqual({ type: "hidden" });
   });
 
-  it("should drop the ordering from the query when catalog order is chosen", async () => {
+  it("should ask the query for catalog order when catalog order is chosen", async () => {
     const { result } = await renderBuild();
 
     await act(() => result.current.pool.openSort());
-    await act(() => result.current.pool.changeSort(undefined));
+    await act(() => result.current.pool.changeSort({ type: "catalogOrder" }));
     await act(() => result.current.pool.applySort());
 
-    expect(criteriaOf(result.current.pool).sort).toBeUndefined();
+    expect(criteriaOf(result.current.pool).sort).toEqual({ type: "catalogOrder" });
   });
 
   it("should keep the chosen ordering when the section changes, unlike the filters", async () => {

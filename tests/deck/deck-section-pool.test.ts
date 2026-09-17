@@ -1,3 +1,4 @@
+import type { CardSort } from "@/features/card/card-list-criteria";
 import { NOT_PICKED, pickOf } from "@/features/deck/presentation/deck-build-steps";
 import {
   DEFAULT_POOL_SORT,
@@ -11,6 +12,7 @@ import {
 import { card } from "../card/fixtures";
 
 const legend = card("legend", "OGN", { domainIds: ["Fury", "Order"] });
+const CATALOG_ORDER: CardSort = { type: "catalogOrder" };
 
 describe("deck section pool", () => {
   it("should count one card in the singular", () => {
@@ -31,9 +33,9 @@ describe("deck section pool", () => {
       "mainDeck",
       { domainIds: ["Fury"], keywordIds: [], typeIds: [] },
       "",
-      undefined,
+      CATALOG_ORDER,
     );
-    const two = poolCriteria("mainDeck", defaultPoolFilters(pickOf(legend)), "", undefined);
+    const two = poolCriteria("mainDeck", defaultPoolFilters(pickOf(legend)), "", CATALOG_ORDER);
 
     expect(one.anyDomainIds).toEqual(["Fury"]);
     expect(two.anyDomainIds).toEqual(["Fury", "Order"]);
@@ -62,20 +64,23 @@ describe("deck section pool", () => {
   it("should ask the query for any of the chosen keywords", () => {
     const filters = { ...defaultPoolFilters(pickOf(legend)), keywordIds: ["shield", "tank"] };
 
-    expect(poolCriteria("mainDeck", filters, "", undefined).keywordIds).toEqual(["shield", "tank"]);
+    expect(poolCriteria("mainDeck", filters, "", CATALOG_ORDER).keywordIds).toEqual([
+      "shield",
+      "tank",
+    ]);
     expect(
-      poolCriteria("mainDeck", defaultPoolFilters(pickOf(legend)), "", undefined).keywordIds,
+      poolCriteria("mainDeck", defaultPoolFilters(pickOf(legend)), "", CATALOG_ORDER).keywordIds,
     ).toBeUndefined();
   });
 
   it("should search the pool by name or rules text, apart from the filters", () => {
     const filters = defaultPoolFilters(pickOf(legend));
 
-    expect(poolCriteria("mainDeck", filters, "  volibear  ", undefined).search).toEqual({
+    expect(poolCriteria("mainDeck", filters, "  volibear  ", CATALOG_ORDER).search).toEqual({
       type: "nameOrRulesText",
       text: "volibear",
     });
-    expect(poolCriteria("mainDeck", filters, "   ", undefined).search).toBeUndefined();
+    expect(poolCriteria("mainDeck", filters, "   ", CATALOG_ORDER).search).toBeUndefined();
   });
 
   it("should carry the ordering the pool was given into the query", () => {
@@ -84,7 +89,9 @@ describe("deck section pool", () => {
     expect(
       poolCriteria("mainDeck", filters, "", { type: "energy", direction: "ascending" }).sort,
     ).toEqual({ type: "energy", direction: "ascending" });
-    expect(poolCriteria("mainDeck", filters, "", undefined).sort).toBeUndefined();
+    expect(poolCriteria("mainDeck", filters, "", CATALOG_ORDER).sort).toEqual({
+      type: "catalogOrder",
+    });
   });
 
   it("should open the pool in the same order the catalog opens in", () => {
@@ -92,15 +99,15 @@ describe("deck section pool", () => {
   });
 
   it("should limit each section to the card types it accepts", () => {
-    expect(poolCriteria("runeDeck", defaultPoolFilters(NOT_PICKED), "", undefined).typeIds).toEqual(
-      ["Rune"],
-    );
     expect(
-      poolCriteria("battlefield", defaultPoolFilters(NOT_PICKED), "", undefined).typeIds,
+      poolCriteria("runeDeck", defaultPoolFilters(NOT_PICKED), "", CATALOG_ORDER).typeIds,
+    ).toEqual(["Rune"]);
+    expect(
+      poolCriteria("battlefield", defaultPoolFilters(NOT_PICKED), "", CATALOG_ORDER).typeIds,
     ).toEqual(["Battlefield"]);
-    expect(poolCriteria("mainDeck", defaultPoolFilters(NOT_PICKED), "", undefined).typeIds).toEqual(
-      ["Unit", "Spell", "Gear"],
-    );
+    expect(
+      poolCriteria("mainDeck", defaultPoolFilters(NOT_PICKED), "", CATALOG_ORDER).typeIds,
+    ).toEqual(["Unit", "Spell", "Gear"]);
   });
 });
 

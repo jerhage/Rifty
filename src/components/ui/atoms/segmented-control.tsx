@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing, TouchTarget } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget, type ThemeColor } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 type SegmentedSize = "regular" | "compact";
@@ -12,6 +13,11 @@ type SegmentedSize = "regular" | "compact";
  * out of a set. There is no default: the two announce differently and the caller knows which it is.
  */
 type SegmentedOptionRole = "radio" | "tab";
+
+type SegmentedOptionContent =
+  | { readonly type: "label"; readonly label: string }
+  | { readonly type: "glyphLabel"; readonly glyph: string; readonly label: string }
+  | { readonly type: "icon"; readonly icon: (color: string) => ReactNode; readonly label: string };
 
 function SegmentedControl({
   children,
@@ -37,9 +43,7 @@ function SegmentedControl({
 
 function SegmentedOption({
   accessibilityLabel,
-  glyph,
-  icon,
-  label,
+  content,
   onPress,
   role,
   selected,
@@ -47,56 +51,71 @@ function SegmentedOption({
 }: {
   /** Spoken in place of the visible label, for a label whose punctuation reads badly. */
   readonly accessibilityLabel?: string;
-  readonly glyph?: string;
-  readonly icon?: (color: string) => ReactNode;
-  readonly label: string;
+  readonly content: SegmentedOptionContent;
   readonly onPress: () => void;
   readonly role: SegmentedOptionRole;
   readonly selected: boolean;
   readonly size?: SegmentedSize;
 }) {
   const theme = useTheme();
-  const themeColor = selected ? "onAccent" : "textSecondary";
+  const themeColor: ThemeColor = selected ? "onAccent" : "textSecondary";
 
   return (
     <Pressable
-      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityLabel={accessibilityLabel ?? content.label}
       accessibilityRole={role}
       accessibilityState={{ selected }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.option,
         size === "compact" ? styles.compactOption : styles.regularOption,
-        icon === undefined ? styles.grow : styles.iconOption,
+        WIDTH_STYLE_BY_CONTENT_TYPE[content.type],
         { backgroundColor: selected ? theme.accent : "transparent" },
         pressed && styles.pressed,
       ]}
     >
-      {icon === undefined ? (
-        <>
-          {glyph === undefined ? null : (
+      {match(content)
+        .returnType<ReactNode>()
+        .with({ type: "label" }, ({ label }) => (
+          <SegmentedOptionLabel label={label} size={size} themeColor={themeColor} />
+        ))
+        .with({ type: "glyphLabel" }, ({ glyph, label }) => (
+          <>
             <ThemedText themeColor={themeColor} type="monoValue">
               {glyph}
             </ThemedText>
-          )}
-          <ThemedText
-            numberOfLines={1}
-            style={size === "compact" ? styles.compactLabel : undefined}
-            themeColor={themeColor}
-            type="small"
-          >
-            {label}
-          </ThemedText>
-        </>
-      ) : (
-        icon(theme[themeColor])
-      )}
+            <SegmentedOptionLabel label={label} size={size} themeColor={themeColor} />
+          </>
+        ))
+        .with({ type: "icon" }, ({ icon }) => icon(theme[themeColor]))
+        .exhaustive()}
     </Pressable>
   );
 }
 
+function SegmentedOptionLabel({
+  label,
+  size,
+  themeColor,
+}: {
+  readonly label: string;
+  readonly size: SegmentedSize;
+  readonly themeColor: ThemeColor;
+}) {
+  return (
+    <ThemedText
+      numberOfLines={1}
+      style={size === "compact" ? styles.compactLabel : undefined}
+      themeColor={themeColor}
+      type="small"
+    >
+      {label}
+    </ThemedText>
+  );
+}
+
 export { SegmentedControl, SegmentedOption };
-export type { SegmentedOptionRole, SegmentedSize };
+export type { SegmentedOptionContent, SegmentedOptionRole, SegmentedSize };
 
 const styles = StyleSheet.create({
   control: {
@@ -140,3 +159,9 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 });
+
+const WIDTH_STYLE_BY_CONTENT_TYPE: Readonly<Record<SegmentedOptionContent["type"], ViewStyle>> = {
+  label: styles.grow,
+  glyphLabel: styles.grow,
+  icon: styles.iconOption,
+};

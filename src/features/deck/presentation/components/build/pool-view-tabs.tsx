@@ -56,7 +56,7 @@ function PoolViewTab({
   return (
     <SegmentedOption
       accessibilityLabel={accessibilityLabel}
-      label={label}
+      content={{ label, type: "label" }}
       onPress={() => onSelect(option)}
       role="tab"
       selected={selected}

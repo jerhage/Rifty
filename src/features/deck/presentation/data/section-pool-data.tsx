@@ -22,7 +22,7 @@ function SectionPoolData({
   readonly children: (pool: CardsDataContent) => ReactNode;
   readonly filters: SectionPoolFilters;
   readonly query: string;
-  readonly sort: CardSort | undefined;
+  readonly sort: CardSort;
   readonly section: DeckSection;
 }) {
   return (

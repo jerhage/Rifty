@@ -1,5 +1,6 @@
 import { match } from "ts-pattern";
 
+import type { CardSort } from "@/features/card/card-list-criteria";
 import type { CardType } from "@/features/card/value-objects/card-type";
 import { DECK_SECTIONS, type DeckSection } from "@/features/deck/deck/deck";
 import { COUNTED_SECTION_RULES } from "@/features/deck/deck/deck-legality";
@@ -11,6 +12,7 @@ import {
 } from "@/features/deck/presentation/deck-section-pool";
 
 const NEVER_IN_A_DECK: readonly CardType[] = ["Other", "Token"];
+const CATALOG_ORDER: CardSort = { type: "catalogOrder" };
 
 function typesOffered(section: DeckSection): readonly CardType[] {
   return match<DeckSection, readonly CardType[]>(section)
@@ -20,7 +22,7 @@ function typesOffered(section: DeckSection): readonly CardType[] {
       "runeDeck",
       "battlefield",
       "sideboard",
-      (filled) => poolCriteria(filled, EMPTY_POOL_FILTERS, "", undefined).typeIds ?? [],
+      (filled) => poolCriteria(filled, EMPTY_POOL_FILTERS, "", CATALOG_ORDER).typeIds ?? [],
     )
     .exhaustive();
 }
@@ -42,7 +44,7 @@ describe("card types that are never in a deck", () => {
         section,
         { ...EMPTY_POOL_FILTERS, typeIds: NEVER_IN_A_DECK },
         "",
-        undefined,
+        CATALOG_ORDER,
       );
 
       expect(criteria.typeIds).toEqual(sectionCardTypes(section));

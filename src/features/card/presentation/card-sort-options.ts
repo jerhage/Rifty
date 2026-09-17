@@ -63,6 +63,8 @@ const CARD_SORT_OPTIONS_BY_ID: Readonly<Record<CardSortId, CardSortOption>> = {
   },
 };
 
+const CATALOG_ORDER: CardSort = { type: "catalogOrder" };
+
 const CARD_SORT_OPTIONS: readonly CardSortOption[] = [
   CARD_SORT_OPTIONS_BY_ID.catalogOrder,
   CARD_SORT_OPTIONS_BY_ID.name,
@@ -75,21 +77,12 @@ function sortOptionForId(id: CardSortId): CardSortOption {
   return CARD_SORT_OPTIONS_BY_ID[id];
 }
 
-/**
- * Catalog order is carried as an absent sort rather than an explicit one, which is how a card
- * query has always expressed "no ordering asked for".
- */
-function sortIdOf(sort: CardSort | undefined): CardSortId {
-  return sort === undefined ? "catalogOrder" : sort.type;
+function sortOptionFor(sort: CardSort): CardSortOption {
+  return sortOptionForId(sort.type);
 }
 
-function sortOptionFor(sort: CardSort | undefined): CardSortOption {
-  return sortOptionForId(sortIdOf(sort));
-}
-
-function sortDirectionOf(sort: CardSort | undefined): CardSortDirection | null {
+function sortDirectionOf(sort: CardSort): CardSortDirection | null {
   return match(sort)
-    .with(undefined, () => null)
     .with({ type: "catalogOrder" }, () => null)
     .with(
       { type: "name" },
@@ -101,9 +94,9 @@ function sortDirectionOf(sort: CardSort | undefined): CardSortDirection | null {
     .exhaustive();
 }
 
-function buildSort(id: CardSortId, direction: CardSortDirection): CardSort | undefined {
+function buildSort(id: CardSortId, direction: CardSortDirection): CardSort {
   return match(id)
-    .with("catalogOrder", () => undefined)
+    .with("catalogOrder", () => CATALOG_ORDER)
     .with("name", () => ({ type: "name", direction }) as const)
     .with("energy", () => ({ type: "energy", direction }) as const)
     .with("might", () => ({ type: "might", direction }) as const)
@@ -112,20 +105,17 @@ function buildSort(id: CardSortId, direction: CardSortDirection): CardSort | und
 }
 
 /** Choosing an attribute adopts its natural direction rather than keeping the previous one. */
-function sortForId(id: CardSortId): CardSort | undefined {
+function sortForId(id: CardSortId): CardSort {
   const { defaultDirection } = sortOptionForId(id);
 
-  return defaultDirection === null ? undefined : buildSort(id, defaultDirection);
+  return defaultDirection === null ? CATALOG_ORDER : buildSort(id, defaultDirection);
 }
 
-function sortWithDirection(
-  sort: CardSort | undefined,
-  direction: CardSortDirection,
-): CardSort | undefined {
-  return buildSort(sortIdOf(sort), direction);
+function sortWithDirection(sort: CardSort, direction: CardSortDirection): CardSort {
+  return buildSort(sort.type, direction);
 }
 
-function toggledSort(sort: CardSort | undefined): CardSort | undefined {
+function toggledSort(sort: CardSort): CardSort {
   const direction = sortDirectionOf(sort);
 
   if (direction === null) return sort;
@@ -133,11 +123,11 @@ function toggledSort(sort: CardSort | undefined): CardSort | undefined {
   return sortWithDirection(sort, direction === "descending" ? "ascending" : "descending");
 }
 
-function sortOptionLabel(sort: CardSort | undefined): string {
+function sortOptionLabel(sort: CardSort): string {
   return sortOptionFor(sort).label;
 }
 
-function sortDirectionArrow(sort: CardSort | undefined): string | null {
+function sortDirectionArrow(sort: CardSort): string | null {
   const direction = sortDirectionOf(sort);
 
   if (direction === null) return null;
@@ -150,7 +140,6 @@ export {
   sortDirectionArrow,
   sortDirectionOf,
   sortForId,
-  sortIdOf,
   sortOptionFor,
   sortOptionLabel,
   sortWithDirection,

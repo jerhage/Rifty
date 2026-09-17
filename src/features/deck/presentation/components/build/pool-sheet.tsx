@@ -33,14 +33,14 @@ function PoolSheet({
   readonly keywords: readonly Keyword[];
   readonly onApplyFilters: () => void;
   readonly onApplySort: () => void;
-  readonly onChangeSort: (sort: CardSort | undefined) => void;
+  readonly onChangeSort: (sort: CardSort) => void;
   readonly onDismiss: () => void;
   readonly onReset: () => void;
   readonly onToggleDomain: (domainId: CardDomain) => void;
   readonly onToggleKeyword: (keywordId: string) => void;
   readonly onToggleType: (typeId: CardType) => void;
   readonly sheet: SectionPoolSheetState;
-  readonly sort: CardSort | undefined;
+  readonly sort: CardSort;
   readonly section: DeckSection;
 }) {
   return (

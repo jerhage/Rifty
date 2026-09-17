@@ -24,7 +24,12 @@ describe("SegmentedOption", () => {
   it("should take the role of a tab when the option swaps the pane below it", async () => {
     await render(
       <SegmentedControl>
-        <SegmentedOption label="Pool" onPress={() => undefined} role="tab" selected />
+        <SegmentedOption
+          content={{ label: "Pool", type: "label" }}
+          onPress={() => undefined}
+          role="tab"
+          selected
+        />
       </SegmentedControl>,
     );
 
@@ -36,7 +41,12 @@ describe("SegmentedOption", () => {
   it("should take the role of a radio when the option picks one value of a set", async () => {
     await render(
       <SegmentedControl>
-        <SegmentedOption label="List" onPress={() => undefined} role="radio" selected={false} />
+        <SegmentedOption
+          content={{ label: "List", type: "label" }}
+          onPress={() => undefined}
+          role="radio"
+          selected={false}
+        />
       </SegmentedControl>,
     );
 
@@ -48,7 +58,7 @@ describe("SegmentedOption", () => {
       <SegmentedControl>
         <SegmentedOption
           accessibilityLabel="In deck, 12"
-          label="In deck · 12"
+          content={{ label: "In deck · 12", type: "label" }}
           onPress={() => undefined}
           role="tab"
           selected={false}

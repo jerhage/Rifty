@@ -8,6 +8,7 @@ import { CatalogFilterFace } from "@/features/catalog/presentation/components/sh
 import { CatalogSearchScreen } from "@/features/catalog/presentation/screens/catalog-search-screen";
 
 const NO_CARDS: readonly CardSummary[] = [];
+const NO_FACETS: CatalogQueryCriteria = { sort: { type: "name", direction: "ascending" } };
 
 function createWrapper() {
   return function Wrapper({ children }: PropsWithChildren) {
@@ -27,7 +28,7 @@ function createWrapper() {
 async function renderCatalog({
   bookmarkedCount = 0,
   cards = NO_CARDS,
-  criteria = {},
+  criteria = NO_FACETS,
   onToggleOnlyBookmarked = () => {},
 }: {
   bookmarkedCount?: number;
@@ -76,7 +77,7 @@ describe("the catalog's bookmarked filter", () => {
   });
 
   it("should report itself as on while the criterion narrows the grid", async () => {
-    await renderCatalog({ bookmarkedCount: 3, criteria: { onlyBookmarked: true } });
+    await renderCatalog({ bookmarkedCount: 3, criteria: { ...NO_FACETS, onlyBookmarked: true } });
 
     expect(chip(3).props.accessibilityState).toEqual({ checked: true });
   });
@@ -91,7 +92,7 @@ describe("the catalog's bookmarked filter", () => {
   });
 
   it("should show the catalog's empty state when nothing is bookmarked", async () => {
-    await renderCatalog({ criteria: { onlyBookmarked: true } });
+    await renderCatalog({ criteria: { ...NO_FACETS, onlyBookmarked: true } });
 
     expect(
       screen.getByText("No bookmarked cards match. Bookmark one from its detail?"),
@@ -105,7 +106,7 @@ describe("the catalog's bookmarked filter", () => {
       <CatalogFilterFace
         bookmarkedCount={2}
         cardSets={[]}
-        criteria={{}}
+        criteria={NO_FACETS}
         keywords={[]}
         onApply={() => {}}
         onChangeCriteria={(criteria) => changes.push(criteria)}
@@ -116,7 +117,7 @@ describe("the catalog's bookmarked filter", () => {
 
     await fireEvent.press(screen.getByRole("switch"));
 
-    expect(changes).toEqual([{ onlyBookmarked: true }]);
+    expect(changes).toEqual([{ ...NO_FACETS, onlyBookmarked: true }]);
     expect(screen.getByText("Only bookmarked cards")).toBeTruthy();
     expect(screen.getByText("2 cards bookmarked")).toBeTruthy();
   });
@@ -127,7 +128,7 @@ describe("the catalog's bookmarked filter", () => {
       <CatalogFilterFace
         bookmarkedCount={1}
         cardSets={[]}
-        criteria={{ onlyBookmarked: true }}
+        criteria={{ ...NO_FACETS, onlyBookmarked: true }}
         keywords={[]}
         onApply={() => {}}
         onChangeCriteria={(criteria) => changes.push(criteria)}
@@ -140,7 +141,7 @@ describe("the catalog's bookmarked filter", () => {
 
     await fireEvent.press(control);
 
-    expect(changes).toEqual([{ onlyBookmarked: undefined }]);
+    expect(changes).toEqual([{ ...NO_FACETS, onlyBookmarked: undefined }]);
     expect(screen.getByText("1 card bookmarked")).toBeTruthy();
   });
 });

@@ -11,7 +11,6 @@ import {
   CARD_SORT_OPTIONS,
   sortDirectionOf,
   sortForId,
-  sortIdOf,
   sortOptionFor,
   sortWithDirection,
 } from "../card-sort-options";
@@ -26,10 +25,10 @@ function CardSortFace({
   sort,
 }: {
   readonly onApply: () => void;
-  readonly onChangeSort: (sort: CardSort | undefined) => void;
-  readonly sort: CardSort | undefined;
+  readonly onChangeSort: (sort: CardSort) => void;
+  readonly sort: CardSort;
 }) {
-  const selectedId = sortIdOf(sort);
+  const selectedId = sort.type;
   const direction = sortDirectionOf(sort);
   const option = sortOptionFor(sort);
 
@@ -53,15 +52,13 @@ function CardSortFace({
             <LabelledSection label="Order">
               <SegmentedControl>
                 <SegmentedOption
-                  glyph="↓"
-                  label={option.descendingLabel}
+                  content={{ glyph: "↓", label: option.descendingLabel, type: "glyphLabel" }}
                   onPress={() => onChangeSort(sortWithDirection(sort, "descending"))}
                   role="radio"
                   selected={direction === "descending"}
                 />
                 <SegmentedOption
-                  glyph="↑"
-                  label={option.ascendingLabel}
+                  content={{ glyph: "↑", label: option.ascendingLabel, type: "glyphLabel" }}
                   onPress={() => onChangeSort(sortWithDirection(sort, "ascending"))}
                   role="radio"
                   selected={direction === "ascending"}

@@ -10,6 +10,12 @@ type DeckPaneContent =
   | { readonly type: "detail"; readonly deckId: DeckId }
   | { readonly type: "drawSimulation"; readonly deckId: DeckId };
 
+type SimulatedDeck =
+  | { readonly type: "noSimulation" }
+  | { readonly type: "simulating"; readonly deckId: DeckId };
+
+const NO_SIMULATION: SimulatedDeck = { type: "noSimulation" };
+
 type DeckOpening =
   | {
       readonly type: "route";
@@ -34,25 +40,31 @@ function openedBesideTheList(deck: Deck): string {
 
 /**
  * The simulation belongs to one deck, so it shows only while that deck is the one shown. Picking
- * another deck needs no reset: the simulated id simply stops matching.
+ * another deck needs no reset: the simulated deck simply stops being the shown one.
  */
 function deckPaneContent(
   shown: DetailPaneContent<DeckId>,
-  simulatedId: DeckId | null,
+  simulated: SimulatedDeck,
 ): DeckPaneContent {
-  return match(shown)
+  return match({ shown, simulated })
     .returnType<DeckPaneContent>()
-    .with({ type: "noSubject" }, () => ({ type: "noDeck" }))
-    .with({ type: "subject" }, ({ id }) =>
-      id === simulatedId ? { deckId: id, type: "drawSimulation" } : { deckId: id, type: "detail" },
+    .with({ shown: { type: "noSubject" } }, () => ({ type: "noDeck" }))
+    .with(
+      { shown: { type: "subject" }, simulated: { type: "simulating" } },
+      ({ shown: subject, simulated: simulation }) => subject.id === simulation.deckId,
+      ({ shown: subject }) => ({ deckId: subject.id, type: "drawSimulation" }),
     )
+    .with({ shown: { type: "subject" } }, ({ shown: subject }) => ({
+      deckId: subject.id,
+      type: "detail",
+    }))
     .exhaustive();
 }
 
 /** How a deck picked in the deck list gets shown, in the deck list's own words. */
 function useDeckOpening(pushDeckRoute: (deckId: DeckId) => void): DeckOpening {
   const announce = useAnnouncement();
-  const [simulatedId, setSimulatedId] = useState<DeckId | null>(null);
+  const [simulated, setSimulated] = useState<SimulatedDeck>(NO_SIMULATION);
   const opening = useDetailOpening({
     closedMessage: "Deck closed.",
     idOf: deckIdOf,
@@ -62,14 +74,14 @@ function useDeckOpening(pushDeckRoute: (deckId: DeckId) => void): DeckOpening {
 
   const openDrawSimulation = useCallback(
     (deckId: DeckId) => {
-      setSimulatedId(deckId);
+      setSimulated({ deckId, type: "simulating" });
       announce("Draw simulation opened in place of the deck.", "interrupting");
     },
     [announce],
   );
 
   const returnToDetail = useCallback(() => {
-    setSimulatedId(null);
+    setSimulated(NO_SIMULATION);
     announce("Draw simulation closed. The deck is shown again.", "interrupting");
   }, [announce]);
 
@@ -77,16 +89,16 @@ function useDeckOpening(pushDeckRoute: (deckId: DeckId) => void): DeckOpening {
 
   return {
     close: () => {
-      setSimulatedId(null);
+      setSimulated(NO_SIMULATION);
       opening.close();
     },
     open: (deck: Deck) => {
-      setSimulatedId(null);
+      setSimulated(NO_SIMULATION);
       opening.open(deck);
     },
     openDrawSimulation,
     returnToDetail,
-    shown: deckPaneContent(opening.shown, simulatedId),
+    shown: deckPaneContent(opening.shown, simulated),
     type: "pane",
   };
 }

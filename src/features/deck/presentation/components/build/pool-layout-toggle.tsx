@@ -14,16 +14,14 @@ function PoolLayoutToggle({
   return (
     <SegmentedControl size="compact">
       <SegmentedOption
-        icon={(color) => <RowsIcon color={color} />}
-        label="List"
+        content={{ icon: (color) => <RowsIcon color={color} />, label: "List", type: "icon" }}
         onPress={() => onSelect("list")}
         role="radio"
         selected={poolLayout === "list"}
         size="compact"
       />
       <SegmentedOption
-        icon={(color) => <GridIcon color={color} />}
-        label="Cards"
+        content={{ icon: (color) => <GridIcon color={color} />, label: "Cards", type: "icon" }}
         onPress={() => onSelect("grid")}
         role="radio"
         selected={poolLayout === "grid"}

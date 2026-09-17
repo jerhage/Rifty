@@ -452,14 +452,15 @@ class SqliteCardRepository implements CardRepository {
 
     if (!criteria?.sort) return catalogOrder();
 
-    return match<CardSort, SQL[]>(criteria.sort)
-      .with({ type: "catalogOrder" }, catalogOrder)
+    const distinguishingTerms = match<CardSort, SQL[]>(criteria.sort)
+      .with({ type: "catalogOrder" }, () => [])
       .with({ type: "name" }, ({ direction }) => [directionFor(direction)(sql`lower(${cards.id})`)])
       .with({ type: "energy" }, ({ direction }) => nullableOrder(cards.energy, direction))
       .with({ type: "might" }, ({ direction }) => nullableOrder(cards.might, direction))
       .with({ type: "power" }, ({ direction }) => nullableOrder(cards.power, direction))
-      .exhaustive()
-      .concat(catalogOrder());
+      .exhaustive();
+
+    return distinguishingTerms.concat(catalogOrder());
   }
 
   /**

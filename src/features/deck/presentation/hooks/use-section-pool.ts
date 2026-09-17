@@ -32,7 +32,7 @@ function useSectionPool(legend: DeckBuildPick) {
   const [poolLayout, setPoolLayout] = useState<SectionPoolLayout>("list");
   const [view, setView] = useState<SectionPoolView>("pool");
   const filterSheet = useDraftSheet<SectionPoolFilters>(() => defaultPoolFilters(legend));
-  const sortSheet = useDraftSheet<CardSort | undefined>(() => DEFAULT_POOL_SORT);
+  const sortSheet = useDraftSheet<CardSort>(() => DEFAULT_POOL_SORT);
   const { dismiss: dismissFilters, editDraft, settle } = filterSheet;
   const { dismiss: dismissSort, editDraft: editSortDraft, settle: settleSort } = sortSheet;
   const appliedSort = sortSheet.applied;
@@ -72,7 +72,7 @@ function useSectionPool(legend: DeckBuildPick) {
   }, [dismissFilters, dismissSort]);
 
   const changeSort = useCallback(
-    (sort: CardSort | undefined) => {
+    (sort: CardSort) => {
       editSortDraft(() => sort);
     },
     [editSortDraft],

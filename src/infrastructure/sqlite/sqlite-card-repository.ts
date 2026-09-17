@@ -10,10 +10,10 @@ import {
   inArray,
   lte,
   notInArray,
-  or,
   sql,
   type SQL,
 } from "drizzle-orm";
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { match } from "ts-pattern";
 
 import type { Card } from "@/features/card/card";
@@ -392,9 +392,11 @@ class SqliteCardRepository implements CardRepository {
       );
     }
     if (criteria.energy)
-      conditions.push(this.#numericFilterCondition(cards.energy, criteria.energy));
-    if (criteria.might) conditions.push(this.#numericFilterCondition(cards.might, criteria.might));
-    if (criteria.power) conditions.push(this.#numericFilterCondition(cards.power, criteria.power));
+      conditions.push(...this.#numericFilterConditions(cards.energy, criteria.energy));
+    if (criteria.might)
+      conditions.push(...this.#numericFilterConditions(cards.might, criteria.might));
+    if (criteria.power)
+      conditions.push(...this.#numericFilterConditions(cards.power, criteria.power));
     if (criteria.search) {
       conditions.push(this.#searchCondition(criteria.search));
     }
@@ -406,33 +408,31 @@ class SqliteCardRepository implements CardRepository {
     const text = search.text.trim();
     if (!text) return sql`0 = 1`;
 
-    const nameCondition = () =>
-      or(
-        sql`instr(lower(${cards.id}), lower(${text})) > 0`,
-        sql`instr(lower(${cards.cleanName}), lower(${text})) > 0`,
-        sql`instr(lower(${cardPrintings.printedName}), lower(${text})) > 0`,
-      )!;
-    const rulesTextCondition = () => sql`instr(lower(${cards.rulesTextPlain}), lower(${text})) > 0`;
+    const contains = (column: SQLiteColumn) => sql`instr(lower(${column}), lower(${text})) > 0`;
+    const nameCondition = sql`(${contains(cards.id)} or ${contains(cards.cleanName)} or ${contains(
+      cardPrintings.printedName,
+    )})`;
+    const rulesTextCondition = contains(cards.rulesTextPlain);
 
-    return match(search)
-      .with({ type: "name" }, nameCondition)
-      .with({ type: "rulesText" }, rulesTextCondition)
-      .with({ type: "nameOrRulesText" }, () => or(nameCondition(), rulesTextCondition())!)
+    return match<CardSearch, SQL>(search)
+      .with({ type: "name" }, () => nameCondition)
+      .with({ type: "rulesText" }, () => rulesTextCondition)
+      .with({ type: "nameOrRulesText" }, () => sql`(${nameCondition} or ${rulesTextCondition})`)
       .exhaustive();
   }
 
-  #numericFilterCondition(
+  #numericFilterConditions(
     column: typeof cards.energy | typeof cards.might | typeof cards.power,
     filter: CardNumericFilter,
-  ): SQL {
-    return match(filter)
-      .with({ type: "exact" }, ({ value }) => eq(column, value))
-      .with({ type: "atLeast" }, ({ value }) => gte(column, value))
-      .with({ type: "atMost" }, ({ value }) => lte(column, value))
-      .with({ type: "between" }, ({ minimum, maximum }) =>
-        // Drizzle permits an empty and(), but a between filter always supplies both bounds.
-        and(gte(column, minimum), lte(column, maximum))!,
-      )
+  ): readonly SQL[] {
+    return match<CardNumericFilter, readonly SQL[]>(filter)
+      .with({ type: "exact" }, ({ value }) => [eq(column, value)])
+      .with({ type: "atLeast" }, ({ value }) => [gte(column, value)])
+      .with({ type: "atMost" }, ({ value }) => [lte(column, value)])
+      .with({ type: "between" }, ({ minimum, maximum }) => [
+        gte(column, minimum),
+        lte(column, maximum),
+      ])
       .exhaustive();
   }
 

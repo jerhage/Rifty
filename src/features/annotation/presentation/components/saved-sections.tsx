@@ -44,9 +44,10 @@ function sectionColumns(
 
   for (let left = Math.min(columns, sections.length); left > 0; left -= 1) {
     const standing = sections.slice(taken, taken + Math.ceil((sections.length - taken) / left));
-    const [first] = standing;
+    const first = standing.at(0);
 
-    laid.push({ key: first.label, sections: standing });
+    if (first !== undefined) laid.push({ key: first.label, sections: standing });
+
     taken += standing.length;
   }
 

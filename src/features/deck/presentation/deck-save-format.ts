@@ -37,7 +37,7 @@ function refusalMessage(refusal: SaveRefusal): string {
     .with({ type: "nameTaken" }, () => "You already have a deck with that name.")
     .with(
       { type: "copyLimitExceeded" },
-      ({ violations }) => violations[0]?.message ?? "Too many copies of a card.",
+      ({ violations }) => violations.at(0)?.message ?? "Too many copies of a card.",
     )
     .exhaustive();
 }

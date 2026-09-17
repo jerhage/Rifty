@@ -29,7 +29,7 @@ function coreRuleAncestorNumbersOf(number: CoreRuleNumber): readonly CoreRuleNum
 function isCoreRuleChapterNumber(number: CoreRuleNumber): boolean {
   const segments = number.split(".");
 
-  return segments.length === 1 && Number(segments[0]) % 100 === 0;
+  return segments.length === 1 && Number(segments.at(0)) % 100 === 0;
 }
 
 type CoreRuleNumber = z.output<typeof coreRuleNumberSchema>;

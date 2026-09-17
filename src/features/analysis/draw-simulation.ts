@@ -121,7 +121,7 @@ function mulliganHand(dealt: DealtHand, indexes: readonly number[]): MulliganedH
   let cursor = dealt.cursor;
 
   for (const index of inHandOrder) {
-    const replacement = dealt.pool[cursor];
+    const replacement = dealt.pool.at(cursor);
 
     if (replacement === undefined) break;
 

@@ -21,7 +21,7 @@ class SqliteSetRepository implements SetRepository {
     throwIfAborted(signal);
     if (!row) return null;
 
-    return (await this.#toDomainCardSets([row], signal))[0] ?? null;
+    return (await this.#toDomainCardSets([row], signal)).at(0) ?? null;
   }
 
   async getAll({ signal }: ReadOptions = {}): Promise<readonly CardSet[]> {

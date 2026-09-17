@@ -53,7 +53,7 @@ function slotsHeldByOtherPrintings(
   section: DeckSection,
   card: Card,
 ): number {
-  return (sectionCounts(draft)[section] ?? 0) - quantityOf(draft, section, card.printingId);
+  return sectionCounts(draft)[section] - quantityOf(draft, section, card.printingId);
 }
 
 /**

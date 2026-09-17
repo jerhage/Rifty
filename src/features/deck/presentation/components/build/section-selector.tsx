@@ -11,7 +11,7 @@ function SectionSelector({
   onSelect,
   selected,
 }: {
-  readonly counts: Readonly<Record<string, number>>;
+  readonly counts: Readonly<Record<DeckSection, number>>;
   readonly onSelect: (section: DeckSection) => void;
   readonly selected: DeckSection;
 }) {
@@ -20,7 +20,7 @@ function SectionSelector({
   return (
     <View style={styles.row}>
       {COUNTED_SECTION_RULES.map((rule) => {
-        const count = counts[rule.section] ?? 0;
+        const count = counts[rule.section];
         const isComplete = count === rule.requiredCount;
         const isSelected = rule.section === selected;
 

@@ -76,7 +76,11 @@ describe("SectionSelector", () => {
     if (firstSection === undefined) throw new Error("No section rules to select between.");
 
     await render(
-      <SectionSelector counts={{}} onSelect={() => undefined} selected={firstSection.section} />,
+      <SectionSelector
+        counts={{ legend: 0, mainDeck: 0, runeDeck: 0, battlefield: 0, sideboard: 0 }}
+        onSelect={() => undefined}
+        selected={firstSection.section}
+      />,
     );
 
     expect(screen.getAllByRole("tab")).toHaveLength(COUNTED_SECTION_RULES.length);

@@ -15,17 +15,13 @@ function useDomainColors() {
   return DomainColors[resolvedScheme(useColorScheme())];
 }
 
-function useKeywordColors() {
-  return KeywordColors[resolvedScheme(useColorScheme())];
-}
-
 function useSpeedColors() {
   return SpeedColors[resolvedScheme(useColorScheme())];
 }
 
 function useKeywordColor(): (keywordId: string) => string {
   const scheme = resolvedScheme(useColorScheme());
-  const palette: Record<string, string | undefined> = KeywordColors[scheme];
+  const palette: Readonly<Record<string, string | undefined>> = KeywordColors[scheme];
   const fallback = Colors[scheme].textSecondary;
 
   return (keywordId) => palette[keywordId] ?? fallback;
@@ -35,4 +31,4 @@ function resolvedScheme(scheme: ReturnType<typeof useColorScheme>) {
   return scheme === "dark" ? "dark" : "light";
 }
 
-export { useDomainColors, useKeywordColor, useKeywordColors, useSpeedColors, useTheme };
+export { useDomainColors, useKeywordColor, useSpeedColors, useTheme };

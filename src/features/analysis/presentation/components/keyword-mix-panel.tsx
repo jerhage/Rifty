@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { Panel } from "@/components/ui/atoms/panel";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
-import { useKeywordColors, useTheme } from "@/hooks/use-theme";
+import { useKeywordColor, useTheme } from "@/hooks/use-theme";
 
 import type { KeywordMix, KeywordShare } from "../../card-metrics";
 
@@ -15,10 +15,8 @@ function KeywordMixPanel({
   readonly mix: KeywordMix;
 }) {
   const theme = useTheme();
-  const keywordColors = useKeywordColors();
+  const keywordColor = useKeywordColor();
   const { carrying, keywords } = mix;
-  const colorFor = (id: string): string =>
-    (keywordColors as Record<string, string | undefined>)[id] ?? theme.textSecondary;
   const highest = Math.max(1, ...keywords.map((keyword) => keyword.count));
 
   if (keywords.length === 0) return null;
@@ -40,7 +38,7 @@ function KeywordMixPanel({
             key={keyword.id}
             style={styles.row}
           >
-            <ThemedText style={[styles.name, { color: colorFor(keyword.id) }]} type="body">
+            <ThemedText style={[styles.name, { color: keywordColor(keyword.id) }]} type="body">
               {keyword.name}
             </ThemedText>
             <View
@@ -52,7 +50,7 @@ function KeywordMixPanel({
                 style={[
                   styles.bar,
                   {
-                    backgroundColor: colorFor(keyword.id),
+                    backgroundColor: keywordColor(keyword.id),
                     width: `${(keyword.count / highest) * 100}%`,
                   },
                 ]}

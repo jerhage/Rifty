@@ -205,11 +205,14 @@ function chooseChampion(draft: DeckBuildDraft, champion: Card): DeckBuildDraft {
   return { ...seated, chosenChampion: pickOf(champion) };
 }
 
-function sectionCounts(draft: DeckBuildDraft): Record<string, number> {
-  return draftEntries(draft).reduce<Record<string, number>>((totals, entry) => {
-    totals[entry.section] = (totals[entry.section] ?? 0) + entry.quantity;
-    return totals;
-  }, {});
+function sectionCounts(draft: DeckBuildDraft): Readonly<Record<DeckSection, number>> {
+  return draftEntries(draft).reduce<Record<DeckSection, number>>(
+    (totals, entry) => {
+      totals[entry.section] += entry.quantity;
+      return totals;
+    },
+    { legend: 0, mainDeck: 0, runeDeck: 0, battlefield: 0, sideboard: 0 },
+  );
 }
 
 export {

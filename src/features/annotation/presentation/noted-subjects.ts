@@ -1,33 +1,23 @@
 import { match } from "ts-pattern";
 
 import type { Note } from "@/features/annotation/note";
-import { SCRATCHPAD_TITLE } from "@/features/annotation/presentation/note-format";
 import type {
   NotedSubject,
   NotedSubjectGroup,
 } from "@/features/annotation/presentation/noted-subject";
 import {
-  NOTHING_NOTED_ON_CARDS_MESSAGE,
-  UNFINDABLE_NOTES_MESSAGE,
-  notedCardsSectionLabel,
-  notedCoreRulesSectionLabel,
-  unfindableNotesSectionLabel,
+  ORDERED_NOTE_SECTION_SPECS,
   unfindableSubjectName,
+  type NoteSectionSpec,
 } from "@/features/annotation/presentation/noted-subjects-format";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import type { CoreRule } from "@/features/rules/core-rule";
-import { CORE_RULES_NOTHING_SAVED_MESSAGE } from "@/features/rules/presentation/core-rules-format";
 import { savedCoreRules, type SavedCoreRule } from "@/features/rules/presentation/core-rules-saved";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
-interface NoteCounts {
-  readonly card: number;
-  readonly coreRule: number;
-  readonly standalone: number;
-  readonly unfindable: number;
-}
+type NoteCounts = Readonly<Record<NotedSubject["type"], number>>;
 
 interface NoteSection {
   readonly groups: readonly NotedSubjectGroup[];
@@ -50,59 +40,69 @@ function noteSections(
 ): readonly NoteSection[] {
   const cardsByPrintingId = new Map(cards.map((card) => [card.printingId, card]));
   const savedByNumber = savedCoreRulesByNumber(notes, coreRules);
+  const gatheredByType = gatheringWithStandingScratchpad();
+
+  for (const note of notes) {
+    const noted = notedSubjectOf(note.subject, cardsByPrintingId, savedByNumber);
+
+    gather(gatheredByType[noted.type], notedGroupKey(noted), note, noted);
+  }
+
+  return ORDERED_NOTE_SECTION_SPECS.flatMap((spec) =>
+    sectionsFor(spec, [...gatheredByType[spec.type].values()]),
+  );
+}
+
+function sectionsFor(
+  spec: NoteSectionSpec,
+  groups: readonly NotedSubjectGroup[],
+): readonly NoteSection[] {
+  const label = spec.label(groups.length);
+
+  return match(spec.presence)
+    .with({ type: "always" }, ({ emptyMessage }): readonly NoteSection[] => [
+      { groups, label, message: groups.length === 0 ? emptyMessage : null },
+    ])
+    .with({ type: "whenPopulated" }, ({ message }): readonly NoteSection[] =>
+      groups.length === 0 ? [] : [{ groups, label, message }],
+    )
+    .exhaustive();
+}
+
+function gatheringWithStandingScratchpad(): Readonly<
+  Record<NotedSubject["type"], Map<string, GatheredNotes>>
+> {
   /** A note can only be originated here, so it stands whether or not anything is in it. */
   const scratchpad: GatheredNotes = {
     key: STANDALONE_KEY,
     notes: [],
     subject: { type: "standalone" },
   };
-  const cardGroups = new Map<string, GatheredNotes>();
-  const coreRuleGroups = new Map<string, GatheredNotes>();
-  const unfindableGroups = new Map<string, GatheredNotes>();
 
-  for (const note of notes) {
-    const noted = notedSubjectOf(note.subject, cardsByPrintingId, savedByNumber);
+  return {
+    standalone: new Map([[scratchpad.key, scratchpad]]),
+    card: new Map(),
+    coreRule: new Map(),
+    unfindable: new Map(),
+  };
+}
 
-    match(noted)
-      .with({ type: "standalone" }, () => {
-        scratchpad.notes.push(note);
-      })
-      .with({ type: "card" }, ({ card }) => gather(cardGroups, card.printingId, note, noted))
-      .with({ type: "coreRule" }, ({ saved }) =>
-        gather(coreRuleGroups, saved.coreRule.number, note, noted),
-      )
-      .with({ type: "unfindable" }, ({ subject }) =>
-        gather(unfindableGroups, unfindableSubjectName(subject), note, noted),
-      )
-      .exhaustive();
-  }
-
-  const sections: NoteSection[] = [
-    { groups: [scratchpad], label: SCRATCHPAD_TITLE, message: null },
-    {
-      groups: [...cardGroups.values()],
-      label: notedCardsSectionLabel(cardGroups.size),
-      message: cardGroups.size === 0 ? NOTHING_NOTED_ON_CARDS_MESSAGE : null,
-    },
-    {
-      groups: [...coreRuleGroups.values()],
-      label: notedCoreRulesSectionLabel(coreRuleGroups.size),
-      message: coreRuleGroups.size === 0 ? CORE_RULES_NOTHING_SAVED_MESSAGE : null,
-    },
-  ];
-
-  if (unfindableGroups.size > 0)
-    sections.push({
-      groups: [...unfindableGroups.values()],
-      label: unfindableNotesSectionLabel(unfindableGroups.size),
-      message: UNFINDABLE_NOTES_MESSAGE,
-    });
-
-  return sections;
+function notedGroupKey(noted: NotedSubject): string {
+  return match(noted)
+    .with({ type: "standalone" }, () => STANDALONE_KEY)
+    .with({ type: "card" }, ({ card }) => card.printingId)
+    .with({ type: "coreRule" }, ({ saved }) => saved.coreRule.number)
+    .with({ type: "unfindable" }, ({ subject }) => unfindableSubjectName(subject))
+    .exhaustive();
 }
 
 function noteCountsOf(sections: readonly NoteSection[]): NoteCounts {
-  const counted = { card: 0, coreRule: 0, standalone: 0, unfindable: 0 };
+  const counted: Record<NotedSubject["type"], number> = {
+    card: 0,
+    coreRule: 0,
+    standalone: 0,
+    unfindable: 0,
+  };
 
   for (const { groups } of sections)
     for (const { notes, subject } of groups) counted[subject.type] += notes.length;

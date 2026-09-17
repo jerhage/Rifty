@@ -6,14 +6,28 @@ import {
   SCRATCHPAD_EMPTY_MESSAGE,
   SCRATCHPAD_NOTES_NAME,
   SCRATCHPAD_PLACEHOLDER,
+  SCRATCHPAD_TITLE,
 } from "@/features/annotation/presentation/note-format";
 import type { NotedSubject } from "@/features/annotation/presentation/noted-subject";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
-import { coreRuleSavedContextLabel } from "@/features/rules/presentation/core-rules-format";
+import {
+  CORE_RULES_NOTHING_SAVED_MESSAGE,
+  coreRuleSavedContextLabel,
+} from "@/features/rules/presentation/core-rules-format";
 
 type NoteWriting =
   | { readonly type: "offered"; readonly subject: AnnotationSubject | null }
   | { readonly type: "withheld" };
+
+type NoteSectionPresence =
+  | { readonly type: "always"; readonly emptyMessage: string | null }
+  | { readonly type: "whenPopulated"; readonly message: string };
+
+interface NoteSectionSpec {
+  readonly type: NotedSubject["type"];
+  readonly label: (count: number) => string;
+  readonly presence: NoteSectionPresence;
+}
 
 interface NotedGroupView {
   readonly body?: string;
@@ -51,6 +65,37 @@ function unfindableNotesSectionLabel(count: number): string {
 function unfindableSubjectName(subject: AnnotationSubject): string {
   return `${UNFINDABLE_SUBJECT_KIND_LABELS[subject.kind]} ${subject.id}`;
 }
+
+const NOTE_SECTION_SPECS_BY_SUBJECT_TYPE: Readonly<Record<NotedSubject["type"], NoteSectionSpec>> =
+  {
+    standalone: {
+      type: "standalone",
+      label: () => SCRATCHPAD_TITLE,
+      presence: { type: "always", emptyMessage: null },
+    },
+    card: {
+      type: "card",
+      label: notedCardsSectionLabel,
+      presence: { type: "always", emptyMessage: NOTHING_NOTED_ON_CARDS_MESSAGE },
+    },
+    coreRule: {
+      type: "coreRule",
+      label: notedCoreRulesSectionLabel,
+      presence: { type: "always", emptyMessage: CORE_RULES_NOTHING_SAVED_MESSAGE },
+    },
+    unfindable: {
+      type: "unfindable",
+      label: unfindableNotesSectionLabel,
+      presence: { type: "whenPopulated", message: UNFINDABLE_NOTES_MESSAGE },
+    },
+  };
+
+const ORDERED_NOTE_SECTION_SPECS: readonly NoteSectionSpec[] = [
+  NOTE_SECTION_SPECS_BY_SUBJECT_TYPE.standalone,
+  NOTE_SECTION_SPECS_BY_SUBJECT_TYPE.card,
+  NOTE_SECTION_SPECS_BY_SUBJECT_TYPE.coreRule,
+  NOTE_SECTION_SPECS_BY_SUBJECT_TYPE.unfindable,
+];
 
 function notedGroupView(subject: NotedSubject): NotedGroupView {
   return match(subject)
@@ -92,11 +137,11 @@ function notedGroupView(subject: NotedSubject): NotedGroupView {
 
 export {
   NOTHING_NOTED_ON_CARDS_MESSAGE,
-  UNFINDABLE_NOTES_MESSAGE,
+  ORDERED_NOTE_SECTION_SPECS,
   notedCardsSectionLabel,
   notedCoreRulesSectionLabel,
   notedGroupView,
   unfindableNotesSectionLabel,
   unfindableSubjectName,
 };
-export type { NoteWriting, NotedGroupView };
+export type { NoteSectionSpec, NoteWriting, NotedGroupView };

@@ -9,7 +9,9 @@ interface SavedCounts {
 }
 
 function countLabel(count: number, one: string, many: string): string | null {
-  return count === 0 ? null : `${count} ${count === 1 ? one : many}`;
+  if (count === 0) return null;
+
+  return `${count} ${count === 1 ? one : many}`;
 }
 
 function savedSummaryLabel(counts: SavedCounts): string {

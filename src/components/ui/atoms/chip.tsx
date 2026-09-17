@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText, type ThemedTextType } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing, TouchTarget } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget, type Theme, type ThemeColor } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 /**
@@ -31,16 +32,7 @@ function Chip({
   tone = "accent",
 }: ChipProps) {
   const theme = useTheme();
-  const isAccent = tone === "accent";
-  const backgroundColor = selected
-    ? isAccent
-      ? theme.accent
-      : theme.backgroundSelected
-    : isAccent
-      ? theme.fill
-      : "transparent";
-  const borderColor = selected ? (isAccent ? theme.accent : theme.borderStrong) : theme.border;
-  const themeColor = selected ? (isAccent ? "onAccent" : "text") : "textSecondary";
+  const { backgroundColor, borderColor, labelColor } = chipAppearance(theme, tone, selected);
 
   return (
     <Pressable
@@ -54,11 +46,42 @@ function Chip({
       ]}
     >
       {adornment}
-      <ThemedText themeColor={themeColor} type={labelType}>
+      <ThemedText themeColor={labelColor} type={labelType}>
         {label}
       </ThemedText>
     </Pressable>
   );
+}
+
+interface ChipAppearance {
+  readonly backgroundColor: string;
+  readonly borderColor: string;
+  readonly labelColor: ThemeColor;
+}
+
+function chipAppearance(theme: Theme, tone: ChipTone, selected: boolean): ChipAppearance {
+  return match({ selected, tone })
+    .with({ selected: true, tone: "accent" }, (): ChipAppearance => ({
+      backgroundColor: theme.accent,
+      borderColor: theme.accent,
+      labelColor: "onAccent",
+    }))
+    .with({ selected: true, tone: "neutral" }, (): ChipAppearance => ({
+      backgroundColor: theme.backgroundSelected,
+      borderColor: theme.borderStrong,
+      labelColor: "text",
+    }))
+    .with({ selected: false, tone: "accent" }, (): ChipAppearance => ({
+      backgroundColor: theme.fill,
+      borderColor: theme.border,
+      labelColor: "textSecondary",
+    }))
+    .with({ selected: false, tone: "neutral" }, (): ChipAppearance => ({
+      backgroundColor: "transparent",
+      borderColor: theme.border,
+      labelColor: "textSecondary",
+    }))
+    .exhaustive();
 }
 
 export { Chip };

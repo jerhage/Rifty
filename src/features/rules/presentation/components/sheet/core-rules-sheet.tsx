@@ -4,7 +4,7 @@ import { match } from "ts-pattern";
 
 import { BottomSheetShell } from "@/components/ui/atoms/bottom-sheet-shell";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
-import { Radius, Spacing, TouchTarget } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget, type Theme, type ThemeColor } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
 import {
   coreRuleBookmarkCountLabel,
@@ -143,12 +143,11 @@ function CoreRulesSheetTab({
   readonly selected: boolean;
 }) {
   const theme = useTheme();
-  const surface = selected
-    ? {
-        backgroundColor: accent ? coreRuleSavedWash(theme, "surface") : theme.fill,
-        borderColor: accent ? coreRuleSavedWash(theme, "edge") : theme.border,
-      }
-    : { backgroundColor: "transparent", borderColor: "transparent" };
+  const { backgroundColor, borderColor, labelColor } = coreRulesSheetTabAppearance(
+    theme,
+    selected,
+    accent,
+  );
 
   return (
     <Pressable
@@ -156,12 +155,13 @@ function CoreRulesSheetTab({
       accessibilityRole="tab"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={({ pressed }) => [styles.tab, surface, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.tab,
+        { backgroundColor, borderColor },
+        pressed && styles.pressed,
+      ]}
     >
-      <ThemedText
-        themeColor={selected ? (accent ? "accent" : "text") : "textSecondary"}
-        type="mono"
-      >
+      <ThemedText themeColor={labelColor} type="mono">
         {label}
       </ThemedText>
       {count === undefined ? null : (
@@ -175,6 +175,36 @@ function CoreRulesSheetTab({
       )}
     </Pressable>
   );
+}
+
+interface CoreRulesSheetTabAppearance {
+  readonly backgroundColor: string;
+  readonly borderColor: string;
+  readonly labelColor: ThemeColor;
+}
+
+function coreRulesSheetTabAppearance(
+  theme: Theme,
+  selected: boolean,
+  accent: boolean,
+): CoreRulesSheetTabAppearance {
+  return match({ accent, selected })
+    .with({ selected: false }, (): CoreRulesSheetTabAppearance => ({
+      backgroundColor: "transparent",
+      borderColor: "transparent",
+      labelColor: "textSecondary",
+    }))
+    .with({ selected: true, accent: true }, (): CoreRulesSheetTabAppearance => ({
+      backgroundColor: coreRuleSavedWash(theme, "surface"),
+      borderColor: coreRuleSavedWash(theme, "edge"),
+      labelColor: "accent",
+    }))
+    .with({ selected: true, accent: false }, (): CoreRulesSheetTabAppearance => ({
+      backgroundColor: theme.fill,
+      borderColor: theme.border,
+      labelColor: "text",
+    }))
+    .exhaustive();
 }
 
 export { CoreRulesSheet };

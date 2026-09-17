@@ -1,8 +1,9 @@
 import { Pressable, StyleSheet } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { BookmarkGlyph } from "@/components/ui/icons/bookmark-glyph";
-import { Radius, Spacing, TouchTarget } from "@/constants/theme";
+import { Radius, Spacing, TouchTarget, type Theme } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 type BookmarkToggleAlignment = "center" | "start";
@@ -34,13 +35,7 @@ function BookmarkToggle({
   const pill = bookmarked
     ? { backgroundColor: theme.accent, borderColor: theme.accent }
     : { backgroundColor: theme.fill, borderColor: theme.border };
-  const markColor = captioned
-    ? bookmarked
-      ? theme.onAccent
-      : theme.textSecondary
-    : bookmarked
-      ? theme.accent
-      : theme.textTertiary;
+  const markColor = bookmarkMarkColor(theme, captioned, bookmarked);
 
   return (
     <Pressable
@@ -68,6 +63,15 @@ function BookmarkToggle({
       ) : null}
     </Pressable>
   );
+}
+
+function bookmarkMarkColor(theme: Theme, captioned: boolean, bookmarked: boolean): string {
+  return match({ bookmarked, captioned })
+    .with({ captioned: true, bookmarked: true }, () => theme.onAccent)
+    .with({ captioned: true, bookmarked: false }, () => theme.textSecondary)
+    .with({ captioned: false, bookmarked: true }, () => theme.accent)
+    .with({ captioned: false, bookmarked: false }, () => theme.textTertiary)
+    .exhaustive();
 }
 
 export { BookmarkToggle };

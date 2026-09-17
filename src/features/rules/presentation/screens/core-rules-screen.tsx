@@ -33,6 +33,7 @@ import { CoreRulesSheet } from "../components/sheet/core-rules-sheet";
 interface CoreRulesScreenProps {
   readonly bookmarkedCount: number;
   readonly bookmarkFor: (number: CoreRuleNumber) => ReactNode;
+  readonly captionedBookmarkFor: (number: CoreRuleNumber) => ReactNode;
   readonly coreRules: readonly CoreRule[];
   readonly edition: CoreRulesEdition;
   /** Asked of every rule the document holds, whether or not a query has filtered it out of view. */
@@ -47,6 +48,7 @@ interface CoreRulesScreenProps {
 function CoreRulesScreen({
   bookmarkedCount,
   bookmarkFor,
+  captionedBookmarkFor,
   coreRules,
   edition,
   isBookmarked,
@@ -173,6 +175,7 @@ function CoreRulesScreen({
         />
       )}
       <CoreRuleNotePopup
+        bookmarkControl={notedCoreRule === null ? null : captionedBookmarkFor(notedCoreRule.number)}
         coreRule={notedCoreRule}
         coreRules={coreRules}
         notes={notedCoreRule === null ? null : notesFor(notedCoreRule.number)}

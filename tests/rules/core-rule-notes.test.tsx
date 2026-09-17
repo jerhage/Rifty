@@ -168,6 +168,16 @@ function markOn(number: string) {
   return screen.getByLabelText(`Bookmark ${number}`);
 }
 
+function popupMarkOn(number: string) {
+  const mark = screen.getByText(/^Bookmark(ed)?$/, { includeHiddenElements: true }).parent;
+
+  if (mark?.props.accessibilityLabel !== `Bookmark ${number}`) {
+    throw new Error(`Nothing in the popup marks ${number}.`);
+  }
+
+  return mark;
+}
+
 function rowBar(number: string) {
   return StyleSheet.flatten(screen.getByText(number).parent?.props.style).borderLeftColor;
 }
@@ -299,6 +309,44 @@ describe("the note popup on a tablet", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Close the notes" }));
 
     expect(screen.queryByRole("header", { name: "Notes on 501.1" })).toBeNull();
+  });
+});
+
+describe("the bookmark control in the note popup", () => {
+  it("should stand beside the rule it is written about and report it unmarked", async () => {
+    await renderRules(PHONE);
+
+    await fireEvent.press(notesControlOn("501.1"));
+
+    expect(popupMarkOn("501.1").props.accessibilityState).toEqual({ checked: false });
+  });
+
+  it("should report the rule marked where the mark already stands", async () => {
+    await renderRules(PHONE, createBookmarkStore(["501.1"]));
+
+    await fireEvent.press(notesControlOn("501.1"));
+
+    expect(popupMarkOn("501.1").props.accessibilityState).toEqual({ checked: true });
+    expect(screen.getByText("Bookmarked", { includeHiddenElements: true })).toBeTruthy();
+  });
+
+  it("should keep the caption from being read after the name it repeats", async () => {
+    await renderRules(PHONE);
+
+    await fireEvent.press(notesControlOn("501.1"));
+
+    expect(popupMarkOn("501.1")).toBeTruthy();
+    expect(screen.queryByText("Bookmark")).toBeNull();
+  });
+
+  it("should mark the rule from inside the popup, and follow the mark it made", async () => {
+    const { bookmarkStore } = await renderRules(TABLET);
+
+    await fireEvent.press(notesControlOn("501.1"));
+    await fireEvent.press(popupMarkOn("501.1"));
+
+    await waitFor(() => expect(bookmarkStore.marks()).toHaveLength(1));
+    expect(popupMarkOn("501.1").props.accessibilityState).toEqual({ checked: true });
   });
 });
 

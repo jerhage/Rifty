@@ -36,6 +36,15 @@ function RulesRoute() {
                       onPress={() => toggleBookmark(number)}
                     />
                   )}
+                  captionedBookmarkFor={(number) => (
+                    <BookmarkToggle
+                      alignment="start"
+                      bookmarked={isBookmarked(number)}
+                      captioned
+                      label={coreRuleBookmarkLabel(number)}
+                      onPress={() => toggleBookmark(number)}
+                    />
+                  )}
                   coreRules={coreRules}
                   edition={edition}
                   isBookmarked={isBookmarked}

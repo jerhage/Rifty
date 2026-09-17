@@ -100,6 +100,15 @@ function coreRuleAnnotations(
         onPress={() => bookmarked.toggleBookmark(number)}
       />
     ),
+    captionedBookmarkFor: (number: CoreRuleNumber): ReactNode => (
+      <BookmarkToggle
+        alignment="start"
+        bookmarked={bookmarked.isBookmarked(number)}
+        captioned
+        label={coreRuleBookmarkLabel(number)}
+        onPress={() => bookmarked.toggleBookmark(number)}
+      />
+    ),
     notesControlFor: (number: CoreRuleNumber, onOpen: () => void): ReactNode => (
       <NotesControl
         count={noted.noteCountOf(number)}

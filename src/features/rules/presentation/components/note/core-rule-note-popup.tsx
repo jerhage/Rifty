@@ -15,6 +15,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing, TouchTarget } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
 import {
+  coreRuleNoteEdge,
   coreRuleNotesTitle,
   coreRuleSavedContextLabel,
 } from "@/features/rules/presentation/core-rules-format";
@@ -22,13 +23,16 @@ import { nearestCoreRuleHeading } from "@/features/rules/presentation/core-rules
 import { useLayoutSize } from "@/hooks/use-layout-size";
 import { useTheme } from "@/hooks/use-theme";
 
-/** Enough of the rule to write against without leaving the document to read it in full. */
-const NOTED_RULE_LINES = 4;
+const CLAMPED_RULE_LINES = 3;
 
+const SHEET_HEIGHT_FRACTION = 0.82;
+
+const CLOSE_HEIGHT = 36;
 const CLOSE_LABEL = "Done";
 const DISMISS_LABEL = "Close the notes";
 
 interface CoreRuleNotePopupProps {
+  readonly bookmarkControl: ReactNode;
   /** The rule whose notes are open, and `null` while none is. */
   readonly coreRule: CoreRule | null;
   readonly coreRules: readonly CoreRule[];
@@ -40,21 +44,34 @@ interface CoreRuleNotePopupProps {
  * Where a rule is written about, over the document rather than inside the row. Nothing about it is
  * gated on the rule being marked: the two acts are stored apart and offered apart.
  */
-function CoreRuleNotePopup({ coreRule, coreRules, notes, onDismiss }: CoreRuleNotePopupProps) {
+function CoreRuleNotePopup({
+  bookmarkControl,
+  coreRule,
+  coreRules,
+  notes,
+  onDismiss,
+}: CoreRuleNotePopupProps) {
   const { layoutClass } = useLayoutSize();
+  const theme = useTheme();
 
   return match(layoutClass)
     .with("phone", () => (
-      <BottomSheetShell isPresented={coreRule !== null} onDismiss={onDismiss}>
+      <BottomSheetShell
+        heightFraction={SHEET_HEIGHT_FRACTION}
+        isPresented={coreRule !== null}
+        onDismiss={onDismiss}
+      >
         {coreRule === null ? (
           <View />
         ) : (
           <CoreRuleNoteFace
+            bookmarkControl={bookmarkControl}
             coreRule={coreRule}
             coreRules={coreRules}
             notes={notes}
             onDismiss={onDismiss}
-            style={styles.filling}
+            ruleLines={CLAMPED_RULE_LINES}
+            style={[styles.filling, { borderTopColor: coreRuleNoteEdge(theme) }]}
           />
         )}
       </BottomSheetShell>
@@ -69,10 +86,12 @@ function CoreRuleNotePopup({ coreRule, coreRules, notes, onDismiss }: CoreRuleNo
         {coreRule === null ? null : (
           <CenteredPopup onDismiss={onDismiss}>
             <CoreRuleNoteFace
+              bookmarkControl={bookmarkControl}
               coreRule={coreRule}
               coreRules={coreRules}
               notes={notes}
               onDismiss={onDismiss}
+              ruleLines={undefined}
               style={styles.fitting}
             />
           </CenteredPopup>
@@ -101,7 +120,10 @@ function CenteredPopup({
         style={styles.scrim}
       />
       <View
-        style={[styles.card, { backgroundColor: theme.backgroundSheet, borderColor: theme.border }]}
+        style={[
+          styles.card,
+          { backgroundColor: theme.backgroundSheet, borderColor: coreRuleNoteEdge(theme) },
+        ]}
       >
         {children}
       </View>
@@ -110,16 +132,20 @@ function CenteredPopup({
 }
 
 function CoreRuleNoteFace({
+  bookmarkControl,
   coreRule,
   coreRules,
   notes,
   onDismiss,
+  ruleLines,
   style,
 }: {
+  readonly bookmarkControl: ReactNode;
   readonly coreRule: CoreRule;
   readonly coreRules: readonly CoreRule[];
   readonly notes: ReactNode;
   readonly onDismiss: () => void;
+  readonly ruleLines: number | undefined;
   /** The sheet gives the face a height to fill; the card takes the height the face asks for. */
   readonly style: StyleProp<ViewStyle>;
 }) {
@@ -144,8 +170,13 @@ function CoreRuleNoteFace({
           <Pressable
             accessibilityLabel={CLOSE_LABEL}
             accessibilityRole="button"
+            hitSlop={TouchTarget.slop(CLOSE_HEIGHT)}
             onPress={onDismiss}
-            style={({ pressed }) => [styles.close, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.close,
+              { backgroundColor: theme.fill, borderColor: theme.border },
+              pressed && styles.pressed,
+            ]}
           >
             <ThemedText themeColor="textSecondary" type="mono">
               {CLOSE_LABEL}
@@ -153,9 +184,10 @@ function CoreRuleNoteFace({
           </Pressable>
         </View>
         <ThemedText type="heading">{coreRuleSavedContextLabel(coreRule, heading)}</ThemedText>
-        <ThemedText numberOfLines={NOTED_RULE_LINES} themeColor="textSecondary" type="body">
+        <ThemedText numberOfLines={ruleLines} themeColor="textSecondary" type="body">
           {coreRule.body}
         </ThemedText>
+        <View style={styles.mark}>{bookmarkControl}</View>
       </View>
       <ScrollView contentContainerStyle={styles.body} style={styles.scroll}>
         {notes}
@@ -192,6 +224,7 @@ const styles = StyleSheet.create({
     width: 560,
   },
   filling: {
+    borderTopWidth: StyleSheet.hairlineWidth,
     flex: 1,
   },
   fitting: {
@@ -217,9 +250,15 @@ const styles = StyleSheet.create({
   },
   close: {
     alignItems: "center",
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
     justifyContent: "center",
-    minHeight: TouchTarget.minimum,
-    minWidth: TouchTarget.minimum,
+    minHeight: CLOSE_HEIGHT,
+    paddingHorizontal: Spacing.three - 4,
+  },
+  mark: {
+    alignItems: "flex-start",
+    paddingTop: Spacing.one,
   },
   scroll: {
     flexGrow: 1,

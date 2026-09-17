@@ -117,6 +117,12 @@ function coreRuleSavedWash(theme: Theme, weight: keyof typeof CoreRuleSavedAlpha
   return `${theme.accent}${CoreRuleSavedAlpha[weight]}`;
 }
 
+const CORE_RULE_NOTE_EDGE_ALPHA = "47";
+
+function coreRuleNoteEdge(theme: Theme): string {
+  return `${theme.highlight}${CORE_RULE_NOTE_EDGE_ALPHA}`;
+}
+
 /** What the saved surface says instead of drawing an empty box, in either frame. */
 const CORE_RULES_NOTHING_SAVED_MESSAGE =
   "Note a rule with the lines control or bookmark it with the flag. Either one files it here.";
@@ -192,6 +198,7 @@ export {
   coreRuleHitAnnouncement,
   coreRuleHitPositionLabel,
   coreRuleKeepingLabel,
+  coreRuleNoteEdge,
   coreRuleNotesTitle,
   coreRuleRemoveBookmarkLabel,
   coreRuleRowKindOf,

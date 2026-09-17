@@ -2,7 +2,7 @@ import { parseCard } from "@/features/card/card";
 import { parseCardListCriteria } from "@/features/card/card-list-criteria";
 import { parseCardSet } from "@/features/set/card-set";
 
-import { card, cardSet, taxonomyId } from "./fixtures";
+import { card, cardSet, taxonomy, taxonomyId } from "./fixtures";
 
 describe("card and set domain validation", () => {
   it("should reject a card with a blank printing id or an unusable image URL", () => {
@@ -22,14 +22,14 @@ describe("card and set domain validation", () => {
         classification: {
           typeId: "Other",
           supertypeId: taxonomyId("Token"),
-          rarityId: taxonomyId("common"),
+          rarity: taxonomy("common"),
         },
       }),
     );
     const recruit = parseCard(
       card("ven-T04-nx", "VEN", {
         name: "Recruit",
-        classification: { typeId: "Token", supertypeId: null, rarityId: taxonomyId("common") },
+        classification: { typeId: "Token", supertypeId: null, rarity: taxonomy("common") },
       }),
     );
 

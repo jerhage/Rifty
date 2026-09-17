@@ -12,7 +12,7 @@ import { findDeck } from "@/features/deck/deck/use-cases/find-deck";
 import { findResolvedDeck } from "@/features/deck/deck/use-cases/find-resolved-deck";
 import { listDecks } from "@/features/deck/deck/use-cases/list-decks";
 
-import { card, taxonomyId } from "../card/fixtures";
+import { card, taxonomy, taxonomyId } from "../card/fixtures";
 import { cardId, deck, deckId } from "./fixtures";
 
 const STORE_FAILURE = new Error("The store is unavailable.");
@@ -32,7 +32,7 @@ const legend = card("ogn-003", "OGN", {
   classification: {
     typeId: "Legend",
     supertypeId: taxonomyId("Champion"),
-    rarityId: taxonomyId("rare"),
+    rarity: taxonomy("rare"),
   },
 });
 

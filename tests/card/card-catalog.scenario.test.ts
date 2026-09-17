@@ -3,7 +3,15 @@ import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import { listCards } from "@/features/card/use-cases/list-cards";
 import { Page } from "@/shared/page";
 
-import { card, cardSet, carriedKeyword, grantedKeyword, setCode, taxonomyId } from "./fixtures";
+import {
+  card,
+  cardSet,
+  carriedKeyword,
+  grantedKeyword,
+  setCode,
+  taxonomy,
+  taxonomyId,
+} from "./fixtures";
 import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 
 describe("card catalog scenarios", () => {
@@ -17,10 +25,10 @@ describe("card catalog scenarios", () => {
       classification: {
         typeId: "Legend",
         supertypeId: taxonomyId("signature"),
-        rarityId: taxonomyId("rare"),
+        rarity: taxonomy("rare", "Rare"),
       },
       domainIds: ["Fury", "Order"],
-      tagIds: [taxonomyId("vi"), taxonomyId("piltover")],
+      tags: [taxonomy("vi", "Vi"), taxonomy("piltover", "Piltover")],
       marketplaceReferences: [
         { marketplace: "tcgplayer", externalId: "685522" },
         { marketplace: "cardmarket", externalId: "98765" },
@@ -33,7 +41,7 @@ describe("card catalog scenarios", () => {
       type: "success",
       card: {
         ...vi,
-        tagIds: ["piltover", "vi"],
+        tags: [taxonomy("piltover", "Piltover"), taxonomy("vi", "Vi")],
         marketplaceReferences: [
           { marketplace: "cardmarket", externalId: "98765" },
           { marketplace: "tcgplayer", externalId: "685522" },
@@ -76,15 +84,15 @@ describe("card catalog scenarios", () => {
     store.seedSet(unleashed);
     const vi = card("vi", unleashed.code, {
       name: "Vi - Piltover Enforcer",
-      classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
+      classification: { typeId: "Legend", supertypeId: null, rarity: taxonomy("rare") },
       domainIds: ["Fury", "Order"],
-      tagIds: [taxonomyId("vi")],
+      tags: [taxonomy("vi")],
     });
     const spirit = card("spirit", unleashed.code, {
       name: "Bewitching Spirit",
-      classification: { typeId: "Unit", supertypeId: null, rarityId: taxonomyId("common") },
+      classification: { typeId: "Unit", supertypeId: null, rarity: taxonomy("common") },
       domainIds: ["Chaos"],
-      tagIds: [taxonomyId("spirit")],
+      tags: [taxonomy("spirit")],
     });
     store.seedCard(vi);
     store.seedCard(spirit);
@@ -167,7 +175,7 @@ describe("card catalog scenarios", () => {
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
     const spire = card("contested-spire", unleashed.code, {
-      classification: { typeId: "Battlefield", supertypeId: null, rarityId: taxonomyId("rare") },
+      classification: { typeId: "Battlefield", supertypeId: null, rarity: taxonomy("rare") },
       collectorNumber: "1",
       name: "Contested Spire",
       orientation: "landscape",
@@ -324,7 +332,7 @@ describe("card catalog scenarios", () => {
       classification: {
         typeId: "Unit",
         supertypeId: taxonomyId("Champion"),
-        rarityId: taxonomyId("rare"),
+        rarity: taxonomy("rare"),
       },
     });
     const akaliCalm = card("akali-calm", origins.code, {
@@ -334,7 +342,7 @@ describe("card catalog scenarios", () => {
       classification: {
         typeId: "Unit",
         supertypeId: taxonomyId("Champion"),
-        rarityId: taxonomyId("rare"),
+        rarity: taxonomy("rare"),
       },
     });
     const akaliOffIdentity = card("akali-chaos", origins.code, {
@@ -344,7 +352,7 @@ describe("card catalog scenarios", () => {
       classification: {
         typeId: "Unit",
         supertypeId: taxonomyId("Champion"),
-        rarityId: taxonomyId("rare"),
+        rarity: taxonomy("rare"),
       },
     });
     const otherCharacter = card("sett", origins.code, {
@@ -354,7 +362,7 @@ describe("card catalog scenarios", () => {
       classification: {
         typeId: "Unit",
         supertypeId: taxonomyId("Champion"),
-        rarityId: taxonomyId("rare"),
+        rarity: taxonomy("rare"),
       },
     });
     for (const each of [akaliFury, akaliCalm, akaliOffIdentity, otherCharacter])

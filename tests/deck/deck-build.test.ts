@@ -4,7 +4,7 @@ import type { DeckBuildMode } from "@/features/deck/presentation/deck-build-mode
 import { NOT_PICKED, pickOf } from "@/features/deck/presentation/deck-build-steps";
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
-import { card, taxonomyId } from "../card/fixtures";
+import { card, taxonomy, taxonomyId } from "../card/fixtures";
 import { createTestWrapper } from "../test-wrapper";
 
 import { cardId, deck, resolvedDeck } from "./fixtures";
@@ -12,26 +12,26 @@ import { cardId, deck, resolvedDeck } from "./fixtures";
 const legend = card("legend", "OGN", {
   name: "Volibear",
   domainIds: ["Fury"],
-  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
+  classification: { typeId: "Legend", supertypeId: null, rarity: taxonomy("rare") },
 });
 const otherLegend = card("legend-two", "OGN", {
   name: "Lux",
   domainIds: ["Mind"],
-  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
+  classification: { typeId: "Legend", supertypeId: null, rarity: taxonomy("rare") },
 });
 const champion = card("champion", "OGN", {
   name: "Yasuo",
   classification: {
     typeId: "Unit",
     supertypeId: taxonomyId("Champion"),
-    rarityId: taxonomyId("rare"),
+    rarity: taxonomy("rare"),
   },
 });
 
 const savedLegend = card("ogn-003", "OGN", {
   name: "Ember Legend",
   cardId: cardId("Ember Legend"),
-  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
+  classification: { typeId: "Legend", supertypeId: null, rarity: taxonomy("rare") },
 });
 const savedMainCard = card("ogn-001", "OGN", { name: "Card 001", cardId: cardId("Card 001") });
 const savedRune = card("ogn-rune", "OGN", { name: "Fury Rune", cardId: cardId("Fury Rune") });
@@ -49,7 +49,7 @@ const unseatedChampion = card("ogn-hero", "OGN", {
   classification: {
     typeId: "Unit",
     supertypeId: taxonomyId("Champion"),
-    rarityId: taxonomyId("rare"),
+    rarity: taxonomy("rare"),
   },
 });
 

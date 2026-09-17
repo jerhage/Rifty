@@ -1,4 +1,4 @@
-import type { Card, CardKeyword } from "@/features/card/card";
+import type { Card, CardKeyword, CardTaxonomy } from "@/features/card/card";
 import { cardIdSchema } from "@/features/card/value-objects/card-id";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import { taxonomyIdSchema, type TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
@@ -31,6 +31,10 @@ function taxonomyId(value: string): TaxonomyId {
   return taxonomyIdSchema.parse(value);
 }
 
+function taxonomy(id: string, name = id): CardTaxonomy {
+  return { id: taxonomyId(id), name };
+}
+
 function cardSet(code: string, publishedOn: string, name = code): CardSet {
   return {
     code: setCode(code),
@@ -59,7 +63,7 @@ function card(
       | "championName"
       | "cardId"
       | "orientation"
-      | "tagIds"
+      | "tags"
       | "marketplaceReferences"
     >
   > = {},
@@ -86,13 +90,13 @@ function card(
     classification: options.classification ?? {
       typeId: "Unit",
       supertypeId: null,
-      rarityId: taxonomyId("common"),
+      rarity: taxonomy("common", "Common"),
     },
     domainIds: options.domainIds ?? ["Chaos"],
     speeds: options.speeds ?? ["normal"],
     keywords: options.keywords ?? [],
     championName: options.championName ?? null,
-    tagIds: options.tagIds ?? [],
+    tags: options.tags ?? [],
     imageUrl: `http://localhost:8787/${code.toLowerCase()}-${printingId}-100.webp`,
     marketplaceReferences: options.marketplaceReferences ?? [
       { marketplace: "tcgplayer", externalId: `tcgplayer-${printingId}` },
@@ -107,6 +111,7 @@ export {
   controllerKeyword,
   grantedKeyword,
   setCode,
+  taxonomy,
   taxonomyId,
   tokenKeyword,
 };

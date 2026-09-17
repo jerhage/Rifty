@@ -41,6 +41,7 @@ import {
   cardTags,
   cards,
 } from "@/infrastructure/database/reference-schema/cards";
+import { rarities, tags } from "@/infrastructure/database/reference-schema/taxonomy";
 import {
   cardKeywordTargets,
   cardKeywords,
@@ -57,6 +58,7 @@ const CARD_SUBJECT_KIND: AnnotationSubjectKind = "card";
 const PRINTED_CARD_COLUMNS = {
   card: getTableColumns(cards),
   printing: getTableColumns(cardPrintings),
+  rarity: { id: rarities.id, name: rarities.name },
 };
 
 const CARD_SUMMARY_COLUMNS = {
@@ -72,6 +74,7 @@ const CARD_SUMMARY_COLUMNS = {
 interface PrintedCardRow {
   readonly card: typeof cards.$inferSelect;
   readonly printing: typeof cardPrintings.$inferSelect;
+  readonly rarity: { readonly id: string; readonly name: string };
 }
 
 interface CardSummaryRow {
@@ -96,6 +99,7 @@ class SqliteCardRepository implements CardRepository {
       .select(PRINTED_CARD_COLUMNS)
       .from(cardPrintings)
       .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
+      .innerJoin(rarities, eq(rarities.id, cardPrintings.rarityId))
       .where(eq(cardPrintings.id, printingId))
       .limit(1);
     throwIfAborted(signal);
@@ -110,6 +114,7 @@ class SqliteCardRepository implements CardRepository {
       .select(PRINTED_CARD_COLUMNS)
       .from(cardPrintings)
       .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
+      .innerJoin(rarities, eq(rarities.id, cardPrintings.rarityId))
       .where(eq(cardPrintings.cardId, cardId))
       .orderBy(desc(cardPrintings.isCanonical), asc(cardPrintings.id))
       .limit(1);
@@ -132,6 +137,7 @@ class SqliteCardRepository implements CardRepository {
         .select(PRINTED_CARD_COLUMNS)
         .from(cardPrintings)
         .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
+        .innerJoin(rarities, eq(rarities.id, cardPrintings.rarityId))
         .where(inArray(cardPrintings.id, chunk))
         .orderBy(...this.#orderBy(undefined));
       throwIfAborted(signal);
@@ -188,6 +194,7 @@ class SqliteCardRepository implements CardRepository {
       .select(PRINTED_CARD_COLUMNS)
       .from(cardPrintings)
       .innerJoin(cards, eq(cards.id, cardPrintings.cardId))
+      .innerJoin(rarities, eq(rarities.id, cardPrintings.rarityId))
       .where(and(...this.#conditionsFor(criteria)))
       .orderBy(...this.#orderBy(criteria))
       // Fetch one sentinel row beyond the page so its presence determines hasMore.
@@ -476,7 +483,7 @@ class SqliteCardRepository implements CardRepository {
     const cardIds = [...new Set(rows.map((row) => row.card.id))];
     // Batch each relation for this page. Otherwise 2 domains * 3 tags * 2 references would produce 12 rows per card in one join
     // and require additional processing for deduping. This is fine for now since we arent' performance limited.
-    const [media, speeds, cardKeywordRows, domainsByCardId, tags, marketplaceReferences] =
+    const [media, speeds, cardKeywordRows, domainsByCardId, tagRows, marketplaceReferences] =
       await Promise.all([
         this.db.select().from(cardMedia).where(inArray(cardMedia.printingId, printingIds)),
         this.db
@@ -498,10 +505,11 @@ class SqliteCardRepository implements CardRepository {
           .orderBy(asc(keywords.name), asc(cardKeywords.id)),
         this.#domainRowsFor(cardIds, signal),
         this.db
-          .select()
+          .select({ cardId: cardTags.cardId, id: tags.id, name: tags.name })
           .from(cardTags)
+          .innerJoin(tags, eq(tags.id, cardTags.tagId))
           .where(inArray(cardTags.cardId, cardIds))
-          .orderBy(asc(cardTags.tagId)),
+          .orderBy(asc(tags.name)),
         this.db
           .select()
           .from(cardMarketplaceReferences)
@@ -522,13 +530,13 @@ class SqliteCardRepository implements CardRepository {
       })),
       (row) => row.cardId,
     );
-    const tagsByCardId = groupBy(tags, (row) => row.cardId);
+    const tagsByCardId = groupBy(tagRows, (row) => row.cardId);
     const marketplaceReferencesByPrintingId = groupBy(
       marketplaceReferences,
       (row) => row.printingId,
     );
 
-    return rows.map(({ card, printing }) => {
+    return rows.map(({ card, printing, rarity }) => {
       const mediaRow = mediaByPrintingId.get(printing.id);
       if (!mediaRow) {
         throw new Error(`Catalog card ${printing.id} is missing required related data.`);
@@ -537,6 +545,7 @@ class SqliteCardRepository implements CardRepository {
       return toDomainCard({
         card,
         printing,
+        rarity,
         media: mediaRow,
         imageBaseUrl: this.imageBaseUrl,
         speeds: speedsByCardId.get(card.id) ?? [],

@@ -27,6 +27,12 @@ const cardKeywordSchema = z
     targets: z.array(cardKeywordTargetSchema).readonly(),
   })
   .readonly();
+const cardTaxonomySchema = z
+  .object({
+    id: taxonomyIdSchema,
+    name: z.string().trim().min(1),
+  })
+  .readonly();
 const cardOrientationSchema = z.enum(["landscape", "portrait"]);
 const cardAttributesSchema = z
   .object({
@@ -39,7 +45,7 @@ const cardClassificationSchema = z
   .object({
     typeId: cardTypeSchema,
     supertypeId: taxonomyIdSchema.nullable(),
-    rarityId: taxonomyIdSchema,
+    rarity: cardTaxonomySchema,
   })
   .readonly();
 const cardSchema = z
@@ -67,7 +73,7 @@ const cardSchema = z
     speeds: z.array(cardSpeedSchema).readonly(),
     keywords: z.array(cardKeywordSchema).readonly(),
     championName: z.string().trim().min(1).nullable(),
-    tagIds: z.array(taxonomyIdSchema).readonly(),
+    tags: z.array(cardTaxonomySchema).readonly(),
     imageUrl: z.url(),
     marketplaceReferences: z.array(marketplaceReferenceSchema).readonly(),
   })
@@ -82,6 +88,7 @@ type CardClassification = z.output<typeof cardClassificationSchema>;
 type CardKeyword = z.output<typeof cardKeywordSchema>;
 type CardKeywordTarget = z.output<typeof cardKeywordTargetSchema>;
 type CardOrientation = z.output<typeof cardOrientationSchema>;
+type CardTaxonomy = z.output<typeof cardTaxonomySchema>;
 type Card = z.output<typeof cardSchema>;
 
 export {
@@ -89,6 +96,7 @@ export {
   cardClassificationSchema,
   cardOrientationSchema,
   cardSchema,
+  cardTaxonomySchema,
   parseCard,
 };
 export type {
@@ -98,4 +106,5 @@ export type {
   CardKeyword,
   CardKeywordTarget,
   CardOrientation,
+  CardTaxonomy,
 };

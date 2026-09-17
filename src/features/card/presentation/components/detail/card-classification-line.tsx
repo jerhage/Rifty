@@ -4,7 +4,7 @@ import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
 import type { Card } from "@/features/card/card";
 
-import { cardDomainNames, formatDomains, formatTaxonomyId } from "../../card-taxonomy-format";
+import { cardDomainNames, formatDomains } from "../../card-taxonomy-format";
 
 function CardClassificationLine({
   accent,
@@ -16,13 +16,13 @@ function CardClassificationLine({
   return (
     <View accessible accessibilityLabel={classificationLabel(card)} style={styles.line}>
       <ThemedText style={[styles.classification, { color: accent }]} type="mono">
-        {formatDomains(card.domainIds)} {formatTaxonomyId(card.classification.typeId)}
+        {formatDomains(card.domainIds)} {card.classification.typeId}
       </ThemedText>
       <ThemedText themeColor="textTertiary" type="mono">
         ·
       </ThemedText>
       <ThemedText themeColor="textSecondary" type="mono">
-        {formatTaxonomyId(card.classification.rarityId)}
+        {card.classification.rarity.name}
       </ThemedText>
     </View>
   );
@@ -31,8 +31,8 @@ function CardClassificationLine({
 function classificationLabel(card: Card): string {
   return [
     ...cardDomainNames(card.domainIds),
-    formatTaxonomyId(card.classification.typeId),
-    formatTaxonomyId(card.classification.rarityId),
+    card.classification.typeId,
+    card.classification.rarity.name,
   ].join(", ");
 }
 

@@ -1,7 +1,7 @@
 import { championCriteria } from "@/features/deck/presentation/data/champion-pool-data";
 import { NOT_PICKED, pickOf } from "@/features/deck/presentation/deck-build-steps";
 
-import { card, taxonomyId } from "../card/fixtures";
+import { card, taxonomy, taxonomyId } from "../card/fixtures";
 
 const legend = card("ogn-legend", "OGN", {
   name: "Yasuo, Unforgiven",
@@ -10,12 +10,12 @@ const legend = card("ogn-legend", "OGN", {
   classification: {
     typeId: "Legend",
     supertypeId: taxonomyId("Champion"),
-    rarityId: taxonomyId("rare"),
+    rarity: taxonomy("rare"),
   },
 });
 const legendWithoutChampion = card("ogn-legend-plain", "OGN", {
   name: "Nameless Legend",
-  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
+  classification: { typeId: "Legend", supertypeId: null, rarity: taxonomy("rare") },
 });
 
 describe("champion pool criteria", () => {

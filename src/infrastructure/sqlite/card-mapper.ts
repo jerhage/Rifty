@@ -10,8 +10,11 @@ import {
   cardSelectSchema,
   cardSpeedSelectSchema,
   cardMarketplaceReferenceSelectSchema,
-  cardTagSelectSchema,
 } from "@/infrastructure/database/reference-schema/cards";
+import {
+  raritySelectSchema,
+  tagSelectSchema,
+} from "@/infrastructure/database/reference-schema/taxonomy";
 
 const cardKeywordRowSchema = z.object({
   id: z.string(),
@@ -26,9 +29,13 @@ const cardKeywordRowSchema = z.object({
   ),
 });
 
+const rarityRowSchema = raritySelectSchema.pick({ id: true, name: true });
+const tagRowSchema = tagSelectSchema.pick({ id: true, name: true });
+
 interface CardPersistenceShape {
   readonly card: unknown;
   readonly printing: unknown;
+  readonly rarity: unknown;
   readonly media: unknown;
   readonly imageBaseUrl: string;
   readonly speeds: readonly unknown[];
@@ -41,6 +48,7 @@ interface CardPersistenceShape {
 function toDomainCard({
   card,
   printing,
+  rarity,
   media,
   imageBaseUrl,
   speeds,
@@ -76,13 +84,13 @@ function toDomainCard({
     classification: {
       typeId: persistedCard.typeId,
       supertypeId: persistedCard.supertypeId,
-      rarityId: persistedPrinting.rarityId,
+      rarity: rarityRowSchema.parse(rarity),
     },
     domainIds: domains.map((domain) => cardDomainSelectSchema.parse(domain).domainId),
     speeds: speeds.map((speed) => cardSpeedSelectSchema.parse(speed).speed),
     keywords: keywords.map((keyword) => toDomainKeyword(keyword)),
     championName: persistedCard.championName,
-    tagIds: tags.map((tag) => cardTagSelectSchema.parse(tag).tagId),
+    tags: tags.map((tag) => tagRowSchema.parse(tag)),
     imageUrl: cardImageUrl(imageBaseUrl, media),
     marketplaceReferences: marketplaceReferences.map((reference) => {
       const persistedReference = cardMarketplaceReferenceSelectSchema.parse(reference);

@@ -120,8 +120,8 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
     database
       .insert(rarities)
       .values({
-        id: card.classification.rarityId,
-        name: card.classification.rarityId,
+        id: card.classification.rarity.id,
+        name: card.classification.rarity.name,
         sortOrder: 0,
       })
       .onConflictDoNothing()
@@ -136,10 +136,10 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
     for (const domainId of card.domainIds) {
       database.insert(domains).values({ id: domainId, name: domainId }).onConflictDoNothing().run();
     }
-    for (const tagId of card.tagIds) {
+    for (const tag of card.tags) {
       database
         .insert(tags)
-        .values({ id: tagId, name: tagId, kind: "trait" })
+        .values({ id: tag.id, name: tag.name, kind: "trait" })
         .onConflictDoNothing()
         .run();
     }
@@ -158,7 +158,7 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         setCode: card.setCode,
         collectorNumber: card.collectorNumber,
         poolCode: null,
-        rarityId: card.classification.rarityId,
+        rarityId: card.classification.rarity.id,
         printedName: card.name,
         finish: card.finish,
         flavourText: card.rulesText.flavour,
@@ -254,10 +254,10 @@ function createSqliteScenarioStore(): SqliteScenarioStore {
         .values(card.domainIds.map((domainId) => ({ cardId: card.cardId, domainId })))
         .run();
     }
-    if (card.tagIds.length > 0) {
+    if (card.tags.length > 0) {
       database
         .insert(cardTags)
-        .values(card.tagIds.map((tagId) => ({ cardId: card.cardId, tagId })))
+        .values(card.tags.map((tag) => ({ cardId: card.cardId, tagId: tag.id })))
         .run();
     }
   }

@@ -53,7 +53,7 @@ function CardDetailScreen({ bookmarkControl, card, notes }: CardDetailScreenProp
         </View>
 
         <CardClassificationLine accent={accent} card={card} />
-        <CardTagLine tagIds={card.tagIds} />
+        <CardTagLine tags={card.tags} />
         <CardAttributeRow accent={accent} attributes={card.attributes} />
         <CardSpeedRow speeds={card.speeds} />
         <CardKeywordRow keywords={card.keywords} />

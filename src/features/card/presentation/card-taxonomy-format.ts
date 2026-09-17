@@ -1,7 +1,5 @@
 import type { Card, CardAttributes } from "@/features/card/card";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
-import type { CardType } from "@/features/card/value-objects/card-type";
-import type { TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
 import type { DomainColors } from "@/constants/theme";
 
 type DomainPalette = (typeof DomainColors)[keyof typeof DomainColors];
@@ -43,11 +41,6 @@ function formatDomains(domainIds: readonly CardDomain[]): string {
   return cardDomainNames(domainIds).join(" / ");
 }
 
-/** Taxonomy ids are stored kebab-cased; titles read better in the UI. */
-function formatTaxonomyId(value: CardType | TaxonomyId): string {
-  return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 /** Each attribute the card carries, spelled out: "3 energy", "5 might", "2 power". */
 function cardAttributeParts(attributes: CardAttributes): readonly string[] {
   return [
@@ -86,7 +79,6 @@ export {
   formatCardAttributes,
   formatCardTypeAndAttributes,
   formatDomains,
-  formatTaxonomyId,
   spokenCardTypeAndAttributes,
 };
 export type { DomainPalette };

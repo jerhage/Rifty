@@ -2,23 +2,21 @@ import { StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Spacing } from "@/constants/theme";
-import type { TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
+import type { CardTaxonomy } from "@/features/card/card";
 
-import { formatTaxonomyId } from "../../card-taxonomy-format";
+function CardTagLine({ tags }: { readonly tags: readonly CardTaxonomy[] }) {
+  if (tags.length === 0) return null;
 
-function CardTagLine({ tagIds }: { readonly tagIds: readonly TaxonomyId[] }) {
-  if (tagIds.length === 0) return null;
-
-  const tags = tagIds.map((tagId) => formatTaxonomyId(tagId));
+  const names = tags.map((tag) => tag.name);
 
   return (
     <ThemedText
-      accessibilityLabel={tags.join(", ")}
+      accessibilityLabel={names.join(", ")}
       themeColor="textSecondary"
       type="mono"
       style={styles.line}
     >
-      {tags.join(" · ")}
+      {names.join(" · ")}
     </ThemedText>
   );
 }

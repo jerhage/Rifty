@@ -12,7 +12,7 @@ import {
   carriedKeyword,
   controllerKeyword,
   grantedKeyword,
-  taxonomyId,
+  taxonomy,
   tokenKeyword,
 } from "../card/fixtures";
 
@@ -21,13 +21,13 @@ const legend = card("legend", "OGN", {
   speeds: ["reaction"],
   keywords: [carriedKeyword("vision", "Vision")],
   attributes: { energy: null, might: null, power: null },
-  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
+  classification: { typeId: "Legend", supertypeId: null, rarity: taxonomy("rare") },
 });
 const cheap = card("cheap", "OGN", {
   name: "Cheap Unit",
   keywords: [carriedKeyword("shield", "Shield", 2)],
   attributes: { energy: 1, might: 1, power: 1 },
-  tagIds: [taxonomyId("Volibear"), taxonomyId("Freljord")],
+  tags: [taxonomy("Volibear"), taxonomy("Freljord")],
 });
 const mid = card("mid", "OGN", {
   name: "Mid Spell",
@@ -38,13 +38,13 @@ const mid = card("mid", "OGN", {
     carriedKeyword("equip", "Equip"),
   ],
   attributes: { energy: 3, might: null, power: null },
-  classification: { typeId: "Spell", supertypeId: null, rarityId: taxonomyId("common") },
-  tagIds: [taxonomyId("Freljord")],
+  classification: { typeId: "Spell", supertypeId: null, rarity: taxonomy("common") },
+  tags: [taxonomy("Freljord")],
 });
 const champion = card("champion", "OGN", {
   name: "Volibear - Furious",
   attributes: { energy: 2, might: 4, power: null },
-  tagIds: [],
+  tags: [],
 });
 
 const played: readonly CardCopy[] = [

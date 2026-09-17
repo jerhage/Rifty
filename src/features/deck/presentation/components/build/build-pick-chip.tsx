@@ -80,7 +80,7 @@ function pickAppearance(
     .with({ type: "picked" }, ({ card }): PickAppearance => ({
       accessibilityLabel: `${label}: ${card.cardId}. Change`,
       backgroundColor: theme.backgroundElement,
-      borderColor: domainAccent(card, domainColors),
+      borderColor: domainAccent(card.domainIds, domainColors),
       domainIds: card.domainIds,
       name: card.cardId,
       nameColor: "text",

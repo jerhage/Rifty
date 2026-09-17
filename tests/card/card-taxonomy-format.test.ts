@@ -16,7 +16,7 @@ const ZED = card("ogn-001", "OGN", {
 
 describe("card attribute parts", () => {
   it("should spell out every attribute the card carries", () => {
-    expect(cardAttributeParts(ZED)).toEqual(["3 energy", "5 might"]);
+    expect(cardAttributeParts(ZED.attributes)).toEqual(["3 energy", "5 might"]);
   });
 
   it("should leave out an attribute the card does not carry", () => {
@@ -24,11 +24,11 @@ describe("card attribute parts", () => {
       attributes: { energy: 2, might: null, power: null },
     });
 
-    expect(cardAttributeParts(spell)).toEqual(["2 energy"]);
+    expect(cardAttributeParts(spell.attributes)).toEqual(["2 energy"]);
   });
 
   it("should join the visible attributes line with the separator the row shows", () => {
-    expect(formatCardAttributes(ZED)).toBe("3 energy · 5 might");
+    expect(formatCardAttributes(ZED.attributes)).toBe("3 energy · 5 might");
   });
 });
 

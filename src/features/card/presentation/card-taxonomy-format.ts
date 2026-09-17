@@ -1,12 +1,14 @@
-import type { Card } from "@/features/card/card";
+import type { Card, CardAttributes } from "@/features/card/card";
 import type { CardDomain } from "@/features/card/value-objects/card-domain";
+import type { CardType } from "@/features/card/value-objects/card-type";
+import type { TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
 import type { DomainColors } from "@/constants/theme";
 
 type DomainPalette = (typeof DomainColors)[keyof typeof DomainColors];
 
 /** A card can carry several domains; its first one colors the page. */
-function domainAccent(card: Card, domainColors: DomainPalette): string {
-  const [firstDomain] = card.domainIds;
+function domainAccent(domainIds: readonly CardDomain[], domainColors: DomainPalette): string {
+  const [firstDomain] = domainIds;
 
   return firstDomain === undefined ? domainColors.Colorless : domainColors[firstDomain];
 }
@@ -33,30 +35,30 @@ function domainCode(domainId: CardDomain): DomainCode {
 }
 
 /** The domains a card belongs to, one name per element, so a caller can choose its own separator. */
-function cardDomainNames(domainIds: readonly CardDomain[]): readonly string[] {
+function cardDomainNames(domainIds: readonly CardDomain[]): readonly CardDomain[] {
   return domainIds.length === 0 ? ["Colorless"] : [...domainIds];
 }
 
-function formatDomains(card: Card): string {
-  return cardDomainNames(card.domainIds).join(" / ");
+function formatDomains(domainIds: readonly CardDomain[]): string {
+  return cardDomainNames(domainIds).join(" / ");
 }
 
 /** Taxonomy ids are stored kebab-cased; titles read better in the UI. */
-function formatTaxonomyId(value: string): string {
+function formatTaxonomyId(value: CardType | TaxonomyId): string {
   return value.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 /** Each attribute the card carries, spelled out: "3 energy", "5 might", "2 power". */
-function cardAttributeParts(card: Card): readonly string[] {
+function cardAttributeParts(attributes: CardAttributes): readonly string[] {
   return [
-    card.attributes.energy === null ? null : `${card.attributes.energy} energy`,
-    card.attributes.might === null ? null : `${card.attributes.might} might`,
-    card.attributes.power === null ? null : `${card.attributes.power} power`,
+    attributes.energy === null ? null : `${attributes.energy} energy`,
+    attributes.might === null ? null : `${attributes.might} might`,
+    attributes.power === null ? null : `${attributes.power} power`,
   ].filter((part): part is string => part !== null);
 }
 
-function formatCardAttributes(card: Card): string {
-  return cardAttributeParts(card).join(" · ");
+function formatCardAttributes(attributes: CardAttributes): string {
+  return cardAttributeParts(attributes).join(" · ");
 }
 
 function formatCardTypeAndAttributes(card: Card): string {
@@ -73,7 +75,7 @@ function formatCardTypeAndAttributes(card: Card): string {
  * as "three E dot five M".
  */
 function spokenCardTypeAndAttributes(card: Card): string {
-  return [card.classification.typeId, ...cardAttributeParts(card)].join(", ");
+  return [card.classification.typeId, ...cardAttributeParts(card.attributes)].join(", ");
 }
 
 export {

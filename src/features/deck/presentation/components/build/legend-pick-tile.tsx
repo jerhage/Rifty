@@ -26,7 +26,7 @@ function LegendPickTile({
   readonly width: number;
 }) {
   const theme = useTheme();
-  const accent = domainAccent(card, useDomainColors());
+  const accent = domainAccent(card.domainIds, useDomainColors());
   const openCard = useOpenCardHapticLongPress(() => onOpenCard(card));
 
   return (

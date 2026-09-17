@@ -29,7 +29,7 @@ interface CardDetailScreenProps {
 
 function CardDetailScreen({ bookmarkControl, card, notes }: CardDetailScreenProps) {
   const insets = useSafeAreaInsets();
-  const accent = domainAccent(card, useDomainColors());
+  const accent = domainAccent(card.domainIds, useDomainColors());
 
   return (
     <ThemedView style={styles.screen}>
@@ -54,7 +54,7 @@ function CardDetailScreen({ bookmarkControl, card, notes }: CardDetailScreenProp
 
         <CardClassificationLine accent={accent} card={card} />
         <CardTagLine tagIds={card.tagIds} />
-        <CardAttributeRow accent={accent} card={card} />
+        <CardAttributeRow accent={accent} attributes={card.attributes} />
         <CardSpeedRow speeds={card.speeds} />
         <CardKeywordRow keywords={card.keywords} />
         <CardRulesPanel rulesText={card.rulesText} />

@@ -102,7 +102,7 @@ function LegendStep({
         )}
         style={styles.list}
       />
-      <BuildFooter actionLabel="Continue" onAction={onNext}>
+      <BuildFooter actionAvailability="ready" actionLabel="Continue" onAction={onNext}>
         <ThemedText numberOfLines={1} themeColor="textSecondary" type="mono">
           {legendLabel(selected)}
         </ThemedText>

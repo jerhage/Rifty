@@ -34,7 +34,7 @@ function BuildCardTile({
   readonly width: number;
 }) {
   const theme = useTheme();
-  const accent = domainAccent(card, useDomainColors());
+  const accent = domainAccent(card.domainIds, useDomainColors());
   const inDeck = quantity > 0;
   const openCard = useOpenCardHapticLongPress(() => onOpenCard(card));
 

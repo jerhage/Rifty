@@ -31,7 +31,7 @@ function ChampionPickRow({
   readonly width: number;
 }) {
   const theme = useTheme();
-  const accent = domainAccent(card, useDomainColors());
+  const accent = domainAccent(card.domainIds, useDomainColors());
   const openCard = useOpenCardHapticLongPress(() => onOpenCard(card));
 
   return (
@@ -66,11 +66,11 @@ function ChampionPickRow({
             {card.name}
           </ThemedText>
           <ThemedText style={{ color: accent }} type="mono">
-            {formatDomains(card)}
+            {formatDomains(card.domainIds)}
           </ThemedText>
         </View>
         <ThemedText themeColor="textTertiary" type="mono" style={styles.attributes}>
-          {formatCardAttributes(card)}
+          {formatCardAttributes(card.attributes)}
         </ThemedText>
       </View>
 
@@ -85,7 +85,11 @@ function ChampionPickRow({
 }
 
 function championLabel(card: Card): string {
-  const described = [card.name, ...cardDomainNames(card.domainIds), ...cardAttributeParts(card)];
+  const described = [
+    card.name,
+    ...cardDomainNames(card.domainIds),
+    ...cardAttributeParts(card.attributes),
+  ];
 
   return `${described.join(", ")}. Choose`;
 }

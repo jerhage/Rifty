@@ -73,7 +73,7 @@ function ChampionStep({
         )}
         style={styles.list}
       />
-      <BuildFooter actionLabel="Build sections" onAction={onNext}>
+      <BuildFooter actionAvailability="ready" actionLabel="Build sections" onAction={onNext}>
         <ThemedText numberOfLines={1} themeColor="textSecondary" type="mono">
           {championLabel(selected)}
         </ThemedText>

@@ -16,7 +16,7 @@ function CardClassificationLine({
   return (
     <View accessible accessibilityLabel={classificationLabel(card)} style={styles.line}>
       <ThemedText style={[styles.classification, { color: accent }]} type="mono">
-        {formatDomains(card)} {formatTaxonomyId(card.classification.typeId)}
+        {formatDomains(card.domainIds)} {formatTaxonomyId(card.classification.typeId)}
       </ThemedText>
       <ThemedText themeColor="textTertiary" type="mono">
         ·

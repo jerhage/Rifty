@@ -11,6 +11,8 @@ import type {
   DeckDraftState,
   SectionPoolState,
 } from "../../../hooks/use-deck-build";
+import { BuildFooter } from "../build-footer";
+import { BuildSaveMessage } from "../build-save-message";
 import { PoolSheet } from "../pool-sheet";
 import { SectionsStep } from "../steps/sections-step";
 
@@ -62,16 +64,27 @@ function SectionsPane({
               verification: draft.verification,
             }}
           >
-            {({ changeName }) => (
-              <SectionsStep
-                draft={draft}
-                onChangeName={changeName}
-                onEditStep={steps.goToStep}
-                onLoadMorePool={sectionPool.loadMore}
-                onOpenCard={onOpenCard}
-                pool={pool}
-                sectionPool={sectionPool.cards}
-              />
+            {({ changeName, saveAction }) => (
+              <>
+                <SectionsStep
+                  draft={draft}
+                  onChangeName={changeName}
+                  onEditStep={steps.goToStep}
+                  onLoadMorePool={sectionPool.loadMore}
+                  onOpenCard={onOpenCard}
+                  pool={pool}
+                  sectionPool={sectionPool.cards}
+                />
+
+                <BuildFooter
+                  actionLabel={saveAction.label}
+                  isActionBusy={saveAction.isBusy}
+                  isActionEnabled={saveAction.isEnabled}
+                  onAction={saveAction.save}
+                >
+                  <BuildSaveMessage message={saveAction.message} />
+                </BuildFooter>
+              </>
             )}
           </DeckSaveData>
           <PoolSheet

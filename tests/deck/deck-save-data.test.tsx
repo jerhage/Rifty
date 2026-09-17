@@ -6,6 +6,8 @@ import { match } from "ts-pattern";
 import type { Deck, DeckVerification } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD } from "@/features/deck/deck/deck-legality";
 import type { ListDecksCapabilities } from "@/features/deck/deck/use-cases/list-decks";
+import { BuildFooter } from "@/features/deck/presentation/components/build/build-footer";
+import { BuildSaveMessage } from "@/features/deck/presentation/components/build/build-save-message";
 import type { SectionsStepProps } from "@/features/deck/presentation/components/build/steps/sections-step";
 import {
   DeckSaveData,
@@ -111,7 +113,20 @@ async function renderDeckSave(store: DeckStore, name = "Storm") {
           childProps.push(Object.keys(received));
           controls = received;
 
-          return <Text>section pool</Text>;
+          return (
+            <>
+              <Text>section pool</Text>
+
+              <BuildFooter
+                actionLabel={received.saveAction.label}
+                isActionBusy={received.saveAction.isBusy}
+                isActionEnabled={received.saveAction.isEnabled}
+                onAction={received.saveAction.save}
+              >
+                <BuildSaveMessage message={received.saveAction.message} />
+              </BuildFooter>
+            </>
+          );
         }}
       </DeckSaveData>
     </SafeAreaProvider>,
@@ -252,14 +267,14 @@ describe("DeckSaveData", () => {
     await waitFor(() => expect(screen.getByText("Ready to save")).toBeTruthy());
   });
 
-  it("should hand its child a name callback and nothing of the save's lifecycle", async () => {
+  it("should hand its child a name callback and a described action, and nothing of the save's lifecycle", async () => {
     const store = createDeckStore();
     const { childProps } = await renderDeckSave(store);
 
     await pressSave();
     await screen.findByText("decks: [Storm]");
 
-    for (const keys of childProps) expect(keys).toEqual(["changeName"]);
+    for (const keys of childProps) expect(keys).toEqual(["changeName", "saveAction"]);
   });
 
   it("should not name a lifecycle value anywhere in the leaf step's props", () => {

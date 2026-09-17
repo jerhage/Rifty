@@ -193,11 +193,13 @@ describe("annotation storage scenarios", () => {
       { type: "onSubject", subject: RULE },
       { noteLister: store.annotationStore.notes },
     );
-    const onNothing = await listNotes({ type: "all" }, { noteLister: store.annotationStore.notes });
+    const everyNote = await listNotes({ type: "all" }, { noteLister: store.annotationStore.notes });
 
     expect(onCard.notes.map((note) => note.body)).toEqual(["On the card"]);
     expect(onRule.notes.map((note) => note.body)).toEqual(["On the rule"]);
-    expect(onNothing.notes.map((note) => note.body)).toEqual(["On nothing"]);
+    expect(
+      everyNote.notes.filter((note) => note.subject === null).map((note) => note.body),
+    ).toEqual(["On nothing"]);
   });
 
   it("should read every note of one kind in one query, and none of another kind", async () => {
@@ -246,7 +248,7 @@ describe("annotation storage scenarios", () => {
     expect(store.executedSql.at(-1)).toMatch(/where .*"subject_kind" = \?/);
   });
 
-  it("should return a note with no subject from the standalone scope and never from a subject scope", async () => {
+  it("should return a note with no subject from every read and never from a subject scope", async () => {
     await writeNote(
       { id: null, subject: null, title: "Scratchpad", body: "Match one: mulliganed two." },
       noteCapabilities("2026-09-16T10:00:00.000Z"),
@@ -270,7 +272,6 @@ describe("annotation storage scenarios", () => {
     await expect(
       listNotes({ type: "onSubject", subject: RULE }, { noteLister: store.annotationStore.notes }),
     ).resolves.toEqual({ type: "success", notes: [] });
-    expect(store.executedSql.at(-2)).toMatch(/where .*"subject_kind" is null/);
   });
 
   it("should rewrite a note in place, changing its body and the instant it was last written", async () => {

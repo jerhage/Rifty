@@ -44,6 +44,14 @@ function entry(
   };
 }
 
+function glyphBoxHeightIn(control: ReturnType<typeof screen.getByRole>): number | undefined {
+  const glyph = control.children[0];
+
+  if (typeof glyph === "string") throw new Error("The control draws no glyph.");
+
+  return StyleSheet.flatten(glyph.props.style).height;
+}
+
 async function renderRows(coreRules: readonly CoreRule[]) {
   const { bookmarkFor, notesControlFor } = coreRuleAnnotations();
 
@@ -133,6 +141,19 @@ describe("CoreRuleRow", () => {
 
     expect(screen.getByText("Twelve Fury runes is a legal rune deck.")).toBeTruthy();
     expect(screen.getByText("Example")).toBeTruthy();
+  });
+
+  it("should give both row controls one glyph box, at the start of its own target", async () => {
+    await renderRows([entry("501.1", "rule", "Chip damage is dealt.")]);
+
+    const notes = screen.getByRole("button", { name: "Notes on 501.1" });
+    const mark = screen.getByLabelText("Bookmark 501.1");
+
+    expect(notes.parent).toBe(mark.parent);
+    expect(StyleSheet.flatten(notes.props.style).justifyContent).toBe("flex-start");
+    expect(StyleSheet.flatten(mark.props.style).justifyContent).toBe("flex-start");
+    expect(glyphBoxHeightIn(mark)).toBe(18);
+    expect(glyphBoxHeightIn(notes)).toBe(glyphBoxHeightIn(mark));
   });
 
   it("should render no detail region for a rule with no details", async () => {

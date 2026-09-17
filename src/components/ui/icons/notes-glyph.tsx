@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 const NOTES_BAR_WIDTH = 13;
 const NOTES_LAST_BAR_WIDTH = 9;
 const NOTES_BAR_HEIGHT = 1.5;
+const NOTES_GLYPH_HEIGHT = 18;
 
 /**
  * Written lines. It stays decorative wherever it is used: the control around it carries the role,
@@ -29,6 +30,8 @@ const styles = StyleSheet.create({
   glyph: {
     alignItems: "center",
     gap: 2,
+    height: NOTES_GLYPH_HEIGHT,
+    justifyContent: "center",
   },
   bar: {
     borderRadius: 1,

@@ -30,7 +30,7 @@ function NotesControl({ count, label, onPress }: NotesControlProps) {
     >
       <NotesGlyph color={count === 0 ? theme.textTertiary : theme.highlight} />
       {count === 0 ? null : (
-        <ThemedText style={styles.count} themeColor="highlight" type="code">
+        <ThemedText themeColor="highlight" type="code">
           {count}
         </ThemedText>
       )}
@@ -47,13 +47,9 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     borderRadius: Radius.small,
     gap: Spacing.half,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     minHeight: TouchTarget.minimum,
     minWidth: TouchTarget.minimum,
-    paddingVertical: Spacing.one,
-  },
-  count: {
-    lineHeight: 12,
   },
   pressed: {
     opacity: 0.7,

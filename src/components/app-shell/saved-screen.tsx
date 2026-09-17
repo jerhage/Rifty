@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
@@ -41,19 +41,17 @@ function SavedScreen({ counts, sections }: SavedScreenProps) {
           {savedSummaryLabel(counts)}
         </ThemedText>
       </View>
-      <ScrollView
-        contentContainerStyle={[
-          styles.page,
+      <View
+        style={[
+          styles.body,
           {
-            paddingBottom: insets.bottom + Spacing.five,
             paddingLeft: insets.left + Spacing.three,
             paddingRight: insets.right + Spacing.three,
           },
         ]}
-        style={styles.body}
       >
         {sections}
-      </ScrollView>
+      </View>
     </ThemedView>
   );
 }
@@ -76,9 +74,7 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-  },
-  page: {
-    flexGrow: 1,
+    minHeight: 0,
     paddingTop: Spacing.three,
   },
 });

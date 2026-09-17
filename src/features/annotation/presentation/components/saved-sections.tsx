@@ -1,4 +1,5 @@
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { match } from "ts-pattern";
 
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
@@ -71,8 +72,13 @@ function SavedColumn({
   readonly sections: readonly SavedSection[];
   readonly saved: SectionedSubjects;
 }) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.column}>
+    <ScrollView
+      contentContainerStyle={[styles.stack, { paddingBottom: insets.bottom + Spacing.five }]}
+      style={styles.column}
+    >
       {sections.map((section) => (
         <LabelledSection key={section.label} label={section.label}>
           {section.message === null ? null : (
@@ -91,7 +97,7 @@ function SavedColumn({
           ))}
         </LabelledSection>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -163,15 +169,19 @@ export type { SavedSectionsProps };
 
 const styles = StyleSheet.create({
   columns: {
-    alignItems: "flex-start",
+    flex: 1,
     flexDirection: "row",
     gap: Spacing.three,
+    minHeight: 0,
     minWidth: 0,
   },
   column: {
     flex: 1,
-    gap: Spacing.four,
+    minHeight: 0,
     minWidth: 0,
+  },
+  stack: {
+    gap: Spacing.four,
   },
   group: {
     borderRadius: Radius.medium,

@@ -36,6 +36,7 @@ const CORE_RULE = subject("coreRule", "104.2");
 const DOCUMENT = coreRuleDocument([{ number: "104.2", body: "A player may pass priority." }]);
 const PHONE = { height: 874, width: 402 } as const;
 const TABLET = { height: 1280, width: 800 } as const;
+const SCROLLING_AREA = "RCTScrollView";
 const VI = {
   printingId: printingIdSchema.parse("vi"),
   riftboundId: "ogn-119-298",
@@ -107,6 +108,18 @@ function nearestHolderOf(one: RenderedNode, other: RenderedNode): RenderedNode {
   if (shared === undefined) throw new Error("the two sections stand in separate trees");
 
   return shared;
+}
+
+function scrollingAreasIn(nodes: readonly RenderedNode[]): readonly RenderedNode[] {
+  return nodes.filter((node) => node.type === SCROLLING_AREA);
+}
+
+function scrollingAreaOf(node: RenderedNode): RenderedNode {
+  const [nearest] = scrollingAreasIn(ancestorsOf(node));
+
+  if (nearest === undefined) throw new Error("the section stands in nothing that scrolls");
+
+  return nearest;
 }
 
 describe("the saved screen", () => {
@@ -205,6 +218,31 @@ describe("the columns the saved sections stand in", () => {
     expect(
       within(holder).queryByRole("header", { name: savedCoreRulesSectionLabel(1) }),
     ).toBeNull();
+  });
+});
+
+describe("the scrolling of the saved columns", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("should give each column a scrolling area of its own, with none above them", async () => {
+    await renderSaved(createNoteStore(), [], TABLET);
+
+    const scratchpad = scrollingAreaOf(sectionHeader(SCRATCHPAD_TITLE));
+    const rules = scrollingAreaOf(sectionHeader(savedCoreRulesSectionLabel(0)));
+
+    expect(rules).not.toBe(scratchpad);
+    expect(scrollingAreasIn([...ancestorsOf(scratchpad), ...ancestorsOf(rules)])).toEqual([]);
+  });
+
+  it("should scroll the one column a phone fits, every section riding with it", async () => {
+    await renderSaved(createNoteStore(), [], PHONE);
+
+    const scratchpad = scrollingAreaOf(sectionHeader(SCRATCHPAD_TITLE));
+
+    expect(scrollingAreaOf(sectionHeader(savedCoreRulesSectionLabel(0)))).toBe(scratchpad);
+    expect(scrollingAreasIn(ancestorsOf(scratchpad))).toEqual([]);
   });
 });
 

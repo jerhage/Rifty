@@ -8,17 +8,66 @@ import type { WriteNote } from "@/features/annotation/presentation/components/no
 import { NoteList } from "@/features/annotation/presentation/components/note-list";
 import type { SectionedNotes } from "@/features/annotation/presentation/data/note-sections-data";
 import type { NotedSubjectGroup } from "@/features/annotation/presentation/noted-subject";
+import type { NoteSection } from "@/features/annotation/presentation/noted-subjects";
 import { notedGroupView } from "@/features/annotation/presentation/noted-subjects-format";
+import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 import { useTheme } from "@/hooks/use-theme";
 
 interface NoteSectionsProps {
   readonly written: SectionedNotes;
 }
 
+interface SectionColumn {
+  readonly key: string;
+  readonly sections: readonly NoteSection[];
+}
+
+const NOTE_COLUMNS: ColumnSpec = {
+  gap: Spacing.three,
+  minimum: 320,
+  sidePadding: Spacing.three,
+};
+
+function sectionColumns(
+  sections: readonly NoteSection[],
+  columns: number,
+): readonly SectionColumn[] {
+  const laid: SectionColumn[] = [];
+  let taken = 0;
+
+  for (let left = Math.min(columns, sections.length); left > 0; left -= 1) {
+    const standing = sections.slice(taken, taken + Math.ceil((sections.length - taken) / left));
+    const [first] = standing;
+
+    laid.push({ key: first.label, sections: standing });
+    taken += standing.length;
+  }
+
+  return laid;
+}
+
 function NoteSections({ written }: NoteSectionsProps) {
+  const { columns } = useColumnFit(NOTE_COLUMNS);
+
   return (
-    <View style={styles.sections}>
-      {written.sections.map((section) => (
+    <View style={styles.columns}>
+      {sectionColumns(written.sections, columns).map(({ key, sections }) => (
+        <NoteColumn key={key} sections={sections} written={written} />
+      ))}
+    </View>
+  );
+}
+
+function NoteColumn({
+  sections,
+  written,
+}: {
+  readonly sections: readonly NoteSection[];
+  readonly written: SectionedNotes;
+}) {
+  return (
+    <View style={styles.column}>
+      {sections.map((section) => (
         <LabelledSection key={section.label} label={section.label}>
           {section.message === null ? null : (
             <ThemedText themeColor="textSecondary" type="body">
@@ -65,6 +114,11 @@ function NoteGroup({
           )}
         </View>
       )}
+      {view.body === undefined ? null : (
+        <ThemedText numberOfLines={3} themeColor="textSecondary" type="body">
+          {view.body}
+        </ThemedText>
+      )}
       <NoteList
         emptyMessage={view.emptyMessage}
         notes={group.notes}
@@ -78,11 +132,18 @@ function NoteGroup({
   );
 }
 
-export { NoteSections };
+export { NOTE_COLUMNS, NoteSections };
 export type { NoteSectionsProps };
 
 const styles = StyleSheet.create({
-  sections: {
+  columns: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: Spacing.three,
+    minWidth: 0,
+  },
+  column: {
+    flex: 1,
     gap: Spacing.four,
     minWidth: 0,
   },

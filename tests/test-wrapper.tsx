@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
+import { Dimensions } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 interface TestFrame {
@@ -7,7 +8,17 @@ interface TestFrame {
   readonly width: number;
 }
 
+function windowOf({ height, width }: TestFrame) {
+  jest
+    .spyOn(Dimensions, "get")
+    .mockReturnValue({ fontScale: 1, height, scale: 2, width } as ReturnType<
+      typeof Dimensions.get
+    >);
+}
+
 function createTestWrapper(frame?: TestFrame) {
+  if (frame !== undefined) windowOf(frame);
+
   const client = new QueryClient({
     defaultOptions: {
       mutations: { gcTime: 0, retry: false, retryDelay: 0 },

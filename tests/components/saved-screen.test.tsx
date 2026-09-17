@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import { SAVED_TITLE, NOTHING_SAVED_SUMMARY } from "@/components/app-shell/saved-format";
 import { SavedScreen } from "@/components/app-shell/saved-screen";
@@ -8,7 +8,10 @@ import {
   SCRATCHPAD_NOTES_NAME,
   SCRATCHPAD_TITLE,
 } from "@/features/annotation/presentation/note-format";
-import { notedCardsSectionLabel } from "@/features/annotation/presentation/noted-subjects-format";
+import {
+  notedCardsSectionLabel,
+  notedCoreRulesSectionLabel,
+} from "@/features/annotation/presentation/noted-subjects-format";
 import { noteCountsOf } from "@/features/annotation/presentation/noted-subjects";
 import type { CardSummary } from "@/features/card/card-summary";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
@@ -22,11 +25,15 @@ import {
   writtenNote,
   type NoteStore,
 } from "../annotation/fixtures";
-import { createTestWrapper } from "../test-wrapper";
+import { coreRuleDocument } from "../rules/fixtures";
+import { createTestWrapper, type TestFrame } from "../test-wrapper";
 
 const WRITTEN_AT = "2026-09-16T10:00:00.000Z";
 const CARD = subject("card", "vi");
+const CORE_RULE = subject("coreRule", "104.2");
+const DOCUMENT = coreRuleDocument([{ number: "104.2", body: "A player may pass priority." }]);
 const PHONE = { height: 874, width: 402 } as const;
+const TABLET = { height: 1280, width: 800 } as const;
 const VI = {
   printingId: printingIdSchema.parse("vi"),
   riftboundId: "ogn-119-298",
@@ -36,8 +43,11 @@ const VI = {
   imageUrl: "http://localhost:8787/ogn-119-298.webp",
 } as const satisfies CardSummary;
 
-async function renderSaved(store: NoteStore = createNoteStore()): Promise<NoteStore> {
-  const subjects = createSubjectStore([VI]);
+async function renderSaved(
+  store: NoteStore = createNoteStore(),
+  frame: TestFrame = PHONE,
+): Promise<NoteStore> {
+  const subjects = createSubjectStore([VI], DOCUMENT);
 
   await render(
     <NoteSectionsData
@@ -54,7 +64,7 @@ async function renderSaved(store: NoteStore = createNoteStore()): Promise<NoteSt
         />
       )}
     </NoteSectionsData>,
-    { wrapper: createTestWrapper(PHONE) },
+    { wrapper: createTestWrapper(frame) },
   );
   await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` });
 
@@ -69,6 +79,29 @@ async function addScratchpadNote(body: string) {
   await fireEvent.press(
     screen.getByRole("button", { name: `Save the new note on ${SCRATCHPAD_NOTES_NAME}` }),
   );
+}
+
+type RenderedNode = ReturnType<typeof screen.getByRole>;
+
+function sectionHeader(label: string): RenderedNode {
+  return screen.getByRole("header", { name: label });
+}
+
+function ancestorsOf(node: RenderedNode): readonly RenderedNode[] {
+  const chain: RenderedNode[] = [];
+
+  for (let above = node.parent; above !== null; above = above.parent) chain.push(above);
+
+  return chain;
+}
+
+function nearestHolderOf(one: RenderedNode, other: RenderedNode): RenderedNode {
+  const above = new Set(ancestorsOf(one));
+  const shared = ancestorsOf(other).find((node) => above.has(node));
+
+  if (shared === undefined) throw new Error("the two sections stand in separate trees");
+
+  return shared;
 }
 
 describe("the saved screen", () => {
@@ -118,6 +151,57 @@ describe("the saved screen", () => {
   });
 });
 
+describe("the columns the saved sections stand in", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("should stand every section under one another while only one column fits", async () => {
+    await renderSaved(createNoteStore(), PHONE);
+
+    const holder = nearestHolderOf(
+      sectionHeader(SCRATCHPAD_TITLE),
+      sectionHeader(notedCardsSectionLabel(0)),
+    );
+
+    expect(
+      within(holder).getByRole("header", { name: notedCoreRulesSectionLabel(0) }),
+    ).toBeTruthy();
+  });
+
+  it("should cut three sections into two columns, the earlier one taking the remainder", async () => {
+    await renderSaved(createNoteStore(), TABLET);
+
+    const holder = nearestHolderOf(
+      sectionHeader(SCRATCHPAD_TITLE),
+      sectionHeader(notedCardsSectionLabel(0)),
+    );
+
+    expect(
+      within(holder).queryByRole("header", { name: notedCoreRulesSectionLabel(0) }),
+    ).toBeNull();
+  });
+
+  it("should keep that arrangement with a note written in every section", async () => {
+    await renderSaved(
+      createNoteStore([
+        writtenNote("note-1", CARD, "Holds the point.", WRITTEN_AT),
+        writtenNote("note-2", CORE_RULE, "Priority passes.", WRITTEN_AT),
+      ]),
+      TABLET,
+    );
+
+    const holder = nearestHolderOf(
+      sectionHeader(SCRATCHPAD_TITLE),
+      sectionHeader(notedCardsSectionLabel(1)),
+    );
+
+    expect(
+      within(holder).queryByRole("header", { name: notedCoreRulesSectionLabel(1) }),
+    ).toBeNull();
+  });
+});
+
 describe("the saved summary", () => {
   it("should say nothing is written while no note exists at all", async () => {
     await renderSaved();
@@ -134,7 +218,7 @@ describe("the saved summary", () => {
     expect(screen.queryByText(NOTHING_SAVED_SUMMARY)).toBeNull();
   });
 
-  it("should count nothing that has no section yet, so no zero stands for one", async () => {
+  it("should count what is written rather than the sections that are drawn", async () => {
     await renderSaved();
 
     expect(screen.queryByText(/\d+ rules?/)).toBeNull();

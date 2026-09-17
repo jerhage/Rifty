@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
-import { MaxReadingWidth, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import {
   SAVED_TITLE,
   savedSummaryLabel,
@@ -34,14 +34,12 @@ function SavedScreen({ noteCounts, notes }: SavedScreenProps) {
           },
         ]}
       >
-        <View style={styles.column}>
-          <ThemedText accessibilityRole="header" type="display">
-            {SAVED_TITLE}
-          </ThemedText>
-          <ThemedText style={styles.summary} themeColor="textTertiary" type="mono">
-            {savedSummaryLabel(noteCounts)}
-          </ThemedText>
-        </View>
+        <ThemedText accessibilityRole="header" type="display">
+          {SAVED_TITLE}
+        </ThemedText>
+        <ThemedText style={styles.summary} themeColor="textTertiary" type="mono">
+          {savedSummaryLabel(noteCounts)}
+        </ThemedText>
       </View>
       <ScrollView
         contentContainerStyle={[
@@ -54,7 +52,7 @@ function SavedScreen({ noteCounts, notes }: SavedScreenProps) {
         ]}
         style={styles.body}
       >
-        <View style={styles.column}>{notes}</View>
+        {notes}
       </ScrollView>
     </ThemedView>
   );
@@ -82,11 +80,5 @@ const styles = StyleSheet.create({
   page: {
     flexGrow: 1,
     paddingTop: Spacing.three,
-  },
-  column: {
-    alignSelf: "center",
-    maxWidth: MaxReadingWidth,
-    minWidth: 0,
-    width: "100%",
   },
 });

@@ -7,6 +7,7 @@ import type {
   NotedSubjectGroup,
 } from "@/features/annotation/presentation/noted-subject";
 import {
+  NOTHING_NOTED_ON_CARDS_MESSAGE,
   UNFINDABLE_NOTES_MESSAGE,
   notedCardsSectionLabel,
   notedCoreRulesSectionLabel,
@@ -17,6 +18,7 @@ import type { AnnotationSubject } from "@/features/annotation/value-objects/anno
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import type { CoreRule } from "@/features/rules/core-rule";
+import { CORE_RULES_NOTHING_SAVED_MESSAGE } from "@/features/rules/presentation/core-rules-format";
 import { savedCoreRules, type SavedCoreRule } from "@/features/rules/presentation/core-rules-saved";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
@@ -75,26 +77,28 @@ function noteSections(
       .exhaustive();
   }
 
-  const sections: readonly NoteSection[] = [
+  const sections: NoteSection[] = [
     { groups: [scratchpad], label: SCRATCHPAD_TITLE, message: null },
     {
       groups: [...cardGroups.values()],
       label: notedCardsSectionLabel(cardGroups.size),
-      message: null,
+      message: cardGroups.size === 0 ? NOTHING_NOTED_ON_CARDS_MESSAGE : null,
     },
     {
       groups: [...coreRuleGroups.values()],
       label: notedCoreRulesSectionLabel(coreRuleGroups.size),
-      message: null,
-    },
-    {
-      groups: [...unfindableGroups.values()],
-      label: unfindableNotesSectionLabel(unfindableGroups.size),
-      message: UNFINDABLE_NOTES_MESSAGE,
+      message: coreRuleGroups.size === 0 ? CORE_RULES_NOTHING_SAVED_MESSAGE : null,
     },
   ];
 
-  return sections.filter(({ groups }) => groups.length > 0);
+  if (unfindableGroups.size > 0)
+    sections.push({
+      groups: [...unfindableGroups.values()],
+      label: unfindableNotesSectionLabel(unfindableGroups.size),
+      message: UNFINDABLE_NOTES_MESSAGE,
+    });
+
+  return sections;
 }
 
 function noteCountsOf(sections: readonly NoteSection[]): NoteCounts {

@@ -3,6 +3,7 @@ import type { PropsWithChildren } from "react";
 import { Dimensions } from "react-native";
 import { SafeAreaProvider, type EdgeInsets } from "react-native-safe-area-context";
 
+import { NOTE_COLUMNS } from "@/features/annotation/presentation/components/note-sections";
 import { CATALOG_COLUMNS } from "@/features/catalog/presentation/components/grid/card-summary-grid";
 import {
   POOL_ROW_COLUMNS,
@@ -137,6 +138,10 @@ describe("the grids each site derives", () => {
 
   it("should let pool rows go multi-column once two of them fit side by side", () => {
     expect(columnsAt(POOL_ROW_COLUMNS, USABLE_WIDTHS)).toEqual([1, 2, 2, 3, 4, 4]);
+  });
+
+  it("should keep the saved sections in one column on a phone and widen them on a tablet", () => {
+    expect(columnsAt(NOTE_COLUMNS, USABLE_WIDTHS)).toEqual([1, 2, 2, 3, 3, 4]);
   });
 });
 

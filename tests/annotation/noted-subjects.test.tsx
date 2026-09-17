@@ -1,10 +1,11 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react-native";
 
 import type { Note } from "@/features/annotation/note";
 import { NoteSections } from "@/features/annotation/presentation/components/note-sections";
 import { NoteSectionsData } from "@/features/annotation/presentation/data/note-sections-data";
 import { SCRATCHPAD_TITLE } from "@/features/annotation/presentation/note-format";
 import {
+  NOTHING_NOTED_ON_CARDS_MESSAGE,
   notedCardsSectionLabel,
   notedCoreRulesSectionLabel,
   unfindableNotesSectionLabel,
@@ -12,6 +13,7 @@ import {
 import type { CardSummary } from "@/features/card/card-summary";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import type { CoreRule } from "@/features/rules/core-rule";
+import { CORE_RULES_NOTHING_SAVED_MESSAGE } from "@/features/rules/presentation/core-rules-format";
 import { coreRuleNumberSchema } from "@/features/rules/value-objects/core-rule-number";
 
 import {
@@ -30,6 +32,7 @@ const VI_PRINTING = "ogn-119-298";
 const WITHDRAWN_PRINTING = "ogn-999-298";
 const RULE_NUMBER = "100.1";
 const WITHDRAWN_NAME = `Card ${WITHDRAWN_PRINTING}`;
+const PHONE = { height: 874, width: 402 } as const;
 
 const VI: CardSummary = {
   printingId: printingIdSchema.parse(VI_PRINTING),
@@ -103,11 +106,19 @@ async function renderNoted(seeded: readonly Note[]): Promise<NotedScreen> {
     >
       {(written) => <NoteSections written={written} />}
     </NoteSectionsData>,
-    { wrapper: createTestWrapper() },
+    { wrapper: createTestWrapper(PHONE) },
   );
   await screen.findByRole("header", { name: SCRATCHPAD_TITLE });
 
   return { notes, subjects };
+}
+
+function sectionHolding(label: string) {
+  const header = screen.getByRole("header", { name: label });
+
+  if (header.parent === null) throw new Error(`nothing stands around ${label}`);
+
+  return header.parent;
 }
 
 describe("the notes gathered under their subjects", () => {
@@ -131,6 +142,21 @@ describe("the notes gathered under their subjects", () => {
     );
   });
 
+  it("should stand a saved rule's own text beneath it, so the note reads without leaving", async () => {
+    await renderNoted([RULE_NOTE]);
+
+    expect(screen.getByText(A_GAME.body)).toBeTruthy();
+  });
+
+  it("should leave a saved card to its name and its printing, with no rules text beneath", async () => {
+    await renderNoted([CARD_NOTE, RULE_NOTE]);
+
+    expect(within(sectionHolding(notedCardsSectionLabel(1))).queryByText(A_GAME.body)).toBeNull();
+    expect(
+      within(sectionHolding(notedCoreRulesSectionLabel(1))).getByText(A_GAME.body),
+    ).toBeTruthy();
+  });
+
   it("should collect several notes on one subject under one heading, newest first", async () => {
     await renderNoted([CARD_NOTE, SECOND_CARD_NOTE]);
 
@@ -140,11 +166,19 @@ describe("the notes gathered under their subjects", () => {
     expect(screen.getByText("Note 2 · 2026-09-14")).toBeTruthy();
   });
 
-  it("should leave a section with no groups without a heading", async () => {
+  it("should keep the card and rule sections standing with nothing filed in either", async () => {
+    await renderNoted([SCRATCHPAD_NOTE]);
+
+    expect(screen.getByRole("header", { name: notedCardsSectionLabel(0) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: notedCoreRulesSectionLabel(0) })).toBeTruthy();
+    expect(screen.getByText(NOTHING_NOTED_ON_CARDS_MESSAGE)).toBeTruthy();
+    expect(screen.getByText(CORE_RULES_NOTHING_SAVED_MESSAGE)).toBeTruthy();
+  });
+
+  it("should hold back the section for a missing subject until a note needs it", async () => {
     await renderNoted([CARD_NOTE]);
 
     expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
-    expect(screen.queryByText(/Notes on rules/)).toBeNull();
     expect(screen.queryByText(/Notes with a missing subject/)).toBeNull();
   });
 

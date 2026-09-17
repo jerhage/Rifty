@@ -16,6 +16,7 @@ type NoteWriting =
   | { readonly type: "withheld" };
 
 interface NotedGroupView {
+  readonly body?: string;
   readonly detail: string | null;
   readonly emptyMessage: string;
   readonly name: string | null;
@@ -32,6 +33,8 @@ const UNFINDABLE_SUBJECT_KIND_LABELS = {
 
 const UNFINDABLE_NOTES_MESSAGE =
   "These were written against something the app can no longer find. Removing one is all that is left to do with it.";
+
+const NOTHING_NOTED_ON_CARDS_MESSAGE = "Write a note on a card and it is filed here.";
 
 function notedCardsSectionLabel(count: number): string {
   return `Notes on cards ${count}`;
@@ -68,6 +71,7 @@ function notedGroupView(subject: NotedSubject): NotedGroupView {
       writing: { type: "offered", subject: { kind: "card", id: card.printingId } },
     }))
     .with({ type: "coreRule" }, ({ saved }): NotedGroupView => ({
+      body: saved.coreRule.body,
       detail: saved.coreRule.number,
       emptyMessage: NOTES_EMPTY_MESSAGE,
       name: coreRuleSavedContextLabel(saved.coreRule, saved.heading),
@@ -87,6 +91,7 @@ function notedGroupView(subject: NotedSubject): NotedGroupView {
 }
 
 export {
+  NOTHING_NOTED_ON_CARDS_MESSAGE,
   UNFINDABLE_NOTES_MESSAGE,
   notedCardsSectionLabel,
   notedCoreRulesSectionLabel,

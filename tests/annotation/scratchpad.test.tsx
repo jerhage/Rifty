@@ -21,6 +21,7 @@ import { createTestWrapper } from "../test-wrapper";
 
 const WRITTEN_AT = "2026-09-16T10:00:00.000Z";
 const CARD = subject("card", "vi");
+const PHONE = { height: 874, width: 402 } as const;
 
 async function renderScratchpad(store: NoteStore = createNoteStore()): Promise<NoteStore> {
   const subjects = createSubjectStore();
@@ -35,7 +36,7 @@ async function renderScratchpad(store: NoteStore = createNoteStore()): Promise<N
     >
       {(written) => <NoteSections written={written} />}
     </NoteSectionsData>,
-    { wrapper: createTestWrapper() },
+    { wrapper: createTestWrapper(PHONE) },
   );
   await screen.findByRole("button", { name: `Add a note to ${SCRATCHPAD_NOTES_NAME}` });
 

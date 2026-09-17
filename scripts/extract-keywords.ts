@@ -27,12 +27,11 @@ const createScanner = () => {
     } | null = null;
 
     for (let i = 0; i < text.length; i++) {
-      const char = text[i];
+      const char = text.at(i);
 
       if (active) {
         if (char === active.end) {
-          const boundaryOk =
-            !active.requireAlphaBoundary || isAlpha(active.buffer[active.buffer.length - 1]);
+          const boundaryOk = !active.requireAlphaBoundary || isAlpha(active.buffer.at(-1));
 
           if (boundaryOk) {
             active.set.add(active.buffer);
@@ -49,7 +48,7 @@ const createScanner = () => {
 
       const target = targets.find((t) => t.markers[0] === char);
       if (target) {
-        if (target.requireAlphaBoundary && !isAlpha(text[i + 1])) {
+        if (target.requireAlphaBoundary && !isAlpha(text.at(i + 1))) {
           // Not a valid open (e.g. followed by a space, digit, or end of string) — skip it.
           continue;
         }
@@ -78,8 +77,8 @@ const loadTexts = (filePath: string): string[] => {
 };
 
 const main = () => {
-  const filePath = process.argv[2];
-  const outputPath = process.argv[3] ?? "scan-results.json";
+  const filePath = process.argv.at(2);
+  const outputPath = process.argv.at(3) ?? "scan-results.json";
 
   if (!filePath) {
     console.error("Usage: tsx scanner.ts <path-to-texts.json> [output-path.json]");

@@ -15,7 +15,7 @@ interface SourcedCard {
 }
 
 function sourceRank(url: string): number {
-  const path = url.split("?")[0] ?? url;
+  const path = url.split("?").at(0) ?? url;
 
   if (/\.thumb\.\w+$/.test(path)) return 2;
 

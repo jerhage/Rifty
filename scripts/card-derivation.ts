@@ -341,8 +341,8 @@ function quotedSpans(text: string): readonly Span[] {
   const spans: Span[] = [];
 
   for (let index = 0; index + 1 < marks.length; index += 2) {
-    const opening = marks[index];
-    const closing = marks[index + 1];
+    const opening = marks.at(index);
+    const closing = marks.at(index + 1);
     if (opening === undefined || closing === undefined) continue;
     spans.push([opening.index, closing.index + closing[0].length] as const);
   }

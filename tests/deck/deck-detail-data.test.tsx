@@ -5,11 +5,11 @@ import type { Card } from "@/features/card/card";
 import type { CardByCardIdFinder } from "@/features/card/card-by-card-id-finder";
 import type { CardsByPrintingIdsFinder } from "@/features/card/cards-by-printing-ids-finder";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
-import type { Deck } from "@/features/deck/deck/deck";
+import type { Deck, DeckId } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
 import { DeckDetailData } from "@/features/deck/presentation/data/deck-detail-data";
 
-import { deck } from "./fixtures";
+import { deck, deckId } from "./fixtures";
 import { card, cardSet } from "../card/fixtures";
 import { createTestWrapper } from "../test-wrapper";
 
@@ -40,13 +40,13 @@ function createCardStore(cards: readonly Card[] | Error): CardStore {
   };
 }
 
-async function renderDeckDetail(store: CardStore, deckFinder: DeckFinder, deckId: string) {
+async function renderDeckDetail(store: CardStore, deckFinder: DeckFinder, id: DeckId) {
   return await render(
     <DeckDetailData
       cardByCardIdFinder={noChampionPrinting}
       cardsByPrintingIdsFinder={store.cardsByPrintingIdsFinder}
       deckFinder={deckFinder}
-      deckId={deckId}
+      deckId={id}
     >
       {({ resolvedDeck }) => (
         <Text>{`${resolvedDeck.deck.name}: ${resolvedDeck.entries.length}`}</Text>
@@ -82,7 +82,7 @@ describe("DeckDetailData", () => {
   it("should report a missing deck as an answer rather than a failure", async () => {
     const store = createCardStore([]);
 
-    await renderDeckDetail(store, finderFor(null), "gone");
+    await renderDeckDetail(store, finderFor(null), deckId("gone"));
 
     expect(await screen.findByText("That deck no longer exists.")).toBeTruthy();
   });

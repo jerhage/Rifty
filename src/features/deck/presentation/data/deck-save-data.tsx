@@ -2,7 +2,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, type ReactNode } from "react";
 import { match } from "ts-pattern";
 
-import type { ChosenChampion, DeckEntry, DeckVerification } from "@/features/deck/deck/deck";
+import {
+  deckIdSchema,
+  type ChosenChampion,
+  type DeckEntry,
+  type DeckVerification,
+} from "@/features/deck/deck/deck";
 import type { DeckDraft } from "@/features/deck/deck/use-cases/save-deck";
 import { deckKeys } from "@/features/deck/queries/deck-keys";
 import { saveDeckMutation } from "@/features/deck/queries/deck-queries";
@@ -120,7 +125,7 @@ function deckIdentity(
 ): Pick<DeckDraft, "id" | "createdAt"> {
   return match(mode)
     .with({ type: "create" }, () => ({
-      id: idGenerator.next(),
+      id: deckIdSchema.parse(idGenerator.next()),
       createdAt: clock.now(),
     }))
     .with({ type: "edit" }, ({ resolvedDeck }) => ({

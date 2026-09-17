@@ -307,23 +307,22 @@ describe("annotation storage scenarios", () => {
   });
 
   it("should still read a bookmark and a note back after their subject is gone", async () => {
-    store.seedDeck(
-      parseDeck({
-        id: "ember-tempo",
-        name: "Ember Tempo",
-        createdAt: "2026-09-16T09:00:00.000Z",
-        updatedAt: "2026-09-16T09:00:00.000Z",
-        chosenChampionCardId: null,
-        entries: [],
-      }),
-    );
+    const tempo = parseDeck({
+      id: "ember-tempo",
+      name: "Ember Tempo",
+      createdAt: "2026-09-16T09:00:00.000Z",
+      updatedAt: "2026-09-16T09:00:00.000Z",
+      chosenChampionCardId: null,
+      entries: [],
+    });
+    store.seedDeck(tempo);
     await toggleBookmark(DECK, bookmarkCapabilities("2026-09-16T10:00:00.000Z"));
     await writeNote(
       { id: null, subject: DECK, title: "", body: "Swap the runes." },
       noteCapabilities("2026-09-16T10:01:00.000Z"),
     );
 
-    await store.deckStore.repository.remove("ember-tempo");
+    await store.deckStore.repository.remove(tempo.id);
 
     await expect(
       listBookmarks(

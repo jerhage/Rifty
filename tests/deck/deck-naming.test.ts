@@ -1,6 +1,6 @@
 import { isDeckNameTaken } from "@/features/deck/deck/deck-naming";
 
-import { deck } from "./fixtures";
+import { deck, deckId } from "./fixtures";
 
 const existing = [
   deck("deck-1", { name: "Ember Aggro" }),
@@ -36,11 +36,11 @@ describe("deck naming", () => {
   });
 
   it("should not count the excluded deck as a clash with itself", () => {
-    expect(isDeckNameTaken("EMBER AGGRO", existing, "deck-1")).toBe(false);
+    expect(isDeckNameTaken("EMBER AGGRO", existing, deckId("deck-1"))).toBe(false);
   });
 
   it("should still catch another deck's name when one deck is excluded", () => {
-    expect(isDeckNameTaken("rune control", existing, "deck-1")).toBe(true);
+    expect(isDeckNameTaken("rune control", existing, deckId("deck-1"))).toBe(true);
   });
 
   it("should report an empty list as free", () => {

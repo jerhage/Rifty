@@ -13,7 +13,7 @@ import { findResolvedDeck } from "@/features/deck/deck/use-cases/find-resolved-d
 import { listDecks } from "@/features/deck/deck/use-cases/list-decks";
 
 import { card } from "../card/fixtures";
-import { cardId, deck } from "./fixtures";
+import { cardId, deck, deckId } from "./fixtures";
 
 const STORE_FAILURE = new Error("The store is unavailable.");
 
@@ -61,7 +61,9 @@ function capabilitiesFor(
 
 describe("deck read use cases", () => {
   it("should reject rather than answer when finding a deck fails", async () => {
-    await expect(findDeck("ember", { deckFinder: failingDeckFinder })).rejects.toBe(STORE_FAILURE);
+    await expect(findDeck(deckId("ember"), { deckFinder: failingDeckFinder })).rejects.toBe(
+      STORE_FAILURE,
+    );
   });
 
   it("should reject rather than answer when listing decks fails", async () => {
@@ -71,7 +73,7 @@ describe("deck read use cases", () => {
 
 describe("finding a resolved deck", () => {
   it("should report a missing deck as an answer rather than a failure", async () => {
-    await expect(findResolvedDeck("gone", capabilitiesFor(null, []))).resolves.toEqual({
+    await expect(findResolvedDeck(deckId("gone"), capabilitiesFor(null, []))).resolves.toEqual({
       type: "notFound",
     });
   });

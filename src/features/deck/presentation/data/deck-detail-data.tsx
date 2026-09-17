@@ -9,6 +9,7 @@ import type { CardsByPrintingIdsFinder } from "@/features/card/cards-by-printing
 import type { DeckId } from "@/features/deck/deck/deck";
 import type { DeckFinder } from "@/features/deck/deck/deck-finder";
 import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
+import { MissingDeck } from "@/features/deck/presentation/components/missing-deck";
 import { getResolvedDeckQuery } from "@/features/deck/queries/deck-queries";
 import { useReadState } from "@/hooks/use-read-state";
 
@@ -42,7 +43,7 @@ function DeckDetailData({
         message="Could not load the deck."
       />
     ))
-    .with({ type: "notFound" }, () => <ErrorState message="That deck no longer exists." />)
+    .with({ type: "notFound" }, () => <MissingDeck />)
     .with({ type: "success" }, ({ resolvedDeck }) => children({ resolvedDeck, reload }))
     .exhaustive();
 }

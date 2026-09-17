@@ -5,7 +5,13 @@ import type { IdGenerator } from "@/application/ports/id-generator";
 import type { Card } from "@/features/card/card";
 import { cardIdSchema, type CardId } from "@/features/card/value-objects/card-id";
 import { printingIdSchema, type PrintingId } from "@/features/card/value-objects/printing-id";
-import { deckSchema, parseDeck, type Deck } from "@/features/deck/deck/deck";
+import {
+  deckIdSchema,
+  deckSchema,
+  parseDeck,
+  type Deck,
+  type DeckId,
+} from "@/features/deck/deck/deck";
 import type { ResolvedDeck } from "@/features/deck/deck/resolved-deck";
 
 import { card, cardSet } from "../card/fixtures";
@@ -56,6 +62,10 @@ function printingId(value: string): PrintingId {
   return printingIdSchema.parse(value);
 }
 
+function deckId(value: string): DeckId {
+  return deckIdSchema.parse(value);
+}
+
 function deck(id: string, options: Partial<Omit<DeckInput, "id">> = {}): Deck {
   return parseDeck({
     id,
@@ -104,5 +114,14 @@ function sequentialIds(prefix = "deck"): IdGenerator {
   return { next: () => `${prefix}-${++index}` };
 }
 
-export { cardId, deck, deckScenarioStore, fixedClock, printingId, resolvedDeck, sequentialIds };
+export {
+  cardId,
+  deck,
+  deckId,
+  deckScenarioStore,
+  fixedClock,
+  printingId,
+  resolvedDeck,
+  sequentialIds,
+};
 export type { DeckEntryInput };

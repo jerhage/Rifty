@@ -6,7 +6,7 @@ import type { CardType } from "@/features/card/value-objects/card-type";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import type { TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
 
-const deckIdSchema = z.string().trim().min(1);
+const deckIdSchema = z.string().trim().min(1).brand<"DeckId">();
 const deckNameSchema = z.string().trim().min(1);
 const deckSectionSchema = z.enum(["legend", "mainDeck", "runeDeck", "battlefield", "sideboard"]);
 const DECK_SECTIONS = deckSectionSchema.options;

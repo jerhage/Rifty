@@ -1,11 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
+import { match } from "ts-pattern";
 
 import { useAppDependencies } from "@/composition/app-dependencies-provider";
 import type { Card } from "@/features/card/card";
 import { KeywordsData } from "@/features/card/presentation/data/keywords-data";
+import { MissingDeck } from "@/features/deck/presentation/components/missing-deck";
 import { DeckDetailData } from "@/features/deck/presentation/data/deck-detail-data";
 import { DeckBuilder } from "@/features/deck/presentation/deck-builder";
+import { linkedDeck } from "@/features/deck/presentation/linked-deck";
 
 function DeckBuildRoute() {
   const { deckId } = useLocalSearchParams<{ deckId?: string }>();
@@ -30,27 +33,7 @@ function DeckBuildRoute() {
   return (
     <KeywordsData keywordLister={cardDependencies.keywordLister}>
       {(keywords) =>
-        deckId ? (
-          <DeckDetailData
-            cardByCardIdFinder={cardDependencies.cardRepository}
-            cardsByPrintingIdsFinder={cardDependencies.cardRepository}
-            deckFinder={decks.deckRepository}
-            deckId={deckId}
-          >
-            {({ resolvedDeck }) => (
-              <DeckBuilder
-                capabilities={capabilities}
-                cardCounter={cardDependencies.cardRepository}
-                cardLister={cardDependencies.cardRepository}
-                keywords={keywords}
-                mode={{ type: "edit", resolvedDeck }}
-                onExit={goBack}
-                onOpenCard={openCard}
-                onSaved={goBack}
-              />
-            )}
-          </DeckDetailData>
-        ) : (
+        deckId === undefined ? (
           <DeckBuilder
             capabilities={capabilities}
             cardCounter={cardDependencies.cardRepository}
@@ -61,6 +44,31 @@ function DeckBuildRoute() {
             onOpenCard={openCard}
             onSaved={goBack}
           />
+        ) : (
+          match(linkedDeck(deckId))
+            .with({ type: "unknownDeck" }, () => <MissingDeck />)
+            .with({ type: "savedDeck" }, ({ deckId: editedDeckId }) => (
+              <DeckDetailData
+                cardByCardIdFinder={cardDependencies.cardRepository}
+                cardsByPrintingIdsFinder={cardDependencies.cardRepository}
+                deckFinder={decks.deckRepository}
+                deckId={editedDeckId}
+              >
+                {({ resolvedDeck }) => (
+                  <DeckBuilder
+                    capabilities={capabilities}
+                    cardCounter={cardDependencies.cardRepository}
+                    cardLister={cardDependencies.cardRepository}
+                    keywords={keywords}
+                    mode={{ type: "edit", resolvedDeck }}
+                    onExit={goBack}
+                    onOpenCard={openCard}
+                    onSaved={goBack}
+                  />
+                )}
+              </DeckDetailData>
+            ))
+            .exhaustive()
         )
       }
     </KeywordsData>

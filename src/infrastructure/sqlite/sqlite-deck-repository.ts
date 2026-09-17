@@ -88,7 +88,7 @@ class SqliteDeckRepository implements DeckRepository {
    * read. Section order is alphabetical rather than play order — presenting them is the UI's call.
    */
   async #cardRowsFor(
-    deckIds: readonly DeckId[],
+    deckIds: readonly string[],
     signal: AbortSignal | undefined,
   ): Promise<Map<string, (typeof deckCards.$inferSelect)[]>> {
     if (deckIds.length === 0) return new Map();

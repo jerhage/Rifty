@@ -2,7 +2,7 @@ import { findDeck } from "@/features/deck/deck/use-cases/find-deck";
 import { findResolvedDeck } from "@/features/deck/deck/use-cases/find-resolved-deck";
 import { listDecks } from "@/features/deck/deck/use-cases/list-decks";
 
-import { deck, deckScenarioStore } from "./fixtures";
+import { deck, deckId, deckScenarioStore } from "./fixtures";
 
 describe("deck storage scenarios", () => {
   it("should hydrate a saved deck with every section it holds, ordered by section", async () => {
@@ -18,9 +18,7 @@ describe("deck storage scenarios", () => {
     });
     store.seedDeck(tempo);
 
-    await expect(
-      findDeck("ember-tempo", { deckFinder: store.deckStore.repository }),
-    ).resolves.toEqual({
+    await expect(findDeck(tempo.id, { deckFinder: store.deckStore.repository })).resolves.toEqual({
       type: "success",
       deck: {
         ...tempo,
@@ -47,7 +45,7 @@ describe("deck storage scenarios", () => {
     store.seedDeck(tempo);
 
     await expect(
-      findResolvedDeck("ember-tempo", {
+      findResolvedDeck(tempo.id, {
         cardByCardIdFinder: store.cards,
         cardsByPrintingIdsFinder: store.cards,
         deckFinder: store.deckStore.repository,
@@ -74,7 +72,7 @@ describe("deck storage scenarios", () => {
     store.seedDeck(tempo);
 
     await expect(
-      findResolvedDeck("ember-tempo", {
+      findResolvedDeck(tempo.id, {
         cardByCardIdFinder: store.cards,
         cardsByPrintingIdsFinder: store.cards,
         deckFinder: store.deckStore.repository,
@@ -89,7 +87,9 @@ describe("deck storage scenarios", () => {
   it("should report an absent deck without treating it as a storage failure", async () => {
     const store = deckScenarioStore();
 
-    await expect(findDeck("unknown", { deckFinder: store.deckStore.repository })).resolves.toEqual({
+    await expect(
+      findDeck(deckId("unknown"), { deckFinder: store.deckStore.repository }),
+    ).resolves.toEqual({
       type: "notFound",
     });
     store.close();

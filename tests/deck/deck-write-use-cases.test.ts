@@ -11,7 +11,7 @@ import { renameDeck } from "@/features/deck/deck/use-cases/rename-deck";
 import { saveDeck, type DeckDraft } from "@/features/deck/deck/use-cases/save-deck";
 import { setDeckCardQuantity } from "@/features/deck/deck/use-cases/set-deck-card-quantity";
 
-import { cardId, deck, fixedClock, printingId, sequentialIds } from "./fixtures";
+import { cardId, deck, deckId, fixedClock, printingId, sequentialIds } from "./fixtures";
 
 const STORE_FAILURE = new Error("The store is unavailable.");
 
@@ -27,7 +27,7 @@ const foundFinder: DeckFinder = { get: () => Promise.resolve(storedDeck) };
 
 function draft(overrides: Partial<DeckDraft> = {}): DeckDraft {
   return {
-    id: "ember",
+    id: deckId("ember"),
     name: "Ember Tempo",
     createdAt: "2026-09-01T10:00:00.000Z",
     chosenChampion: null,
@@ -96,7 +96,7 @@ describe("deck write use cases", () => {
 
   it("should report a missing name when a rename has a whitespace-only name", async () => {
     await expect(
-      renameDeck("ember", "   ", {
+      renameDeck(deckId("ember"), "   ", {
         clock,
         deckFinder: foundFinder,
         deckLister: emptyLister,
@@ -129,7 +129,7 @@ describe("deck write use cases", () => {
 
   it("should reject rather than answer when renaming reads a failing store", async () => {
     await expect(
-      renameDeck("ember", "Ember Aggro", {
+      renameDeck(deckId("ember"), "Ember Aggro", {
         clock,
         deckFinder: failingFinder,
         deckLister: emptyLister,
@@ -174,13 +174,15 @@ describe("deck write use cases", () => {
   });
 
   it("should reject rather than answer when deleting a deck fails", async () => {
-    await expect(deleteDeck("ember", { deckRemover: failingRemover })).rejects.toBe(STORE_FAILURE);
+    await expect(deleteDeck(deckId("ember"), { deckRemover: failingRemover })).rejects.toBe(
+      STORE_FAILURE,
+    );
   });
 
   it("should reject rather than answer when setting a quantity reads a failing store", async () => {
     await expect(
       setDeckCardQuantity(
-        "ember",
+        deckId("ember"),
         {
           section: "mainDeck",
           cardId: cardId("Card 002"),
@@ -195,7 +197,7 @@ describe("deck write use cases", () => {
   it("should reject rather than answer when writing a changed quantity fails", async () => {
     await expect(
       setDeckCardQuantity(
-        "ember",
+        deckId("ember"),
         {
           section: "mainDeck",
           cardId: cardId("Card 002"),

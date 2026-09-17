@@ -7,7 +7,15 @@ import { saveDeck } from "@/features/deck/deck/use-cases/save-deck";
 import { setDeckCardQuantity } from "@/features/deck/deck/use-cases/set-deck-card-quantity";
 
 import type { SqliteScenarioStore } from "../sqlite-scenario-store";
-import { cardId, deck, deckScenarioStore, fixedClock, printingId, sequentialIds } from "./fixtures";
+import {
+  cardId,
+  deck,
+  deckId,
+  deckScenarioStore,
+  fixedClock,
+  printingId,
+  sequentialIds,
+} from "./fixtures";
 
 function capabilities(repository: SqliteScenarioStore["deckStore"]) {
   return {
@@ -60,18 +68,18 @@ describe("deck editing scenarios", () => {
     store.seedDeck(deck("ember", { name: "Ember Tempo" }));
     store.seedDeck(deck("iron", { name: "Iron Wall" }));
 
-    await expect(renameDeck("ember", "Ember Aggro", dependencies)).resolves.toMatchObject({
+    await expect(renameDeck(deckId("ember"), "Ember Aggro", dependencies)).resolves.toMatchObject({
       type: "success",
       deck: { name: "Ember Aggro", updatedAt: "2026-09-07T12:00:00.000Z" },
     });
-    await expect(renameDeck("iron", "IRON WALL", dependencies)).resolves.toMatchObject({
+    await expect(renameDeck(deckId("iron"), "IRON WALL", dependencies)).resolves.toMatchObject({
       type: "success",
       deck: { name: "IRON WALL" },
     });
-    await expect(renameDeck("iron", "Ember Aggro", dependencies)).resolves.toEqual({
+    await expect(renameDeck(deckId("iron"), "Ember Aggro", dependencies)).resolves.toEqual({
       type: "nameTaken",
     });
-    await expect(renameDeck("missing", "Anything", dependencies)).resolves.toEqual({
+    await expect(renameDeck(deckId("missing"), "Anything", dependencies)).resolves.toEqual({
       type: "notFound",
     });
     store.close();
@@ -83,7 +91,7 @@ describe("deck editing scenarios", () => {
     store.seedDeck(deck("ember", { entries: [] }));
 
     const added = await setDeckCardQuantity(
-      "ember",
+      deckId("ember"),
       {
         section: "mainDeck",
         cardId: cardId("Ember Adept"),
@@ -102,7 +110,7 @@ describe("deck editing scenarios", () => {
     });
 
     await setDeckCardQuantity(
-      "ember",
+      deckId("ember"),
       {
         section: "mainDeck",
         cardId: cardId("Ember Adept"),
@@ -111,13 +119,13 @@ describe("deck editing scenarios", () => {
       },
       dependencies,
     );
-    await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
+    await expect(findDeck(deckId("ember"), dependencies)).resolves.toMatchObject({
       type: "success",
       deck: { entries: [{ printingId: "ogn-014", quantity: 2 }] },
     });
 
     await setDeckCardQuantity(
-      "ember",
+      deckId("ember"),
       {
         section: "mainDeck",
         cardId: cardId("Ember Adept"),
@@ -126,7 +134,7 @@ describe("deck editing scenarios", () => {
       },
       dependencies,
     );
-    await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
+    await expect(findDeck(deckId("ember"), dependencies)).resolves.toMatchObject({
       type: "success",
       deck: { entries: [] },
     });
@@ -139,7 +147,7 @@ describe("deck editing scenarios", () => {
     store.seedDeck(deck("ember", { entries: [] }));
 
     await setDeckCardQuantity(
-      "ember",
+      deckId("ember"),
       {
         section: "mainDeck",
         cardId: cardId("Ember Adept"),
@@ -149,7 +157,7 @@ describe("deck editing scenarios", () => {
       dependencies,
     );
     await setDeckCardQuantity(
-      "ember",
+      deckId("ember"),
       {
         section: "sideboard",
         cardId: cardId("Ember Adept"),
@@ -159,7 +167,7 @@ describe("deck editing scenarios", () => {
       dependencies,
     );
 
-    await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
+    await expect(findDeck(deckId("ember"), dependencies)).resolves.toMatchObject({
       type: "success",
       deck: {
         entries: [
@@ -186,7 +194,7 @@ describe("deck editing scenarios", () => {
 
     await expect(
       setDeckCardQuantity(
-        "ember",
+        deckId("ember"),
         {
           section: "mainDeck",
           cardId: cardId("Ember Hero"),
@@ -199,7 +207,7 @@ describe("deck editing scenarios", () => {
 
     await expect(
       setDeckCardQuantity(
-        "ember",
+        deckId("ember"),
         {
           section: "mainDeck",
           cardId: cardId("Ember Hero"),
@@ -225,7 +233,7 @@ describe("deck editing scenarios", () => {
 
     await expect(
       setDeckCardQuantity(
-        "ember",
+        deckId("ember"),
         {
           section: "mainDeck",
           cardId: cardId("Ember Hero"),
@@ -244,7 +252,7 @@ describe("deck editing scenarios", () => {
 
     const rejected = await saveDeck(
       {
-        id: "ember",
+        id: deckId("ember"),
         name: "Ember Tempo",
         createdAt: "2026-09-01T10:00:00.000Z",
         chosenChampion: null,
@@ -277,7 +285,7 @@ describe("deck editing scenarios", () => {
         },
       ],
     });
-    await expect(findDeck("ember", dependencies)).resolves.toEqual({ type: "notFound" });
+    await expect(findDeck(deckId("ember"), dependencies)).resolves.toEqual({ type: "notFound" });
     store.close();
   });
 
@@ -288,7 +296,7 @@ describe("deck editing scenarios", () => {
 
     await expect(
       setDeckCardQuantity(
-        "ember",
+        deckId("ember"),
         {
           section: "mainDeck",
           cardId: cardId("Ember Spark"),
@@ -308,7 +316,7 @@ describe("deck editing scenarios", () => {
 
     await expect(
       setDeckCardQuantity(
-        "ember",
+        deckId("ember"),
         {
           section: "runeDeck",
           cardId: cardId("Fury Rune"),
@@ -325,7 +333,7 @@ describe("deck editing scenarios", () => {
     const store = deckScenarioStore();
     const dependencies = capabilities(store.deckStore);
     const draft = {
-      id: "ember",
+      id: deckId("ember"),
       name: "Ember Tempo",
       createdAt: "2026-09-01T10:00:00.000Z",
       chosenChampion: null,
@@ -362,7 +370,7 @@ describe("deck editing scenarios", () => {
       ),
     ).resolves.toMatchObject({ type: "success" });
 
-    await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
+    await expect(findDeck(deckId("ember"), dependencies)).resolves.toMatchObject({
       type: "success",
       deck: {
         name: "Ember Aggro",
@@ -386,7 +394,7 @@ describe("deck editing scenarios", () => {
     await expect(
       saveDeck(
         {
-          id: "ember",
+          id: deckId("ember"),
           name: "iron wall",
           createdAt: "2026-09-01T10:00:00.000Z",
           chosenChampion: null,
@@ -398,7 +406,7 @@ describe("deck editing scenarios", () => {
     await expect(
       saveDeck(
         {
-          id: "ember",
+          id: deckId("ember"),
           name: "Ember Tempo",
           createdAt: "2026-09-01T10:00:00.000Z",
           chosenChampion: null,
@@ -416,7 +424,7 @@ describe("deck editing scenarios", () => {
 
     const rejected = await saveDeck(
       {
-        id: "ember",
+        id: deckId("ember"),
         name: "Ember Tempo",
         createdAt: "2026-09-01T10:00:00.000Z",
         chosenChampion: {
@@ -443,7 +451,7 @@ describe("deck editing scenarios", () => {
     );
 
     expect(rejected).toMatchObject({ type: "copyLimitExceeded" });
-    await expect(findDeck("ember", dependencies)).resolves.toEqual({ type: "notFound" });
+    await expect(findDeck(deckId("ember"), dependencies)).resolves.toEqual({ type: "notFound" });
     store.close();
   });
 
@@ -454,7 +462,7 @@ describe("deck editing scenarios", () => {
     await expect(
       saveDeck(
         {
-          id: "ember",
+          id: deckId("ember"),
           name: "Ember Tempo",
           createdAt: "2026-09-01T10:00:00.000Z",
           chosenChampion: null,
@@ -480,7 +488,7 @@ describe("deck editing scenarios", () => {
     await expect(
       saveDeck(
         {
-          id: "ember",
+          id: deckId("ember"),
           name: "Ember Tempo",
           createdAt: "2026-09-01T10:00:00.000Z",
           chosenChampion: {
@@ -500,7 +508,7 @@ describe("deck editing scenarios", () => {
         dependencies,
       ),
     ).resolves.toMatchObject({ type: "success" });
-    await expect(findDeck("ember", dependencies)).resolves.toMatchObject({
+    await expect(findDeck(deckId("ember"), dependencies)).resolves.toMatchObject({
       type: "success",
       deck: { chosenChampionCardId: "Ember Legend" },
     });
@@ -516,8 +524,8 @@ describe("deck editing scenarios", () => {
       }),
     );
 
-    await expect(deleteDeck("ember", dependencies)).resolves.toEqual({ type: "success" });
-    await expect(findDeck("ember", dependencies)).resolves.toEqual({ type: "notFound" });
+    await expect(deleteDeck(deckId("ember"), dependencies)).resolves.toEqual({ type: "success" });
+    await expect(findDeck(deckId("ember"), dependencies)).resolves.toEqual({ type: "notFound" });
     await expect(listDecks(dependencies)).resolves.toEqual({ type: "success", decks: [] });
     store.close();
   });

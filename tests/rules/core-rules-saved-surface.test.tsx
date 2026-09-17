@@ -19,7 +19,13 @@ import { SAVED_PANE_COLLAPSED_WIDTH } from "@/features/rules/presentation/compon
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
 import { recordAnnouncements } from "../announcements";
-import { createNoteStore, fixedClock, subject, type NoteStore } from "../annotation/fixtures";
+import {
+  createNoteStore,
+  fixedClock,
+  noteId,
+  subject,
+  type NoteStore,
+} from "../annotation/fixtures";
 import { createTestWrapper } from "../test-wrapper";
 import { coreRuleAnnotations, coreRuleDocument } from "./fixtures";
 
@@ -294,7 +300,7 @@ describe("the notes on a saved rule", () => {
   it("should show what the subject already carries, numbered and dated", async () => {
     const store = createNoteStore([
       {
-        id: "note-0",
+        id: noteId("note-0"),
         subject: subject("coreRule", "501.1"),
         title: "",
         body: "Came up in round three.",

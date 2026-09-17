@@ -2,20 +2,20 @@ import { parseCard } from "@/features/card/card";
 import type { ResolvedDeckEntry } from "@/features/deck/deck/resolved-deck";
 import { deckGroups } from "@/features/deck/presentation/deck-contents";
 
-import { card, carriedKeyword } from "../card/fixtures";
+import { card, carriedKeyword, taxonomyId } from "../card/fixtures";
 
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",
   speeds: ["reaction"],
   keywords: [carriedKeyword("vision", "Vision")],
   attributes: { energy: null, might: null, power: null },
-  classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
+  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
 });
 const cheap = card("cheap", "OGN", {
   name: "Cheap Unit",
   keywords: [carriedKeyword("shield", "Shield", 2)],
   attributes: { energy: 1, might: 1, power: 1 },
-  tagIds: ["Volibear", "Freljord"],
+  tagIds: [taxonomyId("Volibear"), taxonomyId("Freljord")],
 });
 const mid = card("mid", "OGN", {
   name: "Mid Spell",
@@ -26,8 +26,8 @@ const mid = card("mid", "OGN", {
     carriedKeyword("equip", "Equip"),
   ],
   attributes: { energy: 3, might: null, power: null },
-  classification: { typeId: "Spell", supertypeId: null, rarityId: "common" },
-  tagIds: ["Freljord"],
+  classification: { typeId: "Spell", supertypeId: null, rarityId: taxonomyId("common") },
+  tagIds: [taxonomyId("Freljord")],
 });
 const champion = card("champion", "OGN", {
   name: "Volibear - Furious",

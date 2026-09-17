@@ -8,12 +8,12 @@ import {
   toggleMulliganSelection,
 } from "@/features/analysis/draw-simulation";
 
-import { card } from "../card/fixtures";
+import { card, taxonomyId } from "../card/fixtures";
 
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",
   attributes: { energy: null, might: null, power: null },
-  classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
+  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
 });
 const champion = card("champion", "OGN", {
   name: "Volibear - Furious (Alternate Art)",
@@ -30,7 +30,7 @@ const staple = card("staple", "OGN", {
 const pair = card("pair", "OGN", {
   name: "Paired Spell",
   attributes: { energy: 3, might: null, power: 4 },
-  classification: { typeId: "Spell", supertypeId: null, rarityId: "common" },
+  classification: { typeId: "Spell", supertypeId: null, rarityId: taxonomyId("common") },
 });
 const single = card("single", "OGN", {
   name: "Lone Finisher",

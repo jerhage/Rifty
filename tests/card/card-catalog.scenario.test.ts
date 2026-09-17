@@ -3,7 +3,7 @@ import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import { listCards } from "@/features/card/use-cases/list-cards";
 import { Page } from "@/shared/page";
 
-import { card, cardSet, carriedKeyword, grantedKeyword } from "./fixtures";
+import { card, cardSet, carriedKeyword, grantedKeyword, setCode, taxonomyId } from "./fixtures";
 import { createSqliteScenarioStore } from "../sqlite-scenario-store";
 
 describe("card catalog scenarios", () => {
@@ -14,9 +14,13 @@ describe("card catalog scenarios", () => {
       collectorNumber: "229",
       name: "Vi - Piltover Enforcer (Signature)",
       cleanName: "Vi Piltover Enforcer Signature",
-      classification: { typeId: "Legend", supertypeId: "signature", rarityId: "rare" },
+      classification: {
+        typeId: "Legend",
+        supertypeId: taxonomyId("signature"),
+        rarityId: taxonomyId("rare"),
+      },
       domainIds: ["Fury", "Order"],
-      tagIds: ["vi", "piltover"],
+      tagIds: [taxonomyId("vi"), taxonomyId("piltover")],
       marketplaceReferences: [
         { marketplace: "tcgplayer", externalId: "685522" },
         { marketplace: "cardmarket", externalId: "98765" },
@@ -72,15 +76,15 @@ describe("card catalog scenarios", () => {
     store.seedSet(unleashed);
     const vi = card("vi", unleashed.code, {
       name: "Vi - Piltover Enforcer",
-      classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
+      classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
       domainIds: ["Fury", "Order"],
-      tagIds: ["vi"],
+      tagIds: [taxonomyId("vi")],
     });
     const spirit = card("spirit", unleashed.code, {
       name: "Bewitching Spirit",
-      classification: { typeId: "Unit", supertypeId: null, rarityId: "common" },
+      classification: { typeId: "Unit", supertypeId: null, rarityId: taxonomyId("common") },
       domainIds: ["Chaos"],
-      tagIds: ["spirit"],
+      tagIds: [taxonomyId("spirit")],
     });
     store.seedCard(vi);
     store.seedCard(spirit);
@@ -89,7 +93,7 @@ describe("card catalog scenarios", () => {
       listCards(
         {
           domainIds: ["Fury"],
-          rarityIds: ["rare"],
+          rarityIds: [taxonomyId("rare")],
           typeIds: ["Legend"],
           search: { type: "nameOrRulesText", text: "piltover" },
           limit: 10,
@@ -163,7 +167,7 @@ describe("card catalog scenarios", () => {
     const unleashed = cardSet("UNL", "2026-05-08T00:00:00");
     store.seedSet(unleashed);
     const spire = card("contested-spire", unleashed.code, {
-      classification: { typeId: "Battlefield", supertypeId: null, rarityId: "rare" },
+      classification: { typeId: "Battlefield", supertypeId: null, rarityId: taxonomyId("rare") },
       collectorNumber: "1",
       name: "Contested Spire",
       orientation: "landscape",
@@ -317,31 +321,47 @@ describe("card catalog scenarios", () => {
       name: "Akali, Deadly Weapon",
       championName: "Akali",
       domainIds: ["Fury"],
-      classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+      classification: {
+        typeId: "Unit",
+        supertypeId: taxonomyId("Champion"),
+        rarityId: taxonomyId("rare"),
+      },
     });
     const akaliCalm = card("akali-calm", origins.code, {
       name: "Akali, Silent",
       championName: "Akali",
       domainIds: ["Calm"],
-      classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+      classification: {
+        typeId: "Unit",
+        supertypeId: taxonomyId("Champion"),
+        rarityId: taxonomyId("rare"),
+      },
     });
     const akaliOffIdentity = card("akali-chaos", origins.code, {
       name: "Akali, Elsewhere",
       championName: "Akali",
       domainIds: ["Chaos"],
-      classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+      classification: {
+        typeId: "Unit",
+        supertypeId: taxonomyId("Champion"),
+        rarityId: taxonomyId("rare"),
+      },
     });
     const otherCharacter = card("sett", origins.code, {
       name: "Sett, Brawler",
       championName: "Sett",
       domainIds: ["Fury"],
-      classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+      classification: {
+        typeId: "Unit",
+        supertypeId: taxonomyId("Champion"),
+        rarityId: taxonomyId("rare"),
+      },
     });
     for (const each of [akaliFury, akaliCalm, akaliOffIdentity, otherCharacter])
       store.seedCard(each);
 
     const page = await store.cards.getPage({
-      supertypeIds: ["Champion"],
+      supertypeIds: [taxonomyId("Champion")],
       championNames: ["Akali"],
       withinDomainIds: ["Fury", "Calm"],
     });
@@ -366,7 +386,7 @@ describe("card catalog scenarios", () => {
     await expect(store.cards.count()).resolves.toBe(12);
     await expect(store.cards.count({ anyDomainIds: ["Calm"] })).resolves.toBe(6);
     await expect(store.cards.count({ limit: 3, offset: 0 })).resolves.toBe(12);
-    await expect(store.cards.count({ setCodes: ["NOPE"] })).resolves.toBe(0);
+    await expect(store.cards.count({ setCodes: [setCode("NOPE")] })).resolves.toBe(0);
     store.close();
   });
 

@@ -1,14 +1,14 @@
 import type { ResolvedDeckEntry } from "@/features/deck/deck/resolved-deck";
 import { deckAnalysis } from "@/features/deck/presentation/deck-analysis-format";
 
-import { card, carriedKeyword } from "../card/fixtures";
+import { card, carriedKeyword, taxonomyId } from "../card/fixtures";
 
 const legend = card("legend", "OGN", {
   name: "Volibear - Relentless Storm",
   speeds: ["reaction"],
   keywords: [carriedKeyword("vision", "Vision")],
   attributes: { energy: null, might: null, power: null },
-  classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
+  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
 });
 const cheap = card("cheap", "OGN", {
   name: "Cheap Unit",
@@ -19,12 +19,12 @@ const mid = card("mid", "OGN", {
   name: "Mid Spell",
   speeds: ["action"],
   attributes: { energy: 3, might: null, power: null },
-  classification: { typeId: "Spell", supertypeId: null, rarityId: "common" },
+  classification: { typeId: "Spell", supertypeId: null, rarityId: taxonomyId("common") },
 });
 const rune = card("rune", "OGN", {
   name: "Power Rune",
   attributes: { energy: 2, might: null, power: null },
-  classification: { typeId: "Rune", supertypeId: null, rarityId: "common" },
+  classification: { typeId: "Rune", supertypeId: null, rarityId: taxonomyId("common") },
 });
 const bench = card("bench", "OGN", {
   name: "Sideboard Giant",

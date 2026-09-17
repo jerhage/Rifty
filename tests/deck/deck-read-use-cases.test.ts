@@ -12,7 +12,7 @@ import { findDeck } from "@/features/deck/deck/use-cases/find-deck";
 import { findResolvedDeck } from "@/features/deck/deck/use-cases/find-resolved-deck";
 import { listDecks } from "@/features/deck/deck/use-cases/list-decks";
 
-import { card } from "../card/fixtures";
+import { card, taxonomyId } from "../card/fixtures";
 import { cardId, deck, deckId } from "./fixtures";
 
 const STORE_FAILURE = new Error("The store is unavailable.");
@@ -29,7 +29,11 @@ const spark = card("ogn-1", "OGN", { cardId: cardId("Ember Spark"), name: "Ember
 const legend = card("ogn-003", "OGN", {
   cardId: cardId("Ember Legend"),
   name: "Ember Legend",
-  classification: { typeId: "Legend", supertypeId: "Champion", rarityId: "rare" },
+  classification: {
+    typeId: "Legend",
+    supertypeId: taxonomyId("Champion"),
+    rarityId: taxonomyId("rare"),
+  },
 });
 
 function finderFor(found: Deck | null): DeckFinder {

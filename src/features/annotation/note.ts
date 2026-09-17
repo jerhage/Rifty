@@ -2,7 +2,7 @@ import { z } from "zod/v4";
 
 import { annotationSubjectSchema } from "./value-objects/annotation-subject";
 
-const noteIdSchema = z.string().trim().min(1);
+const noteIdSchema = z.string().trim().min(1).brand<"NoteId">();
 const noteTitleSchema = z.string().trim();
 const noteBodySchema = z.string().trim().min(1);
 

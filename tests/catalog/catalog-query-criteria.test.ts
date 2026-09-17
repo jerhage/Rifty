@@ -4,6 +4,8 @@ import {
   type CatalogQueryCriteria,
 } from "@/features/catalog/presentation/catalog-query-criteria";
 
+import { setCode } from "../card/fixtures";
+
 const NO_FACETS: CatalogQueryCriteria = { sort: { type: "name", direction: "ascending" } };
 
 describe("active filter count", () => {
@@ -20,7 +22,7 @@ describe("active filter count", () => {
       activeFilterCount({
         ...NO_FACETS,
         keywordIds: ["shield", "tank"],
-        setCodes: ["OGN"],
+        setCodes: [setCode("OGN")],
         energy: { type: "atLeast", value: 3 },
       }),
     ).toBe(4);
@@ -33,20 +35,22 @@ describe("active filter count", () => {
   });
 
   it("should count the bookmarked filter beside the sheet's other facets", () => {
-    expect(activeFilterCount({ ...NO_FACETS, onlyBookmarked: true, setCodes: ["OGN"] })).toBe(2);
+    expect(
+      activeFilterCount({ ...NO_FACETS, onlyBookmarked: true, setCodes: [setCode("OGN")] }),
+    ).toBe(2);
     expect(activeFilterCount({ ...NO_FACETS, onlyBookmarked: undefined })).toBe(0);
   });
 });
 
 describe("the bookmarked criterion", () => {
   it("should turn on and off again, leaving every other facet alone", () => {
-    const filtered = toggleOnlyBookmarked({ ...NO_FACETS, setCodes: ["OGN"] });
+    const filtered = toggleOnlyBookmarked({ ...NO_FACETS, setCodes: [setCode("OGN")] });
 
-    expect(filtered).toEqual({ ...NO_FACETS, onlyBookmarked: true, setCodes: ["OGN"] });
+    expect(filtered).toEqual({ ...NO_FACETS, onlyBookmarked: true, setCodes: [setCode("OGN")] });
     expect(toggleOnlyBookmarked(filtered)).toEqual({
       ...NO_FACETS,
       onlyBookmarked: undefined,
-      setCodes: ["OGN"],
+      setCodes: [setCode("OGN")],
     });
   });
 });

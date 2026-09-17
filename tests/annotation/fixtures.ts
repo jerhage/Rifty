@@ -5,7 +5,7 @@ import type { IdGenerator } from "@/application/ports/id-generator";
 import type { Bookmark } from "@/features/annotation/bookmark";
 import type { BookmarkListScope } from "@/features/annotation/bookmark-list-scope";
 import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
-import type { Note } from "@/features/annotation/note";
+import { noteIdSchema, type Note, type NoteId } from "@/features/annotation/note";
 import type { NoteListScope } from "@/features/annotation/note-list-scope";
 import type { NoteManager } from "@/features/annotation/note-manager";
 import {
@@ -24,6 +24,10 @@ const MARKED_AT = "2026-09-16T10:00:00.000Z";
 
 function subject(kind: AnnotationSubjectKind, id: string): AnnotationSubject {
   return annotationSubjectSchema.parse({ kind, id });
+}
+
+function noteId(value: string): NoteId {
+  return noteIdSchema.parse(value);
 }
 
 /** Hands out the given instants in order, repeating the last one once they run out. */
@@ -171,7 +175,14 @@ function writtenNote(
   body: string,
   writtenAt: string,
 ): Note {
-  return { id, subject: noteSubject, title: "", body, createdAt: writtenAt, updatedAt: writtenAt };
+  return {
+    id: noteId(id),
+    subject: noteSubject,
+    title: "",
+    body,
+    createdAt: writtenAt,
+    updatedAt: writtenAt,
+  };
 }
 
 interface SubjectStore {
@@ -213,6 +224,7 @@ export {
   createNoteStore,
   createSubjectStore,
   fixedClock,
+  noteId,
   sequentialIds,
   subject,
   writtenNote,

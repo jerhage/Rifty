@@ -4,7 +4,7 @@ import type { DeckBuildMode } from "@/features/deck/presentation/deck-build-mode
 import { NOT_PICKED, pickOf } from "@/features/deck/presentation/deck-build-steps";
 import { useDeckBuild } from "@/features/deck/presentation/hooks/use-deck-build";
 
-import { card } from "../card/fixtures";
+import { card, taxonomyId } from "../card/fixtures";
 import { createTestWrapper } from "../test-wrapper";
 
 import { cardId, deck, resolvedDeck } from "./fixtures";
@@ -12,22 +12,26 @@ import { cardId, deck, resolvedDeck } from "./fixtures";
 const legend = card("legend", "OGN", {
   name: "Volibear",
   domainIds: ["Fury"],
-  classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
+  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
 });
 const otherLegend = card("legend-two", "OGN", {
   name: "Lux",
   domainIds: ["Mind"],
-  classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
+  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
 });
 const champion = card("champion", "OGN", {
   name: "Yasuo",
-  classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+  classification: {
+    typeId: "Unit",
+    supertypeId: taxonomyId("Champion"),
+    rarityId: taxonomyId("rare"),
+  },
 });
 
 const savedLegend = card("ogn-003", "OGN", {
   name: "Ember Legend",
   cardId: cardId("Ember Legend"),
-  classification: { typeId: "Legend", supertypeId: null, rarityId: "rare" },
+  classification: { typeId: "Legend", supertypeId: null, rarityId: taxonomyId("rare") },
 });
 const savedMainCard = card("ogn-001", "OGN", { name: "Card 001", cardId: cardId("Card 001") });
 const savedRune = card("ogn-rune", "OGN", { name: "Fury Rune", cardId: cardId("Fury Rune") });
@@ -42,7 +46,11 @@ const savedSideboardCard = card("ogn-050", "OGN", {
 const unseatedChampion = card("ogn-hero", "OGN", {
   name: "Ember Hero",
   cardId: cardId("Ember Hero"),
-  classification: { typeId: "Unit", supertypeId: "Champion", rarityId: "rare" },
+  classification: {
+    typeId: "Unit",
+    supertypeId: taxonomyId("Champion"),
+    rarityId: taxonomyId("rare"),
+  },
 });
 
 const savedDeck = deck("deck-2", {

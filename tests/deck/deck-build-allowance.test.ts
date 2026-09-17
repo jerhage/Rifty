@@ -13,12 +13,12 @@ import {
   type DeckBuildDraft,
 } from "@/features/deck/presentation/deck-build-steps";
 
-import { card } from "../card/fixtures";
+import { card, taxonomyId } from "../card/fixtures";
 
 const CHAMPION_CLASSIFICATION = {
   typeId: "Unit",
-  supertypeId: "Champion",
-  rarityId: "rare",
+  supertypeId: taxonomyId("Champion"),
+  rarityId: taxonomyId("rare"),
 } as const;
 
 const survivor = card("survivor", "OGN", {

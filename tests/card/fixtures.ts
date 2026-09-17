@@ -1,7 +1,9 @@
 import type { Card, CardKeyword } from "@/features/card/card";
 import { cardIdSchema } from "@/features/card/value-objects/card-id";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
+import { taxonomyIdSchema, type TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
 import type { CardSet } from "@/features/set/card-set";
+import { setCodeSchema, type SetCode } from "@/features/set/value-objects/set-code";
 
 import { identityName } from "../../scripts/card-derivation";
 
@@ -21,9 +23,17 @@ function tokenKeyword(id: string, name: string, value: number | null = null): Ca
   return { id, name, value, targets: [{ kind: "unit", isToken: true, allegiance: "own" }] };
 }
 
+function setCode(value: string): SetCode {
+  return setCodeSchema.parse(value);
+}
+
+function taxonomyId(value: string): TaxonomyId {
+  return taxonomyIdSchema.parse(value);
+}
+
 function cardSet(code: string, publishedOn: string, name = code): CardSet {
   return {
-    code,
+    code: setCode(code),
     name,
     declaredCardCount: 100,
     publishedOn,
@@ -33,7 +43,7 @@ function cardSet(code: string, publishedOn: string, name = code): CardSet {
 
 function card(
   printingId: string,
-  setCode: string,
+  code: string,
   options: Partial<
     Pick<
       Card,
@@ -59,8 +69,8 @@ function card(
   return {
     printingId: printingIdSchema.parse(printingId),
     cardId: cardIdSchema.parse(options.cardId ?? identityName(name)),
-    riftboundId: `${setCode.toLowerCase()}-${printingId}-100`,
-    setCode,
+    riftboundId: `${code.toLowerCase()}-${printingId}-100`,
+    setCode: setCode(code),
     collectorNumber: options.collectorNumber ?? "1",
     name,
     cleanName: options.cleanName ?? `Card ${printingId}`,
@@ -76,18 +86,27 @@ function card(
     classification: options.classification ?? {
       typeId: "Unit",
       supertypeId: null,
-      rarityId: "common",
+      rarityId: taxonomyId("common"),
     },
     domainIds: options.domainIds ?? ["Chaos"],
     speeds: options.speeds ?? ["normal"],
     keywords: options.keywords ?? [],
     championName: options.championName ?? null,
     tagIds: options.tagIds ?? [],
-    imageUrl: `http://localhost:8787/${setCode.toLowerCase()}-${printingId}-100.webp`,
+    imageUrl: `http://localhost:8787/${code.toLowerCase()}-${printingId}-100.webp`,
     marketplaceReferences: options.marketplaceReferences ?? [
       { marketplace: "tcgplayer", externalId: `tcgplayer-${printingId}` },
     ],
   };
 }
 
-export { card, cardSet, carriedKeyword, controllerKeyword, grantedKeyword, tokenKeyword };
+export {
+  card,
+  cardSet,
+  carriedKeyword,
+  controllerKeyword,
+  grantedKeyword,
+  setCode,
+  taxonomyId,
+  tokenKeyword,
+};

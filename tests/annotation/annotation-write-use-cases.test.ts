@@ -10,7 +10,7 @@ import { findBookmark } from "@/features/annotation/use-cases/find-bookmark";
 import { toggleBookmark } from "@/features/annotation/use-cases/toggle-bookmark";
 import { writeNote } from "@/features/annotation/use-cases/write-note";
 
-import { fixedClock, sequentialIds, subject } from "./fixtures";
+import { fixedClock, noteId, sequentialIds, subject } from "./fixtures";
 
 const RULE = subject("coreRule", "103.2");
 const STORE_FAILURE = new Error("The store is unavailable.");
@@ -48,7 +48,7 @@ describe("annotation write use cases", () => {
   it("should report a note that is no longer there rather than creating one under its id", async () => {
     await expect(
       writeNote(
-        { id: "note-9", subject: RULE, title: "", body: "Kept." },
+        { id: noteId("note-9"), subject: RULE, title: "", body: "Kept." },
         { clock, idGenerator, noteFinder: missingFinder, noteSaver: failingSaver },
       ),
     ).resolves.toEqual({ type: "notFound" });
@@ -113,7 +113,7 @@ describe("annotation write use cases", () => {
   it("should treat deleting a note that is already gone as a success", async () => {
     const remover: NoteRemover = { remove: () => Promise.resolve() };
 
-    await expect(deleteNote("note-9", { noteRemover: remover })).resolves.toEqual({
+    await expect(deleteNote(noteId("note-9"), { noteRemover: remover })).resolves.toEqual({
       type: "success",
     });
   });

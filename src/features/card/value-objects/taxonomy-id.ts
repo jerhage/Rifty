@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-const taxonomyIdSchema = z.string().trim().min(1);
+const taxonomyIdSchema = z.string().trim().min(1).brand<"TaxonomyId">();
 
 type TaxonomyId = z.output<typeof taxonomyIdSchema>;
 

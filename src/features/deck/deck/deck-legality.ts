@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 import type { CardId } from "@/features/card/value-objects/card-id";
 import type { CardType } from "@/features/card/value-objects/card-type";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
-import type { TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
+import { taxonomyIdSchema, type TaxonomyId } from "@/features/card/value-objects/taxonomy-id";
 
 import {
   parseDeckVerification,
@@ -118,7 +118,7 @@ const SHARED_COPY_SECTIONS: readonly DeckSection[] = ["mainDeck", "sideboard"];
  */
 const CHAMPION_UNIT: { readonly typeId: CardType; readonly supertypeId: TaxonomyId } = {
   typeId: "Unit",
-  supertypeId: "Champion",
+  supertypeId: taxonomyIdSchema.parse("Champion"),
 };
 
 function isChampionUnit(champion: ChosenChampion): boolean {

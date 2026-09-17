@@ -6,6 +6,7 @@ import { renameDeck } from "@/features/deck/deck/use-cases/rename-deck";
 import { saveDeck } from "@/features/deck/deck/use-cases/save-deck";
 import { setDeckCardQuantity } from "@/features/deck/deck/use-cases/set-deck-card-quantity";
 
+import { taxonomyId } from "../card/fixtures";
 import type { SqliteScenarioStore } from "../sqlite-scenario-store";
 import {
   cardId,
@@ -430,7 +431,7 @@ describe("deck editing scenarios", () => {
         chosenChampion: {
           cardId: cardId("Ember Hero"),
           typeId: "Unit",
-          supertypeId: "Champion",
+          supertypeId: taxonomyId("Champion"),
         },
         entries: [
           {
@@ -494,7 +495,7 @@ describe("deck editing scenarios", () => {
           chosenChampion: {
             cardId: cardId("Ember Legend"),
             typeId: "Legend",
-            supertypeId: "Champion",
+            supertypeId: taxonomyId("Champion"),
           },
           entries: [
             {

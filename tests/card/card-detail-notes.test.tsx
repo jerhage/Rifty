@@ -15,6 +15,7 @@ import { card, cardSet } from "./fixtures";
 import {
   createNoteStore,
   fixedClock,
+  noteId,
   sequentialIds,
   subject,
   type NoteStore,
@@ -28,7 +29,7 @@ const VI = card("vi", UNLEASHED.code, { name: "Vi - Piltover Enforcer" });
 
 function cardNote(id: string, body: string): Note {
   return {
-    id,
+    id: noteId(id),
     subject: { kind: "card", id: VI.printingId },
     title: "",
     body,
@@ -175,7 +176,7 @@ describe("the notes on a card", () => {
   it("should read only the notes on this card, leaving a rule's and the scratchpad's alone", async () => {
     const store = createNoteStore([
       {
-        id: "rule-note",
+        id: noteId("rule-note"),
         subject: subject("coreRule", "501.1"),
         title: "",
         body: "Chip damage is dealt.",
@@ -183,7 +184,7 @@ describe("the notes on a card", () => {
         updatedAt: WRITTEN_AT,
       },
       {
-        id: "loose-note",
+        id: noteId("loose-note"),
         subject: null,
         title: "",
         body: "Round three went long.",

@@ -3,11 +3,13 @@ import { match } from "ts-pattern";
 import type { ChosenChampion, DeckComposition, DeckLegalityRule } from "@/features/deck/deck/deck";
 import { RIFTBOUND_STANDARD, verifyDeck } from "@/features/deck/deck/deck-legality";
 
+import { taxonomyId } from "../card/fixtures";
+
 import { cardId, deck, printingId, type DeckEntryInput } from "./fixtures";
 
 const CHAMPION = "ogn-champion";
-const CHAMPION_UNIT_KIND = { typeId: "Unit", supertypeId: "Champion" } as const;
-const LEGEND_KIND = { typeId: "Legend", supertypeId: "Champion" } as const;
+const CHAMPION_UNIT_KIND = { typeId: "Unit", supertypeId: taxonomyId("Champion") } as const;
+const LEGEND_KIND = { typeId: "Legend", supertypeId: taxonomyId("Champion") } as const;
 
 function champion(
   name: string,

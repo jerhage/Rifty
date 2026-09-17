@@ -14,6 +14,7 @@ import {
   createBookmarkStore,
   createNoteStore,
   fixedClock,
+  noteId,
   subject,
   type BookmarkStore,
   type NoteStore,
@@ -54,7 +55,7 @@ const DOCUMENT = coreRuleDocument([
 
 function noteOn(number: string, id: string, body: string): Note {
   return {
-    id,
+    id: noteId(id),
     subject: subject("coreRule", number),
     title: "",
     body,
@@ -191,7 +192,7 @@ describe("the notes control on a rule row", () => {
   it("should print the count on a rule that carries notes and print none on one that does not", async () => {
     const noteStore = createNoteStore([
       {
-        id: "note-0",
+        id: noteId("note-0"),
         subject: subject("coreRule", "501.1"),
         title: "",
         body: "Came up in round three.",
@@ -210,7 +211,7 @@ describe("the notes control on a rule row", () => {
   it("should leave the row's left bar alone whether or not the rule is noted", async () => {
     const noteStore = createNoteStore([
       {
-        id: "note-0",
+        id: noteId("note-0"),
         subject: subject("coreRule", "501.1"),
         title: "",
         body: "Came up in round three.",
@@ -431,7 +432,7 @@ describe("the saved surface as the union of both acts", () => {
   function notedStore(...numbers: readonly string[]): NoteStore {
     return createNoteStore(
       numbers.map((number, at) => ({
-        id: `note-${at}`,
+        id: noteId(`note-${at}`),
         subject: subject("coreRule", number),
         title: "",
         body: `Written on ${number}.`,

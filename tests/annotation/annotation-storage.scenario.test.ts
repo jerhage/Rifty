@@ -5,7 +5,7 @@ import { writeNote } from "@/features/annotation/use-cases/write-note";
 import { parseDeck } from "@/features/deck/deck/deck";
 
 import { createSqliteScenarioStore, type SqliteScenarioStore } from "../sqlite-scenario-store";
-import { fixedClock, sequentialIds, subject } from "./fixtures";
+import { fixedClock, noteId, sequentialIds, subject } from "./fixtures";
 
 const RULE = subject("coreRule", "103.2");
 const CARD = subject("card", "Ember Adept");
@@ -280,7 +280,7 @@ describe("annotation storage scenarios", () => {
 
     await expect(
       writeNote(
-        { id: "note-1", subject: CARD, title: "Play", body: "Lead with it." },
+        { id: noteId("note-1"), subject: CARD, title: "Play", body: "Lead with it." },
         capabilities,
       ),
     ).resolves.toEqual({

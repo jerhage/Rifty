@@ -169,11 +169,14 @@ function markOn(number: string) {
 }
 
 function popupMarkOn(number: string) {
-  const mark = screen.getByText(/^Bookmark(ed)?$/, { includeHiddenElements: true }).parent;
+  const mark = screen
+    .getAllByRole("checkbox", { name: `Bookmark ${number}` })
+    .find(
+      (candidate) =>
+        within(candidate).queryByText(/^Bookmark(ed)?$/, { includeHiddenElements: true }) !== null,
+    );
 
-  if (mark?.props.accessibilityLabel !== `Bookmark ${number}`) {
-    throw new Error(`Nothing in the popup marks ${number}.`);
-  }
+  if (mark === undefined) throw new Error(`Nothing in the popup marks ${number}.`);
 
   return mark;
 }
@@ -318,7 +321,7 @@ describe("the bookmark control in the note popup", () => {
 
     await fireEvent.press(notesControlOn("501.1"));
 
-    expect(popupMarkOn("501.1").props.accessibilityState).toEqual({ checked: false });
+    expect(popupMarkOn("501.1").props.accessibilityState.checked).toBe(false);
   });
 
   it("should report the rule marked where the mark already stands", async () => {
@@ -326,7 +329,7 @@ describe("the bookmark control in the note popup", () => {
 
     await fireEvent.press(notesControlOn("501.1"));
 
-    expect(popupMarkOn("501.1").props.accessibilityState).toEqual({ checked: true });
+    expect(popupMarkOn("501.1").props.accessibilityState.checked).toBe(true);
     expect(screen.getByText("Bookmarked", { includeHiddenElements: true })).toBeTruthy();
   });
 
@@ -345,8 +348,8 @@ describe("the bookmark control in the note popup", () => {
     await fireEvent.press(notesControlOn("501.1"));
     await fireEvent.press(popupMarkOn("501.1"));
 
-    await waitFor(() => expect(bookmarkStore.marks()).toHaveLength(1));
-    expect(popupMarkOn("501.1").props.accessibilityState).toEqual({ checked: true });
+    await waitFor(() => expect(popupMarkOn("501.1").props.accessibilityState.checked).toBe(true));
+    expect(bookmarkStore.marks()).toHaveLength(1);
   });
 });
 

@@ -93,8 +93,8 @@ function coreRuleKeepingLabel(keeping: CoreRuleKeeping): string {
 }
 
 /** Heads the popup a rule's notes are written in, named so the rule it is about is never in doubt. */
-function coreRuleNotesTitle(number: CoreRuleNumber): string {
-  return `Notes on ${number}`;
+function coreRuleNotesTitle(number: CoreRuleNumber, count: number): string {
+  return `Notes on ${number} · ${count} ${count === 1 ? "note" : "notes"}`;
 }
 
 /** Giving up a mark from the surface, named so a column of removals does not read alike. */

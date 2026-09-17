@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { NoteManager } from "@/features/annotation/note-manager";
 import { BookmarkToggle } from "@/features/annotation/presentation/components/bookmark-toggle";
 import { NotesControl } from "@/features/annotation/presentation/components/notes-control";
+import { SubjectNotePanel } from "@/features/annotation/presentation/components/subject-note-panel";
 import { SubjectNotes } from "@/features/annotation/presentation/components/subject-notes";
 import type { BookmarkedSubjects } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
 import type { SubjectNoteCounts } from "@/features/annotation/presentation/data/subject-note-counts-data";
@@ -91,7 +92,7 @@ function coreRuleAnnotations(
   return {
     bookmarkedCount: bookmarked.bookmarkedCount,
     isBookmarked: bookmarked.isBookmarked,
-    isNoted: (number: CoreRuleNumber): boolean => noted.noteCountOf(number) > 0,
+    noteCountOf: noted.noteCountOf,
     bookmarkFor: (number: CoreRuleNumber): ReactNode => (
       <BookmarkToggle
         alignment="start"
@@ -100,13 +101,21 @@ function coreRuleAnnotations(
         onPress={() => bookmarked.toggleBookmark(number)}
       />
     ),
-    captionedBookmarkFor: (number: CoreRuleNumber): ReactNode => (
-      <BookmarkToggle
-        alignment="start"
-        bookmarked={bookmarked.isBookmarked(number)}
-        captioned
-        label={coreRuleBookmarkLabel(number)}
-        onPress={() => bookmarked.toggleBookmark(number)}
+    notePanelFor: (number: CoreRuleNumber): ReactNode => (
+      <SubjectNotePanel
+        bookmarkControl={
+          <BookmarkToggle
+            bookmarked={bookmarked.isBookmarked(number)}
+            captioned
+            label={coreRuleBookmarkLabel(number)}
+            onPress={() => bookmarked.toggleBookmark(number)}
+          />
+        }
+        clock={clock}
+        idGenerator={idGenerator}
+        noteManager={noteManager}
+        notesName={number}
+        subject={{ kind: "coreRule", id: number }}
       />
     ),
     notesControlFor: (number: CoreRuleNumber, onOpen: () => void): ReactNode => (

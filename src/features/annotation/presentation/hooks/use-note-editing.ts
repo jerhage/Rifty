@@ -6,7 +6,7 @@ import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
 import type { NoteId } from "@/features/annotation/note";
 import type { NoteManager } from "@/features/annotation/note-manager";
-import type { WriteNote } from "@/features/annotation/presentation/components/note-list";
+import type { WriteNote } from "@/features/annotation/presentation/components/note-card";
 import {
   NOTE_BLANK_MESSAGE,
   NOTE_FAILED_MESSAGE,

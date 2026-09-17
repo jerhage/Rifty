@@ -33,13 +33,13 @@ import { CoreRulesSheet } from "../components/sheet/core-rules-sheet";
 interface CoreRulesScreenProps {
   readonly bookmarkedCount: number;
   readonly bookmarkFor: (number: CoreRuleNumber) => ReactNode;
-  readonly captionedBookmarkFor: (number: CoreRuleNumber) => ReactNode;
   readonly coreRules: readonly CoreRule[];
   readonly edition: CoreRulesEdition;
   /** Asked of every rule the document holds, whether or not a query has filtered it out of view. */
   readonly isBookmarked: (number: CoreRuleNumber) => boolean;
   /** The same reach as `isBookmarked`, and independent of it: neither act implies the other. */
-  readonly isNoted: (number: CoreRuleNumber) => boolean;
+  readonly noteCountOf: (number: CoreRuleNumber) => number;
+  readonly notePanelFor: (number: CoreRuleNumber) => ReactNode;
   readonly notesControlFor: (number: CoreRuleNumber, onOpen: () => void) => ReactNode;
   readonly notesFor: (number: CoreRuleNumber) => ReactNode;
   readonly onRemoveBookmark: (number: CoreRuleNumber) => void;
@@ -48,11 +48,11 @@ interface CoreRulesScreenProps {
 function CoreRulesScreen({
   bookmarkedCount,
   bookmarkFor,
-  captionedBookmarkFor,
   coreRules,
   edition,
   isBookmarked,
-  isNoted,
+  noteCountOf,
+  notePanelFor,
   notesControlFor,
   notesFor,
   onRemoveBookmark,
@@ -83,6 +83,7 @@ function CoreRulesScreen({
     setSelectedNumber((current) => (current === number ? null : number));
   }, []);
 
+  const isNoted = useCallback((number: CoreRuleNumber) => noteCountOf(number) > 0, [noteCountOf]);
   const openNotes = useCallback((coreRule: CoreRule) => setNotedCoreRule(coreRule), []);
   const closeNotes = useCallback(() => setNotedCoreRule(null), []);
   const showContents = useCallback(() => setSheetState("contents"), []);
@@ -175,10 +176,10 @@ function CoreRulesScreen({
         />
       )}
       <CoreRuleNotePopup
-        bookmarkControl={notedCoreRule === null ? null : captionedBookmarkFor(notedCoreRule.number)}
         coreRule={notedCoreRule}
         coreRules={coreRules}
-        notes={notedCoreRule === null ? null : notesFor(notedCoreRule.number)}
+        noteCountOf={noteCountOf}
+        notes={notedCoreRule === null ? null : notePanelFor(notedCoreRule.number)}
         onDismiss={closeNotes}
       />
     </ThemedView>

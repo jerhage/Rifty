@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/theme";
 import type { Bookmark } from "@/features/annotation/bookmark";
+import type { Note } from "@/features/annotation/note";
 import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
 import { SubjectNoteCountsData } from "@/features/annotation/presentation/data/subject-note-counts-data";
@@ -46,6 +47,17 @@ const DOCUMENT = coreRuleDocument([
   { number: "501.1", body: "Chip damage is dealt." },
   { number: "501.2", body: "Runes pay for costs." },
 ]);
+
+function noteOn(number: string, id: string, body: string): Note {
+  return {
+    id,
+    subject: subject("coreRule", number),
+    title: "",
+    body,
+    createdAt: WRITTEN_AT,
+    updatedAt: WRITTEN_AT,
+  };
+}
 
 function sameSubject(one: AnnotationSubject, other: AnnotationSubject): boolean {
   return one.kind === other.kind && one.id === other.id;
@@ -185,6 +197,19 @@ function rowBar(number: string) {
   return StyleSheet.flatten(screen.getByText(number).parent?.props.style).borderLeftColor;
 }
 
+async function openNotes(number: string) {
+  await fireEvent.press(notesControlOn(number));
+  await screen.findByRole("button", { name: `Add a note to ${number}` });
+}
+
+function popupRowOn(number: string) {
+  const addBar = screen.getByRole("button", { name: `Add a note to ${number}` });
+
+  if (addBar.parent === null) throw new Error(`The add bar on ${number} stands in nothing.`);
+
+  return addBar.parent;
+}
+
 async function addNote(number: string, body: string) {
   await activate(`Add a note to ${number}`);
   await fireEvent.changeText(screen.getByLabelText(`New note on ${number}`), body);
@@ -250,22 +275,21 @@ describe("the note popup on a phone", () => {
 
     expect(screen.queryByRole("header", { name: "Notes on 501.1" })).toBeNull();
 
-    await fireEvent.press(notesControlOn("501.1"));
+    await openNotes("501.1");
 
-    expect(screen.getByRole("header", { name: "Notes on 501.1" })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Notes on 501.1 · 0 notes" })).toBeTruthy();
     expect(screen.getAllByText("Turn Structure")).toHaveLength(2);
     expect(screen.getAllByText("Chip damage is dealt.")).toHaveLength(2);
 
     await activate("Done");
 
-    expect(screen.queryByRole("header", { name: "Notes on 501.1" })).toBeNull();
+    expect(screen.queryByRole("header", { name: "Notes on 501.1 · 0 notes" })).toBeNull();
   });
 
   it("should write a note on a rule nothing has bookmarked", async () => {
     const { bookmarkStore, noteStore } = await renderRules(PHONE);
 
-    await fireEvent.press(notesControlOn("501.1"));
-    await screen.findByRole("button", { name: "Add a note to 501.1" });
+    await openNotes("501.1");
     await addNote("501.1", "Ask a judge about this.");
 
     await waitFor(() =>
@@ -276,11 +300,62 @@ describe("the note popup on a phone", () => {
     expect(bookmarkStore.marks()).toEqual([]);
   });
 
+  it("should say how many notes the rule already carries, singular and plural", async () => {
+    const noteStore = createNoteStore([
+      noteOn("501.1", "note-0", "Came up in round three."),
+      noteOn("501.2", "note-1", "Runes are paid first."),
+      noteOn("501.2", "note-2", "Then the cost."),
+    ]);
+    await renderRules(PHONE, createBookmarkStore(), noteStore);
+
+    await openNotes("501.1");
+
+    expect(screen.getByRole("header", { name: "Notes on 501.1 · 1 note" })).toBeTruthy();
+
+    await activate("Done");
+    await openNotes("501.2");
+
+    expect(screen.getByRole("header", { name: "Notes on 501.2 · 2 notes" })).toBeTruthy();
+  });
+
+  it("should stand the add bar beside the mark in the row above the notes", async () => {
+    await renderRules(PHONE);
+
+    await openNotes("501.1");
+
+    expect(within(popupRowOn("501.1")).getByRole("checkbox", { name: "Bookmark 501.1" })).toBe(
+      popupMarkOn("501.1"),
+    );
+  });
+
+  it("should draw the note cards under the divider and no count line above them", async () => {
+    const noteStore = createNoteStore([noteOn("501.1", "note-0", "Came up in round three.")]);
+    await renderRules(PHONE, createBookmarkStore(), noteStore);
+
+    await openNotes("501.1");
+
+    expect(screen.getByLabelText("Note 1 on 501.1")).toBeTruthy();
+    expect(screen.queryByLabelText("1 note on 501.1")).toBeNull();
+  });
+
+  it("should store a note written in the panel against the rule the popup is about", async () => {
+    const { noteStore } = await renderRules(PHONE);
+
+    await openNotes("501.1");
+    await addNote("501.1", "Ask a judge about this.");
+
+    await waitFor(() =>
+      expect(screen.getByRole("header", { name: "Notes on 501.1 · 1 note" })).toBeTruthy(),
+    );
+    expect(noteStore.notes().map((note) => [note.subject?.id, note.body])).toEqual([
+      ["501.1", "Ask a judge about this."],
+    ]);
+  });
+
   it("should follow the count on the row once a note is written", async () => {
     await renderRules(PHONE);
 
-    await fireEvent.press(notesControlOn("501.1"));
-    await screen.findByRole("button", { name: "Add a note to 501.1" });
+    await openNotes("501.1");
     await addNote("501.1", "Ask a judge about this.");
 
     await waitFor(() =>
@@ -294,24 +369,24 @@ describe("the note popup on a tablet", () => {
   it("should open from the row it stands on and give itself up again", async () => {
     await renderRules(TABLET);
 
-    expect(screen.queryByRole("header", { name: "Notes on 501.1" })).toBeNull();
+    expect(screen.queryByRole("header", { name: /^Notes on 501\.1/ })).toBeNull();
 
-    await fireEvent.press(notesControlOn("501.1"));
+    await openNotes("501.1");
 
-    expect(screen.getByRole("header", { name: "Notes on 501.1" })).toBeTruthy();
+    expect(screen.getByRole("header", { name: "Notes on 501.1 · 0 notes" })).toBeTruthy();
 
     await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
-    expect(screen.queryByRole("header", { name: "Notes on 501.1" })).toBeNull();
+    expect(screen.queryByRole("header", { name: /^Notes on 501\.1/ })).toBeNull();
   });
 
   it("should close on the scrim as well, so the popup is never a gesture to escape", async () => {
     await renderRules(TABLET);
 
-    await fireEvent.press(notesControlOn("501.1"));
+    await openNotes("501.1");
     await fireEvent.press(screen.getByRole("button", { name: "Close the notes" }));
 
-    expect(screen.queryByRole("header", { name: "Notes on 501.1" })).toBeNull();
+    expect(screen.queryByRole("header", { name: /^Notes on 501\.1/ })).toBeNull();
   });
 });
 
@@ -319,7 +394,7 @@ describe("the bookmark control in the note popup", () => {
   it("should stand beside the rule it is written about and report it unmarked", async () => {
     await renderRules(PHONE);
 
-    await fireEvent.press(notesControlOn("501.1"));
+    await openNotes("501.1");
 
     expect(popupMarkOn("501.1").props.accessibilityState.checked).toBe(false);
   });
@@ -327,7 +402,7 @@ describe("the bookmark control in the note popup", () => {
   it("should report the rule marked where the mark already stands", async () => {
     await renderRules(PHONE, createBookmarkStore(["501.1"]));
 
-    await fireEvent.press(notesControlOn("501.1"));
+    await openNotes("501.1");
 
     expect(popupMarkOn("501.1").props.accessibilityState.checked).toBe(true);
     expect(screen.getByText("Bookmarked", { includeHiddenElements: true })).toBeTruthy();
@@ -336,7 +411,7 @@ describe("the bookmark control in the note popup", () => {
   it("should keep the caption from being read after the name it repeats", async () => {
     await renderRules(PHONE);
 
-    await fireEvent.press(notesControlOn("501.1"));
+    await openNotes("501.1");
 
     expect(popupMarkOn("501.1")).toBeTruthy();
     expect(screen.queryByText("Bookmark")).toBeNull();
@@ -345,7 +420,7 @@ describe("the bookmark control in the note popup", () => {
   it("should mark the rule from inside the popup, and follow the mark it made", async () => {
     const { bookmarkStore } = await renderRules(TABLET);
 
-    await fireEvent.press(notesControlOn("501.1"));
+    await openNotes("501.1");
     await fireEvent.press(popupMarkOn("501.1"));
 
     await waitFor(() => expect(popupMarkOn("501.1").props.accessibilityState.checked).toBe(true));
@@ -367,8 +442,7 @@ describe("marking and noting as two acts", () => {
   it("should mark nothing when a rule is noted", async () => {
     const { bookmarkStore } = await renderRules(PHONE);
 
-    await fireEvent.press(notesControlOn("501.1"));
-    await screen.findByRole("button", { name: "Add a note to 501.1" });
+    await openNotes("501.1");
     await addNote("501.1", "Ask a judge about this.");
     await activate("Done");
 

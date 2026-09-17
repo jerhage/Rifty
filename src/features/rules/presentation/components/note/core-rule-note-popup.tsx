@@ -1,13 +1,5 @@
 import { useMemo, type ReactNode } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
+import { Modal, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { match } from "ts-pattern";
 
 import { BottomSheetShell } from "@/components/ui/atoms/bottom-sheet-shell";
@@ -20,6 +12,7 @@ import {
   coreRuleSavedContextLabel,
 } from "@/features/rules/presentation/core-rules-format";
 import { nearestCoreRuleHeading } from "@/features/rules/presentation/core-rules-saved";
+import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 import { useLayoutSize } from "@/hooks/use-layout-size";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -32,10 +25,10 @@ const CLOSE_LABEL = "Done";
 const DISMISS_LABEL = "Close the notes";
 
 interface CoreRuleNotePopupProps {
-  readonly bookmarkControl: ReactNode;
   /** The rule whose notes are open, and `null` while none is. */
   readonly coreRule: CoreRule | null;
   readonly coreRules: readonly CoreRule[];
+  readonly noteCountOf: (number: CoreRuleNumber) => number;
   readonly notes: ReactNode;
   readonly onDismiss: () => void;
 }
@@ -45,9 +38,9 @@ interface CoreRuleNotePopupProps {
  * gated on the rule being marked: the two acts are stored apart and offered apart.
  */
 function CoreRuleNotePopup({
-  bookmarkControl,
   coreRule,
   coreRules,
+  noteCountOf,
   notes,
   onDismiss,
 }: CoreRuleNotePopupProps) {
@@ -65,9 +58,9 @@ function CoreRuleNotePopup({
           <View />
         ) : (
           <CoreRuleNoteFace
-            bookmarkControl={bookmarkControl}
             coreRule={coreRule}
             coreRules={coreRules}
+            noteCountOf={noteCountOf}
             notes={notes}
             onDismiss={onDismiss}
             ruleLines={CLAMPED_RULE_LINES}
@@ -86,9 +79,9 @@ function CoreRuleNotePopup({
         {coreRule === null ? null : (
           <CenteredPopup onDismiss={onDismiss}>
             <CoreRuleNoteFace
-              bookmarkControl={bookmarkControl}
               coreRule={coreRule}
               coreRules={coreRules}
+              noteCountOf={noteCountOf}
               notes={notes}
               onDismiss={onDismiss}
               ruleLines={undefined}
@@ -132,17 +125,17 @@ function CenteredPopup({
 }
 
 function CoreRuleNoteFace({
-  bookmarkControl,
   coreRule,
   coreRules,
+  noteCountOf,
   notes,
   onDismiss,
   ruleLines,
   style,
 }: {
-  readonly bookmarkControl: ReactNode;
   readonly coreRule: CoreRule;
   readonly coreRules: readonly CoreRule[];
+  readonly noteCountOf: (number: CoreRuleNumber) => number;
   readonly notes: ReactNode;
   readonly onDismiss: () => void;
   readonly ruleLines: number | undefined;
@@ -157,7 +150,7 @@ function CoreRuleNoteFace({
 
   return (
     <View style={style}>
-      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+      <View style={styles.header}>
         <View style={styles.head}>
           <ThemedText
             accessibilityRole="header"
@@ -165,7 +158,7 @@ function CoreRuleNoteFace({
             themeColor="highlight"
             type="mono"
           >
-            {coreRuleNotesTitle(coreRule.number)}
+            {coreRuleNotesTitle(coreRule.number, noteCountOf(coreRule.number))}
           </ThemedText>
           <Pressable
             accessibilityLabel={CLOSE_LABEL}
@@ -187,11 +180,8 @@ function CoreRuleNoteFace({
         <ThemedText numberOfLines={ruleLines} themeColor="textSecondary" type="body">
           {coreRule.body}
         </ThemedText>
-        <View style={styles.mark}>{bookmarkControl}</View>
       </View>
-      <ScrollView contentContainerStyle={styles.body} style={styles.scroll}>
-        {notes}
-      </ScrollView>
+      <View style={styles.notes}>{notes}</View>
     </View>
   );
 }
@@ -232,9 +222,8 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   header: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
     gap: Spacing.one,
-    paddingBottom: Spacing.two + 2,
+    paddingBottom: Spacing.two + 3,
     paddingHorizontal: Spacing.three + 2,
     paddingTop: Spacing.three - 4,
   },
@@ -256,19 +245,10 @@ const styles = StyleSheet.create({
     minHeight: CLOSE_HEIGHT,
     paddingHorizontal: Spacing.three - 4,
   },
-  mark: {
-    alignItems: "flex-start",
-    paddingTop: Spacing.one,
-  },
-  scroll: {
+  notes: {
     flexGrow: 1,
     flexShrink: 1,
     minHeight: 0,
-  },
-  body: {
-    paddingBottom: Spacing.four + 2,
-    paddingHorizontal: Spacing.three + 2,
-    paddingTop: Spacing.two,
   },
   pressed: {
     opacity: 0.7,

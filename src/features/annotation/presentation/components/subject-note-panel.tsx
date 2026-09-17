@@ -1,5 +1,6 @@
-import { useCallback, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
@@ -13,6 +14,7 @@ import {
   type WriteNote,
 } from "@/features/annotation/presentation/components/note-card";
 import { NotesData } from "@/features/annotation/presentation/data/notes-data";
+import { useNoteDrafting } from "@/features/annotation/presentation/hooks/use-note-drafting";
 import {
   NOTES_EMPTY_MESSAGE,
   NOTE_PLACEHOLDER,
@@ -85,44 +87,41 @@ function WrittenNotePanel({
   readonly subject: AnnotationSubject;
 }) {
   const theme = useTheme();
-  const [draftBody, setDraftBody] = useState<string | null>(null);
-
-  const commitDraft = useCallback(() => {
-    if (draftBody !== null) onWriteNote(subject, null, draftBody);
-
-    setDraftBody(null);
-  }, [draftBody, onWriteNote, subject]);
+  const { beginDraft, changeDraftBody, discardDraft, draft, saveDraft } =
+    useNoteDrafting(onWriteNote);
 
   return (
     <View style={styles.panel}>
       <View style={[styles.row, { borderBottomColor: theme.border }]}>
-        <Pressable
-          accessibilityLabel={
-            draftBody === null ? noteAddLabel(notesName) : noteSaveLabel(notesName)
-          }
-          accessibilityRole="button"
-          onPress={draftBody === null ? () => setDraftBody("") : commitDraft}
-          style={({ pressed }) => [
-            styles.add,
-            {
-              backgroundColor: addBarWash(theme, "surface"),
-              borderColor: addBarWash(theme, "edge"),
-            },
-            pressed && styles.pressed,
-          ]}
-        >
-          <ThemedText themeColor="highlight" type="mono">
-            {draftBody === null ? ADD_LABEL : SAVE_LABEL}
-          </ThemedText>
-        </Pressable>
+        {match(draft)
+          .with({ type: "idle" }, () => (
+            <NoteDraftBar
+              caption={ADD_LABEL}
+              label={noteAddLabel(notesName)}
+              onPress={beginDraft}
+            />
+          ))
+          .with({ type: "composing" }, ({ body }) => (
+            <NoteDraftBar
+              caption={SAVE_LABEL}
+              label={noteSaveLabel(notesName)}
+              onPress={() => saveDraft(subject, body)}
+            />
+          ))
+          .exhaustive()}
         {bookmarkControl}
       </View>
       <ScrollView contentContainerStyle={styles.cards} style={styles.scroll}>
-        {notes.length === 0 && draftBody === null ? (
-          <ThemedText themeColor="textSecondary" type="body">
-            {NOTES_EMPTY_MESSAGE}
-          </ThemedText>
-        ) : null}
+        {notes.length === 0
+          ? match(draft)
+              .with({ type: "idle" }, () => (
+                <ThemedText themeColor="textSecondary" type="body">
+                  {NOTES_EMPTY_MESSAGE}
+                </ThemedText>
+              ))
+              .with({ type: "composing" }, () => null)
+              .exhaustive()
+          : null}
         {notes.map((note, at) => (
           <WrittenNote
             fieldHeight={PANEL_FIELD_HEIGHT}
@@ -136,18 +135,53 @@ function WrittenNotePanel({
             writing={{ type: "offered", subject }}
           />
         ))}
-        {draftBody === null ? null : (
-          <DraftNote
-            body={draftBody}
-            fieldHeight={PANEL_FIELD_HEIGHT}
-            notesName={notesName}
-            onChangeBody={setDraftBody}
-            onDiscard={() => setDraftBody(null)}
-            placeholder={NOTE_PLACEHOLDER}
-          />
-        )}
+        {match(draft)
+          .with({ type: "idle" }, () => null)
+          .with({ type: "composing" }, ({ body }) => (
+            <DraftNote
+              body={body}
+              fieldHeight={PANEL_FIELD_HEIGHT}
+              notesName={notesName}
+              onChangeBody={changeDraftBody}
+              onDiscard={discardDraft}
+              placeholder={NOTE_PLACEHOLDER}
+            />
+          ))
+          .exhaustive()}
       </ScrollView>
     </View>
+  );
+}
+
+function NoteDraftBar({
+  caption,
+  label,
+  onPress,
+}: {
+  readonly caption: string;
+  readonly label: string;
+  readonly onPress: () => void;
+}) {
+  const theme = useTheme();
+
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.add,
+        {
+          backgroundColor: addBarWash(theme, "surface"),
+          borderColor: addBarWash(theme, "edge"),
+        },
+        pressed && styles.pressed,
+      ]}
+    >
+      <ThemedText themeColor="highlight" type="mono">
+        {caption}
+      </ThemedText>
+    </Pressable>
   );
 }
 

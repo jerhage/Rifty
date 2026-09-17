@@ -1,4 +1,3 @@
-import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { match } from "ts-pattern";
 
@@ -10,6 +9,7 @@ import {
   WrittenNote,
   type WriteNote,
 } from "@/features/annotation/presentation/components/note-card";
+import { useNoteDrafting } from "@/features/annotation/presentation/hooks/use-note-drafting";
 import {
   noteAddLabel,
   noteCountLabel,
@@ -17,7 +17,6 @@ import {
   noteSaveLabel,
 } from "@/features/annotation/presentation/note-format";
 import type { NoteWriting } from "@/features/annotation/presentation/saved-subjects-format";
-import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import { useTheme } from "@/hooks/use-theme";
 
 const NOTE_FIELD_HEIGHT = 46;
@@ -41,17 +40,8 @@ function NoteList({
   placeholder,
   writing,
 }: NoteListProps) {
-  const theme = useTheme();
-  const [draftBody, setDraftBody] = useState<string | null>(null);
-
-  const commitDraft = useCallback(
-    (subject: AnnotationSubject | null) => {
-      if (draftBody !== null) onWriteNote(subject, null, draftBody);
-
-      setDraftBody(null);
-    },
-    [draftBody, onWriteNote],
-  );
+  const { beginDraft, changeDraftBody, discardDraft, draft, saveDraft } =
+    useNoteDrafting(onWriteNote);
 
   return (
     <View style={styles.notes}>
@@ -66,31 +56,36 @@ function NoteList({
         </ThemedText>
         {match(writing)
           .with({ type: "withheld" }, () => null)
-          .with({ type: "offered" }, ({ subject }) => (
-            <Pressable
-              accessibilityLabel={
-                draftBody === null ? noteAddLabel(notesName) : noteSaveLabel(notesName)
-              }
-              accessibilityRole="button"
-              onPress={draftBody === null ? () => setDraftBody("") : () => commitDraft(subject)}
-              style={({ pressed }) => [
-                styles.add,
-                { backgroundColor: theme.fill, borderColor: theme.border },
-                pressed && styles.pressed,
-              ]}
-            >
-              <ThemedText themeColor="accent" type="mono">
-                {draftBody === null ? "+ Note" : "Save note"}
-              </ThemedText>
-            </Pressable>
-          ))
+          .with({ type: "offered" }, ({ subject }) =>
+            match(draft)
+              .with({ type: "idle" }, () => (
+                <NoteDraftButton
+                  caption="+ Note"
+                  label={noteAddLabel(notesName)}
+                  onPress={beginDraft}
+                />
+              ))
+              .with({ type: "composing" }, ({ body }) => (
+                <NoteDraftButton
+                  caption="Save note"
+                  label={noteSaveLabel(notesName)}
+                  onPress={() => saveDraft(subject, body)}
+                />
+              ))
+              .exhaustive(),
+          )
           .exhaustive()}
       </View>
-      {notes.length === 0 && draftBody === null ? (
-        <ThemedText themeColor="textSecondary" type="body">
-          {emptyMessage}
-        </ThemedText>
-      ) : null}
+      {notes.length === 0
+        ? match(draft)
+            .with({ type: "idle" }, () => (
+              <ThemedText themeColor="textSecondary" type="body">
+                {emptyMessage}
+              </ThemedText>
+            ))
+            .with({ type: "composing" }, () => null)
+            .exhaustive()
+        : null}
       {notes.map((note, at) => (
         <WrittenNote
           fieldHeight={NOTE_FIELD_HEIGHT}
@@ -104,17 +99,49 @@ function NoteList({
           writing={writing}
         />
       ))}
-      {draftBody === null ? null : (
-        <DraftNote
-          body={draftBody}
-          fieldHeight={NOTE_FIELD_HEIGHT}
-          notesName={notesName}
-          onChangeBody={setDraftBody}
-          onDiscard={() => setDraftBody(null)}
-          placeholder={placeholder}
-        />
-      )}
+      {match(draft)
+        .with({ type: "idle" }, () => null)
+        .with({ type: "composing" }, ({ body }) => (
+          <DraftNote
+            body={body}
+            fieldHeight={NOTE_FIELD_HEIGHT}
+            notesName={notesName}
+            onChangeBody={changeDraftBody}
+            onDiscard={discardDraft}
+            placeholder={placeholder}
+          />
+        ))
+        .exhaustive()}
     </View>
+  );
+}
+
+function NoteDraftButton({
+  caption,
+  label,
+  onPress,
+}: {
+  readonly caption: string;
+  readonly label: string;
+  readonly onPress: () => void;
+}) {
+  const theme = useTheme();
+
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.add,
+        { backgroundColor: theme.fill, borderColor: theme.border },
+        pressed && styles.pressed,
+      ]}
+    >
+      <ThemedText themeColor="accent" type="mono">
+        {caption}
+      </ThemedText>
+    </Pressable>
   );
 }
 

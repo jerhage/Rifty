@@ -199,7 +199,12 @@ function keptCountOf({ notes, subject }: SavedSubjectGroup): number {
 function standaloneNotesOf(sections: readonly SavedSection[]): readonly Note[] {
   return sections
     .flatMap(({ groups }) => groups)
-    .flatMap(({ notes, subject }) => (subject.type === "standalone" ? notes : []));
+    .flatMap(({ notes, subject }) =>
+      match(subject)
+        .with({ type: "standalone" }, (): readonly Note[] => notes)
+        .with({ type: "card" }, { type: "coreRule" }, { type: "unfindable" }, () => [])
+        .exhaustive(),
+    );
 }
 
 export { keptCountsOf, savedSections, standaloneNotesOf };

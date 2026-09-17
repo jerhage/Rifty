@@ -105,16 +105,19 @@ function CoreRulesHeader({
           query={query}
           style={styles.field}
         />
-        {search.type === "searched" ? (
-          <CoreRuleMatchNavigation
-            activeHit={activeHit}
-            matchesOnly={matchesOnly}
-            onStepToNextHit={onStepToNextHit}
-            onStepToPreviousHit={onStepToPreviousHit}
-            onToggleMatchesOnly={onToggleMatchesOnly}
-            search={search}
-          />
-        ) : null}
+        {match(search)
+          .with({ type: "noQuery" }, () => null)
+          .with({ type: "searched" }, (searched) => (
+            <CoreRuleMatchNavigation
+              activeHit={activeHit}
+              matchesOnly={matchesOnly}
+              onStepToNextHit={onStepToNextHit}
+              onStepToPreviousHit={onStepToPreviousHit}
+              onToggleMatchesOnly={onToggleMatchesOnly}
+              search={searched}
+            />
+          ))
+          .exhaustive()}
         {match(contentsPlacement)
           .with({ type: "beside" }, () => null)
           .with({ type: "over" }, () => (

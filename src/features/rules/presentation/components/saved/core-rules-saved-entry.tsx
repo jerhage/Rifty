@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing, TouchTarget } from "@/constants/theme";
@@ -67,18 +68,21 @@ function CoreRulesSavedEntry({
             {coreRule.body}
           </ThemedText>
         </Pressable>
-        {keeping === "bookmarked" ? (
-          <Pressable
-            accessibilityLabel={coreRuleRemoveBookmarkLabel(coreRule.number)}
-            accessibilityRole="button"
-            onPress={() => onRemoveBookmark(coreRule.number)}
-            style={({ pressed }) => [styles.remove, pressed && styles.pressed]}
-          >
-            <ThemedText themeColor="textTertiary" type="monoValue">
-              ×
-            </ThemedText>
-          </Pressable>
-        ) : null}
+        {match(keeping)
+          .with("bookmarked", () => (
+            <Pressable
+              accessibilityLabel={coreRuleRemoveBookmarkLabel(coreRule.number)}
+              accessibilityRole="button"
+              onPress={() => onRemoveBookmark(coreRule.number)}
+              style={({ pressed }) => [styles.remove, pressed && styles.pressed]}
+            >
+              <ThemedText themeColor="textTertiary" type="monoValue">
+                ×
+              </ThemedText>
+            </Pressable>
+          ))
+          .with("noted", () => null)
+          .exhaustive()}
       </View>
       <ThemedText themeColor="textTertiary" type="mono">
         {coreRuleKeepingLabel(keeping)}

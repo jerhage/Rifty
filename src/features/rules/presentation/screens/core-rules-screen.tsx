@@ -124,9 +124,12 @@ function CoreRulesScreen({
         search={search}
       />
       <CoreRulesPage contentsPlacement={contentsPlacement}>
-        {contentsPlacement.type === "beside" ? (
-          <CoreRulesContentsColumn coreRules={coreRules} onSelectEntry={scrollToCoreRule} />
-        ) : null}
+        {match(contentsPlacement)
+          .with({ type: "beside" }, () => (
+            <CoreRulesContentsColumn coreRules={coreRules} onSelectEntry={scrollToCoreRule} />
+          ))
+          .with({ type: "over" }, () => null)
+          .exhaustive()}
         <View style={styles.page}>
           {foundNothing ? (
             <CoreRulesNoMatches />
@@ -144,37 +147,43 @@ function CoreRulesScreen({
             />
           )}
         </View>
-        {savedPlacement.type === "beside" ? (
-          <CoreRulesSavedPane
-            bookmarkedCount={bookmarkedCount}
-            expanded={savedPlacement.expanded}
-            onToggle={savedPlacement.toggle}
-          >
-            <CoreRulesSavedSurface
-              coreRules={coreRules}
-              isBookmarked={isBookmarked}
-              isNoted={isNoted}
-              notesFor={notesFor}
-              onGoToCoreRule={scrollToCoreRule}
-              onRemoveBookmark={onRemoveBookmark}
-            />
-          </CoreRulesSavedPane>
-        ) : null}
+        {match(savedPlacement)
+          .with({ type: "beside" }, ({ expanded, toggle }) => (
+            <CoreRulesSavedPane
+              bookmarkedCount={bookmarkedCount}
+              expanded={expanded}
+              onToggle={toggle}
+            >
+              <CoreRulesSavedSurface
+                coreRules={coreRules}
+                isBookmarked={isBookmarked}
+                isNoted={isNoted}
+                notesFor={notesFor}
+                onGoToCoreRule={scrollToCoreRule}
+                onRemoveBookmark={onRemoveBookmark}
+              />
+            </CoreRulesSavedPane>
+          ))
+          .with({ type: "over" }, () => null)
+          .exhaustive()}
       </CoreRulesPage>
-      {savedPlacement.type === "beside" ? null : (
-        <CoreRulesSheet
-          bookmarkedCount={bookmarkedCount}
-          coreRules={coreRules}
-          isBookmarked={isBookmarked}
-          isNoted={isNoted}
-          notesFor={notesFor}
-          onDismiss={hideSheet}
-          onGoToCoreRule={goToCoreRuleFromSheet}
-          onRemoveBookmark={onRemoveBookmark}
-          onShowFace={setSheetState}
-          state={sheetState}
-        />
-      )}
+      {match(savedPlacement)
+        .with({ type: "beside" }, () => null)
+        .with({ type: "over" }, () => (
+          <CoreRulesSheet
+            bookmarkedCount={bookmarkedCount}
+            coreRules={coreRules}
+            isBookmarked={isBookmarked}
+            isNoted={isNoted}
+            notesFor={notesFor}
+            onDismiss={hideSheet}
+            onGoToCoreRule={goToCoreRuleFromSheet}
+            onRemoveBookmark={onRemoveBookmark}
+            onShowFace={setSheetState}
+            state={sheetState}
+          />
+        ))
+        .exhaustive()}
       <CoreRuleNotePopup
         coreRule={notedCoreRule}
         coreRules={coreRules}

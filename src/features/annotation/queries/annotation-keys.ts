@@ -2,10 +2,8 @@ import type { BookmarkListScope } from "@/features/annotation/bookmark-list-scop
 import type { NoteListScope } from "@/features/annotation/note-list-scope";
 
 /**
- * `bookmarks()` is the subtree every bookmark read hangs under, so one mark reaching several scopes
- * can be invalidated without naming them. `notes()` is the same subtree for notes, and the two are
- * siblings rather than one inside the other: marking a subject writes no note of it, and writing a
- * note on a subject marks nothing.
+ * Three subtrees, not two: marking a subject writes no note of it and writing a note marks nothing,
+ * while `notedSubjects()` spans both, so each write path must leave its own subtree and that one stale.
  */
 const annotationKeys = {
   all: () => ["annotation"] as const,
@@ -14,7 +12,7 @@ const annotationKeys = {
     [...annotationKeys.bookmarks(), "list", scope] as const,
   notes: () => [...annotationKeys.all(), "note"] as const,
   noteList: (scope: NoteListScope) => [...annotationKeys.notes(), "list", scope] as const,
-  notedSubjects: () => [...annotationKeys.notes(), "subject"] as const,
+  notedSubjects: () => [...annotationKeys.all(), "notedSubject"] as const,
 };
 
 export { annotationKeys };

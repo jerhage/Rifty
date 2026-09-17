@@ -64,6 +64,11 @@ function BookmarkedSubjectsData<TKind extends AnnotationSubjectKind>({
     listBookmarksQuery(scope, { bookmarkLister: bookmarkManager }),
   );
 
+  const refreshBookmarksAndNotedSubjects = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: annotationKeys.bookmarks() });
+    void queryClient.invalidateQueries({ queryKey: annotationKeys.notedSubjects() });
+  }, [queryClient]);
+
   const { submit } = useWriteState({
     ...toggleBookmarkMutation({
       bookmarkFinder: bookmarkManager,
@@ -72,9 +77,8 @@ function BookmarkedSubjectsData<TKind extends AnnotationSubjectKind>({
       clock,
     }),
     onError: () => announce(BOOKMARK_FAILED_MESSAGE, "interrupting"),
-    /** One mark is read through several scopes, so the whole subtree goes stale. Notes are untouched. */
     onSuccess: (result) => {
-      void queryClient.invalidateQueries({ queryKey: annotationKeys.bookmarks() });
+      refreshBookmarksAndNotedSubjects();
       onBookmarksChanged?.();
       announce(
         match(result)

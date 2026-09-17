@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { Pressable, Text } from "react-native";
 
 import type { Bookmark } from "@/features/annotation/bookmark";
@@ -6,13 +6,17 @@ import type { BookmarkListScope } from "@/features/annotation/bookmark-list-scop
 import type { BookmarkLister } from "@/features/annotation/bookmark-lister";
 import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
-import { listBookmarksQuery } from "@/features/annotation/queries/annotation-queries";
+import {
+  listBookmarksQuery,
+  listNotedSubjectsQuery,
+} from "@/features/annotation/queries/annotation-queries";
+import type { ListNotedSubjectsCapabilities } from "@/features/annotation/use-cases/list-noted-subjects";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import { coreRuleNumberSchema } from "@/features/rules/value-objects/core-rule-number";
 import { useReadState } from "@/hooks/use-read-state";
 
 import { createTestWrapper } from "../test-wrapper";
-import { fixedClock, subject } from "./fixtures";
+import { createNoteStore, createSubjectStore, fixedClock, subject, writtenNote } from "./fixtures";
 
 const STORE_FAILURE = new Error("The store is unavailable.");
 const MARKED_AT = "2026-09-16T10:00:00.000Z";
@@ -63,6 +67,16 @@ function createMarkStore(marked: readonly AnnotationSubject[] = []): MarkStore {
   };
 }
 
+function SavedSubjectsProbe({
+  capabilities,
+}: {
+  readonly capabilities: ListNotedSubjectsCapabilities;
+}) {
+  const { state } = useReadState(listNotedSubjectsQuery(capabilities));
+
+  return <Text>{`saved: ${state.type === "success" ? state.notes.length : "…"}`}</Text>;
+}
+
 /** A second reader of the same rows, under a scope the press never names. */
 function EveryMarkProbe({ bookmarkLister }: { readonly bookmarkLister: BookmarkLister }) {
   const { state } = useReadState(listBookmarksQuery({ type: "all" }, { bookmarkLister }));
@@ -91,6 +105,32 @@ async function renderMarks(manager: BookmarkManager, probe = false) {
         )}
       </BookmarkedSubjectsData>
       {probe ? <EveryMarkProbe bookmarkLister={manager} /> : null}
+    </>,
+    { wrapper: createTestWrapper() },
+  );
+}
+
+async function renderMarksBesideSaved(
+  manager: BookmarkManager,
+  capabilities: ListNotedSubjectsCapabilities,
+) {
+  return await render(
+    <>
+      <BookmarkedSubjectsData
+        bookmarkManager={manager}
+        clock={fixedClock(MARKED_AT)}
+        kind="coreRule"
+      >
+        {({ toggleBookmark }) => (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => toggleBookmark(coreRuleNumberSchema.parse("101.2"))}
+          >
+            <Text>Mark 101.2</Text>
+          </Pressable>
+        )}
+      </BookmarkedSubjectsData>
+      <SavedSubjectsProbe capabilities={capabilities} />
     </>,
     { wrapper: createTestWrapper() },
   );
@@ -147,5 +187,24 @@ describe("BookmarkedSubjectsData", () => {
 
     expect(await screen.findByText("every kind: 2")).toBeTruthy();
     expect(await screen.findByText("marked: 101.1, 101.2")).toBeTruthy();
+  });
+
+  it("should leave the saved read stale too, since it stands over marks and notes alike", async () => {
+    const store = createMarkStore([RULE]);
+    const notes = createNoteStore([
+      writtenNote("note-1", RULE, "Came up in round three.", MARKED_AT),
+    ]);
+    const subjects = createSubjectStore();
+
+    await renderMarksBesideSaved(store.manager, {
+      cardSummariesFinder: subjects.cardSummariesFinder,
+      coreRulesFinder: subjects.coreRulesFinder,
+      noteLister: notes.manager,
+    });
+    expect(await screen.findByText("saved: 1")).toBeTruthy();
+
+    await fireEvent.press(screen.getByText("Mark 101.2"));
+
+    await waitFor(() => expect(notes.scopes()).toHaveLength(2));
   });
 });

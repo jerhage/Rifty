@@ -39,9 +39,9 @@ function useNoteEditing({ clock, idGenerator, noteManager }: NoteEditingDependen
   const queryClient = useQueryClient();
   const announce = useAnnouncement();
 
-  /** One note is read through several scopes, so the whole subtree goes stale. Marks are untouched. */
-  const refreshNotes = useCallback(() => {
+  const refreshNotesAndNotedSubjects = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: annotationKeys.notes() });
+    void queryClient.invalidateQueries({ queryKey: annotationKeys.notedSubjects() });
   }, [queryClient]);
 
   const { submit: submitWrite } = useWriteState({
@@ -53,7 +53,7 @@ function useNoteEditing({ clock, idGenerator, noteManager }: NoteEditingDependen
     }),
     onError: () => announce(NOTE_FAILED_MESSAGE, "interrupting"),
     onSuccess: (result) => {
-      refreshNotes();
+      refreshNotesAndNotedSubjects();
       announce(
         match(result)
           .with({ type: "created" }, () => NOTE_WRITTEN_MESSAGE)
@@ -70,7 +70,7 @@ function useNoteEditing({ clock, idGenerator, noteManager }: NoteEditingDependen
     ...deleteNoteMutation({ noteRemover: noteManager }),
     onError: () => announce(NOTE_REMOVE_FAILED_MESSAGE, "interrupting"),
     onSuccess: () => {
-      refreshNotes();
+      refreshNotesAndNotedSubjects();
       announce(NOTE_REMOVED_MESSAGE, "interrupting");
     },
   });

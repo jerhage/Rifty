@@ -12,6 +12,11 @@ type ImageAlternative =
   | { readonly type: "described"; readonly label: string }
   | { readonly type: "decorative" };
 
+type ImageLoadState =
+  | { readonly type: "pending" }
+  | { readonly type: "painted" }
+  | { readonly type: "failed" };
+
 type ImageAccessibility = Pick<
   ImageProps,
   | "accessibilityElementsHidden"
@@ -32,7 +37,7 @@ function CardImage({
   readonly source: string;
   readonly style: StyleProp<ImageStyle>;
 }) {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [load, setLoad] = useState<ImageLoadState>({ type: "pending" });
   const accessibility = match(alternative)
     .returnType<ImageAccessibility>()
     .with({ type: "described" }, ({ label }) => ({
@@ -51,13 +56,18 @@ function CardImage({
       <Image
         {...accessibility}
         contentFit={contentFit}
-        onError={() => setIsLoaded(false)}
-        onLoad={() => setIsLoaded(true)}
+        onError={() => setLoad({ type: "failed" })}
+        onLoad={() => setLoad({ type: "painted" })}
         source={source}
         style={style}
         transition={TRANSITION_MS}
       />
-      {isLoaded ? null : <Skeleton style={StyleSheet.absoluteFill} />}
+      {match(load)
+        .with({ type: "painted" }, () => null)
+        .with({ type: "pending" }, { type: "failed" }, () => (
+          <Skeleton style={StyleSheet.absoluteFill} />
+        ))
+        .exhaustive()}
     </>
   );
 }

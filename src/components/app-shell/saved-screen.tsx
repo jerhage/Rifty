@@ -8,16 +8,16 @@ import { Spacing } from "@/constants/theme";
 import {
   SAVED_TITLE,
   savedSummaryLabel,
-  type SavedNoteCounts,
+  type SavedCounts,
 } from "@/components/app-shell/saved-format";
 import { useTheme } from "@/hooks/use-theme";
 
 interface SavedScreenProps {
+  readonly counts: SavedCounts;
   readonly notes: ReactNode;
-  readonly noteCounts: SavedNoteCounts;
 }
 
-function SavedScreen({ noteCounts, notes }: SavedScreenProps) {
+function SavedScreen({ counts, notes }: SavedScreenProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
 
@@ -38,7 +38,7 @@ function SavedScreen({ noteCounts, notes }: SavedScreenProps) {
           {SAVED_TITLE}
         </ThemedText>
         <ThemedText style={styles.summary} themeColor="textTertiary" type="mono">
-          {savedSummaryLabel(noteCounts)}
+          {savedSummaryLabel(counts)}
         </ThemedText>
       </View>
       <ScrollView

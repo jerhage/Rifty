@@ -3,10 +3,12 @@ import type { AnnotationSubject } from "@/features/annotation/value-objects/anno
 import type { CardSummary } from "@/features/card/card-summary";
 import type { SavedCoreRule } from "@/features/rules/presentation/core-rules-saved";
 
+type SubjectKeeping = "bookmarked" | "both" | "noted";
+
 type NotedSubject =
   | { readonly type: "standalone" }
-  | { readonly type: "card"; readonly card: CardSummary }
-  | { readonly type: "coreRule"; readonly saved: SavedCoreRule }
+  | { readonly type: "card"; readonly card: CardSummary; readonly keeping: SubjectKeeping }
+  | { readonly type: "coreRule"; readonly saved: SavedCoreRule; readonly keeping: SubjectKeeping }
   | { readonly type: "unfindable"; readonly subject: AnnotationSubject };
 
 interface NotedSubjectGroup {
@@ -15,4 +17,4 @@ interface NotedSubjectGroup {
   readonly subject: NotedSubject;
 }
 
-export type { NotedSubject, NotedSubjectGroup };
+export type { NotedSubject, NotedSubjectGroup, SubjectKeeping };

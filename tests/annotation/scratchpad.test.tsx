@@ -25,11 +25,12 @@ const CARD = subject("card", "vi");
 const PHONE = { height: 874, width: 402 } as const;
 
 async function renderScratchpad(store: NoteStore = createNoteStore()): Promise<NoteStore> {
+  const marked = createBookmarkStore();
   const subjects = createSubjectStore();
 
   await render(
     <NoteSectionsData
-      bookmarkLister={createBookmarkStore().manager}
+      bookmarkManager={marked.manager}
       cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock(WRITTEN_AT)}
       coreRulesFinder={subjects.coreRulesFinder}

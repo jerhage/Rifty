@@ -109,7 +109,7 @@ async function renderNoted(
 
   await render(
     <NoteSectionsData
-      bookmarkLister={bookmarks.manager}
+      bookmarkManager={bookmarks.manager}
       cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock("2026-09-16T13:00:00.000Z")}
       coreRulesFinder={subjects.coreRulesFinder}
@@ -370,6 +370,38 @@ describe("a subject that is marked rather than written on", () => {
 
     await waitFor(() => expect(notes.notes()).toHaveLength(1));
     expect(notes.notes()[0]?.subject).toEqual(MARKED_CARD);
+  });
+});
+
+describe("why a kept row stands where it does", () => {
+  it("should say a card that only a mark filed is bookmarked", async () => {
+    await renderNoted([], [MARKED_CARD]);
+
+    expect(screen.getByText("Bookmarked")).toBeTruthy();
+  });
+
+  it("should say a card that only a note filed is noted, offering no mark to give up", async () => {
+    await renderNoted([CARD_NOTE]);
+
+    expect(screen.getByText("Noted")).toBeTruthy();
+    expect(screen.queryByRole("checkbox", { name: `Bookmark on ${VI.name}` })).toBeNull();
+  });
+
+  it("should say a rule that both acts filed is bookmarked and noted", async () => {
+    await renderNoted([RULE_NOTE], [MARKED_RULE]);
+
+    expect(screen.getByText("Bookmarked and noted")).toBeTruthy();
+  });
+
+  it("should give up the mark from the row and leave what is written standing", async () => {
+    const { bookmarks, notes } = await renderNoted([CARD_NOTE], [MARKED_CARD]);
+
+    await fireEvent.press(screen.getByRole("checkbox", { name: `Bookmark on ${VI.name}` }));
+
+    await waitFor(() => expect(bookmarks.marks()).toEqual([]));
+    expect(await screen.findByText("Noted")).toBeTruthy();
+    expect(notes.notes()).toHaveLength(1);
+    expect(screen.getByLabelText(`Note 1 on ${VI.name}`).props.defaultValue).toBe(CARD_NOTE.body);
   });
 });
 

@@ -12,7 +12,8 @@ import {
   notedCardsSectionLabel,
   notedCoreRulesSectionLabel,
 } from "@/features/annotation/presentation/noted-subjects-format";
-import { noteCountsOf } from "@/features/annotation/presentation/noted-subjects";
+import { keptCountsOf } from "@/features/annotation/presentation/noted-subjects";
+import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CardSummary } from "@/features/card/card-summary";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 
@@ -46,13 +47,15 @@ const VI = {
 
 async function renderSaved(
   store: NoteStore = createNoteStore(),
+  marked: readonly AnnotationSubject[] = [],
   frame: TestFrame = PHONE,
 ): Promise<NoteStore> {
+  const bookmarks = createBookmarkStore(marked);
   const subjects = createSubjectStore([VI], DOCUMENT);
 
   await render(
     <NoteSectionsData
-      bookmarkLister={createBookmarkStore().manager}
+      bookmarkManager={bookmarks.manager}
       cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock(WRITTEN_AT)}
       coreRulesFinder={subjects.coreRulesFinder}
@@ -61,8 +64,8 @@ async function renderSaved(
     >
       {(written) => (
         <SavedScreen
+          counts={keptCountsOf(written.sections)}
           notes={<NoteSections written={written} />}
-          noteCounts={noteCountsOf(written.sections)}
         />
       )}
     </NoteSectionsData>,
@@ -159,7 +162,7 @@ describe("the columns the saved sections stand in", () => {
   });
 
   it("should stand every section under one another while only one column fits", async () => {
-    await renderSaved(createNoteStore(), PHONE);
+    await renderSaved(createNoteStore(), [], PHONE);
 
     const holder = nearestHolderOf(
       sectionHeader(SCRATCHPAD_TITLE),
@@ -172,7 +175,7 @@ describe("the columns the saved sections stand in", () => {
   });
 
   it("should cut three sections into two columns, the earlier one taking the remainder", async () => {
-    await renderSaved(createNoteStore(), TABLET);
+    await renderSaved(createNoteStore(), [], TABLET);
 
     const holder = nearestHolderOf(
       sectionHeader(SCRATCHPAD_TITLE),
@@ -190,6 +193,7 @@ describe("the columns the saved sections stand in", () => {
         writtenNote("note-1", CARD, "Holds the point.", WRITTEN_AT),
         writtenNote("note-2", CORE_RULE, "Priority passes.", WRITTEN_AT),
       ]),
+      [],
       TABLET,
     );
 
@@ -205,7 +209,7 @@ describe("the columns the saved sections stand in", () => {
 });
 
 describe("the saved summary", () => {
-  it("should say nothing is written while no note exists at all", async () => {
+  it("should say nothing is saved while neither act has filed anything", async () => {
     await renderSaved();
 
     expect(screen.getByText(NOTHING_SAVED_SUMMARY)).toBeTruthy();
@@ -216,14 +220,39 @@ describe("the saved summary", () => {
 
     await addScratchpadNote("Trades to chase.");
 
-    expect(await screen.findByText("1 standalone")).toBeTruthy();
+    expect(await screen.findByText("1 standalone note")).toBeTruthy();
     expect(screen.queryByText(NOTHING_SAVED_SUMMARY)).toBeNull();
   });
 
-  it("should count what is written rather than the sections that are drawn", async () => {
-    await renderSaved();
+  it("should count the subjects that are kept, whichever act filed each one", async () => {
+    await renderSaved(
+      createNoteStore([writtenNote("note-1", CORE_RULE, "Priority passes.", WRITTEN_AT)]),
+      [CARD],
+    );
 
-    expect(screen.queryByText(/\d+ rules?/)).toBeNull();
-    expect(screen.queryByText(/\d+ cards?/)).toBeNull();
+    expect(screen.getByText("1 card · 1 rule")).toBeTruthy();
+  });
+
+  it("should count a subject that is both bookmarked and noted once", async () => {
+    await renderSaved(
+      createNoteStore([
+        writtenNote("note-1", CARD, "Holds the point.", WRITTEN_AT),
+        writtenNote("note-2", CARD, "Trade it instead.", WRITTEN_AT),
+      ]),
+      [CARD],
+    );
+
+    expect(screen.getByText("1 card")).toBeTruthy();
+  });
+
+  it("should count the scratchpad by its notes, having no subject to keep", async () => {
+    await renderSaved(
+      createNoteStore([
+        writtenNote("note-1", null, "Trades to chase.", WRITTEN_AT),
+        writtenNote("note-2", null, "Round three went long.", WRITTEN_AT),
+      ]),
+    );
+
+    expect(screen.getByText("2 standalone notes")).toBeTruthy();
   });
 });

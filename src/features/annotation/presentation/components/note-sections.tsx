@@ -1,15 +1,21 @@
 import { StyleSheet, View } from "react-native";
+import { match } from "ts-pattern";
 
 import { LabelledSection } from "@/components/ui/atoms/labelled-section";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { Radius, Spacing } from "@/constants/theme";
 import type { NoteId } from "@/features/annotation/note";
+import { BookmarkToggle } from "@/features/annotation/presentation/components/bookmark-toggle";
 import type { WriteNote } from "@/features/annotation/presentation/components/note-card";
 import { NoteList } from "@/features/annotation/presentation/components/note-list";
 import type { SectionedNotes } from "@/features/annotation/presentation/data/note-sections-data";
 import type { NotedSubjectGroup } from "@/features/annotation/presentation/noted-subject";
 import type { NoteSection } from "@/features/annotation/presentation/noted-subjects";
-import { notedGroupView } from "@/features/annotation/presentation/noted-subjects-format";
+import {
+  bookmarkOnLabel,
+  notedGroupView,
+} from "@/features/annotation/presentation/noted-subjects-format";
+import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import { useColumnFit, type ColumnSpec } from "@/hooks/use-layout-size";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -78,6 +84,7 @@ function NoteColumn({
             <NoteGroup
               group={group}
               key={group.key}
+              onRemoveBookmark={written.removeBookmark}
               onRemoveNote={written.removeNote}
               onWriteNote={written.writeNote}
             />
@@ -90,10 +97,12 @@ function NoteColumn({
 
 function NoteGroup({
   group,
+  onRemoveBookmark,
   onRemoveNote,
   onWriteNote,
 }: {
   readonly group: NotedSubjectGroup;
+  readonly onRemoveBookmark: (subject: AnnotationSubject) => void;
   readonly onRemoveNote: (id: NoteId) => void;
   readonly onWriteNote: WriteNote;
 }) {
@@ -118,6 +127,23 @@ function NoteGroup({
         <ThemedText numberOfLines={3} themeColor="textSecondary" type="body">
           {view.body}
         </ThemedText>
+      )}
+      {view.keepingLabel === null ? null : (
+        <View style={styles.keeping}>
+          <ThemedText style={styles.keepingLabel} themeColor="textTertiary" type="mono">
+            {view.keepingLabel}
+          </ThemedText>
+          {match(view.dropping)
+            .with({ type: "withheld" }, () => null)
+            .with({ type: "offered" }, ({ subject }) => (
+              <BookmarkToggle
+                bookmarked
+                label={bookmarkOnLabel(view.notesName)}
+                onPress={() => onRemoveBookmark(subject)}
+              />
+            ))
+            .exhaustive()}
+        </View>
       )}
       <NoteList
         emptyMessage={view.emptyMessage}
@@ -163,6 +189,17 @@ const styles = StyleSheet.create({
   },
   name: {
     flexShrink: 1,
+    minWidth: 0,
+  },
+  keeping: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.two,
+    minWidth: 0,
+  },
+  keepingLabel: {
+    flex: 1,
     minWidth: 0,
   },
 });

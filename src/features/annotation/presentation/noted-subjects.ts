@@ -5,6 +5,7 @@ import type { Note } from "@/features/annotation/note";
 import type {
   NotedSubject,
   NotedSubjectGroup,
+  SubjectKeeping,
 } from "@/features/annotation/presentation/noted-subject";
 import {
   ORDERED_NOTE_SECTION_SPECS,
@@ -19,7 +20,7 @@ import type { CoreRule } from "@/features/rules/core-rule";
 import { savedCoreRules, type SavedCoreRule } from "@/features/rules/presentation/core-rules-saved";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
 
-type NoteCounts = Readonly<Record<NotedSubject["type"], number>>;
+type KeptCounts = Readonly<Record<NotedSubject["type"], number>>;
 
 interface NoteSection {
   readonly groups: readonly NotedSubjectGroup[];
@@ -39,7 +40,9 @@ function noteSections(
   const written = notes.flatMap(({ subject }) => (subject === null ? [] : [subject]));
   const markedNumbers = coreRuleNumbersOf(marked);
   const writtenNumbers = coreRuleNumbersOf(written);
-  const keptCards = savedCards(printingIdsOf([...written, ...marked]), cards);
+  const markedPrintingIds = printingIdsOf(marked);
+  const writtenPrintingIds = printingIdsOf(written);
+  const keptCards = savedCards(new Set([...markedPrintingIds, ...writtenPrintingIds]), cards);
   const keptCoreRules = savedCoreRules(
     coreRules,
     (number) => markedNumbers.has(number),
@@ -47,8 +50,20 @@ function noteSections(
   );
   const groupsByType: Readonly<Record<NotedSubject["type"], readonly NotedSubjectGroup[]>> = {
     standalone: [scratchpadGroup(notes)],
-    card: keptCards.map((card) => cardGroup(card, notes)),
-    coreRule: keptCoreRules.map((saved) => coreRuleGroup(saved, notes)),
+    card: keptCards.map((card) =>
+      cardGroup(
+        card,
+        notes,
+        subjectKeepingOf(card.printingId, markedPrintingIds, writtenPrintingIds),
+      ),
+    ),
+    coreRule: keptCoreRules.map((saved) =>
+      coreRuleGroup(
+        saved,
+        notes,
+        subjectKeepingOf(saved.coreRule.number, markedNumbers, writtenNumbers),
+      ),
+    ),
     unfindable: unfindableGroups(notes, keptCards, keptCoreRules),
   };
 
@@ -87,19 +102,37 @@ function scratchpadGroup(notes: readonly Note[]): NotedSubjectGroup {
   };
 }
 
-function cardGroup(card: CardSummary, notes: readonly Note[]): NotedSubjectGroup {
+function subjectKeepingOf<TId>(
+  id: TId,
+  marked: ReadonlySet<TId>,
+  written: ReadonlySet<TId>,
+): SubjectKeeping {
+  if (marked.has(id) && written.has(id)) return "both";
+
+  return marked.has(id) ? "bookmarked" : "noted";
+}
+
+function cardGroup(
+  card: CardSummary,
+  notes: readonly Note[],
+  keeping: SubjectKeeping,
+): NotedSubjectGroup {
   return {
     key: card.printingId,
     notes: notesOn(notes, { kind: "card", id: card.printingId }),
-    subject: { type: "card", card },
+    subject: { type: "card", card, keeping },
   };
 }
 
-function coreRuleGroup(saved: SavedCoreRule, notes: readonly Note[]): NotedSubjectGroup {
+function coreRuleGroup(
+  saved: SavedCoreRule,
+  notes: readonly Note[],
+  keeping: SubjectKeeping,
+): NotedSubjectGroup {
   return {
     key: saved.coreRule.number,
     notes: notesOn(notes, { kind: "coreRule", id: saved.coreRule.number }),
-    subject: { type: "coreRule", saved },
+    subject: { type: "coreRule", saved, keeping },
   };
 }
 
@@ -142,7 +175,7 @@ function notesOn(notes: readonly Note[], subject: AnnotationSubject): readonly N
   );
 }
 
-function noteCountsOf(sections: readonly NoteSection[]): NoteCounts {
+function keptCountsOf(sections: readonly NoteSection[]): KeptCounts {
   const counted: Record<NotedSubject["type"], number> = {
     card: 0,
     coreRule: 0,
@@ -151,9 +184,16 @@ function noteCountsOf(sections: readonly NoteSection[]): NoteCounts {
   };
 
   for (const { groups } of sections)
-    for (const { notes, subject } of groups) counted[subject.type] += notes.length;
+    for (const group of groups) counted[group.subject.type] += keptCountOf(group);
 
   return counted;
+}
+
+function keptCountOf({ notes, subject }: NotedSubjectGroup): number {
+  return match(subject)
+    .with({ type: "standalone" }, () => notes.length)
+    .with({ type: "card" }, { type: "coreRule" }, { type: "unfindable" }, () => 1)
+    .exhaustive();
 }
 
 function standaloneNotesOf(sections: readonly NoteSection[]): readonly Note[] {
@@ -162,5 +202,5 @@ function standaloneNotesOf(sections: readonly NoteSection[]): readonly Note[] {
     .flatMap(({ notes, subject }) => (subject.type === "standalone" ? notes : []));
 }
 
-export { noteCountsOf, noteSections, standaloneNotesOf };
-export type { NoteCounts, NoteSection };
+export { keptCountsOf, noteSections, standaloneNotesOf };
+export type { KeptCounts, NoteSection };

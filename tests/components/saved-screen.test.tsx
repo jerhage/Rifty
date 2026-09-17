@@ -17,6 +17,7 @@ import type { CardSummary } from "@/features/card/card-summary";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 
 import {
+  createBookmarkStore,
   createNoteStore,
   createSubjectStore,
   fixedClock,
@@ -51,6 +52,7 @@ async function renderSaved(
 
   await render(
     <NoteSectionsData
+      bookmarkLister={createBookmarkStore().manager}
       cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock(WRITTEN_AT)}
       coreRulesFinder={subjects.coreRulesFinder}

@@ -4,16 +4,20 @@ import { Dimensions, StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/theme";
-import type { Bookmark } from "@/features/annotation/bookmark";
 import type { Note } from "@/features/annotation/note";
-import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
 import { SubjectNoteCountsData } from "@/features/annotation/presentation/data/subject-note-counts-data";
-import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
-import { createNoteStore, fixedClock, subject, type NoteStore } from "../annotation/fixtures";
+import {
+  createBookmarkStore,
+  createNoteStore,
+  fixedClock,
+  subject,
+  type BookmarkStore,
+  type NoteStore,
+} from "../annotation/fixtures";
 import { createTestWrapper } from "../test-wrapper";
 import { coreRuleAnnotations, coreRuleDocument } from "./fixtures";
 
@@ -56,48 +60,6 @@ function noteOn(number: string, id: string, body: string): Note {
     body,
     createdAt: WRITTEN_AT,
     updatedAt: WRITTEN_AT,
-  };
-}
-
-function sameSubject(one: AnnotationSubject, other: AnnotationSubject): boolean {
-  return one.kind === other.kind && one.id === other.id;
-}
-
-interface BookmarkStore {
-  readonly manager: BookmarkManager;
-  marks(): readonly Bookmark[];
-}
-
-function createBookmarkStore(markedNumbers: readonly string[] = []): BookmarkStore {
-  const bookmarks: Bookmark[] = markedNumbers.map((number) => ({
-    subject: subject("coreRule", number),
-    createdAt: WRITTEN_AT,
-  }));
-
-  return {
-    manager: {
-      get: (asked) =>
-        Promise.resolve(bookmarks.find((held) => sameSubject(held.subject, asked)) ?? null),
-      getAll: (scope) =>
-        Promise.resolve(
-          scope.type === "all"
-            ? [...bookmarks]
-            : bookmarks.filter((held) => held.subject.kind === scope.kind),
-        ),
-      remove: (asked) => {
-        const at = bookmarks.findIndex((held) => sameSubject(held.subject, asked));
-
-        if (at >= 0) bookmarks.splice(at, 1);
-
-        return Promise.resolve();
-      },
-      save: (bookmark) => {
-        bookmarks.push(bookmark);
-
-        return Promise.resolve();
-      },
-    },
-    marks: () => bookmarks,
   };
 }
 
@@ -400,7 +362,7 @@ describe("the bookmark control in the note popup", () => {
   });
 
   it("should report the rule marked where the mark already stands", async () => {
-    await renderRules(PHONE, createBookmarkStore(["501.1"]));
+    await renderRules(PHONE, createBookmarkStore([subject("coreRule", "501.1")]));
 
     await openNotes("501.1");
 
@@ -488,7 +450,7 @@ describe("the saved surface as the union of both acts", () => {
   });
 
   it("should say a marked rule is there for the mark, whether or not it is also noted", async () => {
-    await openSavedPane(createBookmarkStore(["501.1"]), notedStore("501.1"));
+    await openSavedPane(createBookmarkStore([subject("coreRule", "501.1")]), notedStore("501.1"));
 
     expect(screen.getAllByText("Bookmarked")).toHaveLength(1);
     expect(screen.queryByText("Noted")).toBeNull();
@@ -496,7 +458,7 @@ describe("the saved surface as the union of both acts", () => {
   });
 
   it("should list both, in document order, where one is marked and the other noted", async () => {
-    await openSavedPane(createBookmarkStore(["501.2"]), notedStore("501.1"));
+    await openSavedPane(createBookmarkStore([subject("coreRule", "501.2")]), notedStore("501.1"));
 
     expect(
       screen
@@ -516,7 +478,10 @@ describe("the saved surface as the union of both acts", () => {
   });
 
   it("should leave the notes standing when the bookmark is given up", async () => {
-    const { noteStore } = await openSavedPane(createBookmarkStore(["501.1"]), notedStore("501.1"));
+    const { noteStore } = await openSavedPane(
+      createBookmarkStore([subject("coreRule", "501.1")]),
+      notedStore("501.1"),
+    );
 
     expect(screen.getByText("Bookmarked")).toBeTruthy();
 

@@ -3,20 +3,19 @@ import type { PropsWithChildren } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import type { Bookmark } from "@/features/annotation/bookmark";
-import type { BookmarkListScope } from "@/features/annotation/bookmark-list-scope";
-import {
-  BookmarkedSubjectsData,
-  type BookmarkedSubjectsDataProps,
-} from "@/features/annotation/presentation/data/bookmarked-subjects-data";
-import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
+import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
 import { Colors } from "@/constants/theme";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { CoreRulesEdition } from "@/features/rules/core-rules-edition";
 import { CoreRulesScreen } from "@/features/rules/presentation/screens/core-rules-screen";
 
 import { createTestWrapper } from "../test-wrapper";
-import { subject } from "../annotation/fixtures";
+import {
+  createBookmarkStore,
+  fixedClock,
+  subject,
+  type BookmarkStore,
+} from "../annotation/fixtures";
 import { coreRuleAnnotations, coreRuleDocument } from "./fixtures";
 
 const EDITION: CoreRulesEdition = { title: "Riftbound Core Rules", publishedOn: "2025-06-02" };
@@ -33,79 +32,6 @@ const DOCUMENT = coreRuleDocument([
   { number: "201", kind: "heading", body: "Playing the Game" },
   { number: "201.1", body: "Recycle, then recycle again." },
 ]);
-
-function sameSubject(one: AnnotationSubject, other: AnnotationSubject): boolean {
-  return one.kind === other.kind && one.id === other.id;
-}
-
-interface BookmarkStore {
-  readonly capabilities: Omit<BookmarkedSubjectsDataProps<"coreRule">, "children" | "kind">;
-  listReads(): number;
-  scopes(): readonly BookmarkListScope[];
-  subjectReads(): number;
-  writes(): number;
-}
-
-/**
- * The store as the screen meets it, counting what it was asked rather than what it answered: a
- * screen that asked once per row would read the same marks back and only the count would say so.
- */
-function createBookmarkStore(markedRuleNumbers: readonly string[] = []): BookmarkStore {
-  const bookmarks: Bookmark[] = markedRuleNumbers.map((number) => ({
-    subject: subject("coreRule", number),
-    createdAt: MARKED_AT,
-  }));
-  const scopes: BookmarkListScope[] = [];
-  let listReads = 0;
-  let subjectReads = 0;
-  let writes = 0;
-
-  return {
-    capabilities: {
-      bookmarkManager: {
-        get: (subject) => {
-          subjectReads += 1;
-
-          return Promise.resolve(
-            bookmarks.find((held) => sameSubject(held.subject, subject)) ?? null,
-          );
-        },
-        getAll: (scope) => {
-          listReads += 1;
-          scopes.push(scope);
-
-          return Promise.resolve(
-            scope.type === "all"
-              ? [...bookmarks]
-              : bookmarks.filter((held) => held.subject.kind === scope.kind),
-          );
-        },
-        remove: (subject) => {
-          writes += 1;
-          const held = bookmarks.findIndex((mark) => sameSubject(mark.subject, subject));
-
-          if (held >= 0) bookmarks.splice(held, 1);
-
-          return Promise.resolve();
-        },
-        save: (bookmark) => {
-          writes += 1;
-
-          if (!bookmarks.some((held) => sameSubject(held.subject, bookmark.subject))) {
-            bookmarks.push(bookmark);
-          }
-
-          return Promise.resolve();
-        },
-      },
-      clock: { now: () => MARKED_AT },
-    },
-    listReads: () => listReads,
-    scopes: () => scopes,
-    subjectReads: () => subjectReads,
-    writes: () => writes,
-  };
-}
 
 function createWrapper() {
   const QueryWrapper = createTestWrapper();
@@ -131,7 +57,11 @@ async function renderBookmarkableDocument(
   coreRules: readonly CoreRule[] = DOCUMENT,
 ) {
   await render(
-    <BookmarkedSubjectsData {...store.capabilities} kind="coreRule">
+    <BookmarkedSubjectsData
+      bookmarkManager={store.manager}
+      clock={fixedClock(MARKED_AT)}
+      kind="coreRule"
+    >
       {(bookmarked) => (
         <CoreRulesScreen
           coreRules={coreRules}
@@ -161,7 +91,7 @@ function rowSurface(number: string) {
 
 describe("a core rule's bookmark", () => {
   it("should read as marked where a mark is stored and unmarked where none is", async () => {
-    await renderBookmarkableDocument(createBookmarkStore(["101.1"]));
+    await renderBookmarkableDocument(createBookmarkStore([subject("coreRule", "101.1")]));
 
     expect(screen.getByRole("checkbox", { name: "Bookmark 101.1" })).toBeTruthy();
     expect(markedState("101.1")).toEqual({ checked: true });
@@ -214,7 +144,9 @@ describe("a core rule's bookmark", () => {
 
 describe("the core rules header's bookmark count", () => {
   it("should count what is marked and follow a mark down to none", async () => {
-    await renderBookmarkableDocument(createBookmarkStore(["101.1", "201.1"]));
+    await renderBookmarkableDocument(
+      createBookmarkStore([subject("coreRule", "101.1"), subject("coreRule", "201.1")]),
+    );
 
     expect(screen.getByRole("button", { name: "2 bookmarked rules" })).toBeTruthy();
 
@@ -228,7 +160,9 @@ describe("the core rules header's bookmark count", () => {
   });
 
   it("should hold a mark the shown list no longer holds, and keep showing the rest", async () => {
-    const field = await renderBookmarkableDocument(createBookmarkStore(["101.1", "101.2"]));
+    const field = await renderBookmarkableDocument(
+      createBookmarkStore([subject("coreRule", "101.1"), subject("coreRule", "101.2")]),
+    );
 
     await fireEvent.changeText(field, "recycle");
     await fireEvent.press(screen.getByRole("checkbox", { name: "Matches only" }));
@@ -242,7 +176,7 @@ describe("the core rules header's bookmark count", () => {
 
 describe("reading the marks a document carries", () => {
   it("should ask the store once for the whole document rather than once per rule", async () => {
-    const store = createBookmarkStore(["101.1"]);
+    const store = createBookmarkStore([subject("coreRule", "101.1")]);
     await renderBookmarkableDocument(store);
 
     expect(store.listReads()).toBe(1);

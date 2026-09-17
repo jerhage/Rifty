@@ -2,6 +2,9 @@ import { match } from "ts-pattern";
 
 import type { Clock } from "@/application/ports/clock";
 import type { IdGenerator } from "@/application/ports/id-generator";
+import type { Bookmark } from "@/features/annotation/bookmark";
+import type { BookmarkListScope } from "@/features/annotation/bookmark-list-scope";
+import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
 import type { Note } from "@/features/annotation/note";
 import type { NoteListScope } from "@/features/annotation/note-list-scope";
 import type { NoteManager } from "@/features/annotation/note-manager";
@@ -16,6 +19,8 @@ import type { PrintingId } from "@/features/card/value-objects/printing-id";
 import type { CoreRule } from "@/features/rules/core-rule";
 import type { CoreRulesByNumbersFinder } from "@/features/rules/core-rules-by-numbers-finder";
 import type { CoreRuleNumber } from "@/features/rules/value-objects/core-rule-number";
+
+const MARKED_AT = "2026-09-16T10:00:00.000Z";
 
 function subject(kind: AnnotationSubjectKind, id: string): AnnotationSubject {
   return annotationSubjectSchema.parse({ kind, id });
@@ -98,6 +103,68 @@ function createNoteStore(seeded: readonly Note[] = []): NoteStore {
   };
 }
 
+interface BookmarkStore {
+  readonly manager: BookmarkManager;
+  listReads(): number;
+  marks(): readonly Bookmark[];
+  scopes(): readonly BookmarkListScope[];
+  subjectReads(): number;
+  writes(): number;
+}
+
+function inBookmarkScope(bookmark: Bookmark, scope: BookmarkListScope): boolean {
+  return match(scope)
+    .with({ type: "all" }, () => true)
+    .with({ type: "ofKind" }, ({ kind }) => bookmark.subject.kind === kind)
+    .exhaustive();
+}
+
+function createBookmarkStore(marked: readonly AnnotationSubject[] = []): BookmarkStore {
+  const bookmarks: Bookmark[] = marked.map((subject) => ({ subject, createdAt: MARKED_AT }));
+  const scopes: BookmarkListScope[] = [];
+  let listReads = 0;
+  let subjectReads = 0;
+  let writes = 0;
+
+  return {
+    manager: {
+      get: (asked) => {
+        subjectReads += 1;
+
+        return Promise.resolve(bookmarks.find((held) => sameSubject(held.subject, asked)) ?? null);
+      },
+      getAll: (scope) => {
+        listReads += 1;
+        scopes.push(scope);
+
+        return Promise.resolve(bookmarks.filter((held) => inBookmarkScope(held, scope)));
+      },
+      remove: (asked) => {
+        writes += 1;
+        const at = bookmarks.findIndex((held) => sameSubject(held.subject, asked));
+
+        if (at >= 0) bookmarks.splice(at, 1);
+
+        return Promise.resolve();
+      },
+      save: (bookmark) => {
+        writes += 1;
+
+        if (!bookmarks.some((held) => sameSubject(held.subject, bookmark.subject))) {
+          bookmarks.push(bookmark);
+        }
+
+        return Promise.resolve();
+      },
+    },
+    listReads: () => listReads,
+    marks: () => bookmarks,
+    scopes: () => scopes,
+    subjectReads: () => subjectReads,
+    writes: () => writes,
+  };
+}
+
 function writtenNote(
   id: string,
   noteSubject: AnnotationSubject | null,
@@ -141,5 +208,13 @@ function createSubjectStore(
   };
 }
 
-export { createNoteStore, createSubjectStore, fixedClock, sequentialIds, subject, writtenNote };
-export type { NoteStore, SubjectStore };
+export {
+  createBookmarkStore,
+  createNoteStore,
+  createSubjectStore,
+  fixedClock,
+  sequentialIds,
+  subject,
+  writtenNote,
+};
+export type { BookmarkStore, NoteStore, SubjectStore };

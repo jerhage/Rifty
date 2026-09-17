@@ -10,6 +10,7 @@ import {
 } from "@/features/annotation/presentation/note-format";
 
 import {
+  createBookmarkStore,
   createNoteStore,
   createSubjectStore,
   fixedClock,
@@ -28,6 +29,7 @@ async function renderScratchpad(store: NoteStore = createNoteStore()): Promise<N
 
   await render(
     <NoteSectionsData
+      bookmarkLister={createBookmarkStore().manager}
       cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock(WRITTEN_AT)}
       coreRulesFinder={subjects.coreRulesFinder}

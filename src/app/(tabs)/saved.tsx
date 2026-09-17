@@ -9,6 +9,7 @@ function SavedRoute() {
 
   return (
     <NoteSectionsData
+      bookmarkLister={annotations.bookmarkRepository}
       cardSummariesFinder={cards.cardRepository}
       clock={clock}
       coreRulesFinder={rules.coreRulesRepository}

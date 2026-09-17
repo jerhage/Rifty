@@ -9,42 +9,66 @@ import {
 } from "@/features/rules/value-objects/core-rule-number";
 import type { ReadOptions } from "@/shared/read-options";
 
+import type { Bookmark } from "../bookmark";
+import type { BookmarkLister } from "../bookmark-lister";
 import type { Note } from "../note";
 import type { NoteLister } from "../note-lister";
+import type { AnnotationSubject } from "../value-objects/annotation-subject";
 
 type ListNotedSubjectsResult = {
   readonly type: "success";
+  readonly bookmarks: readonly Bookmark[];
   readonly cards: readonly CardSummary[];
   readonly coreRules: readonly CoreRule[];
   readonly notes: readonly Note[];
 };
 
 interface ListNotedSubjectsCapabilities {
+  readonly bookmarkLister: BookmarkLister;
   readonly cardSummariesFinder: CardSummariesByPrintingIdsFinder;
   readonly coreRulesFinder: CoreRulesByNumbersFinder;
   readonly noteLister: NoteLister;
 }
 
 async function listNotedSubjects(
-  { cardSummariesFinder, coreRulesFinder, noteLister }: ListNotedSubjectsCapabilities,
+  {
+    bookmarkLister,
+    cardSummariesFinder,
+    coreRulesFinder,
+    noteLister,
+  }: ListNotedSubjectsCapabilities,
   options?: ReadOptions,
 ): Promise<ListNotedSubjectsResult> {
-  const notes = await noteLister.getAll({ type: "all" }, options);
+  const [bookmarks, notes] = await Promise.all([
+    bookmarkLister.getAll({ type: "all" }, options),
+    noteLister.getAll({ type: "all" }, options),
+  ]);
+  const subjects = keptSubjectsOf(bookmarks, notes);
   const [cards, coreRules] = await Promise.all([
-    cardSummariesFinder.getSummariesByPrintingIds(printingIdsOf(notes), options),
-    coreRulesFinder.getAllByNumbers(coreRuleNumbersOf(notes), options),
+    cardSummariesFinder.getSummariesByPrintingIds(printingIdsOf(subjects), options),
+    coreRulesFinder.getAllByNumbers(coreRuleNumbersOf(subjects), options),
   ]);
 
-  return { type: "success", cards, coreRules, notes };
+  return { type: "success", bookmarks, cards, coreRules, notes };
 }
 
-function printingIdsOf(notes: readonly Note[]): readonly PrintingId[] {
-  return notes.flatMap(({ subject }) => (subject?.kind === "card" ? [subject.id] : []));
+function keptSubjectsOf(
+  bookmarks: readonly Bookmark[],
+  notes: readonly Note[],
+): readonly AnnotationSubject[] {
+  return [
+    ...bookmarks.map(({ subject }) => subject),
+    ...notes.flatMap(({ subject }) => (subject === null ? [] : [subject])),
+  ];
 }
 
-function coreRuleNumbersOf(notes: readonly Note[]): readonly CoreRuleNumber[] {
-  return notes.flatMap(({ subject }) =>
-    subject?.kind === "coreRule" ? [subject.id, ...coreRuleAncestorNumbersOf(subject.id)] : [],
+function printingIdsOf(subjects: readonly AnnotationSubject[]): readonly PrintingId[] {
+  return subjects.flatMap((subject) => (subject.kind === "card" ? [subject.id] : []));
+}
+
+function coreRuleNumbersOf(subjects: readonly AnnotationSubject[]): readonly CoreRuleNumber[] {
+  return subjects.flatMap((subject) =>
+    subject.kind === "coreRule" ? [subject.id, ...coreRuleAncestorNumbersOf(subject.id)] : [],
   );
 }
 

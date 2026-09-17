@@ -1,5 +1,6 @@
 import { match } from "ts-pattern";
 
+import type { Bookmark } from "@/features/annotation/bookmark";
 import type { Note } from "@/features/annotation/note";
 import type {
   NotedSubject,
@@ -10,6 +11,7 @@ import {
   unfindableSubjectName,
   type NoteSectionSpec,
 } from "@/features/annotation/presentation/noted-subjects-format";
+import { savedCards } from "@/features/annotation/presentation/saved-cards";
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CardSummary } from "@/features/card/card-summary";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
@@ -25,32 +27,32 @@ interface NoteSection {
   readonly message: string | null;
 }
 
-interface GatheredNotes {
-  readonly key: string;
-  readonly notes: Note[];
-  readonly subject: NotedSubject;
-}
-
 const STANDALONE_KEY = "standalone";
 
 function noteSections(
+  bookmarks: readonly Bookmark[],
   notes: readonly Note[],
   cards: readonly CardSummary[],
   coreRules: readonly CoreRule[],
 ): readonly NoteSection[] {
-  const cardsByPrintingId = new Map(cards.map((card) => [card.printingId, card]));
-  const savedByNumber = savedCoreRulesByNumber(notes, coreRules);
-  const gatheredByType = gatheringWithStandingScratchpad();
-
-  for (const note of notes) {
-    const noted = notedSubjectOf(note.subject, cardsByPrintingId, savedByNumber);
-
-    gather(gatheredByType[noted.type], notedGroupKey(noted), note, noted);
-  }
-
-  return ORDERED_NOTE_SECTION_SPECS.flatMap((spec) =>
-    sectionsFor(spec, [...gatheredByType[spec.type].values()]),
+  const marked = bookmarks.map(({ subject }) => subject);
+  const written = notes.flatMap(({ subject }) => (subject === null ? [] : [subject]));
+  const markedNumbers = coreRuleNumbersOf(marked);
+  const writtenNumbers = coreRuleNumbersOf(written);
+  const keptCards = savedCards(printingIdsOf([...written, ...marked]), cards);
+  const keptCoreRules = savedCoreRules(
+    coreRules,
+    (number) => markedNumbers.has(number),
+    (number) => writtenNumbers.has(number),
   );
+  const groupsByType: Readonly<Record<NotedSubject["type"], readonly NotedSubjectGroup[]>> = {
+    standalone: [scratchpadGroup(notes)],
+    card: keptCards.map((card) => cardGroup(card, notes)),
+    coreRule: keptCoreRules.map((saved) => coreRuleGroup(saved, notes)),
+    unfindable: unfindableGroups(notes, keptCards, keptCoreRules),
+  };
+
+  return ORDERED_NOTE_SECTION_SPECS.flatMap((spec) => sectionsFor(spec, groupsByType[spec.type]));
 }
 
 function sectionsFor(
@@ -69,31 +71,75 @@ function sectionsFor(
     .exhaustive();
 }
 
-function gatheringWithStandingScratchpad(): Readonly<
-  Record<NotedSubject["type"], Map<string, GatheredNotes>>
-> {
-  /** A note can only be originated here, so it stands whether or not anything is in it. */
-  const scratchpad: GatheredNotes = {
-    key: STANDALONE_KEY,
-    notes: [],
-    subject: { type: "standalone" },
-  };
+function printingIdsOf(subjects: readonly AnnotationSubject[]): ReadonlySet<PrintingId> {
+  return new Set(subjects.flatMap((subject) => (subject.kind === "card" ? [subject.id] : [])));
+}
 
+function coreRuleNumbersOf(subjects: readonly AnnotationSubject[]): ReadonlySet<CoreRuleNumber> {
+  return new Set(subjects.flatMap((subject) => (subject.kind === "coreRule" ? [subject.id] : [])));
+}
+
+function scratchpadGroup(notes: readonly Note[]): NotedSubjectGroup {
   return {
-    standalone: new Map([[scratchpad.key, scratchpad]]),
-    card: new Map(),
-    coreRule: new Map(),
-    unfindable: new Map(),
+    key: STANDALONE_KEY,
+    notes: notes.filter(({ subject }) => subject === null),
+    subject: { type: "standalone" },
   };
 }
 
-function notedGroupKey(noted: NotedSubject): string {
-  return match(noted)
-    .with({ type: "standalone" }, () => STANDALONE_KEY)
-    .with({ type: "card" }, ({ card }) => card.printingId)
-    .with({ type: "coreRule" }, ({ saved }) => saved.coreRule.number)
-    .with({ type: "unfindable" }, ({ subject }) => unfindableSubjectName(subject))
+function cardGroup(card: CardSummary, notes: readonly Note[]): NotedSubjectGroup {
+  return {
+    key: card.printingId,
+    notes: notesOn(notes, { kind: "card", id: card.printingId }),
+    subject: { type: "card", card },
+  };
+}
+
+function coreRuleGroup(saved: SavedCoreRule, notes: readonly Note[]): NotedSubjectGroup {
+  return {
+    key: saved.coreRule.number,
+    notes: notesOn(notes, { kind: "coreRule", id: saved.coreRule.number }),
+    subject: { type: "coreRule", saved },
+  };
+}
+
+function unfindableGroups(
+  notes: readonly Note[],
+  cards: readonly CardSummary[],
+  coreRules: readonly SavedCoreRule[],
+): readonly NotedSubjectGroup[] {
+  const missing = notes.flatMap(({ subject }) =>
+    subject !== null && !isResolved(subject, cards, coreRules) ? [subject] : [],
+  );
+
+  return [...new Map(missing.map((subject) => [unfindableSubjectName(subject), subject]))].map(
+    ([key, subject]): NotedSubjectGroup => ({
+      key,
+      notes: notesOn(notes, subject),
+      subject: { type: "unfindable", subject },
+    }),
+  );
+}
+
+function isResolved(
+  subject: AnnotationSubject,
+  cards: readonly CardSummary[],
+  coreRules: readonly SavedCoreRule[],
+): boolean {
+  return match(subject)
+    .with({ kind: "card" }, ({ id }) => cards.some(({ printingId }) => printingId === id))
+    .with({ kind: "coreRule" }, ({ id }) =>
+      coreRules.some(({ coreRule }) => coreRule.number === id),
+    )
+    .with({ kind: "deck" }, () => false)
     .exhaustive();
+}
+
+function notesOn(notes: readonly Note[], subject: AnnotationSubject): readonly Note[] {
+  return notes.filter(
+    ({ subject: written }) =>
+      written !== null && written.kind === subject.kind && written.id === subject.id,
+  );
 }
 
 function noteCountsOf(sections: readonly NoteSection[]): NoteCounts {
@@ -114,58 +160,6 @@ function standaloneNotesOf(sections: readonly NoteSection[]): readonly Note[] {
   return sections
     .flatMap(({ groups }) => groups)
     .flatMap(({ notes, subject }) => (subject.type === "standalone" ? notes : []));
-}
-
-function gather(
-  groups: Map<string, GatheredNotes>,
-  key: string,
-  note: Note,
-  subject: NotedSubject,
-): void {
-  const held = groups.get(key);
-
-  if (held === undefined) groups.set(key, { key, notes: [note], subject });
-  else held.notes.push(note);
-}
-
-function notedSubjectOf(
-  subject: AnnotationSubject | null,
-  cardsByPrintingId: ReadonlyMap<PrintingId, CardSummary>,
-  savedByNumber: ReadonlyMap<CoreRuleNumber, SavedCoreRule>,
-): NotedSubject {
-  return match(subject)
-    .with(null, (): NotedSubject => ({ type: "standalone" }))
-    .with({ kind: "card" }, (written): NotedSubject => {
-      const card = cardsByPrintingId.get(written.id);
-
-      return card === undefined ? { type: "unfindable", subject: written } : { type: "card", card };
-    })
-    .with({ kind: "coreRule" }, (written): NotedSubject => {
-      const saved = savedByNumber.get(written.id);
-
-      return saved === undefined
-        ? { type: "unfindable", subject: written }
-        : { type: "coreRule", saved };
-    })
-    .with({ kind: "deck" }, (written): NotedSubject => ({ type: "unfindable", subject: written }))
-    .exhaustive();
-}
-
-function savedCoreRulesByNumber(
-  notes: readonly Note[],
-  coreRules: readonly CoreRule[],
-): ReadonlyMap<CoreRuleNumber, SavedCoreRule> {
-  const noted = new Set(
-    notes.flatMap(({ subject }) => (subject?.kind === "coreRule" ? [subject.id] : [])),
-  );
-
-  return new Map(
-    savedCoreRules(
-      coreRules,
-      () => false,
-      (number) => noted.has(number),
-    ).map((saved) => [saved.coreRule.number, saved]),
-  );
 }
 
 export { noteCountsOf, noteSections, standaloneNotesOf };

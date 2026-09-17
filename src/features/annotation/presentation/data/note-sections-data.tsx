@@ -6,6 +6,7 @@ import type { IdGenerator } from "@/application/ports/id-generator";
 import { Button } from "@/components/ui/atoms/button";
 import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
+import type { BookmarkLister } from "@/features/annotation/bookmark-lister";
 import type { NoteManager } from "@/features/annotation/note-manager";
 import {
   useNoteEditing,
@@ -24,6 +25,7 @@ interface SectionedNotes extends NoteEditing {
 }
 
 interface NoteSectionsDataProps {
+  readonly bookmarkLister: BookmarkLister;
   readonly cardSummariesFinder: CardSummariesByPrintingIdsFinder;
   readonly children: (written: SectionedNotes) => ReactNode;
   readonly clock: Clock;
@@ -33,6 +35,7 @@ interface NoteSectionsDataProps {
 }
 
 function NoteSectionsData({
+  bookmarkLister,
   cardSummariesFinder,
   children,
   clock,
@@ -41,15 +44,20 @@ function NoteSectionsData({
   noteManager,
 }: NoteSectionsDataProps) {
   const { reload, state } = useReadState(
-    listNotedSubjectsQuery({ cardSummariesFinder, coreRulesFinder, noteLister: noteManager }),
+    listNotedSubjectsQuery({
+      bookmarkLister,
+      cardSummariesFinder,
+      coreRulesFinder,
+      noteLister: noteManager,
+    }),
   );
   const { removeNote, writeNote } = useNoteEditing({ clock, idGenerator, noteManager });
 
   const sections = useMemo(
     () =>
       match(state)
-        .with({ type: "success" }, ({ cards, coreRules, notes }) =>
-          noteSections(notes, cards, coreRules),
+        .with({ type: "success" }, ({ bookmarks, cards, coreRules, notes }) =>
+          noteSections(bookmarks, notes, cards, coreRules),
         )
         .with({ type: "loading" }, { type: "failed" }, () => NO_SECTIONS)
         .exhaustive(),

@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 import { Pressable, Text } from "react-native";
 
 import type { Bookmark } from "@/features/annotation/bookmark";
-import type { BookmarkListScope } from "@/features/annotation/bookmark-list-scope";
 import type { BookmarkLister } from "@/features/annotation/bookmark-lister";
 import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
 import { BookmarkedSubjectsData } from "@/features/annotation/presentation/data/bookmarked-subjects-data";
@@ -11,61 +10,24 @@ import {
   listNotedSubjectsQuery,
 } from "@/features/annotation/queries/annotation-queries";
 import type { ListNotedSubjectsCapabilities } from "@/features/annotation/use-cases/list-noted-subjects";
-import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import { coreRuleNumberSchema } from "@/features/rules/value-objects/core-rule-number";
 import { useReadState } from "@/hooks/use-read-state";
 
 import { createTestWrapper } from "../test-wrapper";
-import { createNoteStore, createSubjectStore, fixedClock, subject, writtenNote } from "./fixtures";
+import {
+  createBookmarkStore,
+  createNoteStore,
+  createSubjectStore,
+  fixedClock,
+  subject,
+  writtenNote,
+} from "./fixtures";
 
 const STORE_FAILURE = new Error("The store is unavailable.");
 const MARKED_AT = "2026-09-16T10:00:00.000Z";
 const READ_NUMBERS = ["101.1", "101.2"].map((value) => coreRuleNumberSchema.parse(value));
 const RULE = subject("coreRule", "101.1");
 const CARD = subject("card", "Ember Adept");
-
-function sameSubject(one: AnnotationSubject, other: AnnotationSubject): boolean {
-  return one.kind === other.kind && one.id === other.id;
-}
-
-interface MarkStore {
-  readonly manager: BookmarkManager;
-  scopes(): readonly BookmarkListScope[];
-}
-
-function createMarkStore(marked: readonly AnnotationSubject[] = []): MarkStore {
-  const bookmarks: Bookmark[] = marked.map((held) => ({ subject: held, createdAt: MARKED_AT }));
-  const scopes: BookmarkListScope[] = [];
-
-  return {
-    manager: {
-      get: (held) =>
-        Promise.resolve(bookmarks.find((mark) => sameSubject(mark.subject, held)) ?? null),
-      getAll: (scope) => {
-        scopes.push(scope);
-
-        return Promise.resolve(
-          scope.type === "all"
-            ? [...bookmarks]
-            : bookmarks.filter((mark) => mark.subject.kind === scope.kind),
-        );
-      },
-      remove: (held) => {
-        const at = bookmarks.findIndex((mark) => sameSubject(mark.subject, held));
-
-        if (at >= 0) bookmarks.splice(at, 1);
-
-        return Promise.resolve();
-      },
-      save: (bookmark) => {
-        bookmarks.push(bookmark);
-
-        return Promise.resolve();
-      },
-    },
-    scopes: () => scopes,
-  };
-}
 
 function SavedSubjectsProbe({
   capabilities,
@@ -138,7 +100,7 @@ async function renderMarksBesideSaved(
 
 describe("BookmarkedSubjectsData", () => {
   it("should hand down the ids of the kind it was asked for, narrowed by the store", async () => {
-    const store = createMarkStore([RULE, CARD]);
+    const store = createBookmarkStore([RULE, CARD]);
 
     await renderMarks(store.manager);
 
@@ -147,7 +109,7 @@ describe("BookmarkedSubjectsData", () => {
   });
 
   it("should render nothing but the loading state before the read settles", async () => {
-    const store = createMarkStore();
+    const store = createBookmarkStore();
 
     await renderMarks({
       ...store.manager,
@@ -159,7 +121,7 @@ describe("BookmarkedSubjectsData", () => {
   });
 
   it("should report a failed read and read again when the retry is pressed", async () => {
-    const store = createMarkStore([RULE]);
+    const store = createBookmarkStore([RULE]);
     let attempts = 0;
 
     await renderMarks({
@@ -178,7 +140,7 @@ describe("BookmarkedSubjectsData", () => {
   });
 
   it("should leave every scope of the marks stale, not only the one it read", async () => {
-    const store = createMarkStore([RULE]);
+    const store = createBookmarkStore([RULE]);
 
     await renderMarks(store.manager, true);
     expect(await screen.findByText("every kind: 1")).toBeTruthy();
@@ -190,13 +152,14 @@ describe("BookmarkedSubjectsData", () => {
   });
 
   it("should leave the saved read stale too, since it stands over marks and notes alike", async () => {
-    const store = createMarkStore([RULE]);
+    const store = createBookmarkStore([RULE]);
     const notes = createNoteStore([
       writtenNote("note-1", RULE, "Came up in round three.", MARKED_AT),
     ]);
     const subjects = createSubjectStore();
 
     await renderMarksBesideSaved(store.manager, {
+      bookmarkLister: store.manager,
       cardSummariesFinder: subjects.cardSummariesFinder,
       coreRulesFinder: subjects.coreRulesFinder,
       noteLister: notes.manager,

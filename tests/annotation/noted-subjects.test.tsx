@@ -10,6 +10,7 @@ import {
   notedCoreRulesSectionLabel,
   unfindableNotesSectionLabel,
 } from "@/features/annotation/presentation/noted-subjects-format";
+import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import type { CardSummary } from "@/features/card/card-summary";
 import { printingIdSchema } from "@/features/card/value-objects/printing-id";
 import type { CoreRule } from "@/features/rules/core-rule";
@@ -17,12 +18,14 @@ import { CORE_RULES_NOTHING_SAVED_MESSAGE } from "@/features/rules/presentation/
 import { coreRuleNumberSchema } from "@/features/rules/value-objects/core-rule-number";
 
 import {
+  createBookmarkStore,
   createNoteStore,
   createSubjectStore,
   fixedClock,
   sequentialIds,
   subject,
   writtenNote,
+  type BookmarkStore,
   type NoteStore,
   type SubjectStore,
 } from "./fixtures";
@@ -86,18 +89,27 @@ const WITHDRAWN_NOTE = writtenNote(
   "2026-09-16T11:00:00.000Z",
 );
 const SCRATCHPAD_NOTE = writtenNote("note-5", null, "Trades to chase.", "2026-09-16T12:00:00.000Z");
+const MARKED_CARD = subject("card", VI_PRINTING);
+const MARKED_RULE = subject("coreRule", RULE_NUMBER);
+const MARKED_WITHDRAWN_CARD = subject("card", WITHDRAWN_PRINTING);
 
 interface NotedScreen {
+  readonly bookmarks: BookmarkStore;
   readonly notes: NoteStore;
   readonly subjects: SubjectStore;
 }
 
-async function renderNoted(seeded: readonly Note[]): Promise<NotedScreen> {
+async function renderNoted(
+  seeded: readonly Note[],
+  marked: readonly AnnotationSubject[] = [],
+): Promise<NotedScreen> {
+  const bookmarks = createBookmarkStore(marked);
   const notes = createNoteStore(seeded);
   const subjects = createSubjectStore([VI], [GAME_CONCEPTS, A_GAME]);
 
   await render(
     <NoteSectionsData
+      bookmarkLister={bookmarks.manager}
       cardSummariesFinder={subjects.cardSummariesFinder}
       clock={fixedClock("2026-09-16T13:00:00.000Z")}
       coreRulesFinder={subjects.coreRulesFinder}
@@ -110,7 +122,7 @@ async function renderNoted(seeded: readonly Note[]): Promise<NotedScreen> {
   );
   await screen.findByRole("header", { name: SCRATCHPAD_TITLE });
 
-  return { notes, subjects };
+  return { bookmarks, notes, subjects };
 }
 
 function sectionHolding(label: string) {
@@ -183,18 +195,24 @@ describe("the notes gathered under their subjects", () => {
   });
 
   it("should ask each feature for its subjects once rather than once per note", async () => {
-    const { subjects } = await renderNoted([
-      CARD_NOTE,
-      RULE_NOTE,
-      SECOND_CARD_NOTE,
-      WITHDRAWN_NOTE,
-    ]);
+    const { subjects } = await renderNoted(
+      [CARD_NOTE, RULE_NOTE, SECOND_CARD_NOTE, WITHDRAWN_NOTE],
+      [MARKED_CARD, MARKED_RULE],
+    );
 
     expect(subjects.cardAsks()).toHaveLength(1);
     expect(subjects.coreRuleAsks()).toHaveLength(1);
     expect(subjects.cardAsks()[0]).toEqual(
       expect.arrayContaining([VI_PRINTING, WITHDRAWN_PRINTING]),
     );
+    expect(subjects.coreRuleAsks()[0]).toEqual(expect.arrayContaining([RULE_NUMBER, "100"]));
+  });
+
+  it("should ask for what is marked as well as what is noted", async () => {
+    const { bookmarks, subjects } = await renderNoted([], [MARKED_CARD, MARKED_RULE]);
+
+    expect(bookmarks.scopes()).toEqual([{ type: "all" }]);
+    expect(subjects.cardAsks()[0]).toEqual([VI_PRINTING]);
     expect(subjects.coreRuleAsks()[0]).toEqual(expect.arrayContaining([RULE_NUMBER, "100"]));
   });
 
@@ -302,5 +320,73 @@ describe("the notes with no subject at all", () => {
 
     expect(screen.getByRole("header", { name: SCRATCHPAD_TITLE })).toBeTruthy();
     expect(screen.getByLabelText("0 notes on the scratchpad")).toBeTruthy();
+  });
+});
+
+describe("a subject that is marked rather than written on", () => {
+  it("should file a marked rule under its heading with nothing written on it", async () => {
+    await renderNoted([], [MARKED_RULE]);
+
+    expect(screen.getByRole("header", { name: notedCoreRulesSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: GAME_CONCEPTS.body })).toBeTruthy();
+    expect(screen.getByText(A_GAME.body)).toBeTruthy();
+    expect(screen.getByLabelText(`0 notes on rule ${RULE_NUMBER}`)).toBeTruthy();
+  });
+
+  it("should file a marked card under its name with nothing written on it", async () => {
+    await renderNoted([], [MARKED_CARD]);
+
+    expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByRole("header", { name: VI.name })).toBeTruthy();
+    expect(screen.getByText(VI_PRINTING)).toBeTruthy();
+    expect(screen.getByLabelText(`0 notes on ${VI.name}`)).toBeTruthy();
+  });
+
+  it("should stand a rule that is both marked and written on once", async () => {
+    await renderNoted([RULE_NOTE], [MARKED_RULE]);
+
+    expect(screen.getByRole("header", { name: notedCoreRulesSectionLabel(1) })).toBeTruthy();
+    expect(screen.getAllByRole("header", { name: GAME_CONCEPTS.body })).toHaveLength(1);
+    expect(screen.getByLabelText(`1 note on rule ${RULE_NUMBER}`)).toBeTruthy();
+  });
+
+  it("should stand a card that is both marked and written on once", async () => {
+    await renderNoted([CARD_NOTE], [MARKED_CARD]);
+
+    expect(screen.getByRole("header", { name: notedCardsSectionLabel(1) })).toBeTruthy();
+    expect(screen.getAllByRole("header", { name: VI.name })).toHaveLength(1);
+    expect(screen.getByLabelText(`1 note on ${VI.name}`)).toBeTruthy();
+  });
+
+  it("should take a note against a subject that only a mark had filed", async () => {
+    const { notes } = await renderNoted([], [MARKED_CARD]);
+
+    await fireEvent.press(screen.getByRole("button", { name: `Add a note to ${VI.name}` }));
+    await fireEvent.changeText(
+      screen.getByLabelText(`New note on ${VI.name}`),
+      "Blocks the two drop.",
+    );
+    await fireEvent.press(screen.getByRole("button", { name: `Save the new note on ${VI.name}` }));
+
+    await waitFor(() => expect(notes.notes()).toHaveLength(1));
+    expect(notes.notes()[0]?.subject).toEqual(MARKED_CARD);
+  });
+});
+
+describe("a mark whose subject cannot be found", () => {
+  it("should be left out rather than filed as a missing subject", async () => {
+    await renderNoted([], [MARKED_WITHDRAWN_CARD]);
+
+    expect(screen.queryByText(WITHDRAWN_PRINTING)).toBeNull();
+    expect(screen.queryByRole("header", { name: "Card" })).toBeNull();
+    expect(screen.queryByText(/Notes with a missing subject/)).toBeNull();
+    expect(screen.getByRole("header", { name: notedCardsSectionLabel(0) })).toBeTruthy();
+  });
+
+  it("should leave a note on the same missing subject standing", async () => {
+    await renderNoted([WITHDRAWN_NOTE], [MARKED_WITHDRAWN_CARD]);
+
+    expect(screen.getByRole("header", { name: unfindableNotesSectionLabel(1) })).toBeTruthy();
+    expect(screen.getByText(WITHDRAWN_NOTE.body)).toBeTruthy();
   });
 });

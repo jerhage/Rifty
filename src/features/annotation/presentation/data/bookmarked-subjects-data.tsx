@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, type ReactNode } from "react";
 import { match } from "ts-pattern";
 
@@ -8,23 +7,15 @@ import { ErrorState } from "@/components/ui/atoms/error-state";
 import { LoadingState } from "@/components/ui/atoms/loading-state";
 import type { BookmarkListScope } from "@/features/annotation/bookmark-list-scope";
 import type { BookmarkManager } from "@/features/annotation/bookmark-manager";
-import { annotationKeys } from "@/features/annotation/queries/annotation-keys";
-import {
-  listBookmarksQuery,
-  toggleBookmarkMutation,
-} from "@/features/annotation/queries/annotation-queries";
+import { useBookmarkToggling } from "@/features/annotation/presentation/hooks/use-bookmark-toggling";
+import { listBookmarksQuery } from "@/features/annotation/queries/annotation-queries";
 import {
   annotationSubjectSchema,
   type AnnotationSubjectId,
   type AnnotationSubjectKind,
 } from "@/features/annotation/value-objects/annotation-subject";
-import { useAnnouncement } from "@/hooks/use-announcement";
 import { useReadState } from "@/hooks/use-read-state";
-import { useWriteState } from "@/hooks/use-write-state";
 
-const BOOKMARKED_MESSAGE = "Bookmarked.";
-const BOOKMARK_REMOVED_MESSAGE = "Bookmark removed.";
-const BOOKMARK_FAILED_MESSAGE = "Could not change the bookmark. Try again.";
 const EMPTY_IDS: ReadonlySet<string> = new Set();
 
 /**
@@ -57,36 +48,16 @@ function BookmarkedSubjectsData<TKind extends AnnotationSubjectKind>({
   kind,
   onBookmarksChanged,
 }: BookmarkedSubjectsDataProps<TKind>) {
-  const queryClient = useQueryClient();
-  const announce = useAnnouncement();
   const scope = useMemo<BookmarkListScope>(() => ({ type: "ofKind", kind }), [kind]);
   const { reload, state } = useReadState(
     listBookmarksQuery(scope, { bookmarkLister: bookmarkManager }),
   );
-
-  const refreshBookmarksAndNotedSubjects = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: annotationKeys.bookmarks() });
-    void queryClient.invalidateQueries({ queryKey: annotationKeys.notedSubjects() });
-  }, [queryClient]);
-
-  const { submit } = useWriteState({
-    ...toggleBookmarkMutation({
-      bookmarkFinder: bookmarkManager,
-      bookmarkRemover: bookmarkManager,
-      bookmarkSaver: bookmarkManager,
-      clock,
-    }),
-    onError: () => announce(BOOKMARK_FAILED_MESSAGE, "interrupting"),
-    onSuccess: (result) => {
-      refreshBookmarksAndNotedSubjects();
-      onBookmarksChanged?.();
-      announce(
-        match(result)
-          .with({ type: "bookmarked" }, () => BOOKMARKED_MESSAGE)
-          .with({ type: "removed" }, () => BOOKMARK_REMOVED_MESSAGE)
-          .exhaustive(),
-      );
-    },
+  const { toggleBookmark: toggleSubject } = useBookmarkToggling({
+    bookmarkFinder: bookmarkManager,
+    bookmarkRemover: bookmarkManager,
+    bookmarkSaver: bookmarkManager,
+    clock,
+    onBookmarksChanged,
   });
 
   const bookmarkedIds = useMemo(
@@ -109,8 +80,8 @@ function BookmarkedSubjectsData<TKind extends AnnotationSubjectKind>({
 
   /** The kind and the id are assembled into a subject here, so the write cannot name another kind. */
   const toggleBookmark = useCallback(
-    (id: AnnotationSubjectId<TKind>) => submit(annotationSubjectSchema.parse({ kind, id })),
-    [kind, submit],
+    (id: AnnotationSubjectId<TKind>) => toggleSubject(annotationSubjectSchema.parse({ kind, id })),
+    [kind, toggleSubject],
   );
 
   return match(state)

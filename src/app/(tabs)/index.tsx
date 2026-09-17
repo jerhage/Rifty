@@ -53,7 +53,7 @@ function HomeScreen() {
                 onOpenCard={open}
               />
             ))
-            .with({ type: "pane" }, ({ close, open, shownId }) => (
+            .with({ type: "pane" }, ({ close, open, shown }) => (
               <SplitLayout
                 primary={
                   <CardCatalog
@@ -64,29 +64,25 @@ function HomeScreen() {
                 }
                 secondary={
                   <CardDetailPane
-                    bookmarkControl={
-                      shownId === null ? null : (
-                        <BookmarkToggle
-                          bookmarked={isBookmarked(shownId)}
-                          label="Bookmark"
-                          onPress={() => toggleBookmark(shownId)}
-                        />
-                      )
-                    }
+                    bookmarkFor={(printingId) => (
+                      <BookmarkToggle
+                        bookmarked={isBookmarked(printingId)}
+                        label="Bookmark"
+                        onPress={() => toggleBookmark(printingId)}
+                      />
+                    )}
                     cardFinder={cards.cardRepository}
-                    notes={
-                      shownId === null ? null : (
-                        <SubjectNotes
-                          clock={clock}
-                          idGenerator={idGenerator}
-                          noteManager={annotations.noteRepository}
-                          notesName={CARD_NOTES_NAME}
-                          subject={{ kind: "card", id: shownId }}
-                        />
-                      )
-                    }
+                    notesFor={(printingId) => (
+                      <SubjectNotes
+                        clock={clock}
+                        idGenerator={idGenerator}
+                        noteManager={annotations.noteRepository}
+                        notesName={CARD_NOTES_NAME}
+                        subject={{ kind: "card", id: printingId }}
+                      />
+                    )}
                     onClose={close}
-                    printingId={shownId}
+                    shown={shown}
                   />
                 }
               />

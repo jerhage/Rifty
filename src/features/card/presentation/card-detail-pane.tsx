@@ -1,43 +1,52 @@
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { match } from "ts-pattern";
 
 import { IconButton } from "@/components/ui/atoms/icon-button";
 import { ThemedText } from "@/components/ui/atoms/themed-text";
 import { ThemedView } from "@/components/ui/atoms/themed-view";
 import { Spacing } from "@/constants/theme";
 import type { CardFinder } from "@/features/card/card-finder";
+import type { CardPaneContent } from "@/features/card/presentation/card-pane-content";
 import { CardDetailData } from "@/features/card/presentation/data/card-detail-data";
 import { CardDetailScreen } from "@/features/card/presentation/screens/card-detail-screen";
 import type { PrintingId } from "@/features/card/value-objects/printing-id";
 
 function CardDetailPane({
-  bookmarkControl,
+  bookmarkFor,
   cardFinder,
-  notes,
+  notesFor,
   onClose,
-  printingId,
+  shown,
 }: {
-  readonly bookmarkControl: ReactNode;
+  readonly bookmarkFor: (printingId: PrintingId) => ReactNode;
   readonly cardFinder: CardFinder;
-  readonly notes: ReactNode;
+  readonly notesFor: (printingId: PrintingId) => ReactNode;
   readonly onClose: () => void;
-  readonly printingId: PrintingId | null;
+  readonly shown: CardPaneContent;
 }) {
   const insets = useSafeAreaInsets();
 
-  if (printingId === null) return <IdleCardPane />;
-
-  return (
-    <ThemedView style={styles.pane}>
-      <View style={[styles.closeRow, { paddingTop: insets.top + Spacing.two }]}>
-        <IconButton accessibilityLabel="Close the card" glyph="✕" onPress={onClose} />
-      </View>
-      <CardDetailData cardFinder={cardFinder} printingId={printingId}>
-        {(card) => <CardDetailScreen bookmarkControl={bookmarkControl} card={card} notes={notes} />}
-      </CardDetailData>
-    </ThemedView>
-  );
+  return match(shown)
+    .with({ type: "noCard" }, () => <IdleCardPane />)
+    .with({ type: "card" }, ({ printingId }) => (
+      <ThemedView style={styles.pane}>
+        <View style={[styles.closeRow, { paddingTop: insets.top + Spacing.two }]}>
+          <IconButton accessibilityLabel="Close the card" glyph="✕" onPress={onClose} />
+        </View>
+        <CardDetailData cardFinder={cardFinder} printingId={printingId}>
+          {(card) => (
+            <CardDetailScreen
+              bookmarkControl={bookmarkFor(printingId)}
+              card={card}
+              notes={notesFor(printingId)}
+            />
+          )}
+        </CardDetailData>
+      </ThemedView>
+    ))
+    .exhaustive();
 }
 
 function IdleCardPane() {

@@ -29,7 +29,7 @@ function NotesControl({ count, label, onPress }: NotesControlProps) {
       style={({ pressed }) => [styles.control, pressed && styles.pressed]}
     >
       <NotesGlyph color={count === 0 ? theme.textTertiary : theme.highlight} />
-      {count === 0 ? null : (
+      {count > 0 && (
         <ThemedText themeColor="highlight" type="code">
           {count}
         </ThemedText>

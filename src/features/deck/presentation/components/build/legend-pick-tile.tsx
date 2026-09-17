@@ -60,7 +60,7 @@ function LegendPickTile({
           source={card.imageUrl}
           style={styles.image}
         />
-        {selected ? (
+        {selected && (
           <View style={[styles.check, { backgroundColor: accent }]}>
             <ThemedText
               maxFontSizeMultiplier={1.2}
@@ -70,7 +70,7 @@ function LegendPickTile({
               ✓
             </ThemedText>
           </View>
-        ) : null}
+        )}
         <DomainBar domainIds={card.domainIds} height={2.5} />
       </View>
       <ThemedText numberOfLines={2} type="body" style={styles.name}>

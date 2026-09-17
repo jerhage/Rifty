@@ -13,11 +13,11 @@ function CardRulesPanel({ rulesText }: { readonly rulesText: Card["rulesText"] }
       <ThemedText themeColor="text" type="body" style={styles.rules}>
         {rulesText.plain || "No rules text."}
       </ThemedText>
-      {rulesText.flavour ? (
+      {rulesText.flavour !== null && rulesText.flavour !== "" && (
         <ThemedText themeColor="textTertiary" type="body" style={styles.flavour}>
           {rulesText.flavour}
         </ThemedText>
-      ) : null}
+      )}
     </View>
   );
 }

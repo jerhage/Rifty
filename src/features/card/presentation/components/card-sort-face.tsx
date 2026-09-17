@@ -48,7 +48,7 @@ function CardSortFace({
             ))}
           </View>
 
-          {direction === null ? null : (
+          {direction !== null && (
             <LabelledSection label="Order">
               <SegmentedControl>
                 <SegmentedOption

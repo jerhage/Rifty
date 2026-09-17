@@ -72,7 +72,7 @@ function SectionPoolControls({
         {sectionRuleSummary(section)}
       </ThemedText>
 
-      {isPool ? (
+      {isPool && (
         <>
           <PoolSearchRow
             filterCount={activePoolFilterCount(filters)}
@@ -90,7 +90,7 @@ function SectionPoolControls({
             />
           </View>
         </>
-      ) : null}
+      )}
     </View>
   );
 }

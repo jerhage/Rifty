@@ -51,7 +51,7 @@ function BookmarkToggle({
       ]}
     >
       <BookmarkGlyph color={markColor} filled={bookmarked} />
-      {captioned ? (
+      {captioned && (
         <ThemedText
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
@@ -60,7 +60,7 @@ function BookmarkToggle({
         >
           {bookmarked ? MARKED_CAPTION : UNMARKED_CAPTION}
         </ThemedText>
-      ) : null}
+      )}
     </Pressable>
   );
 }

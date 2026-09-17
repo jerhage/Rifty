@@ -61,12 +61,12 @@ function HandCardTile({
           source={card.imageUrl}
           style={styles.image}
         />
-        {card.attributes.energy === null ? null : (
+        {card.attributes.energy !== null && (
           <View style={[styles.energy, { backgroundColor: theme.backgroundSheet }]}>
             <ThemedText type="mono">{`${card.attributes.energy}E`}</ThemedText>
           </View>
         )}
-        {selected ? (
+        {selected && (
           <>
             <View style={[styles.scrim, { backgroundColor: theme.background }]} />
             <View style={[styles.badge, { backgroundColor: theme.accent }]}>
@@ -78,7 +78,7 @@ function HandCardTile({
               mulligan
             </ThemedText>
           </>
-        ) : null}
+        )}
         <DomainBar domainIds={card.domainIds} height={2} />
       </View>
       <ThemedText

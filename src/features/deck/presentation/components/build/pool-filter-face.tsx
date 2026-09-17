@@ -63,7 +63,7 @@ function PoolFilterFace({
             </View>
           </LabelledSection>
 
-          {allowsTypeChoice(section) ? (
+          {allowsTypeChoice(section) && (
             <LabelledSection label="Card type">
               <View style={styles.chips}>
                 {sectionCardTypes(section).map((typeId) => (
@@ -76,7 +76,7 @@ function PoolFilterFace({
                 ))}
               </View>
             </LabelledSection>
-          ) : null}
+          )}
 
           <LabelledSection label="Keywords">
             <SelectableChipRow

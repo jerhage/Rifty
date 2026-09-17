@@ -53,7 +53,7 @@ function CardSortControl({
           {sortOptionLabel(sort)}
         </ThemedText>
       </Pressable>
-      {arrow === null ? null : (
+      {arrow !== null && (
         <>
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <Pressable

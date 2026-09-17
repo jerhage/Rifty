@@ -76,16 +76,15 @@ function NoteList({
           )
           .exhaustive()}
       </View>
-      {notes.length === 0
-        ? match(draft)
-            .with({ type: "idle" }, () => (
-              <ThemedText themeColor="textSecondary" type="body">
-                {emptyMessage}
-              </ThemedText>
-            ))
-            .with({ type: "composing" }, () => null)
-            .exhaustive()
-        : null}
+      {notes.length === 0 &&
+        match(draft)
+          .with({ type: "idle" }, () => (
+            <ThemedText themeColor="textSecondary" type="body">
+              {emptyMessage}
+            </ThemedText>
+          ))
+          .with({ type: "composing" }, () => null)
+          .exhaustive()}
       {notes.map((note, at) => (
         <WrittenNote
           fieldHeight={NOTE_FIELD_HEIGHT}

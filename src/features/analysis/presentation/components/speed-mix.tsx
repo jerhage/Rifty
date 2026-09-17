@@ -90,11 +90,11 @@ function SpeedMix({
         ))}
       </View>
 
-      {counted > cardCount ? (
+      {counted > cardCount && (
         <ThemedText themeColor="textTertiary" type="body" style={styles.footnote}>
           A card playable at two speeds counts in both, so the shares can add past 100%.
         </ThemedText>
-      ) : null}
+      )}
     </Panel>
   );
 }

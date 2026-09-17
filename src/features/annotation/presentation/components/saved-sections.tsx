@@ -81,7 +81,7 @@ function SavedColumn({
     >
       {sections.map((section) => (
         <LabelledSection key={section.label} label={section.label}>
-          {section.message === null ? null : (
+          {section.message !== null && (
             <ThemedText themeColor="textSecondary" type="body">
               {section.message}
             </ThemedText>
@@ -117,24 +117,24 @@ function SavedGroup({
 
   return (
     <View style={[styles.group, { backgroundColor: theme.fill, borderColor: theme.border }]}>
-      {view.name === null ? null : (
+      {view.name !== null && (
         <View style={styles.head}>
           <ThemedText accessibilityRole="header" style={styles.name} type="heading">
             {view.name}
           </ThemedText>
-          {view.detail === null ? null : (
+          {view.detail !== null && (
             <ThemedText themeColor="accent" type="code">
               {view.detail}
             </ThemedText>
           )}
         </View>
       )}
-      {view.body === undefined ? null : (
+      {view.body !== undefined && (
         <ThemedText numberOfLines={3} themeColor="textSecondary" type="body">
           {view.body}
         </ThemedText>
       )}
-      {view.keepingLabel === null ? null : (
+      {view.keepingLabel !== null && (
         <View style={styles.keeping}>
           <ThemedText style={styles.keepingLabel} themeColor="textTertiary" type="mono">
             {view.keepingLabel}

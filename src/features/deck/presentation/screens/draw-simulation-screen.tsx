@@ -111,11 +111,11 @@ function DrawSimulationScreen({
           ))}
         </View>
 
-        {hand.length === 0 ? (
+        {hand.length === 0 && (
           <ThemedText themeColor="textSecondary" style={styles.empty} type="body">
             The main deck has no cards to draw from yet.
           </ThemedText>
-        ) : null}
+        )}
 
         <MulliganStatusBar
           counter={mulliganCounterLabel(mulligan)}

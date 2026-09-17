@@ -164,7 +164,7 @@ function CoreRulesSheetTab({
       <ThemedText themeColor={labelColor} type="mono">
         {label}
       </ThemedText>
-      {count === undefined ? null : (
+      {count !== undefined && (
         <ThemedText
           style={styles.count}
           themeColor={selected ? "accent" : "textTertiary"}

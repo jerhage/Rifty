@@ -79,7 +79,7 @@ function DeckDetailScreen({
           <DeckSectionGroup group={group} key={group.title} onOpenCard={onOpenCard} />
         ))}
 
-        {groups.length === 0 ? <EmptyState message="This deck has no cards yet." /> : null}
+        {groups.length === 0 && <EmptyState message="This deck has no cards yet." />}
       </ScrollView>
     </ThemedView>
   );

@@ -46,7 +46,7 @@ function SearchField({
         style={[styles.input, { color: theme.text }]}
         value={query}
       />
-      {query.length > 0 ? (
+      {query.length > 0 && (
         <Pressable
           accessibilityLabel="Clear search"
           accessibilityRole="button"
@@ -58,7 +58,7 @@ function SearchField({
             Clr
           </ThemedText>
         </Pressable>
-      ) : null}
+      )}
     </View>
   );
 }

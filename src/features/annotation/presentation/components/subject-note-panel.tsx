@@ -112,16 +112,15 @@ function WrittenNotePanel({
         {bookmarkControl}
       </View>
       <ScrollView contentContainerStyle={styles.cards} style={styles.scroll}>
-        {notes.length === 0
-          ? match(draft)
-              .with({ type: "idle" }, () => (
-                <ThemedText themeColor="textSecondary" type="body">
-                  {NOTES_EMPTY_MESSAGE}
-                </ThemedText>
-              ))
-              .with({ type: "composing" }, () => null)
-              .exhaustive()
-          : null}
+        {notes.length === 0 &&
+          match(draft)
+            .with({ type: "idle" }, () => (
+              <ThemedText themeColor="textSecondary" type="body">
+                {NOTES_EMPTY_MESSAGE}
+              </ThemedText>
+            ))
+            .with({ type: "composing" }, () => null)
+            .exhaustive()}
         {notes.map((note, at) => (
           <WrittenNote
             fieldHeight={PANEL_FIELD_HEIGHT}

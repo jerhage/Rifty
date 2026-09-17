@@ -28,6 +28,14 @@ function createFinder(): { readonly find: Finder; readonly reads: RecordedRead[]
   return { find, reads };
 }
 
+function recordedRead(reads: readonly RecordedRead[], position: number): RecordedRead {
+  const read = reads.at(position);
+
+  if (read === undefined) throw new Error(`No read was started at position ${position}.`);
+
+  return read;
+}
+
 async function renderReadState(find: Finder) {
   return await renderHook(
     () =>
@@ -62,23 +70,23 @@ describe("useReadState", () => {
     expect(reads).toHaveLength(1);
     await expectState(result, { type: "loading" });
 
-    await settleRead(result, reads[0], { type: "missing" });
+    await settleRead(result, recordedRead(reads, 0), { type: "missing" });
   });
 
   it("should pass an abort signal to the read", async () => {
     const { find, reads } = createFinder();
     const { result } = await renderReadState(find);
 
-    expect(reads[0].signal).toBeInstanceOf(AbortSignal);
+    expect(recordedRead(reads, 0).signal).toBeInstanceOf(AbortSignal);
 
-    await settleRead(result, reads[0], { type: "missing" });
+    await settleRead(result, recordedRead(reads, 0), { type: "missing" });
   });
 
   it("should return the result itself rather than wrapping it when the read succeeds", async () => {
     const { find, reads } = createFinder();
     const { result } = await renderReadState(find);
 
-    await settleRead(result, reads[0], { type: "found", id: "lux" });
+    await settleRead(result, recordedRead(reads, 0), { type: "found", id: "lux" });
 
     expect(result.current.state).toEqual({ type: "found", id: "lux" });
   });
@@ -87,7 +95,7 @@ describe("useReadState", () => {
     const { find, reads } = createFinder();
     const { result } = await renderReadState(find);
 
-    await settleRead(result, reads[0], { type: "missing" });
+    await settleRead(result, recordedRead(reads, 0), { type: "missing" });
 
     expect(result.current.state).toEqual({ type: "missing" });
   });
@@ -96,7 +104,7 @@ describe("useReadState", () => {
     const { find, reads } = createFinder();
     const { result } = await renderReadState(find);
 
-    await failRead(result, reads[0], STORE_FAILURE);
+    await failRead(result, recordedRead(reads, 0), STORE_FAILURE);
 
     expect(result.current.state).toEqual({ type: "failed", error: STORE_FAILURE });
   });
@@ -104,7 +112,7 @@ describe("useReadState", () => {
   it("should read again when reload is called", async () => {
     const { find, reads } = createFinder();
     const { result } = await renderReadState(find);
-    await settleRead(result, reads[0], { type: "missing" });
+    await settleRead(result, recordedRead(reads, 0), { type: "missing" });
 
     await act(async () => {
       result.current.reload();
@@ -112,20 +120,20 @@ describe("useReadState", () => {
 
     await waitFor(() => expect(reads).toHaveLength(2));
 
-    await settleRead(result, reads[1], { type: "found", id: "lux" });
+    await settleRead(result, recordedRead(reads, 1), { type: "found", id: "lux" });
   });
 
   it("should keep the last answer when a read after a successful one fails", async () => {
     const { find, reads } = createFinder();
     const { result } = await renderReadState(find);
-    await settleRead(result, reads[0], { type: "found", id: "lux" });
+    await settleRead(result, recordedRead(reads, 0), { type: "found", id: "lux" });
 
     await act(async () => {
       result.current.reload();
     });
     await waitFor(() => expect(reads).toHaveLength(2));
 
-    reads[1].fail(STORE_FAILURE);
+    recordedRead(reads, 1).fail(STORE_FAILURE);
 
     await expect(
       waitFor(() => expect(result.current.state).toMatchObject({ type: "failed" }), {
@@ -138,7 +146,7 @@ describe("useReadState", () => {
   it("should read again when reload retries a failed read", async () => {
     const { find, reads } = createFinder();
     const { result } = await renderReadState(find);
-    await failRead(result, reads[0], STORE_FAILURE);
+    await failRead(result, recordedRead(reads, 0), STORE_FAILURE);
 
     await act(async () => {
       result.current.reload();
@@ -146,6 +154,6 @@ describe("useReadState", () => {
 
     await waitFor(() => expect(reads).toHaveLength(2));
 
-    await settleRead(result, reads[1], { type: "found", id: "lux" });
+    await settleRead(result, recordedRead(reads, 1), { type: "found", id: "lux" });
   });
 });

@@ -27,6 +27,18 @@ const NO_INSETS: EdgeInsets = { bottom: 0, left: 0, right: 0, top: 0 };
 
 const LANDSCAPE_CUTOUT: EdgeInsets = { bottom: 21, left: 59, right: 59, top: 0 };
 
+interface WindowFrame {
+  readonly height: number;
+  readonly width: number;
+}
+
+const TABLET_FRAMES: readonly WindowFrame[] = [
+  { height: 1376, width: 1032 },
+  { height: 1032, width: 1376 },
+  { height: 1280, width: 800 },
+  { height: 800, width: 1280 },
+];
+
 function windowOf(width: number, height: number) {
   jest
     .spyOn(Dimensions, "get")
@@ -155,12 +167,7 @@ describe("useLayoutSize", () => {
   });
 
   it("should call every design tablet frame a tablet in both orientations", async () => {
-    for (const [width, height] of [
-      [1032, 1376],
-      [1376, 1032],
-      [800, 1280],
-      [1280, 800],
-    ]) {
+    for (const { height, width } of TABLET_FRAMES) {
       expect((await layoutSizeOf(width, height)).layoutClass).toBe("tablet");
     }
   });

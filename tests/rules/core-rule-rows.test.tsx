@@ -45,9 +45,11 @@ function entry(
 }
 
 function glyphBoxHeightIn(control: ReturnType<typeof screen.getByRole>): number | undefined {
-  const glyph = control.children[0];
+  const glyph = control.children.at(0);
 
-  if (typeof glyph === "string") throw new Error("The control draws no glyph.");
+  if (glyph === undefined || typeof glyph === "string") {
+    throw new Error("The control draws no glyph.");
+  }
 
   return StyleSheet.flatten(glyph.props.style).height;
 }

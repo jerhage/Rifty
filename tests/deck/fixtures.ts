@@ -104,7 +104,7 @@ function fixedClock(...instants: readonly string[]): Clock {
   let index = 0;
 
   return {
-    now: () => instants[Math.min(index++, instants.length - 1)] ?? "2026-09-01T10:00:00.000Z",
+    now: () => instants.at(Math.min(index++, instants.length - 1)) ?? "2026-09-01T10:00:00.000Z",
   };
 }
 

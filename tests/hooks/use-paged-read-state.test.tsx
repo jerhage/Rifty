@@ -37,6 +37,14 @@ function createLister(): { readonly list: Lister; readonly reads: RecordedRead[]
   return { list, reads };
 }
 
+function recordedRead(reads: readonly RecordedRead[], position: number): RecordedRead {
+  const read = reads.at(position);
+
+  if (read === undefined) throw new Error(`No read was started at position ${position}.`);
+
+  return read;
+}
+
 async function renderPagedReadState(list: Lister) {
   return await renderHook(
     () =>
@@ -99,26 +107,26 @@ describe("usePagedReadState", () => {
     const { result } = await renderPagedReadState(list);
 
     expect(reads).toHaveLength(1);
-    expect(reads[0].offset).toBe(0);
+    expect(recordedRead(reads, 0).offset).toBe(0);
     await waitFor(() => expect(result.current.state).toEqual({ type: "loading" }));
 
-    await settlePage(result, reads[0], pageOf(["a", "b"], false), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], false), ["a", "b"]);
   });
 
   it("should pass an abort signal to the read", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
 
-    expect(reads[0].signal).toBeInstanceOf(AbortSignal);
+    expect(recordedRead(reads, 0).signal).toBeInstanceOf(AbortSignal);
 
-    await settlePage(result, reads[0], pageOf(["a", "b"], false), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], false), ["a", "b"]);
   });
 
   it("should expose flattened items, hasMore and total when the first page arrives", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
 
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
 
     expect(loaded(result)).toEqual({
       type: "success",
@@ -133,17 +141,22 @@ describe("usePagedReadState", () => {
   it("should append the next page when load more succeeds", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
 
     await act(async () => {
       result.current.loadMore();
     });
 
     await waitFor(() => expect(reads).toHaveLength(2));
-    expect(reads[1].offset).toBe(PAGE_SIZE);
+    expect(recordedRead(reads, 1).offset).toBe(PAGE_SIZE);
     await expectPaging(result, { type: "loadingMore" });
 
-    await settlePage(result, reads[1], pageOf(["c", "d"], false), ["a", "b", "c", "d"]);
+    await settlePage(result, recordedRead(reads, 1), pageOf(["c", "d"], false), [
+      "a",
+      "b",
+      "c",
+      "d",
+    ]);
 
     expect(loaded(result).hasMore).toBe(false);
     await expectPaging(result, { type: "idle" });
@@ -152,7 +165,7 @@ describe("usePagedReadState", () => {
   it("should not read again when load more is called with no further page", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], false), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], false), ["a", "b"]);
 
     await act(async () => {
       result.current.loadMore();
@@ -164,7 +177,7 @@ describe("usePagedReadState", () => {
   it("should start one read when load more fires twice before the next render", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
 
     await act(async () => {
       result.current.loadMore();
@@ -173,19 +186,24 @@ describe("usePagedReadState", () => {
 
     expect(reads).toHaveLength(2);
 
-    await settlePage(result, reads[1], pageOf(["c", "d"], false), ["a", "b", "c", "d"]);
+    await settlePage(result, recordedRead(reads, 1), pageOf(["c", "d"], false), [
+      "a",
+      "b",
+      "c",
+      "d",
+    ]);
   });
 
   it("should report a failed load more on paging while keeping the loaded items", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
     await act(async () => {
       result.current.loadMore();
     });
     await waitFor(() => expect(reads).toHaveLength(2));
 
-    reads[1].fail(STORE_FAILURE);
+    recordedRead(reads, 1).fail(STORE_FAILURE);
 
     await expectPaging(result, { type: "failed", message: LOAD_MORE_ERROR });
     expect(loaded(result).items).toEqual(["a", "b"]);
@@ -194,12 +212,12 @@ describe("usePagedReadState", () => {
   it("should read again when a failed load more is retried", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
     await act(async () => {
       result.current.loadMore();
     });
     await waitFor(() => expect(reads).toHaveLength(2));
-    reads[1].fail(STORE_FAILURE);
+    recordedRead(reads, 1).fail(STORE_FAILURE);
     await expectPaging(result, { type: "failed", message: LOAD_MORE_ERROR });
 
     await act(async () => {
@@ -207,9 +225,14 @@ describe("usePagedReadState", () => {
     });
 
     await waitFor(() => expect(reads).toHaveLength(3));
-    expect(reads[2].offset).toBe(PAGE_SIZE);
+    expect(recordedRead(reads, 2).offset).toBe(PAGE_SIZE);
 
-    await settlePage(result, reads[2], pageOf(["c", "d"], false), ["a", "b", "c", "d"]);
+    await settlePage(result, recordedRead(reads, 2), pageOf(["c", "d"], false), [
+      "a",
+      "b",
+      "c",
+      "d",
+    ]);
 
     await expectPaging(result, { type: "idle" });
   });
@@ -217,18 +240,18 @@ describe("usePagedReadState", () => {
   it("should be refreshing while a refresh is in flight and keep the items until it settles", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
 
     await act(async () => {
       result.current.refresh();
     });
 
     await waitFor(() => expect(reads).toHaveLength(2));
-    expect(reads[1].offset).toBe(0);
+    expect(recordedRead(reads, 1).offset).toBe(0);
     await waitFor(() => expect(loaded(result).isRefreshing).toBe(true));
     expect(loaded(result).items).toEqual(["a", "b"]);
 
-    await settlePage(result, reads[1], pageOf(["x", "y"], true), ["x", "y"]);
+    await settlePage(result, recordedRead(reads, 1), pageOf(["x", "y"], true), ["x", "y"]);
 
     expect(loaded(result).isRefreshing).toBe(false);
   });
@@ -237,7 +260,7 @@ describe("usePagedReadState", () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
 
-    reads[0].fail(STORE_FAILURE);
+    recordedRead(reads, 0).fail(STORE_FAILURE);
 
     await waitFor(() =>
       expect(result.current.state).toEqual({ type: "failed", error: STORE_FAILURE }),
@@ -247,7 +270,7 @@ describe("usePagedReadState", () => {
   it("should read again from the first page when reload retries a failed read", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    reads[0].fail(STORE_FAILURE);
+    recordedRead(reads, 0).fail(STORE_FAILURE);
     await waitFor(() => expect(result.current.state).toMatchObject({ type: "failed" }));
 
     await act(async () => {
@@ -255,16 +278,16 @@ describe("usePagedReadState", () => {
     });
 
     await waitFor(() => expect(reads).toHaveLength(2));
-    expect(reads[1].offset).toBe(0);
+    expect(recordedRead(reads, 1).offset).toBe(0);
 
-    await settlePage(result, reads[1], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 1), pageOf(["a", "b"], true), ["a", "b"]);
   });
 
   it("should announce nothing while the first page loads and settles", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
 
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
 
     expect(announcements).toEqual([]);
   });
@@ -272,13 +295,18 @@ describe("usePagedReadState", () => {
   it("should announce the running count when another page loads", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
 
     await act(async () => {
       result.current.loadMore();
     });
     await waitFor(() => expect(reads).toHaveLength(2));
-    await settlePage(result, reads[1], pageOf(["c", "d"], false), ["a", "b", "c", "d"]);
+    await settlePage(result, recordedRead(reads, 1), pageOf(["c", "d"], false), [
+      "a",
+      "b",
+      "c",
+      "d",
+    ]);
 
     await waitFor(() =>
       expect(announcements).toEqual([{ message: "Showing 4 of 4.", queued: true }]),
@@ -288,13 +316,13 @@ describe("usePagedReadState", () => {
   it("should announce a load more that failed", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
 
     await act(async () => {
       result.current.loadMore();
     });
     await waitFor(() => expect(reads).toHaveLength(2));
-    reads[1].fail(STORE_FAILURE);
+    recordedRead(reads, 1).fail(STORE_FAILURE);
 
     await waitFor(() =>
       expect(announcements).toEqual([{ message: LOAD_MORE_ERROR, queued: false }]),
@@ -304,7 +332,7 @@ describe("usePagedReadState", () => {
   it("should say nothing when load more is called with no further page", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], false), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], false), ["a", "b"]);
 
     await act(async () => {
       result.current.loadMore();
@@ -316,14 +344,19 @@ describe("usePagedReadState", () => {
   it("should announce once when load more fires twice before the next render", async () => {
     const { list, reads } = createLister();
     const { result } = await renderPagedReadState(list);
-    await settlePage(result, reads[0], pageOf(["a", "b"], true), ["a", "b"]);
+    await settlePage(result, recordedRead(reads, 0), pageOf(["a", "b"], true), ["a", "b"]);
 
     await act(async () => {
       result.current.loadMore();
       result.current.loadMore();
     });
     await waitFor(() => expect(reads).toHaveLength(2));
-    await settlePage(result, reads[1], pageOf(["c", "d"], false), ["a", "b", "c", "d"]);
+    await settlePage(result, recordedRead(reads, 1), pageOf(["c", "d"], false), [
+      "a",
+      "b",
+      "c",
+      "d",
+    ]);
 
     await waitFor(() =>
       expect(announcements).toEqual([{ message: "Showing 4 of 4.", queued: true }]),

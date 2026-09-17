@@ -26,6 +26,14 @@ function createSaver(): { readonly save: Saver; readonly writes: RecordedWrite[]
   return { save, writes };
 }
 
+function recordedWrite(writes: readonly RecordedWrite[], position: number): RecordedWrite {
+  const write = writes.at(position);
+
+  if (write === undefined) throw new Error(`No write was submitted at position ${position}.`);
+
+  return write;
+}
+
 async function renderWriteState(save: Saver) {
   return await renderHook(() => useWriteState({ mutationFn: save }), {
     wrapper: createTestWrapper(),
@@ -70,10 +78,10 @@ describe("useWriteState", () => {
     await submit(result, "Lux Control");
 
     expect(writes).toHaveLength(1);
-    expect(writes[0].name).toBe("Lux Control");
+    expect(recordedWrite(writes, 0).name).toBe("Lux Control");
     await expectState(result, { type: "saving" });
 
-    await settleWrite(result, writes[0], { type: "nameTaken" });
+    await settleWrite(result, recordedWrite(writes, 0), { type: "nameTaken" });
   });
 
   it("should return the result itself rather than wrapping it when the write succeeds", async () => {
@@ -81,7 +89,7 @@ describe("useWriteState", () => {
     const { result } = await renderWriteState(save);
     await submit(result, "Lux Control");
 
-    await settleWrite(result, writes[0], { type: "success", id: "deck-1" });
+    await settleWrite(result, recordedWrite(writes, 0), { type: "success", id: "deck-1" });
 
     expect(result.current.state).toEqual({ type: "success", id: "deck-1" });
   });
@@ -91,7 +99,7 @@ describe("useWriteState", () => {
     const { result } = await renderWriteState(save);
     await submit(result, "Lux Control");
 
-    await settleWrite(result, writes[0], { type: "nameTaken" });
+    await settleWrite(result, recordedWrite(writes, 0), { type: "nameTaken" });
 
     expect(result.current.state).toEqual({ type: "nameTaken" });
   });
@@ -100,7 +108,7 @@ describe("useWriteState", () => {
     const { save, writes } = createSaver();
     const { rerender, result } = await renderWriteState(save);
     await submit(result, "Lux Control");
-    await settleWrite(result, writes[0], { type: "success", id: "deck-1" });
+    await settleWrite(result, recordedWrite(writes, 0), { type: "success", id: "deck-1" });
 
     await rerender(undefined);
 
@@ -112,7 +120,7 @@ describe("useWriteState", () => {
     const { result } = await renderWriteState(save);
     await submit(result, "Lux Control");
 
-    await failWrite(result, writes[0], STORE_FAILURE);
+    await failWrite(result, recordedWrite(writes, 0), STORE_FAILURE);
 
     expect(result.current.state).toEqual({ type: "failed", error: STORE_FAILURE });
   });
@@ -121,7 +129,7 @@ describe("useWriteState", () => {
     const { save, writes } = createSaver();
     const { result } = await renderWriteState(save);
     await submit(result, "Lux Control");
-    await failWrite(result, writes[0], STORE_FAILURE);
+    await failWrite(result, recordedWrite(writes, 0), STORE_FAILURE);
 
     await act(async () => {
       result.current.reset();

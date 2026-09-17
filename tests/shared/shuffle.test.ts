@@ -3,7 +3,13 @@ import { shuffle } from "@/shared/shuffle";
 function sequence(values: readonly number[]): () => number {
   let index = 0;
 
-  return () => values[index++ % values.length];
+  return () => {
+    const draw = values.at(index++ % values.length);
+
+    if (draw === undefined) throw new Error("The sequence has no draws to give.");
+
+    return draw;
+  };
 }
 
 describe("shuffle", () => {

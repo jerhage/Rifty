@@ -5,7 +5,13 @@ import { useReduceMotion } from "@/hooks/use-reduce-motion";
 
 type Listener = (isReduced: boolean) => void;
 
-function captureSubscription(): { readonly listeners: Listener[]; removals(): number } {
+interface CapturedSubscription {
+  readonly listeners: Listener[];
+  notify(isReduced: boolean): void;
+  removals(): number;
+}
+
+function captureSubscription(): CapturedSubscription {
   const listeners: Listener[] = [];
   let removals = 0;
 
@@ -20,7 +26,13 @@ function captureSubscription(): { readonly listeners: Listener[]; removals(): nu
     };
   });
 
-  return { listeners, removals: () => removals };
+  return {
+    listeners,
+    notify: (isReduced) => {
+      for (const listener of listeners) listener(isReduced);
+    },
+    removals: () => removals,
+  };
 }
 
 describe("useReduceMotion", () => {
@@ -37,12 +49,12 @@ describe("useReduceMotion", () => {
 
   it("should follow the setting when it changes while the app is open", async () => {
     jest.spyOn(AccessibilityInfo, "isReduceMotionEnabled").mockResolvedValue(false);
-    const { listeners } = captureSubscription();
+    const { listeners, notify } = captureSubscription();
     const { result } = await renderHook(() => useReduceMotion());
 
     await waitFor(() => expect(listeners).toHaveLength(1));
     await act(async () => {
-      listeners[0](true);
+      notify(true);
     });
 
     expect(result.current).toBe(true);

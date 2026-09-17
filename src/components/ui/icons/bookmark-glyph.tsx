@@ -1,5 +1,5 @@
 import { SymbolView } from "expo-symbols";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type ColorValue } from "react-native";
 
 /** Sized to stand on one line of body text, which is 19 points tall. */
 const BOOKMARK_SIZE = 18;
@@ -17,7 +17,13 @@ const BOOKMARK_SIZE = 18;
  * It stays decorative wherever it is used: the control around it carries the role, the name and
  * the state, so a reader is never told "bookmark" twice.
  */
-function BookmarkGlyph({ color, filled }: { readonly color: string; readonly filled: boolean }) {
+function BookmarkGlyph({
+  color,
+  filled,
+}: {
+  readonly color: ColorValue;
+  readonly filled: boolean;
+}) {
   return (
     <SymbolView
       accessibilityElementsHidden
@@ -35,7 +41,13 @@ function BookmarkGlyph({ color, filled }: { readonly color: string; readonly fil
 }
 
 /** No notch, because borders cannot cut one: an open-footed box is as close as drawing gets. */
-function DrawnBookmark({ color, filled }: { readonly color: string; readonly filled: boolean }) {
+function DrawnBookmark({
+  color,
+  filled,
+}: {
+  readonly color: ColorValue;
+  readonly filled: boolean;
+}) {
   return (
     <View
       style={[

@@ -47,7 +47,7 @@ function TabsLayout() {
             options={{
               tabBarItemStyle: isRail ? railCenteringStyle(at) : undefined,
               title: destination.title,
-              tabBarIcon: ({ color }) => <TabGlyph color={color} shape={destination.shape} />,
+              tabBarIcon: ({ color }) => <TabGlyph color={color} identity={destination.identity} />,
             }}
           />
         ))}

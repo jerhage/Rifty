@@ -1,18 +1,18 @@
 import type { ViewStyle } from "react-native";
 
-import type { TabGlyphShape } from "@/components/ui/icons/tab-glyph";
+import type { TabIdentity } from "@/components/ui/icons/tab-glyph";
 
 interface TabDestination {
+  readonly identity: TabIdentity;
   readonly name: string;
-  readonly shape: TabGlyphShape;
   readonly title: string;
 }
 
 const TAB_DESTINATIONS: readonly TabDestination[] = [
-  { name: "index", shape: "square", title: "Cards" },
-  { name: "decks", shape: "diamond", title: "Decks" },
-  { name: "rules", shape: "circle", title: "Rules" },
-  { name: "saved", shape: "pill", title: "Saved" },
+  { identity: "cards", name: "index", title: "Cards" },
+  { identity: "decks", name: "decks", title: "Decks" },
+  { identity: "rules", name: "rules", title: "Rules" },
+  { identity: "saved", name: "saved", title: "Saved" },
 ];
 
 function railCenteringStyle(at: number): ViewStyle | undefined {

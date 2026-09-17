@@ -4,7 +4,8 @@ import { StyleSheet, View } from "react-native";
 
 import { BookmarkGlyph } from "@/components/ui/icons/bookmark-glyph";
 import { CHEVRON_ARMS, ChevronGlyph } from "@/components/ui/icons/chevron-glyph";
-import { TabGlyph, type TabGlyphShape } from "@/components/ui/icons/tab-glyph";
+import { TabGlyph, tabGlyphDrawing, type TabIdentity } from "@/components/ui/icons/tab-glyph";
+import { TabShapeGlyph, type TabShape } from "@/components/ui/icons/tab-shape-glyph";
 
 function renderedStyle() {
   const json = screen.toJSON();
@@ -18,6 +19,18 @@ function renderedProps() {
   const node = Array.isArray(json) ? json[0] : json;
 
   return { type: node?.type, props: node?.props as Record<string, unknown> };
+}
+
+function renderedGlyph(): ReactTestRendererJSON | null {
+  const json = screen.toJSON();
+
+  return (Array.isArray(json) ? json[0] : json) ?? null;
+}
+
+function elementsOf(node: ReactTestRendererJSON | null): readonly ReactTestRendererJSON[] {
+  return (node?.children ?? []).filter(
+    (child): child is ReactTestRendererJSON => typeof child !== "string",
+  );
 }
 
 /**
@@ -102,40 +115,114 @@ describe("BookmarkGlyph", () => {
   });
 });
 
-/**
- * A shape is what tells one destination from another, so no two may draw the same box, and color
- * says nothing: it is the tint the tab bar hands every glyph.
- */
 describe("TabGlyph", () => {
-  const SHAPES: readonly TabGlyphShape[] = ["square", "diamond", "circle", "pill"];
+  const GLYPH_COLOR = "#0B72E7";
 
-  function drawnStyles(): readonly string[] {
-    const json = screen.toJSON();
-    const node = Array.isArray(json) ? json[0] : json;
-    const children: readonly (ReactTestRendererJSON | string)[] = node?.children ?? [];
+  const ELEMENT_COUNTS: Readonly<Record<TabIdentity, number>> = {
+    cards: 2,
+    decks: 3,
+    rules: 4,
+    saved: 1,
+  };
 
-    return children.map((child) =>
-      JSON.stringify(typeof child === "string" ? child : StyleSheet.flatten(child.props.style)),
+  const IDENTITIES = Object.keys(ELEMENT_COUNTS) as readonly TabIdentity[];
+
+  const COLOR_PROPERTIES: readonly string[] = ["backgroundColor", "borderColor", "tintColor"];
+
+  function silhouetteOf(glyph: ReactTestRendererJSON | null): string {
+    return JSON.stringify(
+      elementsOf(glyph).map((element) => {
+        const style: Record<string, unknown> = StyleSheet.flatten(element.props.style);
+
+        return [
+          element.type,
+          Object.entries(style).filter(([property]) => !COLOR_PROPERTIES.includes(property)),
+        ];
+      }),
     );
   }
 
-  it("should draw a box of its own for every shape a destination may take", async () => {
+  function paintOf(element: ReactTestRendererJSON): unknown {
+    const style = StyleSheet.flatten(element.props.style);
+
+    return element.props.tintColor ?? style.backgroundColor ?? style.borderColor;
+  }
+
+  it.each(IDENTITIES)("should draw every element %s is made of, and no other", async (identity) => {
+    await render(<TabGlyph color={GLYPH_COLOR} identity={identity} />);
+
+    expect(elementsOf(renderedGlyph())).toHaveLength(ELEMENT_COUNTS[identity]);
+  });
+
+  it("should draw a silhouette nothing else draws, with the labels and the colors stripped", async () => {
     await render(
       <View>
-        {SHAPES.map((shape) => (
-          <TabGlyph color="#0B72E7" key={shape} shape={shape} />
+        {IDENTITIES.map((identity) => (
+          <TabGlyph color={GLYPH_COLOR} identity={identity} key={identity} />
         ))}
       </View>,
     );
 
-    const drawn = drawnStyles();
+    const silhouettes = elementsOf(renderedGlyph()).map(silhouetteOf);
+
+    expect(silhouettes).toHaveLength(IDENTITIES.length);
+    expect(new Set(silhouettes).size).toBe(IDENTITIES.length);
+  });
+
+  it.each(IDENTITIES)(
+    "should paint every element of %s with the one color it was given",
+    async (identity) => {
+      await render(<TabGlyph color={GLYPH_COLOR} identity={identity} />);
+
+      const painted = elementsOf(renderedGlyph()).map(paintOf);
+
+      expect(painted).toHaveLength(ELEMENT_COUNTS[identity]);
+      expect(new Set(painted)).toEqual(new Set([GLYPH_COLOR]));
+    },
+  );
+
+  it("should keep the notched foot the bookmark symbol draws rather than a box of its own", () => {
+    expect(tabGlyphDrawing("saved")).toEqual({ type: "bookmark" });
+  });
+
+  it("should close the last line of the rules page short, which is what reads as a paragraph end", () => {
+    const drawing = tabGlyphDrawing("rules");
+
+    if (drawing.type !== "elements") throw new Error("the rules tab draws a list of elements");
+
+    expect(drawing.elements.map((element) => element.width)).toEqual([14, 8, 8, 5]);
+  });
+
+  it("should say nothing of itself, because the tab's own label carries the name", async () => {
+    await render(<TabGlyph color={GLYPH_COLOR} identity="cards" />);
+
+    expect(renderedProps().props.accessibilityElementsHidden).toBe(true);
+    expect(renderedProps().props.importantForAccessibility).toBe("no-hide-descendants");
+  });
+});
+
+describe("TabShapeGlyph", () => {
+  const SHAPES: readonly TabShape[] = ["square", "diamond", "circle", "pill"];
+
+  it("should draw a box of its own for every shape it offers", async () => {
+    await render(
+      <View>
+        {SHAPES.map((shape) => (
+          <TabShapeGlyph color="#0B72E7" key={shape} shape={shape} />
+        ))}
+      </View>,
+    );
+
+    const drawn = elementsOf(renderedGlyph()).map((shape) =>
+      JSON.stringify(StyleSheet.flatten(shape.props.style)),
+    );
 
     expect(drawn).toHaveLength(SHAPES.length);
     expect(new Set(drawn).size).toBe(SHAPES.length);
   });
 
   it("should take the color it was given rather than carry one per shape", async () => {
-    await render(<TabGlyph color="#0B72E7" shape="pill" />);
+    await render(<TabShapeGlyph color="#0B72E7" shape="pill" />);
 
     expect(renderedStyle().backgroundColor).toBe("#0B72E7");
     expect(renderedProps().props.accessibilityElementsHidden).toBe(true);

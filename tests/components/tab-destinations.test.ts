@@ -11,10 +11,10 @@ describe("the tab destinations", () => {
     expect(TAB_DESTINATIONS.at(-1)?.name).toBe("saved");
   });
 
-  it("should give each destination a shape nothing else uses", () => {
-    const shapes = TAB_DESTINATIONS.map((destination) => destination.shape);
+  it("should give each destination an identity nothing else uses", () => {
+    const identities = TAB_DESTINATIONS.map((destination) => destination.identity);
 
-    expect(new Set(shapes).size).toBe(TAB_DESTINATIONS.length);
+    expect(new Set(identities).size).toBe(TAB_DESTINATIONS.length);
   });
 
   it("should center the rail by pushing off the first destination and the last, and no other", () => {

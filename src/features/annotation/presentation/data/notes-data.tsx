@@ -17,7 +17,7 @@ import { listNotesQuery } from "@/features/annotation/queries/annotation-queries
 import type { AnnotationSubject } from "@/features/annotation/value-objects/annotation-subject";
 import { useReadState } from "@/hooks/use-read-state";
 
-/** One subject's notes, or the notes that hang off no subject at all, newest first. */
+/** One subject's notes, newest first. */
 interface WrittenNotes extends NoteEditing {
   readonly notes: readonly Note[];
 }
@@ -28,15 +28,12 @@ interface NotesDataProps {
   readonly idGenerator: IdGenerator;
   /** The whole set, because this boundary reads and writes the same rows. */
   readonly noteManager: NoteManager;
-  readonly subject: AnnotationSubject | null;
+  readonly subject: AnnotationSubject;
 }
 
 /** `writeNote` refuses a blank body, so removing a note is a separate call on its own control. */
 function NotesData({ children, clock, idGenerator, noteManager, subject }: NotesDataProps) {
-  const scope = useMemo<NoteListScope>(
-    () => (subject === null ? { type: "standalone" } : { type: "onSubject", subject }),
-    [subject],
-  );
+  const scope = useMemo<NoteListScope>(() => ({ type: "onSubject", subject }), [subject]);
   const { reload, state } = useReadState(listNotesQuery(scope, { noteLister: noteManager }));
   const { removeNote, writeNote } = useNoteEditing({ clock, idGenerator, noteManager });
 

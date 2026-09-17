@@ -52,7 +52,6 @@ function sameSubject(one: Note["subject"], other: Note["subject"]): boolean {
 function inScope(note: Note, scope: NoteListScope): boolean {
   return match(scope)
     .with({ type: "all" }, () => true)
-    .with({ type: "standalone" }, () => note.subject === null)
     .with({ type: "ofKind" }, ({ kind }) => note.subject?.kind === kind)
     .with({ type: "onSubject" }, ({ subject: scoped }) => sameSubject(note.subject, scoped))
     .exhaustive();

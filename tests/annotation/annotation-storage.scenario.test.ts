@@ -193,10 +193,7 @@ describe("annotation storage scenarios", () => {
       { type: "onSubject", subject: RULE },
       { noteLister: store.annotationStore.notes },
     );
-    const onNothing = await listNotes(
-      { type: "standalone" },
-      { noteLister: store.annotationStore.notes },
-    );
+    const onNothing = await listNotes({ type: "all" }, { noteLister: store.annotationStore.notes });
 
     expect(onCard.notes.map((note) => note.body)).toEqual(["On the card"]);
     expect(onRule.notes.map((note) => note.body)).toEqual(["On the rule"]);
@@ -256,7 +253,7 @@ describe("annotation storage scenarios", () => {
     );
 
     await expect(
-      listNotes({ type: "standalone" }, { noteLister: store.annotationStore.notes }),
+      listNotes({ type: "all" }, { noteLister: store.annotationStore.notes }),
     ).resolves.toEqual({
       type: "success",
       notes: [

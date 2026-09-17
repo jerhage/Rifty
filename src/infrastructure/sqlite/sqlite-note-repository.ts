@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, type SQL } from "drizzle-orm";
 import { match } from "ts-pattern";
 
 import type { Note, NoteId } from "@/features/annotation/note";
@@ -70,7 +70,6 @@ class SqliteNoteRepository implements NoteRepository {
 function scopeCondition(scope: NoteListScope): SQL | undefined {
   return match<NoteListScope, SQL | undefined>(scope)
     .with({ type: "all" }, () => undefined)
-    .with({ type: "standalone" }, () => isNull(notes.subjectKind))
     .with({ type: "ofKind" }, ({ kind }) => eq(notes.subjectKind, kind))
     .with({ type: "onSubject" }, ({ subject }) =>
       and(eq(notes.subjectKind, subject.kind), eq(notes.subjectId, subject.id)),

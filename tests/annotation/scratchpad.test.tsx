@@ -102,7 +102,9 @@ describe("the scratchpad", () => {
     await expect(
       store.manager.getAll({ type: "onSubject", subject: subject("coreRule", "501.1") }),
     ).resolves.toEqual([]);
-    await expect(store.manager.getAll({ type: "standalone" })).resolves.toHaveLength(1);
+    const everything = await store.manager.getAll({ type: "all" });
+
+    expect(everything.filter(({ subject }) => subject === null)).toHaveLength(1);
   });
 
   it("should collect several notes rather than hold one", async () => {
